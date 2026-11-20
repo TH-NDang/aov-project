@@ -39,6 +39,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class TournamentAdministration {
     private final TeamRegistry teams;
     private final PlayerRegistry players;
+    private final PlayerMerge merges;
     private final TournamentRegistry tournaments;
     private final SeriesRegistry series;
     private final GameRecords games;
@@ -47,11 +48,13 @@ public class TournamentAdministration {
     private final TransactionTemplate reads;
     private final TransactionTemplate writes;
 
-    public TournamentAdministration(TeamRegistry teams, PlayerRegistry players, TournamentRegistry tournaments,
+    public TournamentAdministration(TeamRegistry teams, PlayerRegistry players, PlayerMerge merges,
+            TournamentRegistry tournaments,
             SeriesRegistry series, GameRecords games, WikiCatalog catalog, CompetitionDirectory directory,
             PlatformTransactionManager transactions) {
         this.teams = teams;
         this.players = players;
+        this.merges = merges;
         this.tournaments = tournaments;
         this.series = series;
         this.games = games;
@@ -138,8 +141,14 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:write')")
     @Transactional
-    public View<Player> createPlayer(Player content) {
-        return players.create(content, actor());
+    public View<Player> createPlayer(Player content, boolean allowSameName) {
+        return players.create(content, actor(), allowSameName);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:write')")
+    @Transactional
+    public PlayerMerge.Result mergePlayer(UUID id, Long version, UUID intoId, Long intoVersion) {
+        return merges.merge(id, version, intoId, intoVersion, actor());
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")

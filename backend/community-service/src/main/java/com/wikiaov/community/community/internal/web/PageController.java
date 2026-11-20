@@ -126,8 +126,10 @@ public class PageController implements PageApi {
 
     @Override
     @PostMapping(path = ApiPaths.ROOT + "/admin/pages", version = "1")
-    public Profile create(@RequestBody CreatePage body) {
-        return profiles.create(body.kind(), body.code(), body.entityId(), body.content());
+    public Profile create(@RequestBody CreatePage body,
+            @RequestParam(defaultValue = "false") boolean allowSameName, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("allowSameName"));
+        return profiles.create(body.kind(), body.code(), body.entityId(), body.content(), allowSameName);
     }
 
     @Override

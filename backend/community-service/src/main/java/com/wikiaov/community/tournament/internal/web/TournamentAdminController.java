@@ -24,6 +24,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.registry.application.PlayerMerge;
 import com.wikiaov.community.tournament.internal.registry.application.TournamentAdministration;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -141,8 +142,16 @@ public class TournamentAdminController implements TournamentAdminApi {
 
     @Override
     @PostMapping(path = ApiPaths.ADMIN + "/players", version = "1")
-    public View<Player> createPlayer(@RequestBody Create<Player> request) {
-        return administration.createPlayer(request.content());
+    public View<Player> createPlayer(@RequestBody Create<Player> request,
+            @RequestParam(defaultValue = "false") boolean allowSameName, HttpServletRequest http) {
+        QueryParameters.requireOnly(http, Set.of("allowSameName"));
+        return administration.createPlayer(request.content(), allowSameName);
+    }
+
+    @Override
+    @PostMapping(path = ApiPaths.ADMIN + "/players/{id}/merge", version = "1")
+    public PlayerMerge.Result mergePlayer(@PathVariable UUID id, @RequestBody MergePlayer request) {
+        return administration.mergePlayer(id, request.version(), request.intoId(), request.intoVersion());
     }
 
     @Override

@@ -19,6 +19,7 @@ import type {
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
 import { ApiError } from "@/lib/api/errors"
+import { sameNamePlayers } from "../model/same-name-players"
 
 export interface TournamentRecords {
   teams: TeamContent
@@ -132,6 +133,11 @@ export type TournamentFilters = {
   size?: number
 }
 /** What a picker was opened in: rows belonging to it come first. */
+/** What a merge moved from the merged profile to the one that stays. */
+export type PlayerMergeResult = {
+  player: DocumentView<TournamentRecords["players"]>
+  moved: { rosterLines: number; repeatedRosterLines: number; tournaments: number; series: number; games: number }
+}
 export type PickerContext = { tournamentId?: string; teamId?: string; playerId?: string; level?: TournamentLevel }
 type RankedKind = "teams" | "players" | "tournaments"
 const searchParams = (values: Record<string, string | number | string[] | undefined>) => {
@@ -205,6 +211,18 @@ export function createTournamentApi(request: Request = communityRequest) {
         version: entry.version,
         content,
       }),
+    /** Folds the player `id` into `intoId` and trashes it, at the versions read just before (spec 04). */
+    mergePlayer: async (id: string, intoId: string) => {
+      const [source, target] = await Promise.all([
+        request<DocumentView<TournamentRecords["players"]>>(`/admin/players/${id}`),
+        request<DocumentView<TournamentRecords["players"]>>(`/admin/players/${intoId}`),
+      ])
+      return send<PlayerMergeResult>(`/admin/players/${id}/merge`, "POST", {
+        version: source.version,
+        intoId,
+        intoVersion: target.version,
+      })
+    },
     deletionImpact: (kind: RecordKind, id: string, signal?: AbortSignal) =>
       request<RecordDeletionImpact>(`/admin/${kind}/${id}/deletion-impact`, { signal }),
     remove: (kind: RecordKind, entry: { id: string; version: number }) =>
@@ -245,6 +263,10 @@ export function tournamentError(error: unknown) {
   if (error instanceof ApiError) {
     if (error.status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
     if (error.status === 403) return "Tài khoản chưa có quyền quản lý giải đấu. Hãy kiểm tra quyền trong Keycloak."
+    if (error.code === "TOURNAMENT_PLAYER_SAME_NAME") {
+      const codes = (sameNamePlayers(error) ?? []).map((player) => player.code).join(", ")
+      return `Đã có tuyển thủ cùng quốc gia mang tên này${codes ? ` (${codes})` : ""}. Dùng mã của hồ sơ đó thay vì tạo hồ sơ mới.`
+    }
     if (error.code === "TOURNAMENT_RECORD_IN_USE") return "Chưa thể xóa: mục này còn được dữ liệu khác sử dụng."
     if (error.code === "TOURNAMENT_RESTORE_BLOCKED") return "Chưa thể khôi phục: cần khôi phục dữ liệu liên quan trước."
     if (error.code === "TOURNAMENT_RECORD_DELETED")

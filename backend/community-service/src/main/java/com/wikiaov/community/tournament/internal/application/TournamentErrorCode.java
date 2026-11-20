@@ -8,6 +8,8 @@ public enum TournamentErrorCode implements ApiErrorCode {
     TOURNAMENT_INVALID_CONTENT(HttpStatus.BAD_REQUEST),
     TOURNAMENT_VERSION_CONFLICT(HttpStatus.CONFLICT),
     TOURNAMENT_RECORD_IN_USE(HttpStatus.CONFLICT),
+    /** Another active player of the country already has that name; resend with allowSameName for a namesake. */
+    TOURNAMENT_PLAYER_SAME_NAME(HttpStatus.CONFLICT),
     TOURNAMENT_RESTORE_BLOCKED(HttpStatus.CONFLICT),
     TOURNAMENT_RECORD_DELETED(HttpStatus.CONFLICT),
     TOURNAMENT_MEDIA_RETIRED(HttpStatus.CONFLICT),
