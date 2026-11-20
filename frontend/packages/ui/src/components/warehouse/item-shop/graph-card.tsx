@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useMemo, useRef, type ReactNode } from "react"
 import { useDraggable, useDroppable } from "@dnd-kit/core"
 import { Circle, GripVertical, ImageOff, PanelRightOpen } from "lucide-react"
-import { itemReaderContent } from "@aov/ui/lib/item-description"
+import { itemCardStats, itemReaderContent } from "@aov/ui/lib/item-description"
 import { cn } from "@aov/ui/lib/utils"
 import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import { Button } from "@aov/ui/components/button"
@@ -103,7 +103,10 @@ export function GraphCard({
   const name = warehouseName(item, locale)
   const text = warehouseText(item.content.translations, locale)
   const summary = text?.summary?.trim()
-  const stats = useMemo(() => itemReaderContent(item.content, text, locale).stats, [item.content, text, locale])
+  const stats = useMemo(
+    () => itemCardStats(itemReaderContent(item.content, text, locale)),
+    [item.content, text, locale],
+  )
   const changeKinds = cardChangeKinds(item.changeKinds)
   const hasOutput = column < columns - 1 && !terminal
   const missing = item.missingFields?.length ?? 0

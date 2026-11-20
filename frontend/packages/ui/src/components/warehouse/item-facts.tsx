@@ -1,10 +1,15 @@
 import type { ReactNode } from "react"
 import { Hourglass, Layers } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 import {
+  formatItemGrantAmount,
   formatItemStatValue,
   itemEffectFacts,
+  itemGrantConditions,
+  itemGrantScalings,
   ITEM_STAT_FILTERS,
+  type ItemGrantedStat,
   type ItemTextContent,
   type ItemTextStat,
 } from "@aov/ui/lib/item-description"
@@ -75,6 +80,49 @@ export function ItemStatList({
   )
 }
 
+/**
+ * Stats the effects grant, apart from the fixed stats above them: each row names the effect and says how the amount
+ * grows, its cap and how long it lasts, because none of these is a stat the item simply has.
+ */
+export function ItemGrantedStatList({ granted, locale }: { granted: ItemGrantedStat[]; locale: string }) {
+  const t = useWarehouseText()
+  if (!granted.length) return null
+  return (
+    <div className="space-y-1">
+      <h4 className="type-label text-muted-foreground">{t("Từ hiệu ứng", "From effects")}</h4>
+      {/* One row each: a granted stat carries its effect and conditions, which need the full width to read. */}
+      <dl>
+        {granted.map((grant, index) => {
+          const amount = formatItemGrantAmount(grant)
+          const scalings = itemGrantScalings(grant)
+          const meta = [grant.effect, ...itemGrantConditions(grant, locale)].filter(Boolean).join(" · ")
+          return (
+            <div key={index} className="flex min-w-0 items-center gap-2 border-b border-dashed py-1.5">
+              <StatArt stat={grant} size={22} />
+              <dt className="min-w-0 flex-1 text-sm">
+                <span className="flex flex-wrap items-center gap-x-1.5">
+                  {grant.label}
+                  {grant.active && <PassiveTag strong>{t("Kích hoạt", "Active")}</PassiveTag>}
+                  {grant.unique && <UniqueTag />}
+                </span>
+                {meta && <span className="type-meta block">{meta}</span>}
+              </dt>
+              <dd className="shrink-0 text-right text-sm whitespace-nowrap tabular-nums">
+                {amount && <span className="block font-semibold">{amount}</span>}
+                {scalings.map((scaling) => (
+                  <span key={scaling} className={cn("block", amount ? "type-meta" : "font-semibold")}>
+                    {amount ? `(${scaling})` : scaling}
+                  </span>
+                ))}
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+    </div>
+  )
+}
+
 /** The stats of a card in one line of icons and numbers; the label stays available to hover and screen readers. */
 export function ItemStatChips({
   stats,
@@ -119,7 +167,14 @@ export function ItemPassiveList({
   return (
     <div className="space-y-2">
       {content.passives.map((passive, index) => {
-        const facts = itemEffectFacts(passive.text)
+        // Gameplay entered for the effect wins over the figures read from its text.
+        const read = itemEffectFacts(passive.text)
+        const cooldown = passive.gameplay?.cooldownSeconds
+        const facts = {
+          cooldownSeconds: cooldown != null ? formatGameNumber(cooldown) : read.cooldownSeconds,
+          maxStacks: passive.gameplay?.maxStacks ?? read.maxStacks,
+        }
+        const grants = passive.grants ?? []
         return (
           <div key={index} className="space-y-1.5 rounded-lg border bg-muted/20 p-3">
             <h4 className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
@@ -130,8 +185,15 @@ export function ItemPassiveList({
               {passive.unique && <UniqueTag />}
             </h4>
             <div className="type-body">{renderText(passive.text, language)}</div>
-            {(facts.cooldownSeconds || facts.maxStacks) && (
+            {(facts.cooldownSeconds || facts.maxStacks || grants.length > 0) && (
               <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {grants.map((grant, grantIndex) => (
+                  <EffectFact key={grantIndex} icon={<StatArt stat={grant} size={14} />}>
+                    {formatItemGrantAmount(grant)
+                      ? `${formatItemGrantAmount(grant)} ${grant.label}`
+                      : `${grant.label} (${itemGrantScalings(grant).join(", ")})`}
+                  </EffectFact>
+                ))}
                 {facts.cooldownSeconds && (
                   <EffectFact icon={<Hourglass aria-hidden />}>
                     {t(`Hồi chiêu ${facts.cooldownSeconds} giây`, `Cooldown ${facts.cooldownSeconds} s`)}

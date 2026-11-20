@@ -1,3 +1,4 @@
+import type { ItemEffectGameplay } from "@aov/ui/lib/item-description"
 import { DEFAULT_LOCALE, pickTranslation } from "@aov/ui/lib/translation-fallback"
 import type { EnchantmentUse } from "@aov/ui/lib/enchantment-use"
 
@@ -29,6 +30,8 @@ export interface ItemContent extends WarehouseContent {
   recipeStatus: "UNKNOWN" | "NONE" | "VERIFIED"
   components: { itemId: string; quantity: number }[]
   stats: WarehouseStat[]
+  /** The gameplay of each effect the description writes, in its order (ADR-033). Absent on older revisions. */
+  effects?: ItemEffectGameplay[]
 }
 export interface EnchantmentContent extends WarehouseContent, EnchantmentUse {
   branchCode: string

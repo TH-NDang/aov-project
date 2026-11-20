@@ -31,7 +31,12 @@ import {
 } from "../components/catalog/warehouse-controls"
 import { ItemSearch, itemSearchMatches } from "../components/items/item-search"
 import { ItemChosenStats, ItemStatFilterMenu } from "@aov/ui/components/warehouse/item-stat-filter-menu"
-import { itemMatchesStatFilters, itemReaderContent, itemStatFilterCounts } from "@aov/ui/lib/item-description"
+import {
+  itemFilterStats,
+  itemMatchesStatFilters,
+  itemReaderContent,
+  itemStatFilterCounts,
+} from "@aov/ui/lib/item-description"
 import { type WarehouseEntry, type WarehouseMetadata } from "../model/warehouse-types"
 import { warehouseName, warehouseText, type ItemContent } from "@aov/ui/lib/warehouse-content"
 import { EnchantmentBranchEditor } from "../components/secondary/enchantment-branch-editor"
@@ -134,7 +139,7 @@ export function BackendItemsPage() {
       new Map(
         rows.map((item) => [
           item.id,
-          itemReaderContent(item.content, warehouseText(item.content.translations, context.locale)).stats,
+          itemFilterStats(itemReaderContent(item.content, warehouseText(item.content.translations, context.locale))),
         ]),
       ),
     [rows, context.locale],

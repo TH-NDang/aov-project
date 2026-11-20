@@ -2,7 +2,7 @@ import { useWarehouseText } from "./warehouse-view"
 import type { ReactNode } from "react"
 
 import { ItemCategoryIcon } from "./item-category-icon"
-import { ItemPassiveList, ItemStatList } from "./item-facts"
+import { ItemGrantedStatList, ItemPassiveList, ItemStatList } from "./item-facts"
 import { ItemRecipeView } from "./item-recipe"
 import { itemReaderContent } from "@aov/ui/lib/item-description"
 import {
@@ -65,14 +65,17 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
       {!readerView && text?.summary && (
         <div className="type-body text-muted-foreground">{renderText(text.summary, language)}</div>
       )}
-      {(reading.stats.length > 0 || pencil) && (
+      {(reading.stats.length > 0 || reading.granted.length > 0 || pencil) && (
         <section className="space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="type-section-title">{t("Chỉ số", "Stats")}</h3>
             {pencil?.("stats")}
           </div>
-          {!reading.stats.length && <p className="type-meta">{t("Chưa có chỉ số.", "No stats yet.")}</p>}
+          {!reading.stats.length && !reading.granted.length && (
+            <p className="type-meta">{t("Chưa có chỉ số.", "No stats yet.")}</p>
+          )}
           <ItemStatList stats={reading.stats} locale={locale} />
+          <ItemGrantedStatList granted={reading.granted} locale={locale} />
           {pencil && !content.stats.length && reading.stats.length > 0 && (
             <p className="type-meta">
               {t(

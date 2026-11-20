@@ -23,7 +23,7 @@ export function WarehouseStatsEditor({
 }) {
   const list = useId()
   const keys = new Map<string, string>(knownStats.map(({ key, label }) => [key, label]))
-  const units = new Set<string>(knownStats.length ? ["POINT", "PERCENT"] : [])
+  const units = new Set<string>(knownStats.length ? ["%"] : [])
   for (const { content } of catalog) {
     const labels = warehouseText(content.translations, locale)?.statLabels
     for (const stat of content.stats ?? []) {

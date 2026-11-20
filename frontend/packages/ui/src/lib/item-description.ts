@@ -28,9 +28,13 @@ export type ItemStatKey =
   | "manaRegen"
   | "maxMana"
   | "tenacity"
+  | "adaptiveAttack"
+  | "attackRange"
 
 export interface ItemStatDefinition {
   key: ItemStatKey
+  /** The code the backend stores, shared with arcana (platform CatalogStats, ADR-033). */
+  code: string
   vi: string
   en: string
   icon: GameplayIconName
@@ -45,16 +49,32 @@ export interface ItemStatDefinition {
 export const ITEM_STATS: ItemStatDefinition[] = [
   {
     key: "physicalAttack",
+    code: "physical-attack",
     vi: "Công vật lý",
     en: "Attack Damage",
     icon: "sword",
     spellings: ["cong vat ly", "attack damage"],
   },
-  { key: "magicAttack", vi: "Công phép", en: "Ability Power", icon: "orb", spellings: ["cong phep", "ability power"] },
-  { key: "maxHealth", vi: "Máu tối đa", en: "Max HP", icon: "heart", spellings: ["mau toi da", "mau", "max hp", "hp"] },
-  { key: "armor", vi: "Giáp", en: "Armor", icon: "shield", spellings: ["giap", "armor"] },
+  {
+    key: "magicAttack",
+    code: "magic-attack",
+    vi: "Công phép",
+    en: "Ability Power",
+    icon: "orb",
+    spellings: ["cong phep", "ability power"],
+  },
+  {
+    key: "maxHealth",
+    code: "max-health",
+    vi: "Máu tối đa",
+    en: "Max HP",
+    icon: "heart",
+    spellings: ["mau toi da", "mau", "max hp", "hp"],
+  },
+  { key: "armor", code: "armor", vi: "Giáp", en: "Armor", icon: "shield", spellings: ["giap", "armor"] },
   {
     key: "magicDefense",
+    code: "magic-defense",
     vi: "Giáp phép",
     en: "Magic Defense",
     icon: "runeShield",
@@ -62,6 +82,7 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "attackSpeed",
+    code: "attack-speed",
     vi: "Tốc đánh",
     en: "Attack Speed",
     icon: "bolt",
@@ -69,6 +90,7 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "movementSpeed",
+    code: "movement-speed",
     vi: "Tốc chạy",
     en: "Movement Speed",
     icon: "boot",
@@ -76,6 +98,7 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "cooldownReduction",
+    code: "cooldown-reduction",
     vi: "Giảm hồi chiêu",
     en: "Cooldown Speed",
     icon: "cooldown",
@@ -83,6 +106,7 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "criticalChance",
+    code: "critical-chance",
     vi: "Tỷ lệ chí mạng",
     en: "Critical Chance",
     icon: "crit",
@@ -90,14 +114,23 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "criticalDamage",
+    code: "critical-damage",
     vi: "Sát thương chí mạng",
     en: "Critical Damage",
     icon: "critDamage",
     spellings: ["sat thuong chi mang", "critical damage"],
   },
-  { key: "lifesteal", vi: "Hút máu", en: "Life Steal", icon: "vamp", spellings: ["hut mau", "life steal"] },
+  {
+    key: "lifesteal",
+    code: "physical-lifesteal",
+    vi: "Hút máu",
+    en: "Life Steal",
+    icon: "vamp",
+    spellings: ["hut mau", "life steal"],
+  },
   {
     key: "magicLifesteal",
+    code: "magic-lifesteal",
     vi: "Hút máu phép",
     en: "Magic Life Steal",
     icon: "vamp",
@@ -105,6 +138,7 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "armorPierce",
+    code: "armor-penetration",
     vi: "Xuyên giáp",
     en: "Armor Pierce",
     icon: "pierce",
@@ -112,14 +146,23 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "magicPierce",
+    code: "magic-penetration",
     vi: "Xuyên giáp phép",
     en: "Magic Pierce",
     icon: "pierce",
     spellings: ["xuyen giap phep", "magic pierce"],
   },
-  { key: "healthRegen", vi: "Hồi máu/5s", en: "HP/5s", icon: "heart", spellings: ["hoi mau/5s", "hp/5s"] },
+  {
+    key: "healthRegen",
+    code: "health-regen-per-five-seconds",
+    vi: "Hồi máu/5s",
+    en: "HP/5s",
+    icon: "heart",
+    spellings: ["hoi mau/5s", "hp/5s"],
+  },
   {
     key: "manaRegen",
+    code: "mana-regen-per-five-seconds",
     vi: "Hồi năng lượng/5s",
     en: "Mana/5s",
     icon: "mana",
@@ -127,6 +170,7 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "maxMana",
+    code: "max-mana",
     vi: "Năng lượng tối đa",
     en: "Max Mana",
     icon: "mana",
@@ -134,10 +178,27 @@ export const ITEM_STATS: ItemStatDefinition[] = [
   },
   {
     key: "tenacity",
+    code: "tenacity",
     vi: "Kháng hiệu ứng",
     en: "Resistance",
     icon: "barrier",
     spellings: ["khang hieu ung", "resistance"],
+  },
+  {
+    key: "adaptiveAttack",
+    code: "adaptive-attack",
+    vi: "Thuộc tính chủ đạo",
+    en: "Adaptive Force",
+    icon: "sword",
+    spellings: ["thuoc tinh chu dao", "adaptive force"],
+  },
+  {
+    key: "attackRange",
+    code: "attack-range",
+    vi: "Tầm đánh",
+    en: "Attack Range",
+    icon: "pierce",
+    spellings: ["tam danh", "attack range"],
   },
 ]
 
@@ -160,6 +221,10 @@ export interface ItemTextPassive {
   unique: boolean
   /** Used on demand by the player rather than always on. */
   active?: boolean
+  /** The gameplay entered for this effect, when there is any. */
+  gameplay?: ItemEffectGameplay
+  /** The stats this effect grants, read from its gameplay. */
+  grants?: ItemGrantedStat[]
 }
 
 export interface ItemTextContent {
@@ -268,8 +333,16 @@ function grantedStat(passive: ItemTextPassive, english: boolean): ItemTextStat |
   return { ...stat, unique: passive.unique, note: note || null }
 }
 
-/** `locale` only chooses the language of the stat names; the text is read the same way in both. */
-export function parseItemDescription(description: string | null | undefined, locale = "vi-VN"): ItemTextContent {
+/**
+ * `locale` only chooses the language of the stat names; the text is read the same way in both. With `effectStats`
+ * off, a passive that grants a stat stays a passive: an item with structured gameplay lists it among its effects, with
+ * the stat as its grant (ADR-033), and only the "+N" lines are fixed stats.
+ */
+export function parseItemDescription(
+  description: string | null | undefined,
+  locale = "vi-VN",
+  { effectStats = true }: { effectStats?: boolean } = {},
+): ItemTextContent {
   const english = locale.startsWith("en")
   const content: ItemTextContent = { stats: [], passives: [], notes: [] }
   for (const raw of (description ?? "").split(/\r?\n/)) {
@@ -280,12 +353,12 @@ export function parseItemDescription(description: string | null | undefined, loc
       continue
     }
     const stat = statFrom(line, english)
-    if (stat) {
+    if (stat && (effectStats || !stat.unique)) {
       content.stats.push(stat)
       continue
     }
     const passive = passiveFrom(line)
-    const granted = grantedStat(passive, english)
+    const granted = effectStats ? grantedStat(passive, english) : null
     if (granted) content.stats.push(granted)
     else content.passives.push(passive)
   }
@@ -364,6 +437,38 @@ export function itemMatchesStatFilters(stats: Pick<ItemTextStat, "key">[], filte
   })
 }
 
+/**
+ * The stats a card shows: the fixed stats, then each stat an effect grants as a plain amount, such as the movement
+ * speed of a boots passive. A grant that grows, stacks, scales, lasts a few seconds or needs an active is left to the detail.
+ */
+export function itemCardStats(reading: Pick<ItemReaderContent, "stats" | "granted">): ItemTextStat[] {
+  const plain = reading.granted.flatMap((grant): ItemTextStat[] =>
+    grant.value !== null &&
+    grant.maxValue === null &&
+    !grant.growth &&
+    !grant.scalings.length &&
+    grant.durationSeconds === null &&
+    !grant.active
+      ? [
+          {
+            key: grant.key,
+            label: grant.label,
+            value: grant.value,
+            percent: grant.percent,
+            unique: grant.unique,
+            note: grant.effect,
+          },
+        ]
+      : [],
+  )
+  return [...reading.stats, ...plain]
+}
+
+/** The stats an item answers the filters with: its fixed stats and those its effects grant. */
+export function itemFilterStats(reading: Pick<ItemReaderContent, "stats" | "granted">): Pick<ItemTextStat, "key">[] {
+  return [...reading.stats, ...reading.granted]
+}
+
 /** How many items each chip would leave on screen, given the chips already on. */
 export function itemStatFilterCounts(statLists: Pick<ItemTextStat, "key">[][], active: readonly string[]) {
   return Object.fromEntries(
@@ -380,51 +485,262 @@ interface StructuredStat {
   unit: string | null
 }
 
+export type ItemScalingSource =
+  "MAX_HEALTH" | "BONUS_HEALTH" | "PHYSICAL_ATTACK" | "BONUS_PHYSICAL_ATTACK" | "MAGIC_ATTACK" | "HERO_LEVEL"
+
+/** A stat an effect grants, as the backend stores it (ADR-033). */
+export interface ItemStatGrantData {
+  stat: string
+  value?: number | null
+  maxValue?: number | null
+  unit?: string | null
+  growth?: "LEVEL" | "STACK" | null
+  scalings?: { source: ItemScalingSource; value: number; unit?: string | null }[]
+  cap?: number | null
+  durationSeconds?: number | null
+  target?: "SELF" | "TEAM" | null
+}
+
+/** The gameplay of one effect, in the order the description writes the effects (ADR-033). */
+export interface ItemEffectGameplay {
+  key: string
+  activation?: "PASSIVE" | "ACTIVE" | null
+  unique?: boolean
+  cooldownSeconds?: number | null
+  maxStacks?: number | null
+  grants?: ItemStatGrantData[]
+}
+
+/** A stat an effect grants, ready to show next to the item's fixed stats. */
+export interface ItemGrantedStat {
+  key: ItemStatKey | null
+  label: string
+  value: number | null
+  maxValue: number | null
+  percent: boolean
+  growth: "LEVEL" | "STACK" | null
+  maxStacks: number | null
+  scalings: { source: ItemScalingSource; label: string; value: number; percent: boolean }[]
+  cap: number | null
+  durationSeconds: number | null
+  /** Nearby allies get it too. */
+  team: boolean
+  /** The name of the effect that grants it, as the description of the reader's language writes it. */
+  effect: string | null
+  /** Granted while an active is in use rather than always. */
+  active: boolean
+  /** From a unique effect: a second item with it adds nothing. */
+  unique: boolean
+}
+
+export interface ItemReaderContent extends ItemTextContent {
+  /** Stats the effects grant, apart from the fixed stats; they answer the stat filters too. */
+  granted: ItemGrantedStat[]
+}
+
 /**
  * What a reader sees for one item. Stats entered as structured data win over the description; passives always come
- * from the description, after any structured effects.
+ * from the description, after any structured effects, and carry the gameplay entered for them.
  */
 export function itemReaderContent(
-  content: { stats?: StructuredStat[] },
+  content: { stats?: StructuredStat[]; effects?: ItemEffectGameplay[] },
   text?: {
     description?: string | null
     statLabels?: Record<string, string>
     effects?: { name: string; description: string }[]
   } | null,
   locale = "vi-VN",
-): ItemTextContent {
+): ItemReaderContent {
   const english = locale.startsWith("en")
-  const parsed = parseItemDescription(text?.description, locale)
+  // Once an item has structured gameplay, its effects are the passives as written, stat passives included.
+  const structured = !!content.stats?.length || !!content.effects?.length
+  const parsed = parseItemDescription(text?.description, locale, { effectStats: !structured })
   const stats = (content.stats ?? []).map((stat): ItemTextStat => {
-    const definition = ITEM_STATS.find((candidate) => candidate.key === stat.key)
+    const definition = itemStatDefinitionByCode(stat.key)
     return {
       key: definition?.key ?? null,
       label: text?.statLabels?.[stat.key] || (english ? definition?.en : definition?.vi) || stat.key,
       value: stat.value,
-      percent: stat.unit === "PERCENT" || stat.unit === "%",
-      unique: false,
-      note: null,
+      percent: isPercent(stat.unit),
+      // The description still says whether the stat comes from a unique passive, and with which note.
+      unique: parsed.stats.find((line) => line.key && line.key === definition?.key)?.unique ?? false,
+      note: parsed.stats.find((line) => line.key && line.key === definition?.key)?.note ?? null,
     }
   })
+  // The gameplay of effect n belongs to the n-th effect the description writes (ADR-033). A translation that writes a
+  // different number of effects is matched by the code of each effect's name instead, which the Vietnamese text gives.
+  const effects = content.effects ?? []
+  const byPosition = effects.length === parsed.passives.length
+  const matched = parsed.passives.map((passive, index) =>
+    byPosition ? effects[index] : effects.find((effect) => passive.name && effect.key === effectKey(passive.name)),
+  )
+  const described = parsed.passives.map((passive, index): ItemTextPassive => {
+    const gameplay = matched[index]
+    if (!gameplay) return passive
+    return {
+      ...passive,
+      gameplay,
+      grants: (gameplay.grants ?? []).map((grant) => grantedFrom(grant, gameplay, passive, english)),
+    }
+  })
+  // An effect no passive of this text matches still grants its stats; they are listed without the effect's name.
+  const unmatched = effects
+    .filter((effect) => !matched.includes(effect))
+    .flatMap((effect) => (effect.grants ?? []).map((grant) => grantedFrom(grant, effect, null, english)))
   return {
     stats: stats.length ? stats : parsed.stats,
+    granted: [...described.flatMap((passive) => passive.grants ?? []), ...unmatched],
     passives: [
       ...(text?.effects ?? []).map((effect) => ({
         name: effect.name || null,
         text: effect.description,
         unique: false,
       })),
-      ...parsed.passives,
+      ...described,
     ],
     notes: parsed.notes,
   }
 }
 
-/** Structured stats for the editor's "fill from description" action; labels the wiki does not know are skipped. */
-export function itemStatsFromDescription(description: string | null | undefined) {
-  return parseItemDescription(description).stats.flatMap((stat) =>
-    stat.key ? [{ key: stat.key as string, value: stat.value, unit: stat.percent ? "PERCENT" : "POINT" }] : [],
+function isPercent(unit: string | null | undefined) {
+  return unit === "%" || unit === "PERCENT"
+}
+
+function grantedFrom(
+  grant: ItemStatGrantData,
+  effect: ItemEffectGameplay,
+  passive: ItemTextPassive | null,
+  english: boolean,
+): ItemGrantedStat {
+  const definition = itemStatDefinitionByCode(grant.stat)
+  return {
+    key: definition?.key ?? null,
+    label: (definition && (english ? definition.en : definition.vi)) ?? grant.stat,
+    value: grant.value ?? null,
+    maxValue: grant.maxValue ?? null,
+    percent: isPercent(grant.unit),
+    growth: grant.growth ?? null,
+    maxStacks: effect.maxStacks ?? null,
+    scalings: (grant.scalings ?? []).map((scaling) => ({
+      source: scaling.source,
+      label: SCALING_SOURCES[scaling.source]?.[english ? "en" : "vi"] ?? scaling.source,
+      value: scaling.value,
+      percent: isPercent(scaling.unit),
+    })),
+    cap: grant.cap ?? null,
+    durationSeconds: grant.durationSeconds ?? null,
+    team: grant.target === "TEAM",
+    effect: passive?.name ?? null,
+    active: effect.activation === "ACTIVE",
+    unique: effect.unique ?? passive?.unique ?? false,
+  }
+}
+
+/** The code of an effect name, as the backend keys effects: accent-free, lowercase, words joined by dashes. */
+export function effectKey(name: string) {
+  return foldSearchText(name)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
+
+export function itemStatDefinitionByCode(code: string) {
+  return ITEM_STATS.find((stat) => stat.code === code || stat.key === code)
+}
+
+/** The stats a scaling part may follow, as the descriptions name them. */
+const SCALING_SOURCES: Record<ItemScalingSource, { vi: string; en: string }> = {
+  MAX_HEALTH: { vi: "máu tối đa", en: "max HP" },
+  BONUS_HEALTH: { vi: "máu thêm", en: "bonus HP" },
+  PHYSICAL_ATTACK: { vi: "công vật lý", en: "attack damage" },
+  BONUS_PHYSICAL_ATTACK: { vi: "công vật lý thêm", en: "bonus attack damage" },
+  MAGIC_ATTACK: { vi: "công phép", en: "ability power" },
+  HERO_LEVEL: { vi: "mỗi cấp tướng", en: "per hero level" },
+}
+
+/**
+ * A granted stat's amount as the game writes it, "+32–60" or "+10%", whatever the reader's locale; null when the grant
+ * is only a scaling.
+ */
+export function formatItemGrantAmount(grant: Pick<ItemGrantedStat, "value" | "maxValue" | "percent">) {
+  if (grant.value === null) return null
+  const range = grant.maxValue !== null && grant.maxValue !== grant.value ? `–${formatGameNumber(grant.maxValue)}` : ""
+  return `+${formatGameNumber(grant.value)}${range}${grant.percent ? "%" : ""}`
+}
+
+/** What a grant scales with, as the game writes it in brackets: 3% of bonus health, 40 per hero level. */
+export function itemGrantScalings(grant: Pick<ItemGrantedStat, "scalings">) {
+  return grant.scalings.map(
+    (scaling) => `+${formatGameNumber(scaling.value)}${scaling.percent ? "%" : ""} ${scaling.label}`,
   )
+}
+
+/**
+ * The conditions of a granted stat, in reading order: how it grows, its cap, how long it lasts and who gets it. Words
+ * follow frontend/docs/QUY-UOC-VIET.md.
+ */
+export function itemGrantConditions(grant: ItemGrantedStat, locale = "vi-VN") {
+  const english = locale.startsWith("en")
+  const unit = grant.percent ? "%" : ""
+  return [
+    grant.growth === "LEVEL" ? (english ? "grows with level" : "tăng theo cấp") : null,
+    grant.growth === "STACK"
+      ? english
+        ? `per stack${grant.maxStacks ? `, up to ${grant.maxStacks} stacks` : ""}`
+        : `mỗi lần cộng dồn${grant.maxStacks ? `, tối đa ${grant.maxStacks} lần` : ""}`
+      : null,
+    grant.cap !== null
+      ? english
+        ? `max ${formatGameNumber(grant.cap)}${unit}`
+        : `tối đa ${formatGameNumber(grant.cap)}${unit}`
+      : null,
+    grant.durationSeconds !== null
+      ? english
+        ? `for ${formatGameNumber(grant.durationSeconds)} seconds`
+        : `trong ${formatGameNumber(grant.durationSeconds)} giây`
+      : null,
+    grant.team ? (english ? "also nearby allies" : "cả đồng đội lân cận") : null,
+  ].filter((part): part is string => !!part)
+}
+
+/**
+ * The effects of a description as the editor's "fill from description" action enters them: one per effect the text
+ * writes, keyed by its name, with how it is used, its cooldown and stacks, and the stat of a passive written as "+N
+ * stat". Stats granted in prose, such as a magic pierce of 32–60, are left for the editor to enter.
+ */
+export function itemEffectsFromDescription(description: string | null | undefined): ItemEffectGameplay[] {
+  const used = new Set<string>()
+  return parseItemDescription(description, "vi-VN", { effectStats: false }).passives.map((passive, index) => {
+    const facts = itemEffectFacts(passive.text)
+    const grants = passive.text.startsWith("+")
+      ? parseItemDescription(passive.text).stats.flatMap((stat): ItemStatGrantData[] => {
+          const definition = itemStatDefinition(stat.key)
+          return definition ? [{ stat: definition.code, value: stat.value, unit: stat.percent ? "%" : null }] : []
+        })
+      : []
+    const named = passive.name ?? (grants[0] && itemStatDefinitionByCode(grants[0].stat)?.vi)
+    let key = (named && effectKey(named)) || `hieu-ung-${index + 1}`
+    if (used.has(key)) key = `${key}-${index + 1}`
+    used.add(key)
+    return {
+      key,
+      activation: passive.active ? "ACTIVE" : "PASSIVE",
+      unique: passive.unique,
+      cooldownSeconds: facts.cooldownSeconds === null ? null : Number(facts.cooldownSeconds),
+      maxStacks: facts.maxStacks,
+      grants,
+    }
+  })
+}
+
+/**
+ * Structured stats for the editor's "fill from description" action, in the codes the backend stores; labels the wiki
+ * does not know are skipped.
+ */
+export function itemStatsFromDescription(description: string | null | undefined) {
+  return parseItemDescription(description, "vi-VN", { effectStats: false }).stats.flatMap((stat) => {
+    const definition = itemStatDefinition(stat.key)
+    return definition ? [{ key: definition.code, value: stat.value, unit: stat.percent ? "%" : null }] : []
+  })
 }
 
 /**
