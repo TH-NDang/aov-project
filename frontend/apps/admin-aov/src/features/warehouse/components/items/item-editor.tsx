@@ -5,6 +5,8 @@ import { ItemRowPicker } from "./item-row-picker"
 import { ItemEffectsEditor } from "./item-effects-editor"
 import { shopColumns } from "../../model/item-shop-position"
 import { WarehouseChangeHistory } from "../history/warehouse-change-history"
+import { useWarehouseRevisions } from "../../api/warehouse-api"
+import { WarehouseDraftChanges } from "../history/warehouse-draft-changes"
 import { useState } from "react"
 import {
   Clapperboard,
@@ -111,6 +113,7 @@ export function ItemEditor({
   onPublish,
   onDiscard,
   busy,
+  onOpenRevision,
 }: {
   entry: WarehouseEntry<ItemContent>
   items: WarehouseEntry<ItemContent>[]
@@ -135,7 +138,11 @@ export function ItemEditor({
   /** Throws the draft away; offered only for a draft, after asking. */
   onDiscard?: () => void
   busy: boolean
+  /** Opens another version of the item in this sheet; left out while that would lose changes not yet saved. */
+  onOpenRevision?: (revisionId: string) => void
 }) {
+  const revisions = useWarehouseRevisions("items", entry.id)
+  const [changesOpen, setChangesOpen] = useState(false)
   const wide = useIsWide()
   const [value, setValue] = useState(() => structuredClone(entry.content))
   const [patchId, setPatchId] = useState(entry.revision.effectiveFromPatchVariantId)
@@ -260,6 +267,16 @@ export function ItemEditor({
           </div>
           <SheetActions
             version={versionLabel(entry.revision.revisionNo, entry.revision.state, editing)}
+            changes={entry.revision.state === "DRAFT" ? { onOpen: () => setChangesOpen(true) } : undefined}
+            versions={
+              onOpenRevision
+                ? {
+                    current: entry.revision,
+                    rows: revisions.data?.filter((row) => row.rulesetId === entry.revision.rulesetId),
+                    onChoose: onOpenRevision,
+                  }
+                : undefined
+            }
             editing={editing}
             disabled={busy || uploading}
             closeDisabled={uploading}
@@ -340,6 +357,19 @@ export function ItemEditor({
             }
           />
         </SheetHeader>
+        {entry.revision.state === "DRAFT" && (
+          <WarehouseDraftChanges
+            open={changesOpen}
+            onOpenChange={setChangesOpen}
+            kind="items"
+            entryId={entry.id}
+            name={warehouseText(entry.content.translations, locale)?.name ?? entry.code}
+            revisionNo={entry.revision.revisionNo}
+            sourceRevisionId={entry.revision.sourceRevisionId}
+            content={entry.content}
+            locale={locale}
+          />
+        )}
         {/* The tab row sits right under the header and stays put; only the tab's content scrolls. */}
         <Tabs value={tab} onValueChange={setTab} className="min-h-0 flex-auto gap-0">
           <TabsList aria-label="Trang bị" variant="line" className={SHEET_TAB_LIST}>
@@ -672,6 +702,7 @@ export function ItemEditor({
               </section>
               <WarehouseChangeHistory
                 kind="items"
+                onOpenRevision={onOpenRevision}
                 entryId={entry.id}
                 rulesetId={entry.revision.rulesetId}
                 locale={locale}

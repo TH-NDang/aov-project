@@ -188,12 +188,19 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       else open(saved)
     })
   }
-  async function action(type: "fork" | "publish" | "discard", request?: NewDraft) {
+  /** Shows another version of the open entry: the server sends that version's own content, a draft included. */
+  async function openRevision(revisionId: string) {
+    if (!selected || revisionId === selected.revision.id) return
+    await mutation.mutateAsync(async () => {
+      open((await warehouseApi.read(kind, selected.id, revisionId)) as SecondaryEntry)
+    })
+  }
+  async function action(type: "fork" | "publish" | "discard", request?: NewDraft, target = selected!) {
     await mutation.mutateAsync(async () => {
       const saved =
         type === "fork"
-          ? await warehouseApi.fork(kind, selected!, request?.cause, request?.patchVariantId)
-          : await warehouseApi[type](kind, selected!)
+          ? await warehouseApi.fork(kind, target, request?.cause, request?.patchVariantId)
+          : await warehouseApi[type](kind, target)
       await refresh()
       // Publishing and discarding finish the work in this panel; a new draft opens for editing.
       if (type === "fork") open(saved, request?.cause === "TRANSLATION_UPDATE" ? "translations" : "mechanics")
@@ -496,7 +503,17 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
               ? (section) => open(existingDraft, section)
               : undefined
           }
-          onPublish={!creating && selected?.revision.state === "DRAFT" ? () => action("publish") : undefined}
+          // A published version with a draft in progress publishes that draft, as on the item page.
+          onPublish={
+            creating || !canPublish
+              ? undefined
+              : selected?.revision.state === "DRAFT"
+                ? () => action("publish")
+                : selected?.revision.state === "PUBLISHED" && existingDraft
+                  ? () => action("publish", undefined, existingDraft)
+                  : undefined
+          }
+          onOpenRevision={creating ? undefined : (revisionId) => void openRevision(revisionId)}
           onDiscard={!creating && selected?.revision.state === "DRAFT" ? () => action("discard") : undefined}
         />
       )}

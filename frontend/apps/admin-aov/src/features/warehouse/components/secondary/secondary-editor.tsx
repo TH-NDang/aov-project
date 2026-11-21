@@ -1,4 +1,6 @@
 import { WarehouseChangeHistory } from "../history/warehouse-change-history"
+import { useWarehouseRevisions } from "../../api/warehouse-api"
+import { WarehouseDraftChanges } from "../history/warehouse-draft-changes"
 import { useEffect, useState } from "react"
 import {
   ChartNoAxesCombined,
@@ -115,6 +117,7 @@ export function SecondaryEditor({
   enchantmentPeers = [],
   onReorderEnchantments,
   openDraftNo,
+  onOpenRevision,
 }: {
   kind: SecondaryKind
   entryId?: string
@@ -152,7 +155,11 @@ export function SecondaryEditor({
   statCatalog?: WarehouseEntry<SecondaryContent>[]
   enchantmentPeers?: WarehouseEntry<EnchantmentContent>[]
   onReorderEnchantments?: (ids: string[]) => Promise<void>
+  /** Opens another version of the entry in this sheet, as the hero page does. */
+  onOpenRevision?: (revisionId: string) => void
 }) {
+  const revisions = useWarehouseRevisions(kind, entryId)
+  const [changesOpen, setChangesOpen] = useState(false)
   const wide = useIsWide()
   const [pageEditing, setPageEditing] = useState(!readOnly && !!initialSection)
   const [tab, setTab] = useState<string>(initialSection === "context" ? "history" : "content")
@@ -365,6 +372,16 @@ export function SecondaryEditor({
           </div>
           <SheetActions
             version={isNew ? "Mới" : versionLabel(revisionNo, revisionState, editingPage)}
+            changes={!isNew && revisionState === "DRAFT" ? { onOpen: () => setChangesOpen(true) } : undefined}
+            versions={
+              !isNew && onOpenRevision && revisionId && revisionNo != null && revisionState
+                ? {
+                    current: { id: revisionId, revisionNo, state: revisionState, rulesetId },
+                    rows: revisions.data?.filter((row) => row.rulesetId === rulesetId),
+                    onChoose: onOpenRevision,
+                  }
+                : undefined
+            }
             editing={editingPage}
             disabled={busy || uploading}
             closeDisabled={busy || uploading}
@@ -416,24 +433,45 @@ export function SecondaryEditor({
             }
             save={!readOnly && (isNew || dirty) ? { label: "Lưu nháp", busy, onClick: save } : undefined}
             publish={
-              !readOnly && canPublish && onPublish
-                ? {
-                    disabled:
-                      dirty ||
-                      (!patchId && !archivedWithoutPatch && !baselineWithoutPatch) ||
-                      visibleMissing.length > 0,
-                    quiet: dirty,
-                    title: dirty
-                      ? "Lưu nháp trước khi xuất bản"
-                      : visibleMissing.length
-                        ? "Cần hoàn thiện trước khi xuất bản"
-                        : undefined,
-                    onClick: () => void act(onPublish),
-                  }
+              canPublish && onPublish
+                ? revisionState !== "PUBLISHED"
+                  ? {
+                      disabled:
+                        dirty ||
+                        (!patchId && !archivedWithoutPatch && !baselineWithoutPatch) ||
+                        visibleMissing.length > 0,
+                      quiet: dirty,
+                      title: dirty
+                        ? "Lưu nháp trước khi xuất bản"
+                        : visibleMissing.length
+                          ? "Cần hoàn thiện trước khi xuất bản"
+                          : undefined,
+                      onClick: () => void act(onPublish),
+                    }
+                  : // A published version with a draft in progress publishes that draft from here, as items do, so the
+                    // draft does not have to be opened first to find the button.
+                    {
+                      disabled: false,
+                      title: openDraftNo ? `Xuất bản bản nháp #${openDraftNo}` : undefined,
+                      onClick: () => void act(onPublish),
+                    }
                 : undefined
             }
           />
         </SheetHeader>
+        {!isNew && entryId && revisionState === "DRAFT" && revisionNo != null && (
+          <WarehouseDraftChanges
+            open={changesOpen}
+            onOpenChange={setChangesOpen}
+            kind={kind}
+            entryId={entryId}
+            name={warehouseText(initialContent.translations, locale)?.name ?? initialCode ?? kindName}
+            revisionNo={revisionNo}
+            sourceRevisionId={sourceRevisionId}
+            content={initialContent}
+            locale={locale}
+          />
+        )}
         {/* The tab row sits right under the header and stays put; only the tab's content scrolls. */}
         <Tabs value={tab} onValueChange={setTab} className="min-h-0 flex-auto gap-0">
           <TabsList aria-label={kindName} variant="line" className={SHEET_TAB_LIST}>
@@ -810,6 +848,7 @@ export function SecondaryEditor({
               {hasHistory && (
                 <WarehouseChangeHistory
                   kind={kind}
+                  onOpenRevision={onOpenRevision}
                   entryId={entryId!}
                   rulesetId={rulesetId}
                   locale={locale}

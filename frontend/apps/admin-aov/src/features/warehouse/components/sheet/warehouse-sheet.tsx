@@ -1,5 +1,15 @@
 import { cloneElement, isValidElement, useState, type ReactElement, type ReactNode } from "react"
-import { Archive, Check, ChevronDown, Copy, LoaderCircle, MoreHorizontal, Pencil, X } from "lucide-react"
+import {
+  Archive,
+  Check,
+  ChevronDown,
+  Copy,
+  GitCompareArrows,
+  LoaderCircle,
+  MoreHorizontal,
+  Pencil,
+  X,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -14,6 +24,7 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { usePublicationOverview } from "../../../publishing/api/publication-overview"
 import { confirmAction } from "@/components/confirm-dialog"
+import { VersionMenuItem, VersionSheet, type VersionRow } from "@/components/version-sheet"
 import { AdminRichTextPreview } from "../../../terminology/rich-text-field"
 import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"
 
@@ -95,6 +106,8 @@ export function SheetActions({
   onClose,
   closeDisabled,
   language,
+  versions,
+  changes,
 }: {
   version: string
   editing: boolean
@@ -110,8 +123,16 @@ export function SheetActions({
   closeDisabled?: boolean
   /** The reading language: a `LanguagePicker variant="menu"`, placed as a row of the ⋯ menu and the sheet it opens. */
   language?: ReactNode
+  /**
+   * Every version of the entry, as the hero page lists them: the version on screen heads the ⋯ menu as a row that opens
+   * the list, and choosing one shows that version. Without it the menu names the version as a plain label.
+   */
+  versions?: { current: VersionRow; rows: VersionRow[] | undefined; onChoose: (revisionId: string) => void }
+  /** On a draft: a row of the ⋯ menu that opens what the draft changes, as on the hero page. */
+  changes?: { onOpen: () => void }
 }) {
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [versionsOpen, setVersionsOpen] = useState(false)
   const picker = isValidElement(language) ? (language as ReactElement<Record<string, unknown>>) : null
   return (
     <div className="ml-auto flex shrink-0 items-center justify-end gap-1.5">
@@ -165,8 +186,24 @@ export function SheetActions({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
             {/* The version on screen heads the menu, so the header keeps its controls alone. */}
-            {version && (
-              <DropdownMenuLabel className={`type-meta ${editing ? "text-primary" : ""}`}>{version}</DropdownMenuLabel>
+            {versions ? (
+              <VersionMenuItem
+                revision={versions.current}
+                disabled={disabled || editing}
+                onOpen={() => setVersionsOpen(true)}
+              />
+            ) : (
+              version && (
+                <DropdownMenuLabel className={`type-meta ${editing ? "text-primary" : ""}`}>
+                  {version}
+                </DropdownMenuLabel>
+              )
+            )}
+            {changes && (
+              <DropdownMenuItem className="gap-2" disabled={disabled} onSelect={changes.onOpen}>
+                <GitCompareArrows />
+                Thay đổi trong bản nháp
+              </DropdownMenuItem>
             )}
             {version && (language || discard) && <DropdownMenuSeparator />}
             {picker && cloneElement(picker, { part: "item", onOpen: () => setLanguageOpen(true) })}
@@ -191,7 +228,18 @@ export function SheetActions({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-      {/* The language sheet lives outside the menu, which closes as the sheet opens. */}
+      {versions && (
+        <VersionSheet
+          open={versionsOpen}
+          onOpenChange={setVersionsOpen}
+          revision={versions.current}
+          revisions={versions.rows}
+          selectedId={versions.current.id}
+          disabled={disabled || editing}
+          onChoose={versions.onChoose}
+        />
+      )}
+      {/* The language and version sheets live outside the menu, which closes as a sheet opens. */}
       {picker && cloneElement(picker, { part: "sheet", open: languageOpen, onOpenChange: setLanguageOpen })}
       {/* A sheet rising from the bottom on a phone closes by a tap above it or a pull down, so it shows no X. */}
       <span aria-hidden className="mx-1 h-5 w-px bg-border group-data-[side=bottom]/sheet:hidden" />

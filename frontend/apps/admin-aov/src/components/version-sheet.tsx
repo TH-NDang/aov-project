@@ -2,21 +2,28 @@ import { History } from "lucide-react"
 import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { cn } from "@aov/ui/lib/utils"
-import type { Revision, Ruleset } from "@/lib/hero-types"
 
-export const REVISION_STATES: Record<Revision["state"], string> = {
+/** What the version list reads of a version: heroes and the four warehouse catalogs share it. */
+export interface VersionRow {
+  id: string
+  revisionNo: number
+  state: "DRAFT" | "PUBLISHED" | "DISCARDED"
+  rulesetId: string
+}
+
+export const VERSION_STATES: Record<VersionRow["state"], string> = {
   DRAFT: "Bản nháp",
   PUBLISHED: "Đã xuất bản",
   DISCARDED: "Đã hủy",
 }
 
-/** The row of the hero's ⋯ menu that names the version on screen and opens the list of versions. */
-export function HeroVersionMenuItem({
+/** The row of a ⋯ menu that names the version on screen and opens the list of versions. */
+export function VersionMenuItem({
   revision,
   disabled,
   onOpen,
 }: {
-  revision: Revision
+  revision: VersionRow
   disabled?: boolean
   onOpen: () => void
 }) {
@@ -30,16 +37,16 @@ export function HeroVersionMenuItem({
     >
       <History />
       <span className="min-w-0 flex-1 truncate">Phiên bản #{revision.revisionNo}</span>
-      <span className="type-meta shrink-0">{REVISION_STATES[revision.state]}</span>
+      <span className="type-meta shrink-0">{VERSION_STATES[revision.state]}</span>
     </DropdownMenuItem>
   )
 }
 
 /**
- * Every version of the hero, newest first as the server lists them, one large row each. A sheet rather than a menu, so
+ * Every version of an entry, newest first as the server lists them, one large row each. A sheet rather than a menu, so
  * it reads well on a phone, where it rises from the bottom.
  */
-export function HeroVersionSheet({
+export function VersionSheet({
   open,
   onOpenChange,
   revision,
@@ -51,9 +58,10 @@ export function HeroVersionSheet({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  revision: Revision
-  revisions: Revision[] | undefined
-  rulesets: Ruleset[] | undefined
+  revision: VersionRow
+  revisions: VersionRow[] | undefined
+  /** Named when the versions span several rulesets, so a row says which one it belongs to. */
+  rulesets?: { id: string; code: string }[]
   selectedId: string
   disabled: boolean
   onChoose: (revisionId: string) => void
@@ -91,7 +99,7 @@ export function HeroVersionSheet({
                   #{row.revisionNo}
                 </span>
                 <span className={cn("type-body min-w-0 flex-1 truncate", checked && "font-semibold text-primary")}>
-                  {REVISION_STATES[row.state]}
+                  {VERSION_STATES[row.state]}
                 </span>
                 {manyRulesets && (
                   <span className="type-meta shrink-0">
