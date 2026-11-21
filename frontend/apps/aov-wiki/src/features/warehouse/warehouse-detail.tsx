@@ -29,7 +29,7 @@ import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { arcanaTitle } from "./warehouse-arcana"
 import { romanTier } from "./warehouse-parts"
-import { spellCooldownText } from "./warehouse-spells"
+import { SpellChargePips, spellCooldownText, spellKeepsCharges } from "./warehouse-spells"
 import {
   arcanaDetailDescription,
   warehouseName,
@@ -153,40 +153,31 @@ function DetailContent({
       ? [
           {
             key: "cooldown",
-            label: ui("Hồi chiêu", "Cooldown"),
+            // With charges, the cooldown is only the pause between two casts; each charge comes back on its own.
+            label: spellKeepsCharges(entry.content)
+              ? ui("Giữa hai lần dùng", "Between casts")
+              : ui("Hồi chiêu", "Cooldown"),
             value: spellCooldownText(entry.content.cooldownSeconds, scope.locale),
           },
-          ...(entry.content.unlockType === "LEVEL" && entry.content.unlockLevel != null
-            ? [
-                {
-                  key: "unlock",
-                  label: ui("Mở khóa", "Unlocks"),
-                  value: ui(`Cấp ${entry.content.unlockLevel}`, `Level ${entry.content.unlockLevel}`),
-                },
-              ]
-            : entry.content.unlockType === "ACCOUNT_CREATION"
-              ? [
-                  {
-                    key: "unlock",
-                    label: ui("Mở khóa", "Unlocks"),
-                    value: ui("Có sẵn từ đầu", "Available from the start"),
-                  },
-                ]
-              : []),
-          ...(entry.content.maxCharges != null
+          ...(spellKeepsCharges(entry.content) && entry.content.maxCharges
             ? [
                 {
                   key: "charges",
-                  label: ui("Số lần tích trữ", "Maximum charges"),
-                  value: String(entry.content.maxCharges),
+                  label: ui("Tích trữ", "Charges"),
+                  value: (
+                    <span className="wiki-spell-charge-fact">
+                      <SpellChargePips count={entry.content.maxCharges} />
+                      {ui(`${entry.content.maxCharges} lần`, `${entry.content.maxCharges}`)}
+                    </span>
+                  ),
                 },
               ]
             : []),
-          ...(entry.content.chargeRechargeSeconds != null
+          ...(spellKeepsCharges(entry.content) && entry.content.chargeRechargeSeconds != null
             ? [
                 {
                   key: "recharge",
-                  label: ui("Thời gian tích một lần", "Recharge time"),
+                  label: ui("Mỗi lần tích hồi sau", "Each charge returns in"),
                   value: spellCooldownText(entry.content.chargeRechargeSeconds, scope.locale),
                 },
               ]

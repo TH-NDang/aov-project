@@ -201,9 +201,10 @@
   font: var(--wiki-type-meta);
   transition: opacity 360ms ease;
 }
-.wiki-arcana-scene-caption > span + span::before {
+/* The dot closes the fact before it, so a wrapped line never starts with one. */
+.wiki-arcana-scene-caption > :not(:last-child)::after {
   content: "·";
-  margin-right: 10px;
+  margin-left: 10px;
 }
 .wiki-arcana-scene-caption b {
   color: var(--aov-accent);

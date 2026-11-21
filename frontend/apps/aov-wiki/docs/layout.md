@@ -169,9 +169,16 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   game: viền vàng kép có vạch chia quay chậm, mỗi màu một phần ba (Đỏ trên, Tím dưới phải, Xanh dưới trái; 6 ô vòng
   ngoài rồi 4 ô vòng trong), ba nan chia có hạt kim cương ở đầu, quầng sáng mỗi phần ba lấy từ ảnh viên ngọc, và lõi
   giữa ghi cấp của bảng (tổng bậc các viên, 90 khi đủ 30 viên bậc III). Ở danh sách nó lần lượt đổi giữa ba bộ mẫu (Công
-  vật lý, Phép, Trung tính) kèm hai chỉ số lớn nhất; ở Lắp ngọc có bảng đang lắp thì vẽ đúng bảng đó. Phụ trợ dùng ảnh
-  tròn,
-  xếp lớp ảnh khi có nhiều trạng thái; mục cũ thu gọn.
+  vật lý, Phép, Trung tính) kèm hai chỉ số lớn nhất; ở Lắp ngọc có bảng đang lắp thì vẽ đúng bảng đó.
+- Phụ trợ dùng ảnh tròn, xếp lớp ảnh khi có nhiều trạng thái; mục cũ thu gọn. Hồi chiêu ghi theo giây như game; từ 60
+  giây trở lên có thêm số phút gần bằng ("90 giây ≈ 1.5 phút"), ở thẻ, khung chi tiết và phần trưng bày. Phép tích trữ
+  (như Trừng trị) ghi hồi chiêu là "giữa hai lần dùng" và có một hạt vàng cho mỗi lần tích trữ, kèm "Tích trữ N lần ·
+  mỗi lần hồi N giây"; khung chi tiết tách thành "Giữa hai lần dùng", "Tích trữ" (có các hạt) và "Mỗi lần tích hồi sau",
+  chú thích phần trưng bày ghi thêm "Tích trữ N lần". Mô tả hiện đầy đủ (không cắt dòng).
+  Cấp mở khóa vẫn nằm trong dữ liệu nhưng không hiện ở trang công khai (thẻ, khung chi tiết, phần trưng bày). Phần trưng
+  bày đầu trang là "đồng hồ hồi chiêu": một phép lớn ở giữa có lớp tối quét theo chiều kim đồng hồ như khi phép đang hồi
+  trong trận rồi sáng lên khi sẵn sàng, các phép khác nằm trên một vòng quay chậm quanh nó; phép ở giữa đổi sau vài giây,
+  chú thích ghi tên và hồi chiêu. Bốn phần của kho đều có phần trưng bày riêng.
 - Bảng ngọc có nút chuyển "Danh sách / Lắp ngọc" (`view=page`). Lắp ngọc giống màn bảng ngọc trong game: ba hàng
   Đỏ, Tím, Xanh, mỗi hàng 10 ô, chỉ dùng ngọc bậc cao nhất. Bảng ô là một "sân khấu" tối có ánh vàng ở góc; mỗi hàng
   được thắp bằng chính ảnh viên ngọc của màu đó (phóng to, làm nhòe thành quầng sáng bên trái, mờ và nghiêng ở mép

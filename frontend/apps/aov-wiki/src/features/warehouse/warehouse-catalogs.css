@@ -1010,15 +1010,38 @@
   content: "·";
   margin-left: 2px;
 }
-/* What the talent does, kept to three lines; the whole text is one press away. */
+/* What the talent does, whole: the page holds a dozen talents, so nothing needs cutting short. */
 .wiki-spell-card-description {
   font: var(--wiki-type-body);
-  display: -webkit-box;
-  overflow: hidden;
   margin-top: 4px;
   color: var(--aov-text-soft);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+}
+/* A talent that keeps charges: its pips, then how many it holds and how often one comes back. */
+.wiki-spell-card-charges,
+.wiki-spell-charge-fact {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.wiki-spell-card-charges {
+  font: var(--wiki-type-meta);
+  margin-top: 2px;
+  color: var(--aov-accent-strong);
+}
+/* One gilded pip a charge, a small lit stone. */
+.wiki-spell-pips {
+  display: inline-flex;
+  flex: none;
+  gap: 3px;
+}
+.wiki-spell-pips > i {
+  width: 10px;
+  height: 10px;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 80%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--aov-wiki-gold-bright), var(--aov-accent) 70%);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--aov-accent) 55%, transparent);
 }
 
 /* Rows and cards come up as they scroll into view, in browsers that can drive an animation from scrolling. */

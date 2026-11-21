@@ -1,10 +1,10 @@
 import { ArcanaShowcase } from "./warehouse-showcase-arcana"
+import { SpellShowcase } from "./warehouse-showcase-spells"
 import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
 import { PublishedWarehouseView } from "./warehouse-view"
 import { WarehouseHeading } from "./warehouse-heading"
-import { ShowcasePieces, WarehouseShowcase, showcaseImages } from "./warehouse-showcase"
 import { EnchantmentShowcase } from "./warehouse-showcase-enchantments"
 import { ItemShowcase } from "./warehouse-showcase-items"
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
@@ -60,10 +60,6 @@ export default function WarehousePage() {
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
   const entries = catalog.data ?? NO_ENTRIES
   const groups = metadata.data ?? []
-  const showcase = useMemo(
-    () => (kind === "enchantments" || kind === "items" || kind === "arcana" ? [] : showcaseImages(entries)),
-    [entries, kind],
-  )
   const filtered = useMemo(
     () => entries.filter((entry) => matchesWarehouseSearch(entry, search, scope.locale)),
     [entries, search, scope.locale],
@@ -225,7 +221,7 @@ export default function WarehousePage() {
             ) : kind === "arcana" ? (
               <ArcanaShowcase intro={intro} entries={entries} params={params} />
             ) : (
-              <WarehouseShowcase {...intro} scene={<ShowcasePieces images={showcase} wide={intro.wide} />} />
+              <SpellShowcase intro={intro} entries={entries} />
             )
           }
         />

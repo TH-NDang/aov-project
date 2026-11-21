@@ -27,7 +27,7 @@ const ABOUT: Record<WarehouseKind, { tagline: [string, string]; lead: [string, s
   },
   spells: {
     tagline: ["Một phép, đúng lúc", "One spell, at the right moment"],
-    lead: ["Hồi chiêu, cấp mở và tác dụng của từng phép bổ trợ.", "Cooldown, unlock level and effect of each talent."],
+    lead: ["Hồi chiêu và tác dụng của từng phép bổ trợ.", "Cooldown and effect of each talent."],
     unit: ["phụ trợ", "talents"],
   },
   enchantments: {
