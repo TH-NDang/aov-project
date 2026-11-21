@@ -138,7 +138,7 @@ export function CreateRegion({ onDone }: { onDone: (regionId: string) => void })
       <fieldset disabled={busy || !draft.ready || draft.invalid} className="space-y-4">
         <label className="grid gap-2 text-sm">
           Mã thị trường
-          <Input {...form.register("code")} required pattern="[A-Z][A-Z0-9-]{1,15}" maxLength={16} placeholder="VN" />
+          <Input {...form.register("code")} required pattern="[A-Z][A-Z0-9\-]{1,15}" maxLength={16} placeholder="VN" />
         </label>
         <label className="grid gap-2 text-sm">
           Tên thị trường
