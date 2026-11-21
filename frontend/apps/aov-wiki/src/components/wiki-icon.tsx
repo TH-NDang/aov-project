@@ -115,6 +115,7 @@ const PATHS = {
   rows: <path d="M4 7h16M4 12h16M4 17h16" />,
   copy: <path d="M9 9h10v11H9zM6 15H5V4h10v1" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
   share: <path d="M4 13v6h16v-6M12 3v12M7.5 7.5 12 3l4.5 4.5" />,
   /** A broom, tilted as if sweeping: handle, binding, a fanned head with bristles. Clears without deleting. */
   broom: (

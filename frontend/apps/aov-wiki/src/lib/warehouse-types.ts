@@ -96,8 +96,14 @@ export function warehouseImage(entry: WarehouseEntry, assetId = entry.content.ic
 
 export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, locale = "vi-VN") {
   const text = warehouseText(entry.content.translations, locale)
+  // The stats are found by their shared names in both languages, so either language's word for life steal finds them.
+  const stats = Array.isArray(entry.content.stats) ? (entry.content.stats as { key: string }[]) : []
+  const statNames = stats.flatMap(({ key }) => {
+    const shared = itemStatDefinitionByCode(key)
+    return shared ? [shared.vi, shared.en] : []
+  })
   const haystack = foldSearchText(
-    `${warehouseName(entry, locale)} ${entry.code} ${text?.summary ?? ""} ${text?.description ?? ""}`,
+    `${warehouseName(entry, locale)} ${entry.code} ${text?.summary ?? ""} ${text?.description ?? ""} ${statNames.join(" ")}`,
   )
   return foldSearchText(query)
     .trim()

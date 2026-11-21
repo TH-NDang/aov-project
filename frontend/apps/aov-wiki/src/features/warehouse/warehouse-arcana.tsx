@@ -4,6 +4,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import {
   ARCANA_COLORS,
   ARCANA_FAMILIES,
+  arcanaChosenCodes,
   arcanaFilters,
   arcanaRows,
   type ArcanaColor,
@@ -45,6 +46,8 @@ export function arcanaTitle(entry: WarehouseArcana, locale: string) {
 
 type Row = { entry: WarehouseArcana; family: ArcanaFamily }
 
+const NONE: ReadonlySet<string> = new Set()
+
 /**
  * One arcana as its stats, one to a line with the figure at the end. Its name only lists those same stats, so the row
  * leaves it to the reader's screen reader and the detail panel.
@@ -52,38 +55,69 @@ type Row = { entry: WarehouseArcana; family: ArcanaFamily }
 function ArcanaRow({
   entry,
   pieces,
-  chosenStat,
+  chosen,
+  dimmed,
   selected,
   onOpen,
 }: {
   entry: WarehouseArcana
   pieces: Pieces
-  chosenStat: string
+  chosen: ReadonlySet<string>
+  dimmed: boolean
   selected: boolean
   onOpen: (entry: WarehouseEntry, button: HTMLButtonElement) => void
 }) {
   const { locale } = useWikiContext()
-  const text = warehouseText(entry.content.translations, locale)
   return (
     <button
       type="button"
       className="wiki-arcana-row arcana-card"
       aria-pressed={selected}
+      data-dimmed={(dimmed && !selected) || undefined}
       aria-label={wikiText(locale, `Xem ${warehouseName(entry, locale)}`, `View ${warehouseName(entry, locale)}`)}
       onClick={(event) => onOpen(entry, event.currentTarget)}
     >
       <WarehouseArtwork entry={entry} kind="arcana" />
-      <span className="wiki-arcana-row-stats" data-comparing={chosenStat ? "" : undefined}>
-        {entry.content.stats.map((stat) => (
-          <span key={stat.key} data-chosen={stat.key === chosenStat || undefined}>
-            <span>{warehouseStatLabel(stat.key, text, locale)}</span>
-            <b>{warehouseStatValue({ ...stat, value: stat.value * pieces }, locale)}</b>
-          </span>
-        ))}
-        {!entry.content.stats.length && <span>{wikiText(locale, "Chưa có chỉ số", "No stats recorded")}</span>}
-      </span>
+      <ArcanaStatLines entry={entry} pieces={pieces} chosen={chosen} />
     </button>
   )
+}
+
+/** An arcana's stats, one to a line with the figure at the end, for one piece or several. */
+export function ArcanaStatLines({
+  entry,
+  pieces = 1,
+  chosen = NONE,
+}: {
+  entry: WarehouseArcana
+  pieces?: number
+  /** The stat codes the reader filtered on: those lines stay bright and the others step back. */
+  chosen?: ReadonlySet<string>
+}) {
+  const { locale } = useWikiContext()
+  const text = warehouseText(entry.content.translations, locale)
+  return (
+    <span className="wiki-arcana-row-stats" data-comparing={chosen.size ? "" : undefined}>
+      {entry.content.stats.map((stat) => (
+        <span key={stat.key} data-chosen={chosen.has(stat.key) || undefined}>
+          <span>{warehouseStatLabel(stat.key, text, locale)}</span>
+          <b>{warehouseStatValue({ ...stat, value: stat.value * pieces }, locale)}</b>
+        </span>
+      ))}
+      {!entry.content.stats.length && <span>{wikiText(locale, "Chưa có chỉ số", "No stats recorded")}</span>}
+    </span>
+  )
+}
+
+/** An arcana named by its stats in the shared stat names, as its rows show them, in the reader's language. */
+export function arcanaStatName(entry: WarehouseArcana, locale: string) {
+  const text = warehouseText(entry.content.translations, locale)
+  const names = entry.content.stats.map((stat) => warehouseStatLabel(stat.key, text, locale))
+  return names.length ? names.join(" / ") : arcanaTitle(entry, locale)
+}
+
+export function arcanaFamilyName(family: ArcanaFamily, locale: string) {
+  return wikiText(locale, ...FAMILY_NAMES[family])
 }
 
 /**
@@ -93,19 +127,19 @@ function ArcanaRow({
 function ArcanaTier({
   rows,
   color,
-  grouped,
   pieces,
-  chosenStat,
+  chosen,
+  matches,
   allEntries,
   selectedId,
   onOpen,
 }: {
   rows: Row[]
   color: string
-  /** Label the stat families inside a color; a filtered list is short enough without them. */
-  grouped: boolean
   pieces: Pieces
-  chosenStat: string
+  chosen: ReadonlySet<string>
+  /** The arcana a search or stat filter matches; the others are dimmed. Null when nothing narrows the list. */
+  matches: ReadonlySet<string> | null
   allEntries: PublishedWarehouseRecord[]
   selectedId: string | null
   onOpen: (entry: WarehouseEntry, button: HTMLButtonElement) => void
@@ -129,13 +163,11 @@ function ArcanaTier({
           key,
           title: wikiText(locale, `Ngọc ${arcanaColorName(key, locale)}`, `${arcanaColorName(key, locale)} arcana`),
           art: <ArcanaColorArt color={key} entries={allEntries} />,
-          groups: grouped
-            ? ARCANA_FAMILIES.map((member) => ({
-                key: member,
-                label: family(member),
-                rows: members.filter((row) => row.family === member),
-              }))
-            : [{ key: "all", label: "", rows: members }],
+          groups: ARCANA_FAMILIES.map((member) => ({
+            key: member,
+            label: family(member),
+            rows: members.filter((row) => row.family === member),
+          })),
         }
       })
   const shown = columns
@@ -164,7 +196,8 @@ function ArcanaTier({
                     key={entry.id}
                     entry={entry}
                     pieces={pieces}
-                    chosenStat={chosenStat}
+                    chosen={chosen}
+                    dimmed={!!matches && !matches.has(entry.id)}
                     selected={entry.id === selectedId}
                     onOpen={onOpen}
                   />
@@ -209,6 +242,7 @@ export function ArcanaCatalog({
   searching,
   selectedId,
   onSelect,
+  onFilters,
 }: {
   /** Entries left by the page search. */
   entries: PublishedWarehouseRecord[]
@@ -218,17 +252,23 @@ export function ArcanaCatalog({
   searching: boolean
   selectedId: string | null
   onSelect: (entry: WarehouseEntry, button?: HTMLButtonElement) => void
+  onFilters: (filters: Record<string, string | null>) => void
 }) {
   const { locale } = useWikiContext()
   const filters = arcanaFilters(params, group)
-  const rows = arcanaRows(entries, filters, locale)
+  // As on the item board, a search or a stat filter leaves every arcana in its place and dims the ones it does not
+  // match, so the columns never jump; only the color filter takes arcana off the page.
+  const rows = arcanaRows(allEntries, { ...filters, stats: [] }, locale)
+  const narrowed = searching || filters.stats.length > 0
+  const matches = narrowed ? new Set(arcanaRows(entries, filters, locale).map(({ entry }) => entry.id)) : null
   const [top, ...lower] = [...new Set(rows.map(({ entry }) => entry.content.tier))]
-  const [pieces, setPieces] = useState<Pieces>(1)
+  // Kept in the address, so it stays as the reader changes filters or shares the link.
+  const pieces: Pieces = params.get("pieces") === String(PIECES_PER_COLOR) ? PIECES_PER_COLOR : 1
   // What the reader did with the lower tiers by hand; untouched, they follow the filters and the open entry.
   const [lowerChosen, setLowerChosen] = useState<boolean>()
-  const narrowed = searching || !!filters.stat
+  const chosen = arcanaChosenCodes(filters.stats)
   const selectedTier = rows.find(({ entry }) => entry.id === selectedId)?.entry.content.tier
-  if (!rows.length) return <EmptyGroup />
+  if (!rows.length || matches?.size === 0) return <EmptyGroup />
 
   const tierTitle = (tier: number) =>
     ARCANA_COLORS.some((color) => color === filters.color)
@@ -239,15 +279,20 @@ export function ArcanaCatalog({
     <ArcanaTier
       rows={inTier(tier)}
       color={filters.color}
-      grouped={!searching && !filters.stat}
       pieces={pieces}
-      chosenStat={filters.stat}
+      chosen={chosen}
+      matches={matches}
       allEntries={allEntries}
       selectedId={selectedId}
       onOpen={onSelect}
     />
   )
-  const lowerOpen = lowerChosen ?? (narrowed || (selectedTier !== undefined && lower.includes(selectedTier)))
+  // The lower tiers stay folded while searching, as they are rarely what the reader wants; their line says how many
+  // arcana in them match. They open by themselves only for the open entry.
+  const lowerMatches = matches
+    ? rows.filter(({ entry }) => lower.includes(entry.content.tier) && matches.has(entry.id)).length
+    : 0
+  const lowerOpen = lowerChosen ?? (selectedTier !== undefined && lower.includes(selectedTier))
   const lowerNames = [...lower].reverse().map(romanTier)
   return (
     <div className="wiki-arcana">
@@ -256,14 +301,22 @@ export function ArcanaCatalog({
         <GroupHeading
           title={tierTitle(top)}
           count={inTier(top).length}
-          aside={<PiecesSwitch pieces={pieces} onChange={setPieces} />}
+          aside={
+            <PiecesSwitch
+              pieces={pieces}
+              onChange={(count) => onFilters({ pieces: count === 1 ? null : String(count) })}
+            />
+          }
         />
         {body(top)}
       </section>
       {lower.length > 0 && (
         // Lower tiers only stand in until a player owns the top one: one quiet line until asked for.
         <FoldedGroup
-          title={wikiText(locale, `Ngọc bậc ${lowerNames.join(" và ")}`, `Tier ${lowerNames.join(" and ")} arcana`)}
+          title={
+            wikiText(locale, `Ngọc bậc ${lowerNames.join(" và ")}`, `Tier ${lowerNames.join(" and ")} arcana`) +
+            (lowerMatches ? wikiText(locale, ` · ${lowerMatches} khớp`, ` · ${lowerMatches} match`) : "")
+          }
           count={lower.reduce((total, tier) => total + inTier(tier).length, 0)}
           open={lowerOpen}
           onToggle={() => setLowerChosen(!lowerOpen)}

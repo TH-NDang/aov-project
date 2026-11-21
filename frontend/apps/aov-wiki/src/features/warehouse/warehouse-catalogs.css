@@ -630,6 +630,17 @@
   text-align: left;
   transition: var(--wiki-entry-transition);
 }
+/* An arcana a search or stat filter does not match stays in its place, dimmed as on the item board. */
+.wiki-arcana-row[data-dimmed] {
+  opacity: 0.35;
+  filter: saturate(0.5);
+}
+@media (hover: hover) {
+  .wiki-arcana-row[data-dimmed]:hover {
+    opacity: 1;
+    filter: none;
+  }
+}
 /* The stats are the row: one to a line, the name of the stat on the left and its figure lined up on the right. */
 .wiki-arcana-row-stats {
   font: var(--wiki-type-category);

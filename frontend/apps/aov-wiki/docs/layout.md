@@ -155,13 +155,30 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   có đủ các chỉ số đó, mỗi chip có số món sẽ còn lại và chip không còn kết quả được ẩn. Trên wide chip nằm thành một hàng
   riêng dưới thanh công cụ, trên compact nằm trong nút Lọc. Sơ đồ làm mờ món không khớp nhưng giữ bố cục, Danh sách ẩn
   hẳn.
-- Phù hiệu có màu/icon từng hệ, đường nối liên tục từ biểu tượng hệ qua I–III. Bảng ngọc lọc theo màu và chỉ số, không
-  có bộ lọc bậc; mỗi bậc chia cột theo màu (hoặc theo nhóm chỉ số khi đã chọn một màu). Mỗi hàng ngọc là các chỉ số của
-  nó, mỗi chỉ số một dòng, tên chỉ số lấy từ danh sách chỉ số chung, con số canh phải; tên ngọc chỉ hiện ở chi tiết. Đầu
-  bậc cao nhất có nút "1 viên / 10 viên" (10 viên là lắp kín một màu). Khi lọc một chỉ số, ngọc xếp theo chỉ số đó từ
-  cao xuống và chỉ số đó sáng hơn. Bậc cao nhất mở sẵn; các bậc dưới gộp thành một dòng "Ngọc bậc I và II" thu gọn, mở
+- Phù hiệu có màu/icon từng hệ, đường nối liên tục từ biểu tượng hệ qua I–III. Bảng ngọc tìm và lọc như Trang bị: ô tìm
+  kiếm tìm cả tên chỉ số (cả tiếng Việt lẫn tiếng Anh) và ghi số ngọc còn lại; nút "Chỉ số" (trên compact nằm trong nút
+  Lọc) dùng chung các nhóm chỉ số của Trang bị (`stats=`), chọn được nhiều nhóm, mỗi nhóm có số ngọc sẽ còn lại, và các
+  nhóm đã chọn hiện thành chip dưới thanh công cụ; dưới nữa là các chip màu. Không có bộ lọc bậc. Mỗi bậc chia cột theo
+  màu (hoặc theo nhóm chỉ số khi đã chọn một màu). Mỗi hàng ngọc là các chỉ số của nó, mỗi chỉ số một dòng, tên chỉ số
+  lấy từ danh sách chỉ số chung, con số canh phải; tên ngọc chỉ hiện ở chi tiết. Đầu bậc cao nhất có nút "1 viên / 10
+  viên" (10 viên là lắp kín một màu). Như sơ đồ Trang bị, tìm kiếm và lọc chỉ số không ẩn ngọc mà làm mờ những viên không
+  khớp (độ đậm 35%, rê chuột vào thì rõ lại), nên các cột giữ nguyên chỗ; chỉ bộ lọc màu mới bỏ ngọc khỏi trang. Chỉ số
+  thuộc những nhóm đã chọn sáng hơn. Khi tìm, phần bậc thấp vẫn thu gọn và dòng của nó ghi số viên khớp. Bậc cao nhất mở sẵn; các bậc dưới gộp thành một dòng "Ngọc bậc I và II" thu gọn, mở
   ra có một câu giải thích. Cột hẹp (cạnh khung chi tiết) bỏ hình ngọc để giữ chỗ cho chỉ số. Phụ trợ dùng ảnh tròn,
   xếp lớp ảnh khi có nhiều trạng thái; mục cũ thu gọn.
+- Bảng ngọc có nút chuyển "Danh sách / Lắp ngọc" (`view=page`). Lắp ngọc giống màn bảng ngọc trong game: ba hàng
+  Đỏ, Tím, Xanh, mỗi hàng 10 ô, chỉ dùng ngọc bậc cao nhất. Bấm một viên trong danh sách bên dưới để lắp vào ô trống của
+  màu đang chọn; mỗi viên có nút bớt, thêm và "Lắp kín" (lắp vào mọi ô còn trống). Mỗi hàng gom các viên giống nhau
+  thành một nhóm rộng theo số viên, ghi hình, tên (ghép từ tên chỉ số chung) và "×số", vạch ngắn ở mép dưới chia từng
+  ô; nhóm hẹp bỏ tên trước rồi bỏ hình, số "×N" thì luôn còn. Rê chuột vào nhóm hiện tooltip có tên, số viên và chỉ số
+  các viên đó cộng vào bảng (tooltip không mở khi chạm, kể cả khi DevTools giả lập điện thoại). Trên màn hẹp mỗi nhóm
+  một dòng để luôn đọc được tên. Bấm một nhóm thì danh sách chuyển sang màu đó, cuộn tới viên đó và làm nó sáng lên một
+  lúc để chỉnh số viên. Bấm phần "còn N ô" thì chọn màu đó. Màu vừa đủ 10 viên thì danh sách tự chuyển sang màu còn
+  chỗ. Khung "Tổng chỉ số" cộng chỉ số của cả bảng theo thứ tự chỉ số chung và liệt kê các viên đã lắp theo thứ tự Đỏ,
+  Tím, Xanh, bấm một viên ở đó cũng mở nó trong danh sách; trên wide khung này đứng bên phải và dính khi cuộn, trên màn
+  hẹp nằm ngay dưới bảng ô. Bảng ngọc nằm trong địa chỉ (`slots=mã*số,...`), nên nút Sao chép chia sẻ được đúng bảng
+  đó, nút Dán mở bảng từ một liên kết (hoặc phần `slots`) đã chép; liên kết bị sửa tay không làm một màu quá 10 viên
+  và bỏ mã không có.
 - Trên wide, danh mục rộng hết cột trang cho tới khi mở một mục; khi đó chi tiết đứng thành cột bên phải (320–380px) cho
   cả bốn phần, để đọc món này sang món khác không phải mở rồi đóng. Trên compact, chọn mục mở tấm chi tiết từ bên phải,
   hoặc từ dưới lên khi màn hình từ 640px trở xuống, không rời danh mục. Chi tiết có nút và phím ← → sang mục trước/sau

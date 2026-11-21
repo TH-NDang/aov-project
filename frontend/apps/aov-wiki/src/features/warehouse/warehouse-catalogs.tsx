@@ -10,6 +10,7 @@ import { ArcanaCatalog } from "./warehouse-arcana"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { EnchantmentCatalog } from "./warehouse-enchantments"
 import { EnchantmentSetView } from "./warehouse-enchantment-set"
+import { ArcanaPageView } from "./warehouse-arcana-page"
 import { warehouseItemLayout } from "./warehouse-item-layout"
 import { EmptyGroup, GroupHeading, romanTier } from "./warehouse-parts"
 import { SpellCatalog } from "./warehouse-spells"
@@ -248,10 +249,12 @@ export function WarehouseCatalog(props: CatalogProps) {
         onSelect={onSelect}
       />
     )
+  if (kind === "arcana" && params.get("view") === "page")
+    return <ArcanaPageView entries={allEntries} params={params} onFilters={props.onFilters} />
   if (kind === "arcana")
     return (
       <ArcanaCatalog
-        key={JSON.stringify([searching, params.get("tier"), params.get("stat")])}
+        key={JSON.stringify([searching, params.get("tier"), params.get("stats")])}
         entries={entries}
         allEntries={allEntries}
         group={group}
@@ -259,6 +262,7 @@ export function WarehouseCatalog(props: CatalogProps) {
         searching={searching}
         selectedId={selectedId}
         onSelect={onSelect}
+        onFilters={props.onFilters}
       />
     )
   if (kind === "enchantments" && params.get("view") === "set")
