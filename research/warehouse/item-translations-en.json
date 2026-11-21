@@ -77,6 +77,11 @@
     "giap-ho-menh": {
       "description": "+120 Armor\n\nUnique Passive – Fighting Spirit: Increases the damage you deal by 10%.\n\nUnique Passive – Nirvana: The hero revives after 2 seconds where they fell with 2100–3500 HP. Works only 2 times per match. Cooldown: 150 seconds."
     },
+    "giap-thong-kho": {
+      "name": "Mail of Pain",
+      "summary": "Damage reflection",
+      "description": "+50 Attack Damage\n+300 Armor\n+700 Max HP\n\nPassive: When taking damage, reflects 5% of that damage back to the enemy as true damage (the effect weakens with distance, by up to 50%).\n\nActive – Riposte: Enter the <color=#d0b88e>Damage Reflection state</color> for 3 seconds, raising the reflected damage to 25%. Cooldown: 75 seconds."
+    },
     "giay-du-muc": {
       "description": "+20% Attack Speed\n\nUnique Passive – Acceleration: +60 Movement Speed\n\nUnique Passive: Normal attacks restore 20 HP (half the effect against non-hero units). Cooldown: 0.3 seconds.\n\nCan be swapped for free with other tier II boots. Cooldown: 3 minutes."
     },
