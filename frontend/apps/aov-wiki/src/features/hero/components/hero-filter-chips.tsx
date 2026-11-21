@@ -5,7 +5,8 @@ import "./hero-filter-chips.css"
 
 /**
  * One group of hero filters as chips with their mark and name: the lanes, or the roles. `sheet` is for the quick
- * switch, whose rows scroll and clip: the focus ring is drawn inside each chip and phones get taller chips.
+ * switch, whose rows scroll and clip: the focus ring is drawn inside each chip and phones get taller chips. `counts`
+ * writes after each chip how many heroes it would show with the other filters kept; a chip that would show none is dimmed.
  */
 export function HeroFilterChips<Value extends string>({
   label,
@@ -13,12 +14,14 @@ export function HeroFilterChips<Value extends string>({
   selected,
   onToggle,
   layout,
+  counts,
 }: {
   label: string
   options: readonly HeroFilterOption<Value>[]
   selected: readonly Value[]
   onToggle: (value: Value) => void
   layout?: "sheet"
+  counts?: ReadonlyMap<Value, number>
 }) {
   const { locale } = useWikiContext()
   return (
@@ -37,10 +40,12 @@ export function HeroFilterChips<Value extends string>({
           type="button"
           className="wiki-hero-chip"
           aria-pressed={selected.includes(option.value)}
+          data-empty={(counts?.get(option.value) === 0 && !selected.includes(option.value)) || undefined}
           onClick={() => onToggle(option.value)}
         >
           <HeroGlyph name={option.glyph} />
           {option.label}
+          {counts && <span className="wiki-hero-chip-count">{counts.get(option.value) ?? 0}</span>}
         </button>
       ))}
     </div>

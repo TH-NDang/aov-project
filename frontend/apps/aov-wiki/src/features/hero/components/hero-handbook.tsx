@@ -367,8 +367,15 @@ function OverviewPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handboo
           ]}
         />
       </div>
+      {/* The game writes this line as advice on playing the hero, so it reads as a tip rather than a description. */}
       {profile?.summary && (
-        <OverviewSummary long={profile.summary.length > 140}>{rich(profile.summary)}</OverviewSummary>
+        <div className="wiki-hero-tip">
+          <span className="wiki-hero-tip-label">
+            <WikiIcon name="bulb" size={16} />
+            {text("Mẹo chơi", "Play tip")}
+          </span>
+          <OverviewSummary long={profile.summary.length > 140}>{rich(profile.summary)}</OverviewSummary>
+        </div>
       )}
       {hero.content.overviewRatings && <HeroRatings ratings={hero.content.overviewRatings} />}
       {!!facts.length && (

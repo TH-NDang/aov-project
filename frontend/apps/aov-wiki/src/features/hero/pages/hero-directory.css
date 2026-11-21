@@ -213,6 +213,19 @@
   background: var(--aov-accent-soft);
   color: var(--aov-accent-strong);
 }
+/* How many heroes the choice would show, at the end of its row; a choice that would show none is dimmed. */
+.wiki-hero-sheet-count {
+  margin-left: auto;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-hero-sheet-choice[aria-pressed="true"] .wiki-hero-sheet-count {
+  color: inherit;
+}
+.wiki-hero-sheet-choice[data-empty] {
+  opacity: 0.45;
+}
 
 @media (max-width: 1099.98px) {
   .wiki-hero-grid {

@@ -71,7 +71,8 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 - `/hero` mở bằng `CatalogHeading` "Thư viện Tướng" với phiên bản dữ liệu bên phải. Trên wide, dưới tiêu đề là ô tìm và
   hai nhóm chip Vị trí, Vai trò, mỗi chip có icon và tên. Trên compact, ô tìm và nút Lọc dính dưới đầu trang; bộ lọc Vị
   trí và Vai trò nằm trong drawer dưới, có ghi tên từng lựa chọn và số tướng tìm được; phiên bản dữ liệu là một dòng dưới
-  ô tìm.
+  ô tìm. Mỗi chip (và mỗi lựa chọn trong drawer) ghi số tướng nó sẽ cho thấy khi giữ nguyên ô tìm và nhóm lọc còn lại;
+  lựa chọn cho 0 tướng bị làm mờ nhưng vẫn bấm được.
 - Tiếp theo là hàng thay đổi ở bản đang xem (`PatchChangesRow` trong `src/components/patch-changes-row.tsx`): các tướng
   có thay đổi, chia theo loại, dẫn tới ghi chú đầy đủ. Rồi đến lưới tướng, tiêu đề "Tất cả tướng" hoặc "Kết quả" kèm số
   tướng; khi đang lọc có nút Xóa bộ lọc.
@@ -330,8 +331,12 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
   dùng, cho nút đổi tướng nhanh. Tướng chưa có cấu hình dùng màu trung tính. Đây là lựa chọn biên tập tại frontend,
   không phải màu suy ra từ vai trò hoặc lấy bằng canvas trên trình duyệt: CDN hiện không cung cấp CORS để đọc pixel ảnh.
 - Khi thay ảnh gốc cần rà soát và cập nhật bảng màu tương ứng; về sau có thể chuyển các màu này thành metadata do backend cung cấp để đi cùng phiên bản ảnh.
-- Tổng quan gồm điểm đánh giá lấy từ `overviewRatings` theo thang của dữ liệu, chỉ số và cốt truyện (gấp lại). Trên
-  compact Tổng quan là một thẻ giữa phần thay đổi và Bộ kỹ năng, giới thiệu dài được rút gọn.
+- Tổng quan gồm mẹo chơi, điểm đánh giá lấy từ `overviewRatings` theo thang của dữ liệu, chỉ số và cốt truyện (gấp
+  lại). Câu giới thiệu của game là lời khuyên cách chơi, nên hiện dưới nhãn "Mẹo chơi" có icon bóng đèn và vạch vàng bên
+  trái. Mỗi điểm đánh giá là một ô nhỏ: tên và icon, điểm (ví dụ 3/5), rồi các vạch của game; Độ khó ghi thêm chữ (Rất
+  dễ, Dễ, Trung bình, Khó, Rất khó) vì điểm cao không có nghĩa là tốt hơn. Trên wide bốn ô nằm một hàng và tiêu đề Tổng
+  quan chỉ còn cho trình đọc màn hình và mục lục, nút góp ý đứng ở góc phải mẹo chơi. Trên compact Tổng quan là một thẻ
+  giữa phần thay đổi và Bộ kỹ năng, bốn ô chia hai hàng, giới thiệu dài được rút gọn.
 - Dưới màn đầu là phiên bản dữ liệu. Bản không thay đổi tướng ghi rõ điều đó ngay dưới và dẫn tới lần thay đổi gần nhất.
   Bản có thay đổi có khối "Thay đổi ở bản này" phía trên Bộ kỹ năng: một bề mặt có vạch màu theo loại thay đổi, tóm tắt,
   từng thay đổi theo kỹ năng (`ChangeList`), nguồn công bố và so với bản nào; nút "Xem kỹ năng đầy đủ" mở đúng kỹ năng.

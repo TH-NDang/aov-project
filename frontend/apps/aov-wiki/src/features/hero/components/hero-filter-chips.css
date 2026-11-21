@@ -64,3 +64,17 @@
     height: 36px;
   }
 }
+/* How many heroes a chip would show; a chip that would show none is dimmed but can still be chosen. */
+.wiki-hero-chip-count {
+  min-width: 1.25em;
+  margin-left: 2px;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.wiki-hero-chip[aria-pressed="true"] .wiki-hero-chip-count {
+  color: inherit;
+}
+.wiki-hero-chip[data-empty] {
+  opacity: 0.45;
+}

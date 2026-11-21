@@ -205,19 +205,31 @@
 .wiki-hero-stage-info .wiki-hero-video-button {
   color: var(--aov-accent);
 }
-.wiki-hero-stage-info .wiki-handbook-profile {
+.wiki-hero-stage-info > .wiki-handbook-profile {
+  max-width: 680px;
   margin-top: 20px;
+}
+.wiki-hero-stage-info .wiki-hero-tip {
+  max-width: 560px;
 }
 /* The overview needs no title of its own beside the hero's name; the row keeps the report button. */
 .wiki-hero-stage-info .wiki-hero-overview-heading {
-  margin-bottom: 4px;
+  position: relative;
+  height: 0;
 }
 .wiki-hero-stage-info .wiki-hero-overview-heading h2 {
-  margin: 0;
-  color: var(--aov-muted);
-  font: 600 0.75rem/1rem var(--wiki-font-reading);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* The report button stands at the top right of the tip, the part a reader would correct. */
+.wiki-hero-stage-info .wiki-hero-overview-heading > :not(h2) {
+  position: absolute;
+  top: -4px;
+  left: min(568px, 100% - 32px);
 }
 .wiki-hero-stage-info .wiki-hero-summary:not([data-open]) {
   display: -webkit-box;
@@ -227,14 +239,13 @@
 }
 .wiki-hero-stage-info .wiki-hero-summary {
   font: var(--wiki-type-body);
-  color: var(--aov-text-soft);
+  color: var(--aov-text);
 }
 .wiki-hero-stage-info .wiki-hero-summary-more {
   display: inline-flex;
 }
 .wiki-hero-stage-info .wiki-hero-ratings {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 28px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .wiki-hero-stage-info .wiki-hero-rating-track > span {
   background: color-mix(in srgb, var(--aov-raised) 80%, transparent);
@@ -388,6 +399,25 @@
 .wiki-fact-icon {
   flex: none;
 }
+/* The game's advice on playing the hero: a small gold label over the text, held by a thin gold rule. */
+.wiki-hero-tip {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  padding-left: 12px;
+  border-left: 2px solid color-mix(in srgb, var(--aov-accent) 70%, transparent);
+}
+.wiki-hero-tip-label {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-accent);
+  font-weight: 600;
+}
+.wiki-hero-tip .wiki-hero-summary {
+  color: var(--aov-text);
+}
 .wiki-hero-summary-more {
   font: var(--wiki-type-meta);
   display: none;
@@ -511,9 +541,8 @@ button.wiki-handbook-action svg:first-child {
   display: inline-flex;
   min-height: 36px;
 }
-.wiki-handbook-compact .wiki-hero-ratings {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 16px;
+.wiki-handbook-compact .wiki-hero-ratings > div {
+  background: color-mix(in srgb, var(--aov-bg) 70%, transparent);
 }
 /* On the narrowest phones a label keeps to one line by giving up its mark. */
 @media (max-width: 339.98px) {
@@ -591,29 +620,42 @@ button.wiki-handbook-action svg:first-child {
   }
 }
 
+/*
+ * The ratings as small tiles: the label on top, the score under it (difficulty also as a word), then the game's
+ * segments across the tile.
+ */
 .wiki-hero-ratings {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  margin-block: 14px;
+  margin-block: 16px 4px;
 }
 .wiki-hero-ratings > div {
   display: grid;
-  gap: 2px;
+  min-width: 0;
+  align-content: start;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  border-radius: var(--aov-radius-control);
+  background: color-mix(in srgb, var(--aov-surface) 86%, transparent);
 }
 .wiki-hero-ratings dt {
   font: var(--wiki-type-meta);
+  min-width: 0;
   color: var(--aov-muted);
+  white-space: nowrap;
+}
+.wiki-hero-ratings dt > svg {
+  flex: none;
+  color: var(--aov-accent);
 }
 .wiki-hero-ratings dd {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: contents;
 }
 .wiki-hero-rating-track {
   display: flex;
   height: 6px;
-  flex: 1;
-  gap: 2px;
+  gap: 3px;
 }
 .wiki-hero-rating-track > span {
   display: block;
@@ -623,7 +665,7 @@ button.wiki-handbook-action svg:first-child {
   background: var(--aov-raised);
 }
 .wiki-handbook-compact .wiki-hero-rating-track > span {
-  background: var(--aov-bg);
+  background: var(--aov-raised);
 }
 .wiki-hero-rating-track > span > span {
   display: block;
@@ -631,10 +673,22 @@ button.wiki-handbook-action svg:first-child {
   background: var(--aov-accent);
 }
 .wiki-hero-rating-value {
-  font: var(--wiki-type-category);
-  min-width: 2.25em;
-  text-align: right;
+  font: var(--wiki-type-meta);
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
+}
+.wiki-hero-rating-value strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-hero-rating-word {
+  margin-right: auto;
+  padding-right: 8px;
+  color: var(--aov-accent);
+  font-weight: 600;
 }
 
 /*
