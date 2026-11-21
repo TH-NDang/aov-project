@@ -32,8 +32,6 @@ public class StatRow extends AssignedIdentifierEntity<StatRow.Key> {
 
     private BigDecimal percentValue;
 
-    private BigDecimal growthPerLevel;
-
     private String unitCode;
 
     @Override
