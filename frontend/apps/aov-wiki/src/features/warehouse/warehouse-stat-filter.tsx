@@ -3,7 +3,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import type { ItemStatFilterDefinition } from "@aov/ui/lib/item-description"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiText } from "../../context/wiki-context"
-import type { ItemCatalogView } from "./use-item-catalog"
 import "./warehouse-stat-filter.css"
 
 /** A stat's mark: its icon in its own colour on a soft disc of that colour. */
@@ -11,15 +10,31 @@ export function StatBadge({ filter, size = 28 }: { filter: ItemStatFilterDefinit
   return <ItemStatBadge group={filter.key} size={size} />
 }
 
+/** What a stat filter reads and changes: the filters chosen, how many entries each would leave, and how to change them. */
+export interface StatFilterState {
+  stats: readonly string[]
+  counts: Record<string, number>
+  setStats: (stats: string[]) => void
+}
+
 function toggled(values: readonly string[], value: string) {
   return values.includes(value) ? values.filter((current) => current !== value) : [...values, value]
 }
 
 /**
- * The stat filter of the item catalog on wide screens: one button on the toolbar that opens every stat with how many
- * items it would leave. The stats chosen show as chips under the toolbar, each one a tap from being taken off.
+ * The stat filter of a catalog on wide screens: one button on the toolbar that opens every stat with how many entries it
+ * would leave. The stats chosen show as chips under the toolbar, each one a tap from being taken off.
  */
-export function StatFilterButton({ view, options }: { view: ItemCatalogView; options: ItemStatFilterDefinition[] }) {
+export function StatFilterButton({
+  view,
+  options,
+  hint,
+}: {
+  view: StatFilterState
+  options: ItemStatFilterDefinition[]
+  /** What the filter keeps, in the words of the catalog; the item catalog's by default. */
+  hint?: string
+}) {
   const text = useWikiText()
   const chosen = view.stats.length
   return (
@@ -32,7 +47,9 @@ export function StatFilterButton({ view, options }: { view: ItemCatalogView; opt
       <PopoverContent align="start" sideOffset={8} className="wiki-stat-filter-panel">
         <div className="wiki-stat-filter-head">
           <strong>{text("Lọc theo chỉ số", "Filter by stat")}</strong>
-          <span>{text("Chỉ giữ trang bị có đủ các chỉ số đã chọn.", "Keeps items that have every stat chosen.")}</span>
+          <span>
+            {hint ?? text("Chỉ giữ trang bị có đủ các chỉ số đã chọn.", "Keeps items that have every stat chosen.")}
+          </span>
         </div>
         <div className="wiki-stat-filter-grid" role="group" aria-label={text("Chỉ số", "Stats")}>
           {options.map((filter) => {
@@ -65,7 +82,7 @@ export function StatFilterButton({ view, options }: { view: ItemCatalogView; opt
 }
 
 /** The stats being filtered on, under the toolbar; each chip takes its stat off. */
-export function ChosenStats({ view, options }: { view: ItemCatalogView; options: ItemStatFilterDefinition[] }) {
+export function ChosenStats({ view, options }: { view: StatFilterState; options: ItemStatFilterDefinition[] }) {
   const text = useWikiText()
   const chosen = options.filter((filter) => view.stats.includes(filter.key))
   if (!chosen.length) return null

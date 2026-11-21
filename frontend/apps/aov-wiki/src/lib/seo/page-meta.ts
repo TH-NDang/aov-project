@@ -138,8 +138,8 @@ export const SECTIONS: Record<SectionKey, { path: string; name: [string, string]
     path: warehousePath("spells"),
     name: ["Phụ trợ", "Talents"],
     description: [
-      "Phép bổ trợ Liên Quân Mobile: tác dụng, thời gian hồi chiêu và cấp mở khóa.",
-      "Arena of Valor talents: effects, cooldowns and unlock levels.",
+      "Phép bổ trợ Liên Quân Mobile: tác dụng và thời gian hồi chiêu.",
+      "Arena of Valor talents: effects and cooldowns.",
     ],
   },
   updates: {

@@ -14,7 +14,8 @@ import { compareSkillRanks } from "@aov/ui/lib/skill-rank-values"
 import { statReadingChange, type StatNumbers } from "../../model/assessment/stat-reading"
 import { SECTIONS, type Section } from "@/lib/hero-types"
 
-type Row = { label: string; field: string; before: unknown; after: unknown }
+export type ChangeRow = { label: string; field: string; before: unknown; after: unknown }
+type Row = ChangeRow
 type SectionRows = { section: Section; name: string; rows: Row[] }
 type SectionValues = Partial<Record<Section, unknown>>
 const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v)
@@ -179,7 +180,14 @@ function Value({ value, field }: { value: unknown; field: string }) {
   return <AdminEntityText text={comparisonValue(value, field) || "Trống"} />
 }
 
-function Changes({ sections, locale }: { sections: SectionRows[]; locale: string }) {
+/** Changed fields grouped by section, each shown before and after; the warehouse sheets read their drafts with it too. */
+export function ChangeSections({
+  sections,
+  locale,
+}: {
+  sections: { section: string; name: string; rows: ChangeRow[] }[]
+  locale: string
+}) {
   return sections
     .filter(({ rows }) => rows.length > 0)
     .map(({ section, name, rows }) => (
@@ -271,7 +279,7 @@ export function HeroDraftChanges({
                   <h3 className="type-section-title">Chưa lưu</h3>
                   <p className="type-meta">Trước là dữ liệu đã lưu trên máy chủ. Sau là nội dung trên thiết bị này.</p>
                 </div>
-                <Changes sections={unsaved} locale={locale} />
+                <ChangeSections sections={unsaved} locale={locale} />
               </section>
             )}
             {hasStored && saved && (
@@ -289,7 +297,7 @@ export function HeroDraftChanges({
                     )}
                   </p>
                 </div>
-                <Changes sections={stored} locale={locale} />
+                <ChangeSections sections={stored} locale={locale} />
               </section>
             )}
             {!hasUnsaved && !hasStored && (

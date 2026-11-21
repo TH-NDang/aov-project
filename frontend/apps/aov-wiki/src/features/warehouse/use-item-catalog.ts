@@ -2,9 +2,11 @@ import { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router"
 import { arcanaCombatGroup } from "@aov/ui/lib/arcana-stat-colors"
 import {
+  ITEM_STAT_FILTERS,
   itemCardStats,
   itemFilterStats,
   itemMatchesStatFilters,
+  itemStatDefinitionByCode,
   itemReaderContent,
   itemStatFilterCounts,
   type ItemTextStat,
@@ -149,9 +151,35 @@ export type ArcanaColor = (typeof ARCANA_COLORS)[number]
 export const ARCANA_FAMILIES = ["physical", "magic", "neutral"] as const
 export type ArcanaFamily = (typeof ARCANA_FAMILIES)[number]
 
-/** The arcana filters as the address carries them; an old link may still name the color as `group`. */
+/**
+ * The arcana filters as the address carries them; an old link may still name the color as `group`. The stats are the
+ * stat filters of the item catalog (`stats=`), so both catalogs filter the same way.
+ */
 export function arcanaFilters(params: URLSearchParams, group: string) {
-  return { color: params.get("color") || group, tier: params.get("tier") ?? "", stat: params.get("stat") ?? "" }
+  return {
+    color: params.get("color") || group,
+    tier: params.get("tier") ?? "",
+    stats: (params.get("stats") ?? "").split(",").filter(Boolean),
+  }
+}
+
+export type ArcanaFilters = ReturnType<typeof arcanaFilters>
+
+/** An arcana's stats as the stat filters name them. */
+export function arcanaFilterStats(entry: WarehouseArcana) {
+  return entry.content.stats.flatMap((stat) => {
+    const key = itemStatDefinitionByCode(stat.key)?.key
+    return key ? [{ key }] : []
+  })
+}
+
+/** The stat codes the chosen stat filters cover, such as both kinds of life steal for "lifesteal". */
+export function arcanaChosenCodes(filters: readonly string[]) {
+  return new Set(
+    ITEM_STAT_FILTERS.filter((filter) => filters.includes(filter.key))
+      .flatMap((filter) => filter.stats)
+      .flatMap((key) => itemStatDefinitionByCode(key)?.code ?? []),
+  )
 }
 
 /** Arcana left by the color and tier filters: the stats on offer are read from these. */
@@ -165,20 +193,26 @@ export function arcanaCandidates(entries: PublishedWarehouseRecord[], filters: {
     )
 }
 
+/** How many arcana each stat filter would leave, beside the stat filters already chosen. */
+export function arcanaStatCounts(entries: PublishedWarehouseRecord[], filters: ArcanaFilters) {
+  return itemStatFilterCounts(arcanaCandidates(entries, filters).map(arcanaFilterStats), filters.stats)
+}
+
 /** The arcana on screen in reading order: highest tier first, then color, then what the stats serve, then name. */
-export function arcanaRows(
-  entries: PublishedWarehouseRecord[],
-  filters: { color: string; tier: string; stat: string },
-  locale: string,
-) {
+export function arcanaRows(entries: PublishedWarehouseRecord[], filters: ArcanaFilters, locale: string) {
   const { compare } = new Intl.Collator(locale, { numeric: true, sensitivity: "base" })
+  // With a stat chosen, the reader is comparing it: the most of the first one chosen comes first.
+  const compared = arcanaChosenCodes(filters.stats.slice(0, 1))
+  const amount = (entry: WarehouseArcana) =>
+    entry.content.stats.reduce((total, stat) => total + (compared.has(stat.key) ? stat.value : 0), 0)
   return arcanaCandidates(entries, filters)
-    .filter((entry) => !filters.stat || entry.content.stats.some((stat) => stat.key === filters.stat))
+    .filter((entry) => itemMatchesStatFilters(arcanaFilterStats(entry), filters.stats))
     .map((entry) => ({ entry, family: arcanaCombatGroup(entry.content) }))
     .sort(
       (a, b) =>
         b.entry.content.tier - a.entry.content.tier ||
         ARCANA_COLORS.indexOf(a.entry.content.color) - ARCANA_COLORS.indexOf(b.entry.content.color) ||
+        amount(b.entry) - amount(a.entry) ||
         ARCANA_FAMILIES.indexOf(a.family) - ARCANA_FAMILIES.indexOf(b.family) ||
         compare(warehouseName(a.entry, locale), warehouseName(b.entry, locale)),
     )

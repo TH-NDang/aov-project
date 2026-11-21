@@ -116,11 +116,7 @@ import { toast } from "sonner"
 import { confirmAction } from "@/components/confirm-dialog"
 import { CAUSE_NAMES } from "@/lib/version-causes"
 import { VersionFacts } from "@/features/publishing/components/setup/version-facts"
-import {
-  HeroVersionMenuItem,
-  HeroVersionSheet,
-  REVISION_STATES as STATES,
-} from "@/features/publishing/components/workspace/hero-version-menu"
+import { VersionMenuItem, VersionSheet, VERSION_STATES as STATES } from "@/components/version-sheet"
 import { Input } from "@aov/ui/components/input"
 
 import { PublishingFrame } from "./publishing-frame"
@@ -706,7 +702,7 @@ export function PublishingWorkspace({
   // The versions open from a row of the ⋯ menu, in a sheet of their own, so the header keeps one row of controls.
   const [versionsOpen, setVersionsOpen] = useState(false)
   const versionSheet = revision && (
-    <HeroVersionSheet
+    <VersionSheet
       open={versionsOpen}
       onOpenChange={setVersionsOpen}
       revision={revision}
@@ -858,7 +854,7 @@ export function PublishingWorkspace({
           </>
         )}
         {/* What used to sit around the name: the version, the reading language and the original screenshots. */}
-        {revision && <HeroVersionMenuItem revision={revision} disabled={busy} onOpen={() => setVersionsOpen(true)} />}
+        {revision && <VersionMenuItem revision={revision} disabled={busy} onOpen={() => setVersionsOpen(true)} />}
         {draftSummary && !draftSummary.hidden && (
           <DraftStatusMenuItem summary={draftSummary} onOpen={() => setDraftStatusOpen(true)} />
         )}

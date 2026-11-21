@@ -165,3 +165,103 @@ test("descriptions join lines wrapped by the game's text box and keep stat, effe
   assert.equal(joinWrappedLines(item), item)
   assert.equal(joinWrappedLines("Kết thúc câu.\nmở đầu câu mới"), "Kết thúc câu.\nmở đầu câu mới")
 })
+
+test("a warehouse sheet lists every version from its menu and opens the one chosen, as the hero page does", async () => {
+  await withWarehouseUi(async ({ document, render }) => {
+    const window = document.defaultView!
+    const { SheetActions } = await import("../src/features/warehouse/components/sheet/warehouse-sheet")
+    const chosen: string[] = []
+    const rows = [
+      { id: "draft", revisionNo: 2, state: "DRAFT" as const, rulesetId: "standard" },
+      { id: "published", revisionNo: 1, state: "PUBLISHED" as const, rulesetId: "standard" },
+    ]
+    await render(
+      <SheetActions
+        version="Bản 1 · Đã xuất bản"
+        editing={false}
+        disabled={false}
+        onClose={() => {}}
+        versions={{ current: rows[1], rows, onChoose: (id) => chosen.push(id) }}
+      />,
+    )
+    await act(async () => {
+      document
+        .querySelector('button[aria-label="Thêm thao tác"]')!
+        .dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    })
+    const row = document.querySelector<HTMLElement>('[role="menuitem"][aria-label="Phiên bản dữ liệu"]')
+    assert.ok(row?.textContent?.includes("Phiên bản #1"))
+    await act(async () => row!.click())
+    const versions = [...document.querySelectorAll<HTMLElement>('[role="radio"]')]
+    assert.deepEqual(
+      versions.map((version) => [version.textContent, version.getAttribute("aria-checked")]),
+      [
+        ["#2Bản nháp", "false"],
+        ["#1Đã xuất bản", "true"],
+      ],
+    )
+    await act(async () => versions[0].click())
+    assert.deepEqual(chosen, ["draft"])
+  })
+})
+
+test("a published enchantment, arcana or talent with a draft in progress publishes that draft from its sheet", async () => {
+  await withWarehouseUi(async ({ document, render }) => {
+    const { SecondaryEditor } = await import("../src/features/warehouse/components/secondary/secondary-editor")
+    const { newSecondaryContent } = await import("../src/features/warehouse/model/secondary-content")
+    let published = 0
+    await render(
+      <SecondaryEditor
+        kind="arcana"
+        code="do-3"
+        content={newSecondaryContent("arcana", "vi-VN")}
+        branches={[]}
+        locale="vi-VN"
+        isNew={false}
+        rulesetId="standard"
+        revisionState="PUBLISHED"
+        readOnly
+        canPublish
+        openDraftNo={2}
+        onPublish={async () => {
+          published++
+        }}
+        onClose={() => {}}
+        onSave={async () => {}}
+      />,
+    )
+    const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+      (node) => node.textContent?.trim() === "Xuất bản",
+    )
+    assert.equal(button?.title, "Xuất bản bản nháp #2")
+    await act(async () => button!.click())
+    assert.equal(published, 1)
+  })
+})
+
+test("a warehouse draft opens what it changes from its menu, as a hero draft does", async () => {
+  await withWarehouseUi(async ({ document, render }) => {
+    const window = document.defaultView!
+    const { SheetActions } = await import("../src/features/warehouse/components/sheet/warehouse-sheet")
+    let opened = 0
+    await render(
+      <SheetActions
+        version="Bản 2 · Bản nháp"
+        editing={false}
+        disabled={false}
+        onClose={() => {}}
+        changes={{ onOpen: () => opened++ }}
+      />,
+    )
+    await act(async () => {
+      document
+        .querySelector('button[aria-label="Thêm thao tác"]')!
+        .dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    })
+    const row = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) =>
+      item.textContent?.includes("Thay đổi trong bản nháp"),
+    )
+    await act(async () => row!.click())
+    assert.equal(opened, 1)
+  })
+})

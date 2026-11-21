@@ -25,6 +25,8 @@ export const warehouseKeys = {
   changes: (kind: string, rulesetId: string, locale: string) =>
     ["warehouse", "changes", kind, rulesetId, locale] as const,
   history: (kind: string, entryId: string) => ["warehouse", "history", kind, entryId] as const,
+  revision: (kind: string, entryId: string, revisionId: string) =>
+    ["warehouse", "revision", kind, entryId, revisionId] as const,
   removals: (id: string, rulesetId: string) => ["warehouse", "removals", id, rulesetId] as const,
 }
 export function invalidateWarehouseCatalogs(client: QueryClient) {
@@ -174,6 +176,14 @@ export function useWarehouseCatalog<K extends WarehouseKind>(kind: K, rulesetId:
     enabled: !!rulesetId,
     staleTime: 60000,
     refetchOnWindowFocus: false,
+  })
+}
+/** Every version of one entry, newest first: the version sheet and the history tab read the same list. */
+export function useWarehouseRevisions(kind: WarehouseKind, entryId: string | undefined) {
+  return useQuery({
+    queryKey: warehouseKeys.history(kind, entryId ?? ""),
+    queryFn: () => warehouseApi.revisions(kind, entryId!),
+    enabled: !!entryId,
   })
 }
 export function useWarehouseMetadata(kind: "items" | "enchantments") {

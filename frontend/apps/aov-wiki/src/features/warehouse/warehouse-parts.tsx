@@ -27,13 +27,20 @@ export function ArcanaColorArt({ color, entries }: { color: ArcanaColor; entries
   return sample ? <WarehouseArtwork entry={sample} kind="arcana" className="wiki-warehouse-chip-art" /> : null
 }
 
-/** The heading of one group of a catalog: its name and how many entries it holds. */
-export function GroupHeading({ title, count }: { title: string; count: number }) {
-  return (
+/** The heading of one group of a catalog: its name, how many entries it holds and a control for the group, if any. */
+export function GroupHeading({ title, count, aside }: { title: string; count: number; aside?: ReactNode }) {
+  const heading = (
     <h2 className="wiki-warehouse-heading">
       {title}
       <small>{count}</small>
     </h2>
+  )
+  if (!aside) return heading
+  return (
+    <div className="wiki-warehouse-heading-row">
+      {heading}
+      {aside}
+    </div>
   )
 }
 

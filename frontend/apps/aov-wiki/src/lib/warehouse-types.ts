@@ -1,4 +1,4 @@
-import type { ItemEffectGameplay } from "@aov/ui/lib/item-description"
+import { itemStatDefinitionByCode, type ItemEffectGameplay } from "@aov/ui/lib/item-description"
 import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
@@ -96,13 +96,29 @@ export function warehouseImage(entry: WarehouseEntry, assetId = entry.content.ic
 
 export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, locale = "vi-VN") {
   const text = warehouseText(entry.content.translations, locale)
+  // The stats are found by their shared names in both languages, so either language's word for life steal finds them.
+  const stats = Array.isArray(entry.content.stats) ? (entry.content.stats as { key: string }[]) : []
+  const statNames = stats.flatMap(({ key }) => {
+    const shared = itemStatDefinitionByCode(key)
+    return shared ? [shared.vi, shared.en] : []
+  })
   const haystack = foldSearchText(
-    `${warehouseName(entry, locale)} ${entry.code} ${text?.summary ?? ""} ${text?.description ?? ""}`,
+    `${warehouseName(entry, locale)} ${entry.code} ${text?.summary ?? ""} ${text?.description ?? ""} ${statNames.join(" ")}`,
   )
   return foldSearchText(query)
     .trim()
     .split(/\s+/)
     .every((term) => haystack.includes(term))
+}
+
+/**
+ * A stat's name: the shared stat list first, so every entry spells a stat the same way whatever its own record says,
+ * then the label the entry recorded, then the code itself.
+ */
+export function warehouseStatLabel(key: string, text: Pick<WarehouseText, "statLabels"> | undefined, locale: string) {
+  const shared = itemStatDefinitionByCode(key)
+  if (shared) return isEnglishLocale(locale) ? shared.en : shared.vi
+  return text?.statLabels?.[key] || key.replace(/_/g, " ")
 }
 
 export function warehouseStatValue(stat: WarehouseStat, locale = "vi-VN") {

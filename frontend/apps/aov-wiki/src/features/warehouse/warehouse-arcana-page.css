@@ -1,0 +1,599 @@
+/* ---------- Arcana page builder ---------- */
+/* The board and the picker on the left, the page's totals in a column beside them that stays in view. */
+.wiki-arcana-builder {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  align-items: start;
+  gap: 20px;
+}
+.wiki-arcana-builder-main {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+}
+@container wiki-warehouse (max-width: 759.98px) {
+  .wiki-arcana-builder {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* On one column the totals come right after the board, where a phone reader sees them change. */
+  .wiki-arcana-builder-main {
+    display: contents;
+  }
+  .wiki-arcana-picker {
+    order: 3;
+  }
+}
+
+/* The board: one line of ten slots per color. */
+/* The board as a stage, like the enchantment set screen: a dark well with a warm light from the top corner. */
+.wiki-arcana-board {
+  display: grid;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 25%, var(--aov-line));
+  border-radius: var(--aov-radius-card);
+  padding: 8px;
+  background:
+    radial-gradient(90% 140% at 0% 0%, color-mix(in srgb, var(--aov-accent) 12%, transparent), transparent 60%),
+    var(--aov-sunken);
+}
+.wiki-arcana-board-line {
+  --wiki-warehouse-art-radius: 50%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 144px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: calc(var(--aov-radius-card) - 2px);
+  padding: 8px 10px;
+}
+.wiki-arcana-board-line[data-active] {
+  border-color: color-mix(in srgb, var(--aov-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 7%, transparent);
+}
+/*
+ * Each line is lit by its own gem, so the color comes from the game's picture rather than from a palette: blurred into
+ * a glow behind the name, and faint and tilted at the far end. The line the picker shows glows the most.
+ */
+.wiki-arcana-board-backdrop {
+  --wiki-warehouse-art-radius: 50%;
+  --wiki-warehouse-art-ring: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.wiki-arcana-board-glow,
+.wiki-arcana-board-mark {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+}
+.wiki-arcana-board-glow {
+  --wiki-warehouse-art-size: 200px;
+  left: -64px;
+  opacity: 0.35;
+  filter: blur(36px) saturate(1.6);
+}
+.wiki-arcana-board-line[data-active] .wiki-arcana-board-glow {
+  opacity: 0.6;
+}
+.wiki-arcana-board-mark {
+  --wiki-warehouse-art-size: 140px;
+  right: -28px;
+  opacity: 0.08;
+  rotate: -14deg;
+}
+.wiki-arcana-board-head {
+  --wiki-warehouse-art-size: 22px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+.wiki-arcana-board-head > button:first-child {
+  font: var(--wiki-type-entry);
+  display: inline-flex;
+  min-width: 0;
+  min-height: 36px;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text);
+  text-align: left;
+}
+.wiki-arcana-board-head small {
+  font: var(--wiki-type-meta);
+  margin-left: auto;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-arcana-board-line[data-active] .wiki-arcana-board-head small {
+  color: var(--aov-accent);
+}
+.wiki-arcana-board-clear {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-muted);
+}
+/* A line of ten slots, one group per arcana as wide as its pieces, the free slots as one dashed group. */
+.wiki-arcana-slots {
+  display: flex;
+  min-width: 0;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-arcana-slots > li {
+  container: wiki-arcana-slot / inline-size;
+  min-width: 0;
+  flex: var(--count) 1 0;
+}
+/* A group: its pieces as one pill, and the free slots as one dashed pill. */
+.wiki-arcana-slot,
+.wiki-arcana-slots button[data-empty] {
+  --wiki-warehouse-art-size: 28px;
+  --wiki-warehouse-art-radius: 50%;
+  font: var(--wiki-type-meta);
+  display: flex;
+  width: 100%;
+  height: 44px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: 22px;
+  color: var(--aov-text);
+}
+.wiki-arcana-slot {
+  /* Short marks along the bottom between the slots a group fills, so its pieces can be counted without crossing the text. */
+  background:
+    repeating-linear-gradient(
+        to right,
+        transparent 0 calc(100% / var(--count) - 1px),
+        var(--aov-line-strong) calc(100% / var(--count) - 1px) calc(100% / var(--count))
+      )
+      bottom / 100% 7px no-repeat,
+    var(--aov-surface);
+}
+.wiki-arcana-slot-main {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 0 7px;
+  color: inherit;
+  text-align: left;
+}
+.wiki-arcana-slot-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-arcana-slot-main > b {
+  flex: none;
+  color: var(--aov-accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-arcana-slots button[data-empty] {
+  justify-content: center;
+  border-style: dashed;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--aov-muted);
+}
+.wiki-arcana-slots button[data-empty] .wiki-arcana-slot-name {
+  flex: none;
+  font-weight: 400;
+}
+/*
+ * A narrow group gives up its name first, then its picture; its count always stays, as it is what
+ * the line is read for. The free slots give up their words last.
+ */
+@container wiki-arcana-slot (max-width: 119.98px) {
+  .wiki-arcana-slot-main .wiki-arcana-slot-name {
+    display: none;
+  }
+  .wiki-arcana-slot-main {
+    justify-content: center;
+    padding: 0 6px;
+  }
+}
+@container wiki-arcana-slot (max-width: 71.98px) {
+  .wiki-arcana-slot-main > :first-child {
+    display: none;
+  }
+  .wiki-arcana-slot-main {
+    padding: 0 2px;
+  }
+}
+@container wiki-arcana-slot (max-width: 59.98px) {
+  .wiki-arcana-slots button[data-empty] .wiki-arcana-slot-name {
+    display: none;
+  }
+}
+@media (hover: hover) {
+  .wiki-arcana-board-clear:hover,
+  .wiki-arcana-board-head > button:first-child:hover {
+    color: var(--aov-accent-strong);
+  }
+  .wiki-arcana-slot:has(.wiki-arcana-slot-main:hover),
+  .wiki-arcana-slots button[data-empty]:hover {
+    border-color: var(--aov-accent);
+  }
+}
+/*
+ * A narrow board puts the color's name above its slots, and each group on a line of its own: a group as wide as its
+ * pieces would leave no room for the arcana's name, which is what tells two groups apart.
+ */
+@container wiki-warehouse (max-width: 559.98px) {
+  .wiki-arcana-board-line {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 6px 8px 10px;
+  }
+  .wiki-arcana-slots {
+    flex-direction: column;
+  }
+  .wiki-arcana-slots > li {
+    flex: none;
+  }
+  .wiki-arcana-slot,
+  .wiki-arcana-slots button[data-empty] {
+    height: 38px;
+  }
+}
+
+/* The picker: the top-tier arcana of the chosen color. */
+.wiki-arcana-picker {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+.wiki-arcana-picker > h3,
+.wiki-arcana-summary > h3 {
+  font: var(--wiki-type-section);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  color: var(--aov-text);
+}
+.wiki-arcana-picker > h3 small,
+.wiki-arcana-summary > h3 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-arcana-picker-group {
+  display: grid;
+  gap: 6px;
+}
+.wiki-arcana-picker-group > h4 {
+  margin: 4px 0 0;
+  color: var(--aov-muted);
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.wiki-arcana-pick {
+  --wiki-warehouse-art-size: 32px;
+  --wiki-warehouse-art-radius: 50%;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--wiki-entry-line);
+  border-radius: var(--aov-radius-card);
+  padding: 6px 8px;
+  background: var(--wiki-entry-bg);
+}
+/* The arcana picked on the board glows for a moment once the picker brings it into view. */
+.wiki-arcana-pick[data-focused] {
+  animation: wiki-arcana-pick-found 1.6s ease-out;
+}
+@keyframes wiki-arcana-pick-found {
+  0%,
+  40% {
+    border-color: var(--aov-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--aov-accent) 30%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-arcana-pick[data-focused] {
+    animation: none;
+    border-color: var(--aov-accent);
+  }
+}
+.wiki-arcana-pick[data-placed] {
+  border-color: color-mix(in srgb, var(--aov-accent) 45%, transparent);
+}
+.wiki-arcana-pick-main {
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.wiki-arcana-pick-main:disabled {
+  cursor: default;
+}
+.wiki-arcana-stepper {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+.wiki-arcana-stepper button {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text);
+}
+.wiki-arcana-stepper button:disabled,
+.wiki-arcana-pick-fill:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.wiki-arcana-stepper output {
+  font: var(--wiki-type-category);
+  min-width: 20px;
+  color: var(--aov-text);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.wiki-arcana-pick[data-placed] .wiki-arcana-stepper output {
+  color: var(--aov-accent);
+}
+.wiki-arcana-pick-fill {
+  font: var(--wiki-type-meta);
+  min-height: 32px;
+  flex: none;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 12px;
+  color: var(--aov-text-soft);
+}
+@media (hover: hover) {
+  .wiki-arcana-pick:has(.wiki-arcana-pick-main:not(:disabled):hover) {
+    border-color: var(--wiki-entry-hover-line);
+    background: var(--wiki-entry-hover-bg);
+  }
+  .wiki-arcana-stepper button:not(:disabled):hover,
+  .wiki-arcana-pick-fill:not(:disabled):hover {
+    color: var(--aov-accent-strong);
+  }
+  .wiki-arcana-pick-fill:not(:disabled):hover {
+    border-color: var(--aov-accent);
+  }
+}
+/* A phone keeps the stats readable: the picture goes, the board already shows it. */
+@container wiki-warehouse (max-width: 559.98px) {
+  .wiki-arcana-pick-main > :first-child {
+    display: none;
+  }
+}
+
+/* The totals of the whole page, then what it holds. */
+.wiki-arcana-summary {
+  position: sticky;
+  top: 72px;
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 16px;
+  background: var(--aov-surface);
+}
+@container wiki-warehouse (max-width: 759.98px) {
+  .wiki-arcana-summary {
+    position: static;
+  }
+}
+.wiki-arcana-totals {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.wiki-arcana-totals > div {
+  font: var(--wiki-type-category);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--aov-line);
+  padding: 6px 0;
+}
+.wiki-arcana-totals dt {
+  font-weight: 500;
+  color: var(--aov-text);
+}
+.wiki-arcana-totals dd {
+  margin: 0;
+  color: var(--aov-accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-arcana-summary-empty {
+  font: var(--wiki-type-body);
+  margin: 0;
+  color: var(--aov-text-soft);
+}
+.wiki-arcana-placed {
+  --wiki-warehouse-art-size: 22px;
+  --wiki-warehouse-art-radius: 50%;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-arcana-placed button {
+  font: var(--wiki-type-meta);
+  display: flex;
+  /* The hover tint reaches a little past the text on both sides, without moving the text. */
+  width: calc(100% + 12px);
+  min-width: 0;
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--aov-radius-control);
+  padding: 2px 6px;
+  margin: 0 -6px;
+  color: var(--aov-text-soft);
+  text-align: left;
+}
+@media (hover: hover) {
+  .wiki-arcana-placed button:hover {
+    background: var(--aov-raised);
+    color: var(--aov-text);
+  }
+}
+.wiki-arcana-placed-name {
+  min-width: 0;
+  flex: 1;
+}
+.wiki-arcana-placed b {
+  color: var(--aov-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-arcana-summary-clear {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 14px;
+  color: var(--aov-text-soft);
+}
+@media (hover: hover) {
+  .wiki-arcana-summary-clear:hover {
+    border-color: var(--aov-accent);
+    color: var(--aov-accent-strong);
+  }
+}
+
+/* The view's tool: a link to the page being built. */
+.wiki-arcana-page-tools {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.wiki-arcana-page-tools > button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 14px;
+  color: var(--aov-text-soft);
+}
+@media (hover: hover) {
+  .wiki-arcana-page-tools > button:hover {
+    border-color: var(--aov-accent);
+    color: var(--aov-accent-strong);
+  }
+}
+.wiki-arcana-page-notice {
+  margin-right: auto;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
+}
+.wiki-arcana-page-paste {
+  display: flex;
+  min-width: min(100%, 320px);
+  flex: 1;
+  gap: 6px;
+}
+.wiki-arcana-page-paste input {
+  font: var(--wiki-type-body);
+  min-width: 0;
+  min-height: 36px;
+  flex: 1;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 12px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+.wiki-arcana-page-paste button {
+  font: var(--wiki-type-meta);
+  min-height: 36px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 14px;
+  color: var(--aov-text-soft);
+}
+/* On a phone the two tools are their icons alone, so they share the line with the view switch. */
+@media (max-width: 899.98px) {
+  .wiki-arcana-page-tools > button {
+    width: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+  .wiki-arcana-page-tools > button > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .wiki-arcana-page-paste input {
+    font-size: 16px;
+  }
+}
+
+/* What a group on the board holds: its name, its count and what those pieces add to the page. */
+.wiki-arcana-slot-tip[data-slot="tooltip-content"] {
+  font: var(--wiki-type-meta);
+  display: grid;
+  min-width: 220px;
+  max-width: 280px;
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 10px 12px;
+  background: var(--aov-popover);
+  color: var(--aov-text-soft);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-arcana-slot-tip[data-slot="tooltip-content"] > svg {
+  visibility: hidden;
+}
+.wiki-arcana-slot-tip strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-arcana-slot-tip strong b {
+  color: var(--aov-accent);
+  font-variant-numeric: tabular-nums;
+}

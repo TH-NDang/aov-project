@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link } from "react-router"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ExternalLink, History, PenLine, Save } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { ActionStrip } from "@/components/action-strip"
@@ -18,7 +18,7 @@ import {
 } from "./catalog-changes"
 import { ChangeKindSelect } from "../../../publishing/components/patch-changes/change-kind-select"
 import { CAUSE_NAMES } from "@/lib/version-causes"
-import { warehouseApi, invalidateWarehouseCatalogs, warehouseKeys } from "../../api/warehouse-api"
+import { invalidateWarehouseCatalogs, useWarehouseRevisions } from "../../api/warehouse-api"
 import { warehouseBaselineMode, type WarehouseRevision } from "../../model/warehouse-types"
 import { type WarehouseKind } from "@aov/ui/lib/warehouse-content"
 import { publishingKeys } from "@/lib/api/publishing-api"
@@ -34,6 +34,7 @@ export function WarehouseChangeHistory({
   locale,
   patchContext,
   currentRevisionId,
+  onOpenRevision,
 }: {
   kind: WarehouseKind
   entryId: string
@@ -42,6 +43,8 @@ export function WarehouseChangeHistory({
   patchContext?: { variantId: string; sourceUrl?: string; onSaved: () => void }
   /** The version on screen, marked on the timeline. */
   currentRevisionId?: string
+  /** Opens another version in the sheet; without it the versions on the timeline are plain labels. */
+  onOpenRevision?: (revisionId: string) => void
 }) {
   const client = useQueryClient()
   const capabilities = useSession().actor?.capabilities ?? []
@@ -49,10 +52,7 @@ export function WarehouseChangeHistory({
     capabilities.includes("patch:write") && capabilities.includes(`${changeDomain[kind].toLowerCase()}:publish`)
   const changes = useCatalogChanges(kind, rulesetId, locale)
   const overview = usePublicationOverview()
-  const history = useQuery({
-    queryKey: warehouseKeys.history(kind, entryId),
-    queryFn: () => warehouseApi.revisions(kind, entryId),
-  })
+  const history = useWarehouseRevisions(kind, entryId)
   const [selectedTarget, setTarget] = useState("")
   const [patch, setPatch] = useState(patchContext?.variantId ?? "")
   const [selectedFrom, setFrom] = useState("")
@@ -346,16 +346,33 @@ export function WarehouseChangeHistory({
               </div>
               {node.revisions.length > 0 && (
                 <ul className="flex flex-wrap gap-1.5" aria-label="Các bản ở mốc này">
-                  {node.revisions.map((revision) => (
-                    <li
-                      key={revision.id}
-                      className={`type-meta rounded-md border px-2 py-0.5 ${revision.id === currentRevisionId ? "border-primary text-primary" : ""}`}
-                    >
-                      Bản {revision.revisionNo} · {revisionLabels[revision.cause]}
-                      {revision.state === "DRAFT" ? " · nháp" : ""}
-                      {revision.id === currentRevisionId ? " · đang mở" : ""}
-                    </li>
-                  ))}
+                  {node.revisions.map((revision) => {
+                    const label = (
+                      <>
+                        Bản {revision.revisionNo} · {revisionLabels[revision.cause]}
+                        {revision.state === "DRAFT" ? " · nháp" : ""}
+                        {revision.id === currentRevisionId ? " · đang mở" : ""}
+                      </>
+                    )
+                    const chip = `type-meta rounded-md border px-2 py-0.5 ${revision.id === currentRevisionId ? "border-primary text-primary" : ""}`
+                    return (
+                      <li key={revision.id}>
+                        {onOpenRevision && revision.id !== currentRevisionId ? (
+                          // Another version on the timeline opens in this sheet, a draft included.
+                          <button
+                            type="button"
+                            className={`${chip} transition-colors hover:border-primary hover:text-primary`}
+                            title={`Mở bản ${revision.revisionNo}`}
+                            onClick={() => onOpenRevision(revision.id)}
+                          >
+                            {label}
+                          </button>
+                        ) : (
+                          <span className={`inline-block ${chip}`}>{label}</span>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               {node.changes.map((change) => (

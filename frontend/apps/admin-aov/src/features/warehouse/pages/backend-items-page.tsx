@@ -228,6 +228,15 @@ export function BackendItemsPage() {
     setEditingEntry(entry)
     setSelectedId(entry.id)
   }
+  /** Shows another version of the open item: the server sends that version's own content, a draft included. */
+  async function openRevision(revisionId: string) {
+    if (!selected || revisionId === selected.revision.id) return
+    try {
+      openEntry(await warehouseApi.read("items", selected.id, revisionId))
+    } catch (cause) {
+      toast.error(errorMessage(cause))
+    }
+  }
   function update(entry: Entry, content: ItemContent, patchId?: string | null) {
     setUndo((history) => [...history.slice(-19), new Map(edits)])
     setEdits((previous) =>
@@ -598,6 +607,8 @@ export function BackendItemsPage() {
                   : undefined
           }
           onDiscard={canWrite && selected.revision.state === "DRAFT" ? () => void discard(selected) : undefined}
+          // Changes applied here but not yet saved stay with this version, so another one opens only once they are saved.
+          onOpenRevision={edits.has(selected.id) ? undefined : (revisionId) => void openRevision(revisionId)}
         />
       )}
       <Dialog

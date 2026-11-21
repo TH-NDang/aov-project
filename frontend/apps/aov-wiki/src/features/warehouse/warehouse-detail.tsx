@@ -29,38 +29,18 @@ import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { arcanaTitle } from "./warehouse-arcana"
 import { romanTier } from "./warehouse-parts"
-import { spellCooldownText } from "./warehouse-spells"
+import { SpellChargePips, spellCooldownText, spellKeepsCharges } from "./warehouse-spells"
 import {
   arcanaDetailDescription,
   warehouseName,
+  warehouseStatLabel,
   warehouseStatValue,
   warehouseText,
   type WarehouseEntry,
   type PublishedWarehouseRecord,
   type WarehouseGroup,
   type WarehouseKind,
-  type WarehouseText,
 } from "../../lib/warehouse-types"
-
-const STAT_LABELS: Record<string, [string, string]> = {
-  physicalAttack: ["Công vật lý", "Attack Damage"],
-  magicAttack: ["Công phép", "Ability Power"],
-  maxHealth: ["Máu tối đa", "Max HP"],
-  armor: ["Giáp", "Armor"],
-  magicDefense: ["Giáp phép", "Magic Defense"],
-  attackSpeed: ["Tốc đánh", "Attack Speed"],
-  movementSpeed: ["Tốc chạy", "Movement Speed"],
-  cooldownReduction: ["Giảm hồi chiêu", "Cooldown Speed"],
-  criticalChance: ["Tỷ lệ chí mạng", "Critical Chance"],
-  criticalDamage: ["Sát thương chí mạng", "Critical Damage"],
-  armorPierce: ["Xuyên giáp", "Armor Pierce"],
-  magicPierce: ["Xuyên giáp phép", "Magic Pierce"],
-}
-
-function statLabel(key: string, text: WarehouseText | undefined, locale: string) {
-  const known = STAT_LABELS[key]
-  return text?.statLabels?.[key] ?? (known && wikiText(locale, ...known)) ?? key.replace(/_/g, " ")
-}
 
 function PanelTitle(props: ComponentProps<"h2">) {
   return <h2 data-slot="sheet-title" {...props} />
@@ -138,11 +118,13 @@ function DetailContent({
   const effects = text?.effects?.length ? text.effects : (baseText?.effects ?? [])
   const statRows = (content.stats ?? []).map((stat) => ({
     key: stat.key,
-    label: statLabel(stat.key, text, scope.locale),
+    label: warehouseStatLabel(stat.key, text, scope.locale),
     value: warehouseStatValue(stat, scope.locale),
   }))
   const arcana = entry.kind === "arcana" ? entry.content : null
-  const visibleDescription = arcana ? arcanaDetailDescription(text, statRows) : description
+  // A description that repeats the stats may spell them as the entry recorded them, not as the shared list does.
+  const recordedRows = statRows.map((row) => ({ ...row, label: text?.statLabels?.[row.key] ?? row.label }))
+  const visibleDescription = arcana ? arcanaDetailDescription(text, [...statRows, ...recordedRows]) : description
   const name = warehouseName(entry, scope.locale)
   const settings = references.data
   const items = entries.filter((e) => e.kind === "items")
@@ -171,40 +153,31 @@ function DetailContent({
       ? [
           {
             key: "cooldown",
-            label: ui("Hồi chiêu", "Cooldown"),
+            // With charges, the cooldown is only the pause between two casts; each charge comes back on its own.
+            label: spellKeepsCharges(entry.content)
+              ? ui("Giữa hai lần dùng", "Between casts")
+              : ui("Hồi chiêu", "Cooldown"),
             value: spellCooldownText(entry.content.cooldownSeconds, scope.locale),
           },
-          ...(entry.content.unlockType === "LEVEL" && entry.content.unlockLevel != null
-            ? [
-                {
-                  key: "unlock",
-                  label: ui("Mở khóa", "Unlocks"),
-                  value: ui(`Cấp ${entry.content.unlockLevel}`, `Level ${entry.content.unlockLevel}`),
-                },
-              ]
-            : entry.content.unlockType === "ACCOUNT_CREATION"
-              ? [
-                  {
-                    key: "unlock",
-                    label: ui("Mở khóa", "Unlocks"),
-                    value: ui("Có sẵn từ đầu", "Available from the start"),
-                  },
-                ]
-              : []),
-          ...(entry.content.maxCharges != null
+          ...(spellKeepsCharges(entry.content) && entry.content.maxCharges
             ? [
                 {
                   key: "charges",
-                  label: ui("Số lần tích trữ", "Maximum charges"),
-                  value: String(entry.content.maxCharges),
+                  label: ui("Tích trữ", "Charges"),
+                  value: (
+                    <span className="wiki-spell-charge-fact">
+                      <SpellChargePips count={entry.content.maxCharges} />
+                      {ui(`${entry.content.maxCharges} lần`, `${entry.content.maxCharges}`)}
+                    </span>
+                  ),
                 },
               ]
             : []),
-          ...(entry.content.chargeRechargeSeconds != null
+          ...(spellKeepsCharges(entry.content) && entry.content.chargeRechargeSeconds != null
             ? [
                 {
                   key: "recharge",
-                  label: ui("Thời gian tích một lần", "Recharge time"),
+                  label: ui("Mỗi lần tích hồi sau", "Each charge returns in"),
                   value: spellCooldownText(entry.content.chargeRechargeSeconds, scope.locale),
                 },
               ]

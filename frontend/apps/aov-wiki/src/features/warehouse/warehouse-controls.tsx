@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react"
 import { EnchantmentSetTools } from "./warehouse-enchantment-set-tools"
+import { ArcanaPageTools } from "./warehouse-arcana-page-tools"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { useRef, type ReactNode } from "react"
 import { ItemCategoryArtwork, itemCategoryTone } from "@aov/ui/components/item-category-icons"
@@ -12,25 +13,21 @@ import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import {
   ARCANA_COLORS,
-  arcanaCandidates,
   arcanaFilters,
   arcanaRows,
+  arcanaStatCounts,
   type ItemCatalogView,
   type ItemSort,
 } from "./use-item-catalog"
-import { useMediaQuery } from "./warehouse-layout"
-import { ChosenStats, StatBadge, StatFilterButton } from "./warehouse-stat-filter"
+import { ChosenStats, StatBadge, StatFilterButton, type StatFilterState } from "./warehouse-stat-filter"
 import { itemMatchesCategory } from "./warehouse-item-layout"
-import { ArcanaColorArt, arcanaColorName, romanTier } from "./warehouse-parts"
+import { ArcanaColorArt, arcanaColorName } from "./warehouse-parts"
 import {
   warehouseText,
   type PublishedWarehouseRecord,
   type WarehouseGroup,
   type WarehouseKind,
 } from "../../lib/warehouse-types"
-
-/** From this width the search and a catalog's filters share one line; below it the filters take the next line. */
-const ONE_LINE = "(min-width: 1100px)"
 
 interface ControlsProps {
   kind: WarehouseKind
@@ -411,42 +408,83 @@ function ItemControls({ search, onSearch, entries, groups, group, onFilters, ite
   )
 }
 
+/**
+ * The arcana controls work as the item ones do: a search that also finds stats and says how many arcana it leaves, and
+ * the same stat filter with how many arcana each stat would leave. The colors follow, as the item groups do.
+ */
 function ArcanaControls({ search, onSearch, entries, allEntries, group, params, onFilters }: ControlsProps) {
   const { locale } = useWikiContext()
   const compact = usePageLayout() === "compact"
-  const roomy = useMediaQuery(ONE_LINE)
   const text = useWikiText()
   const filters = arcanaFilters(params, group)
-  const labels = new Map<string, string>()
-  for (const entry of arcanaCandidates(entries, filters))
-    for (const { key } of entry.content.stats)
-      labels.set(key, warehouseText(entry.content.translations, locale)?.statLabels?.[key] || key)
-  const stats = [...labels]
-    .map(([value, label]) => ({ value, label }))
-    .sort((a, b) => a.label.localeCompare(b.label, locale))
-  const allStats = text("Tất cả chỉ số", "All stats")
-  const tiers = [3, 2, 1]
-  const tierName = (tier: number) => `${text("Bậc", "Tier")} ${romanTier(tier)}`
-  const reset = () => onFilters({ color: null, group: null, tier: null, stat: null })
+  const counts = arcanaStatCounts(entries, filters)
+  const statView: StatFilterState = {
+    stats: filters.stats,
+    counts,
+    setStats: (stats) => onFilters({ stats: stats.join(",") || null }),
+  }
+  const options = ITEM_STAT_FILTERS.filter((filter) => counts[filter.key] || filters.stats.includes(filter.key))
+  const found = entries.filter((entry) => entry.kind === "arcana").length
+  // The arcana as a list, or the game's arcana screen where a player fills one page.
+  const building = params.get("view") === "page"
+  const list = text("Danh sách", "List")
+  const builder = text("Lắp ngọc", "Build a page")
+  const viewSwitch = (
+    <div
+      className="wiki-warehouse-switch"
+      role="group"
+      aria-label={text("Kiểu xem", "View")}
+      data-labels={!compact || building || undefined}
+    >
+      <button
+        type="button"
+        aria-pressed={!building}
+        aria-label={list}
+        title={list}
+        onClick={() => onFilters({ view: null })}
+      >
+        <WikiIcon name="rows" size={18} />
+        <span>{list}</span>
+      </button>
+      <button
+        type="button"
+        aria-pressed={building}
+        aria-label={builder}
+        title={builder}
+        onClick={() => onFilters({ view: "page", q: null, color: null, group: null, tier: null, stats: null })}
+      >
+        <WikiIcon name="cards" size={18} />
+        <span>{builder}</span>
+      </button>
+    </div>
+  )
+  if (building)
+    return (
+      <div className="wiki-warehouse-controls">
+        <div className="wiki-warehouse-toolbar">
+          {viewSwitch}
+          <ArcanaPageTools entries={allEntries} onFilters={onFilters} />
+        </div>
+      </div>
+    )
   const searchField = (
     <SearchField
       value={search}
       onChange={onSearch}
       label={text("Tìm ngọc", "Search arcana")}
-      placeholder={text("Tìm ngọc…", "Search arcana…")}
+      placeholder={
+        compact ? text("Tìm ngọc…", "Search arcana…") : text("Tìm theo tên, chỉ số…", "Search names, stats…")
+      }
+      result={text(`${found} ngọc`, `${found} arcana`)}
     />
   )
   const colors = (
     <ChipGroup label={text("Màu ngọc", "Arcana color")}>
-      <Chip pressed={!filters.color} onClick={() => onFilters({ color: null, group: null, stat: null })}>
+      <Chip pressed={!filters.color} onClick={() => onFilters({ color: null, group: null })}>
         {text("Tất cả màu", "All colors")}
       </Chip>
       {ARCANA_COLORS.map((color) => (
-        <Chip
-          key={color}
-          pressed={filters.color === color}
-          onClick={() => onFilters({ color, group: null, stat: null })}
-        >
+        <Chip key={color} pressed={filters.color === color} onClick={() => onFilters({ color, group: null })}>
           <ArcanaColorArt color={color} entries={allEntries} />
           {arcanaColorName(color, locale)}
         </Chip>
@@ -455,43 +493,35 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
   )
 
   if (compact) {
-    const found = arcanaRows(entries, filters, locale).length
+    const shown = arcanaRows(entries, filters, locale).length
     return (
       <div className="wiki-warehouse-controls">
         <div className="wiki-warehouse-toolbar">
+          {viewSwitch}
           {searchField}
           <PublicFilterSheet
             title={text("Lọc ngọc", "Filter arcana")}
             triggerLabel={text("Lọc", "Filter")}
-            count={Number(!!filters.tier) + Number(!!filters.stat)}
+            count={filters.stats.length}
             resetLabel={text("Xóa lọc", "Clear")}
-            onReset={() => onFilters({ tier: null, stat: null })}
-            resultLabel={text(`Xem ${found} ngọc`, `Show ${found} arcana`)}
+            onReset={() => statView.setStats([])}
+            resultLabel={text(`Xem ${shown} ngọc`, `Show ${shown} arcana`)}
           >
-            <SheetGroup label={text("Bậc ngọc", "Arcana tier")}>
-              <SheetChoice pressed={!filters.tier} onClick={() => onFilters({ tier: null, stat: null })}>
-                {text("Mọi bậc", "All tiers")}
-              </SheetChoice>
-              {tiers.map((tier) => (
-                <SheetChoice
-                  key={tier}
-                  pressed={filters.tier === String(tier)}
-                  onClick={() => onFilters({ tier: String(tier), stat: null })}
-                >
-                  {tierName(tier)}
-                </SheetChoice>
-              ))}
-            </SheetGroup>
-            <SheetGroup label={text("Chỉ số", "Stats")}>
-              <SheetChoice pressed={!filters.stat} onClick={() => onFilters({ stat: null })}>
-                {allStats}
-              </SheetChoice>
-              {stats.map(({ value, label }) => (
-                <SheetChoice key={value} pressed={filters.stat === value} onClick={() => onFilters({ stat: value })}>
-                  {label}
-                </SheetChoice>
-              ))}
-            </SheetGroup>
+            {options.length > 0 && (
+              <SheetGroup label={text("Chỉ số", "Stats")}>
+                {options.map((filter) => (
+                  <SheetChoice
+                    key={filter.key}
+                    pressed={filters.stats.includes(filter.key)}
+                    count={counts[filter.key] ?? 0}
+                    onClick={() => statView.setStats(toggled(filters.stats, filter.key))}
+                  >
+                    <StatBadge filter={filter} size={26} />
+                    {text(filter.vi, filter.en)}
+                  </SheetChoice>
+                ))}
+              </SheetGroup>
+            )}
           </PublicFilterSheet>
         </div>
         {colors}
@@ -499,58 +529,21 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
     )
   }
 
-  const filterRow = (
-    <div className="wiki-warehouse-filters">
-      {colors}
-      <ChipGroup label={text("Bậc ngọc", "Arcana tier")}>
-        <Chip pressed={!filters.tier} onClick={() => onFilters({ tier: null, stat: null })}>
-          {text("Mọi bậc", "All tiers")}
-        </Chip>
-        {tiers.map((tier) => (
-          <Chip
-            key={tier}
-            pressed={filters.tier === String(tier)}
-            label={tierName(tier)}
-            onClick={() => onFilters({ tier: String(tier), stat: null })}
-          >
-            {romanTier(tier)}
-          </Chip>
-        ))}
-      </ChipGroup>
-      <Select
-        value={filters.stat || "all"}
-        onValueChange={(value) => onFilters({ stat: value === "all" ? null : value })}
-      >
-        <SelectTrigger
-          className="wiki-warehouse-select"
-          aria-label={text("Lọc theo chỉ số", "Filter by stat")}
-          data-active={filters.stat ? "" : undefined}
-        >
-          <SelectValue placeholder={allStats} />
-        </SelectTrigger>
-        <SelectContent drawerTitle={text("Chỉ số", "Stats")} position="popper" align="start">
-          <SelectItem value="all">{allStats}</SelectItem>
-          {stats.map(({ value, label }) => (
-            <SelectItem key={value} value={value}>
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {(filters.color || filters.tier || filters.stat) && (
-        <button type="button" className="wiki-warehouse-clear" onClick={reset}>
-          {text("Xóa lọc", "Clear filters")}
-        </button>
-      )}
-    </div>
-  )
   return (
     <div className="wiki-warehouse-controls">
       <div className="wiki-warehouse-toolbar">
+        {viewSwitch}
         {searchField}
-        {roomy && filterRow}
+        {options.length > 0 && (
+          <StatFilterButton
+            view={statView}
+            options={options}
+            hint={text("Chỉ giữ ngọc có đủ các chỉ số đã chọn.", "Keeps arcana that have every stat chosen.")}
+          />
+        )}
       </div>
-      {!roomy && filterRow}
+      <ChosenStats view={statView} options={options} />
+      {colors}
     </div>
   )
 }
