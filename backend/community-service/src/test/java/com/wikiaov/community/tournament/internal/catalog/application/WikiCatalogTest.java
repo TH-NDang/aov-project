@@ -35,9 +35,9 @@ class WikiCatalogTest {
                     : path.endsWith("catalog-context")
                             ? context()
                             : path.endsWith("heroes")
-                                    ? "{\"items\":[{\"id\":\"" + HERO
+                                    ? "{\"context\":{\"region\":\"VN\"},\"page\":{\"items\":[{\"id\":\"" + HERO
                                             + "\",\"code\":\"hero\",\"name\":\"Hero\",\"revisionId\":\"" + REVISION
-                                            + "\"}],\"totalElements\":1}"
+                                            + "\"}],\"page\":0,\"size\":100,\"totalElements\":1}}"
                                     : "{\"items\":[],\"totalElements\":0}";
             byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().set("Content-Type", "application/json");
