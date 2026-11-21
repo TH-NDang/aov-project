@@ -188,6 +188,11 @@ class Data:
         return {player_id: names_of_player(self.players[player_id]) for player_id in ids
                 if self.live_player(player_id)}
 
+    def player_team_candidates(self, player_id):
+        """Teams the player has a roster line with in any tournament."""
+        teams = {team for team, members in self.team_members.items() if player_id in members}
+        return {team: names_of_team(self.teams[team]) for team in teams if self.live_team(team)}
+
     def team_history_candidates(self, series):
         """Players with a roster line on either team in any tournament: the rosters of a match are often incomplete."""
         ids = set()
@@ -330,6 +335,8 @@ def plan_award_teams(data, plan):
             if award.get("teamId") or not (award.get("teamName") or "").strip():
                 continue
             team = exactly_one(award["teamName"], candidates)
+            if team is None and award.get("playerId"):
+                team = exactly_one(award["teamName"], data.player_team_candidates(award["playerId"]))
             if team is None:
                 plan.skip("AWARD_TEAM", tournament["id"], award["teamName"], "no single team of the tournament")
                 continue

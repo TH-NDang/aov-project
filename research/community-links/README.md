@@ -31,7 +31,7 @@ Ghi `ket-qua/plan.json` (các thay đổi đề xuất), `ket-qua/review.tsv` (c
 | Ê-kíp phát sóng của giải | Mục lịch sử có URL nguồn `<URL của giải>#Broadcast`; vai trò từ chữ ("MC", "Bình luận viên", "Phỏng vấn", "Khách mời phân tích") |
 | Ban huấn luyện | Mục lịch sử có hồ sơ đội và URL nguồn trùng đúng một giải chưa xóa; "Huấn luyện viên…" là COACH, "…phân tích…" là TEAM_ANALYST, chữ gốc vào `title` |
 | Giải của mốc lịch sử | URL nguồn (bỏ phần sau "#") trùng đúng một giải, kể cả giải ở thùng rác |
-| Đội của giải thưởng | `teamName` trùng tên, tên ngắn hoặc tên gọi khác của đúng một đội có đội hình, thứ hạng hoặc trận ở giải đó |
+| Đội của giải thưởng | `teamName` trùng tên, tên ngắn hoặc tên gọi khác của đúng một đội có đội hình, thứ hạng hoặc trận ở giải đó; nếu không, và giải thưởng đã có `playerId`, trùng đúng một đội mà người nhận từng có dòng đội hình |
 
 Tên được so như `tournament.normalize_reference_search`: không phân biệt hoa thường và dấu, dấu câu coi như khoảng trắng.
 

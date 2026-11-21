@@ -128,6 +128,15 @@ class PlanTest(unittest.TestCase):
         plan = backfill.build_plan(data)
         self.assertIn(("GAME_MVP", "g-3", "Kai", "no single player of the two rosters"), plan.review)
 
+    def test_an_award_team_missing_from_the_tournament_is_linked_through_its_player_s_roster(self):
+        data = export()
+        data["teams"].append({"id": "team-c", "deleted": False, "name": "eArena", "shortName": None, "aliases": []})
+        data["rosters"].append({"tournamentId": "t-old", "teamId": "team-c", "playerId": ZANE})
+        data["tournaments"][0]["awards"].append({"title": "FMVP", "recipientName": "Zane", "playerId": ZANE,
+                                                 "teamName": "eArena"})
+        plan = backfill.build_plan(data)
+        self.assertIn("team-c", [c["value"] for c in changes_of(plan, "awards.teamId")])
+
     def test_a_series_mvp_is_linked_from_its_rated_line(self):
         series = [c for c in changes_of(self.plan, "mvpPlayerId") if c["record"] == "series"]
         self.assertEqual([(c["id"], c["value"]) for c in series], [("s-1", STARK)])
