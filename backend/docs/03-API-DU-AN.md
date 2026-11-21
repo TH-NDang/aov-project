@@ -1156,7 +1156,6 @@ PUT /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/combat-stats
     {
       "statKey": "HP",
       "baseValue": 3600,
-      "growthPerLevel": 250,
       "unit": "POINT"
     },
     {
@@ -1171,6 +1170,10 @@ PUT /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/combat-stats
 ```
 
 Full replace của section trong draft; không merge field mơ hồ.
+
+Mỗi dòng phải có `baseValue`, thiếu trả 422. Đó là số màn Thuộc tính trong game ghi: chỉ số của tướng không đổi theo
+cấp tướng (cấp 1 đến 15 như nhau), trang bị, phù hiệu và bảng ngọc cộng thêm khi vào trận. Không có mức tăng theo cấp;
+trường `growthPerLevel` đã bỏ, body cũ còn gửi trường này thì nó bị bỏ qua.
 
 `percentValue` tùy chọn, là phần trăm game hiển thị sau dấu `|` (`150 | 20%`). Chỉ `ARMOR`, `MAGIC_DEFENSE`,
 `ARMOR_PIERCE` và `MAGIC_PIERCE` có giá trị này, phải có `baseValue` và nằm trong khoảng 0–100; sai trả 422. Bỏ trống
@@ -1800,7 +1803,7 @@ GET /api/wiki/v1/admin/heroes/{heroId}/patch-view?patchVariantId=...
 ```
 
 Quyền `catalog:read`. Trả `anchor` (revision dùng làm mốc, `direction`: `EXACT`, `FORWARD`,
-`BACKWARD` hoặc `NONE`), `stats` (statKey, unit, baseValue, percentValue, growthPerLevel, `provenance`:
+`BACKWARD` hoặc `NONE`), `stats` (statKey, unit, baseValue, percentValue, `provenance`:
 `OBSERVED`, `DERIVED`, `CARRIED`, changeSetId, patchVariantId), `roles` (roleCode, provenance,
 changeSetId, patchVariantId), `skillFields` (skillKey, fieldKey, value, provenance, changeSetId,
 patchVariantId) và `appliedChangeSetIds`. Giá trị suy ra ghi change set và patch đã đặt giá trị đó. Suy ra theo
@@ -2529,7 +2532,7 @@ vẹn; không sửa snapshot đã lưu. Khi bổ sung trường gameplay capture
 `GET /admin/heroes/import/fields` thêm overviewRatings và combatStats, type=json.
 `values.overviewRatings` nhận `{scaleCode,survivability,attackDamage,skillEffects,difficulty,derived,sources}`;
 scale đã có GAME_OVERVIEW_10 giới hạn 0–10, derived bắt buộc có nguồn. `values.combatStats` nhận
-`{values:[{statKey,baseValue?,percentValue?,growthPerLevel?,unit}],sources}`; mỗi dòng phải có ít nhất một số đã biết,
+`{values:[{statKey,baseValue,percentValue?,unit}],sources}`; mỗi dòng phải có `baseValue`,
 `percentValue` theo cùng quy tắc của cập nhật chỉ số chiến đấu.
 Đây là field cấp object: OVERWRITE thay cả object, FILL_EMPTY chỉ điền nếu section chưa có dữ liệu,
 SKIP giữ nguyên. Bỏ field khỏi values không xóa section. Tên field/kiểu không hợp lệ trả 422.
