@@ -75,8 +75,11 @@ public class WikiCatalogClient implements WikiCatalogSource {
             }
             return builder.build();
         });
-        var items = maps(data.get("items")).stream().map(row -> reference(row, kind)).toList();
-        return new ReferencePage(items, number(data.get("totalElements")));
+        // The public hero list answers its rows under "page", next to the context it was read in; the other lists
+        // are a bare page.
+        var rows = kind.equals("heroes") ? map(data.get("page")) : data;
+        var items = maps(rows.get("items")).stream().map(row -> reference(row, kind)).toList();
+        return new ReferencePage(items, number(rows.get("totalElements")));
     }
 
     private Map<String, Object> read(Function<UriBuilder, URI> uri) {
