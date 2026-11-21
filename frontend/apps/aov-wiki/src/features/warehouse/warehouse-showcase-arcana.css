@@ -1,0 +1,222 @@
+/*
+ * The arcana's scene: an arcana page drawn as the game's wheel, set out as a jewel under a few faint stars. Each color's
+ * third is lit by its own gem, blurred behind it, so its colour comes from the game's picture.
+ */
+.wiki-arcana-scene {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1.5px 1.5px at 18% 22%, color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent), transparent),
+    radial-gradient(1px 1px at 34% 78%, color-mix(in srgb, var(--aov-text) 60%, transparent), transparent),
+    radial-gradient(1.5px 1.5px at 58% 12%, color-mix(in srgb, var(--aov-text) 50%, transparent), transparent),
+    radial-gradient(1px 1px at 72% 88%, color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent), transparent),
+    radial-gradient(1.5px 1.5px at 92% 30%, color-mix(in srgb, var(--aov-text) 45%, transparent), transparent);
+  transition: opacity 360ms ease;
+}
+/* The page on show fades before the next sample takes its turn. */
+.wiki-arcana-scene[data-leaving] {
+  opacity: 0;
+}
+
+/*
+ * The wheel: a gilded double rim with a fine dial turning slowly inside it, an inner ring between the two runs of
+ * slots, three tapered spokes ending in small diamonds, and a glowing core with the page's level. Every piece stands by
+ * its share of the wheel, so the wheel only sets its own size.
+ */
+.wiki-arcana-scene-wheel {
+  --wheel: calc(158px * var(--scene-scale, 1));
+  --gem: calc(19px * var(--scene-scale, 1));
+  --gold: var(--aov-wiki-gold);
+  --night: var(--aov-wiki-bar);
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  isolation: isolate;
+  width: var(--wheel);
+  height: var(--wheel);
+  border: 2px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 30%, color-mix(in srgb, var(--night) 55%, transparent) 72%),
+    radial-gradient(circle at 50% 40%, var(--aov-wiki-panel), var(--night) 80%);
+  box-shadow:
+    inset 0 0 0 4px color-mix(in srgb, var(--night) 85%, transparent),
+    inset 0 0 0 5px color-mix(in srgb, var(--gold) 28%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--aov-accent) 14%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--gold) 18%, transparent),
+    0 0 48px -4px color-mix(in srgb, var(--aov-accent) 30%, transparent),
+    0 24px 40px -20px var(--night);
+  translate: 0 -50%;
+}
+/* The ring between the two runs of slots, a thin gilded line. */
+.wiki-arcana-scene-wheel::before {
+  content: "";
+  position: absolute;
+  inset: 21%;
+  border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gold) 8%, transparent);
+}
+/* A wide banner sets the wheel in the middle of its scene. */
+.wiki-warehouse-showcase[data-layout="wide"] .wiki-arcana-scene-wheel {
+  right: 24%;
+  translate: 50% -50%;
+}
+/* The dial: fine ticks just inside the rim, every sixth one brighter, turning slowly. */
+.wiki-arcana-scene-rim {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(color-mix(in srgb, var(--gold) 55%, transparent) 0 0.7deg, transparent 0.7deg 30deg),
+    repeating-conic-gradient(color-mix(in srgb, var(--gold) 28%, transparent) 0 0.5deg, transparent 0.5deg 5deg);
+  mask: radial-gradient(closest-side, transparent 93%, var(--aov-text) 94%, var(--aov-text) 99%, transparent 100%);
+  animation: wiki-arcana-scene-turn 80s linear infinite;
+}
+@keyframes wiki-arcana-scene-turn {
+  to {
+    rotate: 1turn;
+  }
+}
+/* A spoke runs from the core to the rim, brightest in the middle, and ends in a small diamond. */
+.wiki-arcana-scene-spoke {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 46%;
+  margin-left: -1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 30%,
+    color-mix(in srgb, var(--gold) 55%, transparent) 55%,
+    color-mix(in srgb, var(--gold) 20%, transparent)
+  );
+  transform-origin: top center;
+  rotate: var(--spoke);
+}
+.wiki-arcana-scene-spoke::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border: 1px solid color-mix(in srgb, var(--gold) 80%, transparent);
+  background: var(--night);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--gold) 50%, transparent);
+  translate: -50% 0;
+  rotate: 45deg;
+}
+/* The core: a lit stone in a double gilded setting, showing the page's level. */
+.wiki-arcana-scene-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 30%;
+  height: 30%;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--gold) 70%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 30%,
+    color-mix(in srgb, var(--aov-accent) 24%, var(--night)),
+    var(--night) 72%
+  );
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--night) 90%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--gold) 30%, transparent),
+    0 0 22px color-mix(in srgb, var(--aov-accent) 40%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--aov-accent) 30%, transparent);
+  color: var(--aov-wiki-gold-bright);
+  font: 700 calc(1.25rem * var(--scene-scale, 1)) / 1 var(--wiki-font-display);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  translate: -50% -50%;
+}
+/* Each third's light, from its gem blurred behind it, breathing out of step with the other two. */
+.wiki-arcana-scene-glow {
+  position: absolute;
+  z-index: -1;
+  top: var(--piece-y);
+  left: var(--piece-x);
+  width: 52%;
+  height: 52%;
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0.5;
+  filter: blur(18px) saturate(1.7);
+  translate: -50% -50%;
+  animation: wiki-arcana-scene-breathe 4.5s ease-in-out infinite alternate;
+  animation-delay: calc(var(--piece-order) * -1.5s);
+}
+@keyframes wiki-arcana-scene-breathe {
+  to {
+    opacity: 0.28;
+  }
+}
+.wiki-arcana-scene-gem,
+.wiki-arcana-scene-slot {
+  position: absolute;
+  top: var(--piece-y);
+  left: var(--piece-x);
+  width: var(--gem);
+  height: var(--gem);
+  border-radius: 50%;
+  translate: -50% -50%;
+}
+/* A gem sits in a gilded setting with a little shadow under it. */
+.wiki-arcana-scene-gem {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--gold) 65%, transparent),
+    0 0 0 2.5px color-mix(in srgb, var(--night) 80%, transparent),
+    0 4px 8px -2px var(--night);
+  object-fit: cover;
+  animation: wiki-arcana-scene-gem-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1.2) backwards;
+  animation-delay: calc(var(--piece-order) * 24ms);
+}
+/* An empty socket: a dark hollow with a dashed gilded edge. */
+.wiki-arcana-scene-slot {
+  border: 1px dashed color-mix(in srgb, var(--gold) 40%, transparent);
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--night) 40%, transparent), var(--night));
+  box-shadow: inset 0 2px 5px var(--night);
+}
+/* A new page is put together one slot after another, red first. */
+@keyframes wiki-arcana-scene-gem-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* Under the two lines: the page on show and the two stats it adds the most of. */
+.wiki-arcana-scene-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  margin-top: 2px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  transition: opacity 360ms ease;
+}
+.wiki-arcana-scene-caption > span + span::before {
+  content: "·";
+  margin-right: 10px;
+}
+.wiki-arcana-scene-caption b {
+  color: var(--aov-accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-arcana-scene-caption[data-leaving] {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-arcana-scene-rim,
+  .wiki-arcana-scene-glow,
+  .wiki-arcana-scene-gem {
+    animation: none;
+  }
+}

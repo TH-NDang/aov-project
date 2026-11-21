@@ -1,3 +1,4 @@
+import { ArcanaShowcase } from "./warehouse-showcase-arcana"
 import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
@@ -60,7 +61,7 @@ export default function WarehousePage() {
   const entries = catalog.data ?? NO_ENTRIES
   const groups = metadata.data ?? []
   const showcase = useMemo(
-    () => (kind === "enchantments" || kind === "items" ? [] : showcaseImages(entries)),
+    () => (kind === "enchantments" || kind === "items" || kind === "arcana" ? [] : showcaseImages(entries)),
     [entries, kind],
   )
   const filtered = useMemo(
@@ -221,6 +222,8 @@ export default function WarehousePage() {
               <EnchantmentShowcase intro={intro} entries={entries} groups={groups} />
             ) : kind === "items" ? (
               <ItemShowcase intro={intro} entries={entries} groups={groups} />
+            ) : kind === "arcana" ? (
+              <ArcanaShowcase intro={intro} entries={entries} params={params} />
             ) : (
               <WarehouseShowcase {...intro} scene={<ShowcasePieces images={showcase} wide={intro.wide} />} />
             )

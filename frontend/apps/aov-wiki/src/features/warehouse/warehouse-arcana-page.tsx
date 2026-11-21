@@ -131,8 +131,16 @@ function ArcanaBoard({
           return entry?.content.color === key ? [{ entry, count: piece.count }] : []
         })
         const free = ARCANA_PAGE_SLOTS - placed
+        // The color's own gem lights its line: blurred into a glow on the left, faint and tilted on the right.
+        const gem = pool.find((entry) => entry.content.color === key)
         return (
           <section key={key} className="wiki-arcana-board-line" data-active={key === color || undefined}>
+            {gem && (
+              <span className="wiki-arcana-board-backdrop" aria-hidden="true">
+                <WarehouseArtwork entry={gem} kind="arcana" className="wiki-arcana-board-glow" />
+                <WarehouseArtwork entry={gem} kind="arcana" className="wiki-arcana-board-mark" />
+              </span>
+            )}
             <div className="wiki-arcana-board-head">
               <button
                 type="button"

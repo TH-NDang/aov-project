@@ -26,16 +26,22 @@
 }
 
 /* The board: one line of ten slots per color. */
+/* The board as a stage, like the enchantment set screen: a dark well with a warm light from the top corner. */
 .wiki-arcana-board {
   display: grid;
   gap: 6px;
-  border: 1px solid var(--aov-line);
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 25%, var(--aov-line));
   border-radius: var(--aov-radius-card);
   padding: 8px;
-  background: var(--aov-sunken);
+  background:
+    radial-gradient(90% 140% at 0% 0%, color-mix(in srgb, var(--aov-accent) 12%, transparent), transparent 60%),
+    var(--aov-sunken);
 }
 .wiki-arcana-board-line {
   --wiki-warehouse-art-radius: 50%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
   min-width: 0;
   grid-template-columns: 144px minmax(0, 1fr);
@@ -48,6 +54,39 @@
 .wiki-arcana-board-line[data-active] {
   border-color: color-mix(in srgb, var(--aov-accent) 45%, transparent);
   background: color-mix(in srgb, var(--aov-accent) 7%, transparent);
+}
+/*
+ * Each line is lit by its own gem, so the color comes from the game's picture rather than from a palette: blurred into
+ * a glow behind the name, and faint and tilted at the far end. The line the picker shows glows the most.
+ */
+.wiki-arcana-board-backdrop {
+  --wiki-warehouse-art-radius: 50%;
+  --wiki-warehouse-art-ring: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.wiki-arcana-board-glow,
+.wiki-arcana-board-mark {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+}
+.wiki-arcana-board-glow {
+  --wiki-warehouse-art-size: 200px;
+  left: -64px;
+  opacity: 0.35;
+  filter: blur(36px) saturate(1.6);
+}
+.wiki-arcana-board-line[data-active] .wiki-arcana-board-glow {
+  opacity: 0.6;
+}
+.wiki-arcana-board-mark {
+  --wiki-warehouse-art-size: 140px;
+  right: -28px;
+  opacity: 0.08;
+  rotate: -14deg;
 }
 .wiki-arcana-board-head {
   --wiki-warehouse-art-size: 22px;

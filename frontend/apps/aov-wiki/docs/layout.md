@@ -163,11 +163,19 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   lấy từ danh sách chỉ số chung, con số canh phải; tên ngọc chỉ hiện ở chi tiết. Đầu bậc cao nhất có nút "1 viên / 10
   viên" (10 viên là lắp kín một màu). Như sơ đồ Trang bị, tìm kiếm và lọc chỉ số không ẩn ngọc mà làm mờ những viên không
   khớp (độ đậm 35%, rê chuột vào thì rõ lại), nên các cột giữ nguyên chỗ; chỉ bộ lọc màu mới bỏ ngọc khỏi trang. Chỉ số
-  thuộc những nhóm đã chọn sáng hơn. Khi tìm, phần bậc thấp vẫn thu gọn và dòng của nó ghi số viên khớp. Bậc cao nhất mở sẵn; các bậc dưới gộp thành một dòng "Ngọc bậc I và II" thu gọn, mở
-  ra có một câu giải thích. Cột hẹp (cạnh khung chi tiết) bỏ hình ngọc để giữ chỗ cho chỉ số. Phụ trợ dùng ảnh tròn,
+  thuộc những nhóm đã chọn sáng hơn. Khi tìm, phần bậc thấp vẫn thu gọn và dòng của nó ghi số viên khớp. Bậc cao nhất
+  mở sẵn; các bậc dưới gộp thành một dòng "Ngọc bậc I và II" thu gọn, mở ra có một câu giải thích. Cột hẹp (cạnh khung
+  chi tiết) bỏ hình ngọc để giữ chỗ cho chỉ số. Phần trưng bày đầu trang Bảng ngọc vẽ một bảng ngọc như vòng tròn trong
+  game: viền vàng kép có vạch chia quay chậm, mỗi màu một phần ba (Đỏ trên, Tím dưới phải, Xanh dưới trái; 6 ô vòng
+  ngoài rồi 4 ô vòng trong), ba nan chia có hạt kim cương ở đầu, quầng sáng mỗi phần ba lấy từ ảnh viên ngọc, và lõi
+  giữa ghi cấp của bảng (tổng bậc các viên, 90 khi đủ 30 viên bậc III). Ở danh sách nó lần lượt đổi giữa ba bộ mẫu (Công
+  vật lý, Phép, Trung tính) kèm hai chỉ số lớn nhất; ở Lắp ngọc có bảng đang lắp thì vẽ đúng bảng đó. Phụ trợ dùng ảnh
+  tròn,
   xếp lớp ảnh khi có nhiều trạng thái; mục cũ thu gọn.
 - Bảng ngọc có nút chuyển "Danh sách / Lắp ngọc" (`view=page`). Lắp ngọc giống màn bảng ngọc trong game: ba hàng
-  Đỏ, Tím, Xanh, mỗi hàng 10 ô, chỉ dùng ngọc bậc cao nhất. Bấm một viên trong danh sách bên dưới để lắp vào ô trống của
+  Đỏ, Tím, Xanh, mỗi hàng 10 ô, chỉ dùng ngọc bậc cao nhất. Bảng ô là một "sân khấu" tối có ánh vàng ở góc; mỗi hàng
+  được thắp bằng chính ảnh viên ngọc của màu đó (phóng to, làm nhòe thành quầng sáng bên trái, mờ và nghiêng ở mép
+  phải), nên màu lấy từ ảnh của game chứ không thêm màu mới; hàng đang chọn sáng hơn. Bấm một viên trong danh sách bên dưới để lắp vào ô trống của
   màu đang chọn; mỗi viên có nút bớt, thêm và "Lắp kín" (lắp vào mọi ô còn trống). Mỗi hàng gom các viên giống nhau
   thành một nhóm rộng theo số viên, ghi hình, tên (ghép từ tên chỉ số chung) và "×số", vạch ngắn ở mép dưới chia từng
   ô; nhóm hẹp bỏ tên trước rồi bỏ hình, số "×N" thì luôn còn. Rê chuột vào nhóm hiện tooltip có tên, số viên và chỉ số
