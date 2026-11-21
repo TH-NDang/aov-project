@@ -127,6 +127,12 @@ def mvp_in_text(text, candidates):
     return found.pop() if len(found) == 1 else None
 
 
+def named_by(text, candidates):
+    """Whether any candidate has one of the names the MVP part of a note gives."""
+    said = mvp_names(text)
+    return any(names & said for names in candidates.values())
+
+
 def exactly_one(name, candidates):
     """The one candidate that has this name; None when none or several do."""
     wanted = key(name)
@@ -147,9 +153,11 @@ class Data:
         self.team_pages = {row["id"]: row for row in export["pages"] if row["kind"] == "TEAM"}
         self.roster = defaultdict(set)
         self.tournament_teams = defaultdict(set)
+        self.team_members = defaultdict(set)
         for row in export["rosters"]:
             self.roster[(row["tournamentId"], row["teamId"])].add(row["playerId"])
             self.tournament_teams[row["tournamentId"]].add(row["teamId"])
+            self.team_members[row["teamId"]].add(row["playerId"])
         for row in self.series.values():
             for team in (row["teamAId"], row["teamBId"]):
                 if team:
@@ -180,6 +188,15 @@ class Data:
         return {player_id: names_of_player(self.players[player_id]) for player_id in ids
                 if self.live_player(player_id)}
 
+    def team_history_candidates(self, series):
+        """Players with a roster line on either team in any tournament: the rosters of a match are often incomplete."""
+        ids = set()
+        for team in (series["teamAId"], series["teamBId"]):
+            if team:
+                ids |= self.team_members[team]
+        return {player_id: names_of_player(self.players[player_id]) for player_id in ids
+                if self.live_player(player_id)}
+
 
 class Plan:
     def __init__(self):
@@ -207,23 +224,32 @@ def plan_game_mvps(data, plan):
             if data.live_player(player_id):
                 candidates[player_id] = names_of_player(data.players[player_id])
         player = mvp_in_text(text, candidates)
+        evidence = text
+        if player is None and not named_by(text, candidates):
+            player = mvp_in_text(text, data.team_history_candidates(series))
+            evidence = f"{text} (team history)"
         if player is None:
             plan.skip("GAME_MVP", game["id"], text, "no single player of the two rosters")
             continue
         plan.link("GAME_MVP", {"record": "game", "id": game["id"], "field": "mvpPlayerId", "value": player,
-                               "evidence": text})
+                               "evidence": evidence})
 
 
 def plan_series(data, plan):
     for series in data.series.values():
         name = series_mvp_name(series.get("note"))
         if name and not series.get("mvpPlayerId"):
-            player = exactly_one(name, data.series_candidates(series))
+            candidates = data.series_candidates(series)
+            player = exactly_one(name, candidates)
+            evidence = name
+            if player is None and not any(key(name) in names for names in candidates.values()):
+                player = exactly_one(name, data.team_history_candidates(series))
+                evidence = f"{name} (team history)"
             if player is None:
                 plan.skip("SERIES_MVP", series["id"], name, "no single player of the two rosters")
             else:
                 plan.link("SERIES_MVP", {"record": "series", "id": series["id"], "field": "mvpPlayerId",
-                                         "value": player, "evidence": name})
+                                         "value": player, "evidence": evidence})
         casters = series_caster_names(series.get("note"))
         if casters and not series.get("broadcast"):
             pages = [exactly_one(caster, data.individuals) for caster in casters]
