@@ -118,7 +118,7 @@ export function HeroStatsEditor({
   const rows = combatAttributeRows(value, observation, defaults)
   const inherited = defaults.filter((rule) => !value.values.some((v) => v.statKey === rule.statKey))
   const add = (statKey: string, unit = statUnit(statKey)) =>
-    onChange({ ...value, values: [...value.values, { statKey, unit, baseValue: null, growthPerLevel: null }] })
+    onChange({ ...value, values: [...value.values, { statKey, unit, baseValue: null }] })
   const update = (index: number, patch: Partial<Stats["values"][number]>) =>
     onChange({ ...value, values: value.values.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)) })
   const nextKey = Object.keys(STAT_LABELS).find((key) => !value.values.some((entry) => entry.statKey === key)) ?? ""
@@ -126,8 +126,8 @@ export function HeroStatsEditor({
     <div className="space-y-3">
       <p className="type-meta">
         {observation && patchCode
-          ? "Đã có thuộc tính từ ảnh của patch này. Chỉ thêm giá trị riêng khi có nguồn xác nhận chỉ số cơ bản hoặc mức tăng mỗi cấp."
-          : "Nhập giá trị cơ bản hoặc mức tăng mỗi cấp khi có nguồn cho riêng tướng."}
+          ? "Đã có thuộc tính từ ảnh của patch này. Chỉ thêm giá trị riêng khi có nguồn xác nhận chỉ số của tướng."
+          : "Nhập chỉ số như màn Thuộc tính trong game ghi. Chỉ số không đổi theo cấp tướng; trang bị, phù hiệu và bảng ngọc cộng thêm khi vào trận."}
       </p>
       {referenceError && (
         <p role="status" className="type-meta">
@@ -247,13 +247,6 @@ export function HeroStatsEditor({
                 onChange={(v) => update(index, { baseValue: v === "" ? null : Number(v) })}
               />
             )}
-            <Field
-              label="Tăng mỗi cấp"
-              type="number"
-              step="any"
-              value={stat.growthPerLevel ?? ""}
-              onChange={(v) => update(index, { growthPerLevel: v === "" ? null : Number(v) })}
-            />
             {!hasStatPercent(stat.statKey) && (
               <label className="type-body col-span-2 grid gap-1.5 sm:col-span-1">
                 Đơn vị

@@ -10,8 +10,8 @@ test("armor is typed the way the game shows it and a malformed value cannot be s
     const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
       values: [
-        { statKey: "ARMOR", baseValue: null, growthPerLevel: null, unit: "POINT" },
-        { statKey: "HP", baseValue: 3720, percentValue: null, growthPerLevel: null, unit: "HP" },
+        { statKey: "ARMOR", baseValue: null, unit: "POINT" },
+        { statKey: "HP", baseValue: 3720, percentValue: null, unit: "HP" },
       ],
       sources: [],
     }
@@ -43,7 +43,6 @@ test("armor is typed the way the game shows it and a malformed value cannot be s
       statKey: "ARMOR",
       baseValue: 150,
       percentValue: 20,
-      growthPerLevel: null,
       unit: "POINT",
     })
     assert.equal(input.validationMessage, "")
@@ -67,7 +66,7 @@ test("a stat without a percent in the game drops one when the row switches to it
   await withView(async ({ document, render, dom }) => {
     const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
-      values: [{ statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" }],
+      values: [{ statKey: "ARMOR", baseValue: 150, percentValue: 20, unit: "POINT" }],
       sources: [],
     }
     const mount = () =>
@@ -118,9 +117,7 @@ test("a hero can override a shared stat and switch back without storing a copy",
     await click(
       Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Đặt giá trị riêng"))!,
     )
-    assert.deepEqual(stats.values, [
-      { statKey: "CRITICAL_DAMAGE", baseValue: null, growthPerLevel: null, unit: "PERCENT" },
-    ])
+    assert.deepEqual(stats.values, [{ statKey: "CRITICAL_DAMAGE", baseValue: null, unit: "PERCENT" }])
     await mount()
     await click(document.querySelector<HTMLButtonElement>('[aria-label="Dùng mặc định của patch"]')!)
     assert.deepEqual(stats.values, [])
@@ -133,7 +130,7 @@ test("stat choices and calendar inputs preserve unknown data, zero and missing v
   await withView(async ({ dom, document, render, click }) => {
     const { SectionEditor } = await import("../src/features/publishing/components/editing/section-editor")
     let value = structuredClone(fixtureContent.COMBAT_STATS!)
-    value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, growthPerLevel: null, unit: "custom-unit" })
+    value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, unit: "custom-unit" })
     value.sources = [
       {
         label: "Source",
@@ -182,7 +179,6 @@ test("stat choices and calendar inputs preserve unknown data, zero and missing v
     assert.deepEqual(value.values[2], {
       statKey: "CUSTOM_STAT",
       baseValue: 17,
-      growthPerLevel: null,
       unit: "custom-unit",
     })
     const openSources = () => click(document.querySelector<HTMLButtonElement>('[aria-label="Nguồn tham khảo (1)"]')!)

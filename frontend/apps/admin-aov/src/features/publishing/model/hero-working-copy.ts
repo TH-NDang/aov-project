@@ -56,7 +56,6 @@ const contentSchema = z.object({
           statKey: text,
           baseValue: number.nullable(),
           percentValue: number.nullable().optional(),
-          growthPerLevel: number.nullable(),
           unit: text,
         }),
       ),

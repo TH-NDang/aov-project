@@ -43,7 +43,7 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
             baseValue === undefined
               ? null
               : {
-                  values: [{ statKey: "CRITICAL_DAMAGE", unit: "PERCENT", baseValue, growthPerLevel: null }],
+                  values: [{ statKey: "CRITICAL_DAMAGE", unit: "PERCENT", baseValue }],
                   sources: [],
                 }
           }
@@ -86,8 +86,8 @@ test("attack summary follows roles and active skill scaling while full details k
     }
     const stats = {
       values: [
-        { statKey: "ATTACK_DAMAGE", baseValue: 176, growthPerLevel: null, unit: "POINT" },
-        { statKey: "ABILITY_POWER", baseValue: 0, growthPerLevel: null, unit: "POINT" },
+        { statKey: "ATTACK_DAMAGE", baseValue: 176, unit: "POINT" },
+        { statKey: "ABILITY_POWER", baseValue: 0, unit: "POINT" },
       ],
       sources: [],
     }
