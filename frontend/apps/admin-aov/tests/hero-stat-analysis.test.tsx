@@ -60,14 +60,14 @@ test("stat comparisons keep recorded source, patch, level, resource type and arm
     1,
   )
   const own = combatAttributeRows(
-    { values: [{ statKey: "ARMOR", baseValue: 999, unit: "POINT", growthPerLevel: null }], sources: [] },
+    { values: [{ statKey: "ARMOR", baseValue: 999, unit: "POINT" }], sources: [] },
     undefined,
     [],
   )[0]
   peers[0].baseStats.ARMOR.unit = "PERCENT"
   assert.equal(analyzeStat(own, peers, "s4", null)?.primary?.matches, 4)
   const resourceStats = {
-    values: [{ statKey: "MAX_RESOURCE", baseValue: 460, unit: "POINT", growthPerLevel: null }],
+    values: [{ statKey: "MAX_RESOURCE", baseValue: 460, unit: "POINT" }],
     sources: [],
   }
   const resource = combatAttributeRows(resourceStats, { ...capture, image: undefined }, []).find(
@@ -108,7 +108,7 @@ test("hero analysis opens on demand and excludes the selected hero from both rol
         ...Array.from({ length: 5 }, (_, i) => sample(String(i), ["MAGE", "SUPPORT"])),
       ],
     )
-    const stats = { values: [{ statKey: "HP", baseValue: 3500, unit: "POINT", growthPerLevel: null }], sources: [] }
+    const stats = { values: [{ statKey: "HP", baseValue: 3500, unit: "POINT" }], sources: [] }
     await render(
       <HeroCombatAttributes
         stats={stats}

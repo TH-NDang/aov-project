@@ -135,7 +135,6 @@ export interface AttributeRow {
   group: Group | "Khác"
   value: string
   kind: AttributeSource
-  growth?: number | null
   observed?: string
   reference?: StatDefault
   matchesDefault: boolean
@@ -189,7 +188,6 @@ export function combatAttributeRows(
         group: definition?.group ?? "Khác",
         value: ownValue ?? observed ?? fallback ?? "—",
         kind,
-        growth: own?.growthPerLevel,
         observed,
         reference,
         matchesDefault:

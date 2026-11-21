@@ -9,7 +9,7 @@ import { WikiVersionPicker } from "../../../components/wiki-version-picker"
 import { useWikiContext, wikiText } from "../../../context/wiki-context"
 import { CatalogHeading } from "../../../layout/catalog-heading"
 import { usePublishedChanges } from "../../../lib/wiki-patch-changes"
-import { heroCatalogQuery } from "../../../lib/hero-api"
+import { heroCatalogQuery, type HeroListItem } from "../../../lib/hero-api"
 import { HeroCard } from "../components/hero-card"
 import {
   HERO_POSITIONS,
@@ -31,11 +31,13 @@ function FilterSheetChoices<Value extends string>({
   options,
   selected,
   onToggle,
+  counts,
 }: {
   label: string
   options: readonly HeroFilterOption<Value>[]
   selected: readonly Value[]
   onToggle: (value: Value) => void
+  counts: ReadonlyMap<Value, number>
 }) {
   return (
     <fieldset className="wiki-hero-sheet-group">
@@ -47,15 +49,25 @@ function FilterSheetChoices<Value extends string>({
             type="button"
             className="wiki-hero-sheet-choice"
             aria-pressed={selected.includes(option.value)}
+            data-empty={(counts.get(option.value) === 0 && !selected.includes(option.value)) || undefined}
             onClick={() => onToggle(option.value)}
           >
             <HeroGlyph name={option.glyph} />
             {option.label}
+            <span className="wiki-hero-sheet-count">{counts.get(option.value) ?? 0}</span>
           </button>
         ))}
       </div>
     </fieldset>
   )
+}
+
+function optionCounts<Value extends string>(
+  values: readonly Value[],
+  heroes: readonly HeroListItem[],
+  valuesOf: (hero: HeroListItem) => readonly string[],
+) {
+  return new Map(values.map((value) => [value, heroes.filter((hero) => valuesOf(hero).includes(value)).length]))
 }
 
 export function HeroDirectory() {
@@ -72,12 +84,23 @@ export function HeroDirectory() {
   const hasFilters = ["q", "role", "position"].some((key) => searchParams.has(key))
   const needle = normalizedHeroSearch(search)
   const heroes = query.data?.items ?? []
-  const visibleHeroes = heroes.filter((hero) => {
-    const matchesSearch = !needle || normalizedHeroSearch(heroSearchTexts(hero).join(" ")).includes(needle)
-    const matchesRole = !roles.length || roles.some((role) => hero.roles.includes(role))
-    const matchesPosition = !positions.length || positions.some((position) => hero.positions?.includes(position))
-    return matchesSearch && matchesRole && matchesPosition
-  })
+  const matchesSearch = (hero: HeroListItem) =>
+    !needle || normalizedHeroSearch(heroSearchTexts(hero).join(" ")).includes(needle)
+  const matchesRole = (hero: HeroListItem) => !roles.length || roles.some((role) => hero.roles.includes(role))
+  const matchesPosition = (hero: HeroListItem) =>
+    !positions.length || positions.some((position) => hero.positions?.includes(position))
+  const visibleHeroes = heroes.filter((hero) => matchesSearch(hero) && matchesRole(hero) && matchesPosition(hero))
+  // What each chip would show: the heroes with that lane or role that every other filter and the search keep.
+  const laneCounts = optionCounts(
+    HERO_POSITIONS.map((option) => option.value),
+    heroes.filter((hero) => matchesSearch(hero) && matchesRole(hero)),
+    (hero) => hero.positions ?? [],
+  )
+  const roleCounts = optionCounts(
+    HERO_ROLES.map((option) => option.value),
+    heroes.filter((hero) => matchesSearch(hero) && matchesPosition(hero)),
+    (hero) => hero.roles,
+  )
   const publishedHeroes = new Map(heroes.map((hero) => [hero.id, hero]))
   // Changes are recorded per form, so a form's change opens that form on its hero's page (ADR-024).
   const publishedForms = new Map(
@@ -167,12 +190,14 @@ export function HeroDirectory() {
                 options={laneOptions}
                 selected={positions}
                 onToggle={(value) => toggleFilter("position", value, positions)}
+                counts={laneCounts}
               />
               <FilterSheetChoices
                 label={roleLabel}
                 options={roleOptions}
                 selected={roles}
                 onToggle={(value) => toggleFilter("role", value, roles)}
+                counts={roleCounts}
               />
             </PublicFilterSheet>
           </section>
@@ -188,12 +213,14 @@ export function HeroDirectory() {
               options={laneOptions}
               selected={positions}
               onToggle={(value) => toggleFilter("position", value, positions)}
+              counts={laneCounts}
             />
             <HeroFilterChips
               label={roleLabel}
               options={roleOptions}
               selected={roles}
               onToggle={(value) => toggleFilter("role", value, roles)}
+              counts={roleCounts}
             />
           </div>
         </section>

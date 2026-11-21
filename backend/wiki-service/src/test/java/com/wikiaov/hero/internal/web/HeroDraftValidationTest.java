@@ -67,18 +67,19 @@ class HeroDraftValidationTest {
 
             for (var key : List.of("ARMOR", "MAGIC_DEFENSE", "ARMOR_PIERCE", "MAGIC_PIERCE")) {
                 assertThatCode(() -> validation.validate(HeroSection.COMBAT_STATS, stats(new Stat(key,
-                        BigDecimal.valueOf(150), BigDecimal.valueOf(20), null, "POINT")))).doesNotThrowAnyException();
+                        BigDecimal.valueOf(150), BigDecimal.valueOf(20), "POINT")))).doesNotThrowAnyException();
             }
             for (var percent : List.of(BigDecimal.ZERO, hundred)) {
                 assertThatCode(() -> validation.validate(HeroSection.COMBAT_STATS,
-                        stats(new Stat("ARMOR", BigDecimal.TEN, percent, null, "POINT"))))
+                        stats(new Stat("ARMOR", BigDecimal.TEN, percent, "POINT"))))
                         .doesNotThrowAnyException();
             }
 
-            var refused = List.of(new Stat("HP", BigDecimal.TEN, BigDecimal.ONE, null, "POINT"),
-                    new Stat("ARMOR", null, BigDecimal.ONE, BigDecimal.ONE, "POINT"),
-                    new Stat("ARMOR", BigDecimal.TEN, BigDecimal.valueOf(-1), null, "POINT"),
-                    new Stat("ARMOR", BigDecimal.TEN, BigDecimal.valueOf(101), null, "POINT"));
+            var refused = List.of(new Stat("HP", BigDecimal.TEN, BigDecimal.ONE, "POINT"),
+                    new Stat("HP", null, null, "POINT"),
+                    new Stat("ARMOR", null, BigDecimal.ONE, "POINT"),
+                    new Stat("ARMOR", BigDecimal.TEN, BigDecimal.valueOf(-1), "POINT"),
+                    new Stat("ARMOR", BigDecimal.TEN, BigDecimal.valueOf(101), "POINT"));
             for (var stat : refused) {
                 assertThatThrownBy(() -> validation.validate(HeroSection.COMBAT_STATS, stats(stat)))
                         .isInstanceOf(ApiException.class);

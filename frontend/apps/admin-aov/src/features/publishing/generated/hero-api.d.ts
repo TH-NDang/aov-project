@@ -966,10 +966,10 @@ export interface components {
       values: {
         statKey: string
         unit: string
+        /** @description The value the game's attribute screen shows, required to save the stat. It is the same at every hero level; items, arcana and enchantments add to it in a match. */
         baseValue?: number | null
         /** @description The percent the game shows after the bar, as in 150 | 20%. Only ARMOR, MAGIC_DEFENSE, ARMOR_PIERCE and MAGIC_PIERCE have one, and it needs baseValue. */
         percentValue?: number | null
-        growthPerLevel?: number | null
       }[]
       sources: components["schemas"]["HeroSource"][]
     }

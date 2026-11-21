@@ -79,12 +79,6 @@ function AttributeList({ rows, columns = false }: { rows: AttributeRow[]; column
                       {(row.kind !== "CAPTURED" || row.reference) && (
                         <span className="type-meta block">{ATTRIBUTE_SOURCE_LABELS[row.kind]}</span>
                       )}
-                      {row.growth != null && (
-                        <span className="type-meta block">
-                          {row.growth > 0 ? "+" : ""}
-                          {row.growth} / cấp
-                        </span>
-                      )}
                       {row.kind === "OWN" && row.observed && row.observed !== row.value && (
                         <span className="type-meta block">Ảnh ghi {row.observed}</span>
                       )}

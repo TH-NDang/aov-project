@@ -39,7 +39,8 @@ const FIGURES: Record<string, [string, string]> = {
   DAMAGE_TAKEN: ["Sát thương phải chịu", "Damage taken"],
   KILLS: ["Hạ gục", "Kills"],
   ASSISTS: ["Hỗ trợ", "Assists"],
-  GOLD: ["Vàng", "Gold"],
+  // The game gives this one per minute (570–740), unlike the per-match figures above it.
+  GOLD: ["Vàng mỗi phút", "Gold per minute"],
 }
 const NOTES = [
   ["strengths", "Điểm mạnh", "Strengths"],

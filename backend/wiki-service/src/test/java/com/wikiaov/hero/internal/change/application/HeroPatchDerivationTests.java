@@ -66,7 +66,7 @@ class HeroPatchDerivationTests {
             when(contexts.variant(variant.id())).thenReturn(variant);
         }
         when(sections.content(eq(HeroSection.COMBAT_STATS), any())).thenReturn(new Stats(
-                List.of(new Stat("HP", new BigDecimal("3500"), null, new BigDecimal("100"), "POINT")), List.of()));
+                List.of(new Stat("HP", new BigDecimal("3500"), null, "POINT")), List.of()));
         when(sections.content(eq(HeroSection.PROFILE), any()))
                 .thenReturn(new Profile(List.of(), Set.of(Role.ASSASSIN), List.of()));
 
@@ -128,7 +128,7 @@ class HeroPatchDerivationTests {
     @Test
     void aChangeSetKeepsThePercentUnknownBecauseItOnlyRecordsTheNumber() {
         when(sections.content(eq(HeroSection.COMBAT_STATS), any())).thenReturn(new Stats(
-                List.of(new Stat("ARMOR", new BigDecimal("150"), new BigDecimal("20"), null, "POINT")), List.of()));
+                List.of(new Stat("ARMOR", new BigDecimal("150"), new BigDecimal("20"), "POINT")), List.of()));
         var armor = new StatChangeClassification();
         armor.setStatKey("ARMOR");
         armor.setUnitCode("POINT");

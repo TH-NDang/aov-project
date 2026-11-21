@@ -94,7 +94,7 @@ public class HeroValidation {
     private void validateStats(Stats stats) {
         unique(stats.values().stream().map(Stat::statKey).toList());
 
-        if (stats.values().stream().anyMatch(value -> value.baseValue() == null && value.growthPerLevel() == null)) {
+        if (stats.values().stream().anyMatch(value -> value.baseValue() == null)) {
             throw invalid("A stat must have a numeric value.");
         }
 

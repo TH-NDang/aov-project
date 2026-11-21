@@ -34,8 +34,8 @@ export const fixtureContent: Content = {
   },
   COMBAT_STATS: {
     values: [
-      { statKey: "HP", baseValue: 3300, growthPerLevel: 250, unit: "HP" },
-      { statKey: "ARMOR", baseValue: 100, growthPerLevel: 15, unit: "" },
+      { statKey: "HP", baseValue: 3300, unit: "HP" },
+      { statKey: "ARMOR", baseValue: 100, unit: "" },
     ],
     sources: [],
   },
