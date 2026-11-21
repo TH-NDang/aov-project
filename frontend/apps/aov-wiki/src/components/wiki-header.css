@@ -263,17 +263,31 @@
 .wiki-compact-header:is([data-variant="library"], [data-solid])::before {
   opacity: 1;
 }
+/* Clear over a scene; scrolling frosts the bar in over the first 100px: the page under it blurs and darkens. */
+.wiki-compact-header[data-clear]::before {
+  background: color-mix(in srgb, var(--aov-wiki-bar) 72%, transparent);
+  opacity: var(--header-solid, 0);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
 .wiki-compact-header[data-searching] {
   gap: 6px;
   padding-inline: 6px 12px;
 }
+/* A titled bar centres the title on the screen, not between its buttons: the two sides share what the title leaves,
+   so one button on the left and three on the right still frame it evenly. A long title takes the space it needs and
+   ends in an ellipsis before it reaches a button. */
+.wiki-compact-header[data-titled] {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+}
 .wiki-compact-title {
   font: var(--wiki-type-section);
   min-width: 0;
-  flex: 1;
   overflow: hidden;
   padding-inline: 6px;
   color: var(--aov-text);
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -293,6 +307,7 @@
 }
 .wiki-compact-utilities {
   display: flex;
+  justify-self: end;
   align-items: center;
 }
 /* A plain 40px target; a soft disc appears on hover and over artwork. */

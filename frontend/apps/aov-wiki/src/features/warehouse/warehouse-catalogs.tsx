@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { ItemStatChips } from "@aov/ui/components/warehouse/item-facts"
@@ -13,6 +13,7 @@ import { EnchantmentSetView } from "./warehouse-enchantment-set"
 import { warehouseItemLayout } from "./warehouse-item-layout"
 import { EmptyGroup, GroupHeading, romanTier } from "./warehouse-parts"
 import { SpellCatalog } from "./warehouse-spells"
+import { TierJumps, tierSectionId } from "./warehouse-tier-jumps"
 import {
   type PublishedWarehouseRecord,
   type WarehouseEntry,
@@ -58,6 +59,7 @@ function ItemRow({
     <button
       type="button"
       className="wiki-item-row"
+      data-tier={entry.content.tier ?? undefined}
       aria-pressed={selected}
       aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
       onClick={(event) => onOpen(event.currentTarget)}
@@ -98,6 +100,23 @@ function ItemList({
   const byTier = view.sort === "tier"
   const totals = new Map(byTier ? warehouseItemLayout(view.listed, "").map((s) => [s.key, s.entries.length]) : [])
   const sections = byTier ? warehouseItemLayout(revealed.rows, "").reverse() : null
+  // Every tier of the whole list, not only the rows revealed so far, so a jump can reach one further down.
+  const tiers = byTier ? warehouseItemLayout(view.listed, "").reverse() : []
+  const [jumping, setJumping] = useState<string | null>(null)
+  function jump(key: string) {
+    const tier = tiers.find((section) => section.key === key)
+    const first = tier ? view.listed.indexOf(tier.entries[0]) : -1
+    if (first >= 0 && first + ITEM_BATCH > kept) setReach({ scope, rows: first + ITEM_BATCH })
+    setJumping(key)
+  }
+  // Once the tier is in the list, the page scrolls to its heading.
+  useEffect(() => {
+    if (!jumping) return
+    const section = document.getElementById(tierSectionId(jumping))
+    if (!section) return
+    section.scrollIntoView({ behavior: "smooth", block: "start" })
+    setJumping(null)
+  }, [jumping, revealed.rows.length])
   const more = (
     <InfiniteScroll query={revealed.loader} label={wikiText(locale, "Đang tải thêm trang bị", "Loading more items")} />
   )
@@ -129,13 +148,27 @@ function ItemList({
           ? `${wikiText(locale, "Cấp", "Tier")} ${romanTier(section.value)}`
           : wikiText(locale, "Chưa phân cấp", "Tier not assigned")
         return (
-          <section key={section.key} className="wiki-warehouse-section" aria-label={title}>
+          <section
+            key={section.key}
+            id={tierSectionId(section.key)}
+            className="wiki-warehouse-section"
+            data-tier={section.value ?? undefined}
+            aria-label={title}
+          >
             <GroupHeading title={title} count={totals.get(section.key) ?? section.entries.length} />
             {rows(section.entries)}
           </section>
         )
       })}
       {more}
+      <TierJumps
+        tiers={tiers.map((tier) => ({
+          key: tier.key,
+          label: tier.value ? romanTier(tier.value) : "?",
+          count: tier.entries.length,
+        }))}
+        onJump={jump}
+      />
     </div>
   )
 }
@@ -160,6 +193,12 @@ function ItemBoard({
     "Pick an item to read it and see its recipe lines.",
   )
   const board = groups.find((group) => group.code === view.category)
+  // The shop's three columns, as a player reads them: what an item starts from, what it passes through, what it ends as.
+  const columns = [
+    wikiText(locale, "Cơ bản", "Basic"),
+    wikiText(locale, "Nâng cấp", "Upgraded"),
+    wikiText(locale, "Hoàn chỉnh", "Finished"),
+  ]
   const open = (id: string | null) => {
     const entry = id ? items.find((item) => item.id === id) : undefined
     if (entry) onSelect(entry, document.activeElement instanceof HTMLButtonElement ? document.activeElement : undefined)
@@ -189,6 +228,7 @@ function ItemBoard({
         onCategory={onGroupChange}
         editable={false}
         showOpenButton={false}
+        columnLabels={columns}
       />
     </div>
   )

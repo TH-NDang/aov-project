@@ -46,7 +46,7 @@ export function ShopLegend({
               {t("Gián tiếp / nâng cấp", "Indirect / upgrade")}
             </span>
             {showOpenButton && (
-              <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => onSelect(selectedId)}>
+              <Button size="sm" className="h-7 px-2" onClick={() => onSelect(selectedId)}>
                 {t("Mở chi tiết", "Open details")}
               </Button>
             )}

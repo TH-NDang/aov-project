@@ -2,6 +2,8 @@ import { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router"
 import { arcanaCombatGroup } from "@aov/ui/lib/arcana-stat-colors"
 import {
+  itemCardStats,
+  itemFilterStats,
   itemMatchesStatFilters,
   itemReaderContent,
   itemStatFilterCounts,
@@ -64,26 +66,40 @@ export function useItemCatalog({
   const stats = useMemo(() => statsParam.split(",").filter(Boolean), [statsParam])
   const category = layout === "shop" ? group || selected?.content.categoryCode || groups[0]?.code || "" : group
 
-  const statsById = useMemo(
+  const readingById = useMemo(
     () =>
       new Map(
         items.map((item) => [
           item.id,
-          itemReaderContent(item.content, warehouseText(item.content.translations, locale), locale).stats,
+          itemReaderContent(item.content, warehouseText(item.content.translations, locale), locale),
         ]),
       ),
     [items, locale],
   )
-  const statsOf = useCallback((item: WarehouseItem): ItemTextStat[] => statsById.get(item.id) ?? [], [statsById])
+  const statsOf = useCallback(
+    (item: WarehouseItem): ItemTextStat[] => {
+      const reading = readingById.get(item.id)
+      return reading ? itemCardStats(reading) : []
+    },
+    [readingById],
+  )
+  // The filters also count the stats an effect grants, such as the magic pierce of a passive.
+  const filterStatsOf = useCallback(
+    (item: WarehouseItem) => {
+      const reading = readingById.get(item.id)
+      return reading ? itemFilterStats(reading) : []
+    },
+    [readingById],
+  )
 
   const visible = useMemo(
-    () => matches.filter((item) => itemMatchesStatFilters(statsOf(item), stats)),
-    [matches, statsOf, stats],
+    () => matches.filter((item) => itemMatchesStatFilters(filterStatsOf(item), stats)),
+    [matches, filterStatsOf, stats],
   )
   const inCategory = useCallback((item: WarehouseItem) => !category || itemMatchesCategory(item, category), [category])
   const counts = useMemo(
-    () => itemStatFilterCounts(matches.filter(inCategory).map(statsOf), stats),
-    [matches, inCategory, statsOf, stats],
+    () => itemStatFilterCounts(matches.filter(inCategory).map(filterStatsOf), stats),
+    [matches, inCategory, filterStatsOf, stats],
   )
   const listed = useMemo(
     () => visible.filter(inCategory).sort(compareItems(sort, locale)),

@@ -1,81 +1,74 @@
 import type { ReactNode } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiText } from "../../context/wiki-context"
 import type { WarehouseKind } from "../../lib/warehouse-types"
-import "./warehouse-heading.css"
+import { WarehouseShowcase, type ShowcaseIntro } from "./warehouse-showcase"
 
-/** What each part of the armory holds, in one line, and the word that counts its entries. */
-const ABOUT: Record<WarehouseKind, { lead: [string, string]; unit: [string, string] }> = {
+/**
+ * How each part of the armory introduces itself, in two lines: a short tagline that says what the part gives in a
+ * match, then a plain line on how it works. And the word that counts its entries.
+ */
+const ABOUT: Record<WarehouseKind, { tagline: [string, string]; lead: [string, string]; unit: [string, string] }> = {
   items: {
+    tagline: ["Sáu ô đồ, một chiến thuật", "Six slots, one plan"],
     lead: [
-      "Chỉ số, nội tại và đường ghép của mọi trang bị trong cửa hàng.",
+      "Chỉ số, nội tại và đường ghép của mọi món trong cửa hàng.",
       "Stats, passives and build paths of every item in the shop.",
     ],
     unit: ["trang bị", "items"],
   },
   arcana: {
+    tagline: ["Lợi thế từ phút đầu tiên", "An edge from the first minute"],
     lead: [
-      "Ngọc ba màu theo từng bậc, với chỉ số mỗi viên cộng thêm.",
-      "Arcana of three colors by tier, with the stats each one adds.",
+      "Ngọc ba màu cộng chỉ số ngay khi vào trận.",
+      "Arcana of three colours add their stats as the match begins.",
     ],
     unit: ["ngọc", "arcana"],
   },
   spells: {
-    lead: [
-      "Phép bổ trợ mang vào trận: hồi chiêu, cấp mở và tác dụng.",
-      "Talents taken into a match: cooldown, unlock level and effect.",
-    ],
+    tagline: ["Một phép, đúng lúc", "One spell, at the right moment"],
+    lead: ["Hồi chiêu, cấp mở và tác dụng của từng phép bổ trợ.", "Cooldown, unlock level and effect of each talent."],
     unit: ["phụ trợ", "talents"],
   },
   enchantments: {
+    // How a set is made is what a reader needs first here; the rules are those of the set builder.
+    tagline: ["Năm phù hiệu, một lối chơi", "Five enchantments, one way to play"],
     lead: [
-      "Phù hiệu theo từng hệ, nâng dần qua các bậc của nhánh đã chọn.",
-      "Enchantments by realm, raised tier by tier along the chosen branch.",
+      "3 bậc của hệ chính, 2 phù hiệu từ hệ khác.",
+      "3 tiers of a main branch, 2 enchantments from other branches.",
     ],
     unit: ["phù hiệu", "enchantments"],
   },
 }
 
 /**
- * The head of an armory page on wide screens: the part's name over a line about what it holds and how many entries
- * there are, with its emblem large and faint behind, and the data version on the right. Phones name the page in their
- * header and keep the part tabs instead.
+ * The head of an armory page: the part's two lines and count, drawn by {@link WarehouseShowcase} on wide screens and on
+ * phones. The page passes `showcase` to give the part a scene of its own.
  */
 export function WarehouseHeading({
   kind,
   title,
   count,
   action,
+  showcase,
 }: {
   kind: WarehouseKind
   title: string
   /** Entries on screen; left out while the catalog loads. */
   count?: number
   action?: ReactNode
+  /** Draws the head from its text, with the part's own scene. */
+  showcase?: (intro: ShowcaseIntro) => ReactNode
 }) {
   const text = useWikiText()
-  if (usePageLayout() === "compact") return null
   const about = ABOUT[kind]
-  return (
-    <header className="wiki-warehouse-heading-banner" data-kind={kind}>
-      <WikiIcon name={kind} size={168} className="wiki-warehouse-heading-emblem" />
-      <div className="wiki-warehouse-heading-text">
-        <span className="wiki-warehouse-heading-eyebrow">
-          <WikiIcon name={kind} size={18} />
-          {text("Kho trang bị", "Armory")}
-        </span>
-        <h1>{title}</h1>
-        <p>
-          {text(...about.lead)}
-          {count !== undefined && count > 0 && (
-            <span className="wiki-warehouse-heading-count">
-              {count} {text(...about.unit)}
-            </span>
-          )}
-        </p>
-      </div>
-      {action && <div className="wiki-warehouse-heading-action">{action}</div>}
-    </header>
-  )
+  const intro: ShowcaseIntro = {
+    title,
+    tagline: text(...about.tagline),
+    lead: text(...about.lead),
+    count: count !== undefined && count > 0 ? `${count} ${text(...about.unit)}` : undefined,
+    action,
+    wide: usePageLayout() === "wide",
+  }
+  return showcase ? showcase(intro) : <WarehouseShowcase {...intro} />
 }

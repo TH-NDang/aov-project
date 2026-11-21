@@ -224,7 +224,7 @@ public class ItemCatalog {
 
     private ItemContent initialContent(Create input) {
         return input.content() == null
-                ? new ItemContent(null, null, null, null, List.of(), "UNKNOWN", List.of(), List.of(),
+                ? new ItemContent(null, null, null, null, List.of(), "UNKNOWN", List.of(), List.of(), List.of(),
                         List.of(new Translation(input.initialLocale(), input.name(), null, null, null, null)), null)
                 : input.content();
     }

@@ -1782,7 +1782,10 @@ Mỗi schema `item`, `arcana`, `spell`, `enchantment` có ba bảng riêng: iden
   thể. Gameplay của phụ trợ không chứa nội dung dịch của các trạng thái.
 
 JSONB gameplay chứa cấu trúc nhỏ của từng catalog và danh sách chỉ số/tọa độ/thành phần đã định
-nghĩa bằng DTO Java có kiểu; mảng translations luôn rỗng trong cột này. Chúng không dùng như kho
+nghĩa bằng DTO Java có kiểu; mảng translations luôn rỗng trong cột này. Gameplay của trang bị có
+thêm `effects` (ADR-033): phần gameplay của từng hiệu ứng theo thứ tự mô tả, gồm cách dùng, hồi
+chiêu, số lần cộng dồn và các chỉ số hiệu ứng cho thêm. Không có cột hay migration riêng; revision
+cũ thiếu khóa này đọc ra danh sách rỗng. Chúng không dùng như kho
 trường tự tạo. API không cho tạo cột mới. Trigger chặn sửa/xóa revision PUBLISHED và chặn ghi
 bản dịch thuộc revision PUBLISHED; publication luôn có published_at và sequence. Yêu cầu patch
 context áp dụng như dưới đây, không thay đổi các migration đã triển khai.

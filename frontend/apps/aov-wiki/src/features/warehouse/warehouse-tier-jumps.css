@@ -1,0 +1,78 @@
+/* The tier jumps float at the foot of the list, at its right edge; while the page scrolls they tuck into that edge. */
+.wiki-tier-jumps {
+  position: sticky;
+  z-index: 5;
+  bottom: 16px;
+  display: flex;
+  justify-self: end;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 30%, var(--aov-line));
+  border-radius: var(--aov-radius-pill);
+  padding: 4px;
+  background: color-mix(in srgb, var(--aov-wiki-bar) 88%, transparent);
+  box-shadow: var(--aov-shadow-lg);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition:
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 260ms ease;
+}
+/* Tucked: slid into the edge, all but the grip out of sight and faded, so it never covers a row being read. Only a
+   keyboard focus inside holds it out; a clicked button keeps its focus, and that must not stop it tucking. */
+.wiki-tier-jumps[data-tucked]:not(:has(:focus-visible)) {
+  opacity: 0.85;
+  transform: translateX(calc(100% - 22px));
+}
+.wiki-tier-jumps-grip {
+  width: 4px;
+  height: 22px;
+  margin: 0 4px 0 2px;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-accent) 55%, transparent);
+}
+.wiki-tier-jumps button {
+  display: inline-flex;
+  height: 34px;
+  min-width: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 10px;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
+  font-weight: 700;
+  transition:
+    background 140ms,
+    color 140ms;
+}
+.wiki-tier-jumps button small {
+  color: var(--aov-muted);
+  font: inherit;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-tier-jumps button:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-tier-jumps button[aria-current] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.wiki-tier-jumps button[aria-current] small {
+  color: color-mix(in srgb, var(--aov-on-accent) 70%, transparent);
+}
+/* Back to the top: a chevron pointing up. */
+.wiki-tier-jumps-top {
+  padding: 0;
+}
+.wiki-tier-jumps-top > svg {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-tier-jumps {
+    transition: none;
+  }
+}

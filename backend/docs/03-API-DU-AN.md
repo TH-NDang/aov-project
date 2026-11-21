@@ -2739,8 +2739,18 @@ statLabels?,variantLabels?,effects?; effect gồm key,name,description,type. `no
 biên tập/nguồn, tối đa 32768 ký tự; public không trả ghi chú này. Các danh sách tùy chọn mặc định rỗng.
 
 - Item: tier,price,categoryCode,shopPositions[{categoryCode,row,column,variant}],recipeStatus
-  UNKNOWN/NONE/VERIFIED,components[{itemId,quantity}],stats[{key,value,unit}]. Chỉ VERIFIED nhận
+  UNKNOWN/NONE/VERIFIED,components[{itemId,quantity}],stats[{key,value,unit}],effects[]. Chỉ VERIFIED nhận
   thành phần đã xác nhận; không cho tự ghép chính nó, chu trình hoặc UUID không tồn tại.
+  `stats` là chỉ số cố định (các dòng "+N" của mô tả); key thuộc bộ mã `platform.CatalogStats`, không trùng,
+  unit là `%` hoặc null (điểm). `effects` là phần gameplay của hiệu ứng theo thứ tự mô tả viết chúng (ADR-033):
+  `{key,activation PASSIVE/ACTIVE,unique,cooldownSeconds?,maxStacks?,grants[]}`; key là mã của tên hiệu ứng, không
+  trùng trong món; hồi chiêu lớn hơn 0; maxStacks từ 1. Grant `{stat,value?,maxValue?,unit?,growth?,scalings[],
+  cap?,durationSeconds?,target}`: stat thuộc bộ mã; phải có value hoặc ít nhất một scaling; số không âm; maxValue
+  cần value và không nhỏ hơn nó; growth `LEVEL` cần maxValue, `STACK` cần maxStacks của hiệu ứng; cap và
+  durationSeconds lớn hơn 0; target `SELF` (mặc định) hoặc `TEAM`. Scaling `{source,value,unit}` với source
+  `MAX_HEALTH`, `BONUS_HEALTH`, `PHYSICAL_ATTACK`, `BONUS_PHYSICAL_ATTACK`, `MAGIC_ATTACK`, `HERO_LEVEL`, value lớn
+  hơn 0, unit `%` hoặc null. activation mặc định PASSIVE. Tối đa 20 hiệu ứng, 10 grant mỗi hiệu ứng, 5 scaling mỗi grant. Bản dịch không được đổi `stats` hay
+  `effects`; revision cũ không có `effects` đọc ra danh sách rỗng.
 - Arcana: color RED/PURPLE/GREEN,tier,stats. Chỉ số chưa biết được để rỗng trong nháp.
 - Enchantment: branchCode,tier,position,activation PASSIVE/ACTIVE/TALENT_UPGRADE/UNKNOWN,
   cooldownSeconds,cooldownMaxSeconds,maxUses,availableFromSeconds,availableUntilSeconds. Tier 1–3,

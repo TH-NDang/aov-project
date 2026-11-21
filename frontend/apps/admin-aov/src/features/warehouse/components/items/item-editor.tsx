@@ -2,6 +2,7 @@ import { ItemCategorySelect } from "./item-category-icon"
 import { ItemCategoryIcon } from "@/features/warehouse/components/items/item-category-view"
 import { ItemRecipe } from "./item-recipe"
 import { ItemRowPicker } from "./item-row-picker"
+import { ItemEffectsEditor } from "./item-effects-editor"
 import { shopColumns } from "../../model/item-shop-position"
 import { WarehouseChangeHistory } from "../history/warehouse-change-history"
 import { useState } from "react"
@@ -20,7 +21,7 @@ import {
 } from "lucide-react"
 import { ITEM_STATS, itemReaderContent, itemStatsFromDescription } from "@aov/ui/lib/item-description"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
-import { ItemStatList } from "@aov/ui/components/warehouse/item-facts"
+import { ItemGrantedStatList, ItemStatList } from "@aov/ui/components/warehouse/item-facts"
 import { ItemRecipeView } from "@aov/ui/components/warehouse/item-recipe"
 import { Button } from "@aov/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
@@ -330,7 +331,9 @@ export function ItemEditor({
                       ? "Áp dụng chỉnh sửa trước khi xuất bản"
                       : visibleMissing.length
                         ? "Cần hoàn thiện trước khi xuất bản"
-                        : undefined,
+                        : entry.revision.state === "PUBLISHED" && openDraftNo
+                          ? `Xuất bản bản nháp #${openDraftNo}`
+                          : undefined,
                     onClick: onPublish,
                   }
                 : undefined
@@ -447,9 +450,14 @@ export function ItemEditor({
                             locale={locale}
                             disabled={busy || uploading}
                             onChange={(stats) => change({ stats })}
-                            knownStats={ITEM_STATS.map((stat) => ({ key: stat.key, label: stat.vi }))}
+                            knownStats={ITEM_STATS.map((stat) => ({ key: stat.code, label: stat.vi }))}
                           />
                         </section>
+                        <ItemEffectsEditor
+                          effects={value.effects ?? []}
+                          description={warehouseText(value.translations, "vi-VN")?.description}
+                          onChange={(effects) => change({ effects })}
+                        />
                       </fieldset>
                     ) : (
                       <div className="space-y-4">
@@ -465,6 +473,7 @@ export function ItemEditor({
                           ) : (
                             <p className="type-meta">Chưa có chỉ số.</p>
                           )}
+                          <ItemGrantedStatList granted={reading.granted} locale={locale} />
                           {!value.stats.length && reading.stats.length > 0 && (
                             <p className="type-meta">Đang đọc từ mô tả, chưa lưu thành chỉ số có cấu trúc.</p>
                           )}

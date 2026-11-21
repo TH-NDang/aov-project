@@ -65,7 +65,27 @@ export function crossesCard(a: Point, b: Point, card: CardRect): boolean {
     ? a.x > card.left && a.x < card.right && Math.max(a.y, b.y) > card.top && Math.min(a.y, b.y) < card.bottom
     : a.y > card.top && a.y < card.bottom && Math.max(a.x, b.x) > card.left && Math.min(a.x, b.x) < card.right
 }
-/** Route orthogonal wires through free lanes, never through another item card. */
+/** What a turn costs, in pixels of wire: a route takes a short detour rather than a jog. */
+const BEND_COST = 24
+/**
+ * How close a wire may run along a card before it starts to cost more, so it keeps to the middle of a gap. The cost
+ * grows with the length of the run, so it does not depend on how the search divides a run into steps.
+ */
+const CLEARANCE = 12
+
+/** The distance from a horizontal run at `y` to the nearest card edge it passes over or under. */
+function clearance(y: number, from: number, to: number, cards: CardRect[]) {
+  let nearest = Infinity
+  for (const card of cards)
+    if (Math.max(from, to) > card.left && Math.min(from, to) < card.right)
+      nearest = Math.min(nearest, y <= card.top ? card.top - y : y >= card.bottom ? y - card.bottom : 0)
+  return nearest
+}
+
+/**
+ * Route orthogonal wires through free lanes, never through another item card. Runs between two rows keep to the
+ * middle of the gap, and turns cost extra, so a wire bends as little as it can.
+ */
 export function routeItemWire(
   source: CardRect,
   target: CardRect,
@@ -80,7 +100,15 @@ export function routeItemWire(
     b = { x: end.x - gap, y: end.y }
   const obstacles = cards.map((r) => ({ left: r.left - 4, right: r.right + 4, top: r.top - 4, bottom: r.bottom + 4 }))
   const xs = [...new Set([a.x, b.x, ...obstacles.flatMap((r) => [r.left - 4, r.right + 4])])].sort((x, y) => x - y)
-  const ys = [...new Set([a.y, b.y, ...obstacles.flatMap((r) => [r.top - 4, r.bottom + 4])])].sort((x, y) => x - y)
+  // Besides the lines just off each card, the middle of every gap between a card and the one under it.
+  const middles = cards.flatMap((upper) =>
+    cards
+      .filter((lower) => lower.top > upper.bottom && lower.left < upper.right && lower.right > upper.left)
+      .map((lower) => (upper.bottom + lower.top) / 2),
+  )
+  const ys = [...new Set([a.y, b.y, ...middles, ...obstacles.flatMap((r) => [r.top - 4, r.bottom + 4])])].sort(
+    (x, y) => x - y,
+  )
   const key = (x: number, y: number) => y * xs.length + x
   const point = (k: number): Point => ({ x: xs[k % xs.length], y: ys[Math.floor(k / xs.length)] })
   const first = key(xs.indexOf(a.x), ys.indexOf(a.y)),
@@ -108,7 +136,14 @@ export function routeItemWire(
       const n = key(x, y),
         q = point(n)
       if (obstacles.some((r) => crossesCard(p, q, r))) continue
-      const d = distance.get(k)! + Math.abs(p.x - q.x) + Math.abs(p.y - q.y)
+      // The wire leaves the source and enters the target sideways, so the first and last runs are horizontal.
+      const before = previous.get(k)
+      const incoming = before === undefined ? "h" : point(before).x === p.x ? "v" : "h"
+      const step = p.x === q.x ? "v" : "h"
+      const run = Math.abs(p.x - q.x)
+      const tight = step === "h" ? (Math.max(0, CLEARANCE - clearance(p.y, p.x, q.x, cards)) * run) / 16 : 0
+      const d =
+        distance.get(k)! + Math.abs(p.x - q.x) + Math.abs(p.y - q.y) + (step === incoming ? 0 : BEND_COST) + tight
       if (d < (distance.get(n) ?? Infinity)) {
         distance.set(n, d)
         previous.set(n, k)

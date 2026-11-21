@@ -1,0 +1,103 @@
+/* The items' scene: a hero's six slots in a framed panel, lit in the colour of the group on show. */
+.wiki-items-scene {
+  --slot: 38px;
+  --panel-x: 77%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    44% 80% at var(--panel-x) 48%,
+    color-mix(in srgb, var(--scene-tone) 28%, transparent),
+    transparent
+  );
+  transition: opacity 360ms ease;
+  animation: wiki-items-scene-light 600ms ease backwards;
+}
+.wiki-items-scene[data-wide] {
+  --slot: 58px;
+  --panel-x: 56%;
+}
+/* The set on show fades before the next group fills the slots. */
+.wiki-items-scene[data-leaving] {
+  opacity: 0;
+}
+.wiki-items-scene-panel {
+  position: absolute;
+  top: 50%;
+  left: var(--panel-x);
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 40%, transparent);
+  border-radius: 14px;
+  padding: 8px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aov-wiki-bar) 70%, transparent),
+    color-mix(in srgb, var(--aov-wiki-bar) 90%, transparent)
+  );
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--scene-tone) 8%, transparent),
+    0 16px 34px -18px var(--aov-wiki-bar),
+    0 0 40px -12px color-mix(in srgb, var(--scene-tone) 55%, transparent);
+  transform: translate(-50%, -50%) rotate(-4deg);
+}
+.wiki-items-scene-grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--slot));
+  gap: 6px;
+}
+/* An empty slot is a dark well; its item drops in, one slot after another. */
+.wiki-items-scene-slot {
+  display: grid;
+  width: var(--slot);
+  height: var(--slot);
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 22%, transparent);
+  border-radius: 10px;
+  background: var(--aov-sunken);
+  box-shadow: inset 0 2px 6px var(--aov-wiki-bar);
+}
+.wiki-items-scene-slot > img {
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  border-radius: 8px;
+  object-fit: cover;
+  animation: wiki-items-slot-in 380ms cubic-bezier(0.2, 0.8, 0.2, 1.2) backwards;
+  animation-delay: calc(var(--slot-order) * 90ms);
+}
+/* Under the two lines: which group fills the slots, with a dot of its colour. */
+.wiki-items-scene-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  transition: opacity 360ms ease;
+}
+.wiki-items-scene-caption::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--scene-tone);
+  box-shadow: 0 0 8px var(--scene-tone);
+}
+.wiki-items-scene-caption[data-leaving] {
+  opacity: 0;
+}
+@keyframes wiki-items-scene-light {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes wiki-items-slot-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-items-scene,
+  .wiki-items-scene-slot > img {
+    animation: none;
+  }
+}

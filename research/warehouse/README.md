@@ -57,3 +57,33 @@ python -m unittest discover -s research/warehouse -p "test_*.py"
 `enchantment-translations-en.json` là bản tiếng Anh của cùng nội dung, áp dụng bằng `--file research/warehouse/enchantment-translations-en.json` thành bản nháp `TRANSLATION_UPDATE`; tệp không ghi cách dùng nên số liệu gameplay giữ nguyên. Ngày 20/11/2026 trên dữ liệu dev: bỏ 33 bản nháp tiếng Anh cũ (lưu lại trong `.local-state/`), xuất bản 33 bản sửa tiếng Việt rồi 33 bản dịch tiếng Anh.
 
 Lệnh đầu chỉ đọc. Mục đang có bản nháp mở bị bỏ qua và được liệt kê kèm nguyên nhân của bản nháp đó; phải xuất bản hoặc bỏ bản nháp ấy trước. Mỗi bước ghi vào `.local-state/enchantment-corrections.jsonl`.
+
+Script cũng sửa được trang bị: tệp ghi `"kind": "items"` và đặt các mục dưới khóa `items`. `item-translations-en.json` viết lại mô tả tiếng Anh của 90 trang bị theo quy ước: nhãn đứng đầu (`Unique Passive – Name: …`), mỗi hiệu ứng một dòng theo đúng thứ tự bản tiếng Việt, hồi chiêu là câu cuối (`Cooldown: 3 seconds.`), khoảng số viết `32–60`, đơn vị viết đủ chữ. Mọi con số giữ nguyên; tệp được sinh bằng chính bộ đọc mô tả của Wiki rồi duyệt từng dòng. Ngày 20/11/2026 xuất bản 90 bản `TRANSLATION_UPDATE` trên dữ liệu dev.
+
+```powershell
+python research/warehouse/correct-enchantments.py --file research/warehouse/item-translations-en.json --apply --publish
+```
+
+Với bản đã triển khai, chạy từ máy của người có quyền, đặt khóa của client `wiki-importer` vào `WIKI_IMPORTER_CLIENT_SECRET` trong shell của mình (công cụ không in hay lưu khóa) rồi thêm `--backend https://athahub.com --keycloak https://athahub.com/idp`. `--apply --discard-translation-drafts` lưu nội dung các bản nháp dịch đang chặn vào `.local-state/` rồi bỏ chúng.
+
+## Xuất bản bản nháp trang bị
+
+`publish-item-drafts.py` đọc mọi trang bị, so từng bản nháp đang mở với bản đã xuất bản mà nó tách ra, và chỉ xuất bản những bản nháp thật sự thay đổi nội dung; bản nháp không đổi gì được để nguyên. Lệnh không có `--apply` chỉ in danh sách và các trường mỗi bản nháp thay đổi. `--cause TRANSLATION_UPDATE` giới hạn theo nguyên nhân của bản nháp. Mỗi lần xuất bản ghi vào `.local-state/item-draft-publishes.jsonl`. Cách đăng nhập vào bản đã triển khai giống `correct-enchantments.py`.
+
+```powershell
+python research/warehouse/publish-item-drafts.py
+python research/warehouse/publish-item-drafts.py --apply
+```
+
+Ngày 20/11/2026: xuất bản 113 bản nháp `TRANSLATION_UPDATE` (mô tả tiếng Việt đã sửa và bản tiếng Anh) trên VPS và trên dữ liệu dev; bản nháp của Kiếm ngắn trên VPS không đổi gì nên để nguyên.
+
+## Chỉ số cố định và chỉ số từ hiệu ứng của trang bị (ADR-033)
+
+`item-gameplay.json` ghi cho từng món `stats` (các dòng "+N" của mô tả, theo bộ mã `CatalogStats`) và `effects` (mỗi hiệu ứng theo thứ tự mô tả viết: cách dùng, duy nhất, hồi chiêu, số lần cộng dồn và các chỉ số hiệu ứng cho thêm). Khung được sinh bằng chính bộ đọc mô tả của Wiki từ mô tả đã xuất bản ngày 20/11/2026; phần chỉ số của các câu như "Nhận 32–60 (+3% máu bản thân thêm) xuyên giáp phép, tối đa không vượt quá 150 điểm" được đọc tay từng câu. Sát thương, lá chắn và hồi máu không được ghi.
+
+`apply-item-gameplay.py` so từng món với bản mới nhất, tách bản sửa nội dung (`CONTENT_CORRECTION`) cho món khác dữ liệu, ghi `stats` và `effects` rồi chỉ xuất bản khi có `--publish`. Mô tả, công thức và vị trí cửa hàng giữ nguyên. Món đang có bản nháp được để nguyên. `--only` giới hạn theo mã món. Mỗi lần ghi vào `.local-state/item-gameplay.jsonl`. Backend phải có ADR-033 trước khi chạy `--apply`: backend cũ từ chối trường `effects`.
+
+```powershell
+python research/warehouse/apply-item-gameplay.py
+python research/warehouse/apply-item-gameplay.py --apply --publish
+```

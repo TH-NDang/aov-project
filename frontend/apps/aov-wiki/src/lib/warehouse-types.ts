@@ -1,3 +1,4 @@
+import type { ItemEffectGameplay } from "@aov/ui/lib/item-description"
 import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
@@ -48,6 +49,8 @@ export interface WarehouseContent {
   recipeStatus?: "UNKNOWN" | "NONE" | "VERIFIED"
   components?: { itemId: string; quantity: number }[]
   stats?: WarehouseStat[]
+  /** Item effects with the stats they grant (ADR-033). */
+  effects?: ItemEffectGameplay[]
   branchCode?: string
   position?: number | null
   color?: "RED" | "PURPLE" | "GREEN"

@@ -2,7 +2,13 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   formatItemStatValue,
+  itemEffectFacts,
   itemProfile,
+  formatItemGrantAmount,
+  itemEffectsFromDescription,
+  itemFilterStats,
+  itemGrantConditions,
+  itemGrantScalings,
   itemMatchesStatFilters,
   itemReaderContent,
   itemStatFilterCounts,
@@ -113,11 +119,103 @@ test("structured stats win over the description, whose passives still show", () 
   )
 })
 
-test("the editor can turn description stats into structured ones", () => {
+test("the editor turns description stats into the codes the backend stores", () => {
   assert.deepEqual(itemStatsFromDescription("+60 Công vật lý\n+30% Tốc đánh\n+12 Sức mạnh cổ\nGiáp băng: Nhận giáp"), [
-    { key: "physicalAttack", value: 60, unit: "POINT" },
-    { key: "attackSpeed", value: 30, unit: "PERCENT" },
+    { key: "physical-attack", value: 60, unit: null },
+    { key: "attack-speed", value: 30, unit: "%" },
   ])
+})
+
+const ROBE =
+  "+120 Công phép\n+900 Máu tối đa\n\nNội tại duy nhất – Linh thể: Nhận 26–40 (+2% máu bản thân) công phép, tối đa không vượt quá 100 điểm.\n\nNội tại – Phá phép: Nhận 32–60 (+3% máu bản thân thêm) xuyên giáp phép, tối đa không vượt quá 150 điểm."
+const PIERCE = {
+  key: "pha-phep",
+  activation: "PASSIVE" as const,
+  unique: false,
+  grants: [
+    {
+      stat: "magic-penetration",
+      value: 32,
+      maxValue: 60,
+      growth: "LEVEL" as const,
+      cap: 150,
+      scalings: [{ source: "BONUS_HEALTH" as const, value: 3, unit: "%" }],
+    },
+  ],
+}
+
+test("an effect's granted stat is read apart from the fixed stats and answers the stat filters", () => {
+  const reading = itemReaderContent(
+    {
+      stats: [
+        { key: "magic-attack", value: 120, unit: null },
+        { key: "max-health", value: 900, unit: null },
+      ],
+      effects: [{ key: "linh-the", activation: "PASSIVE", unique: true, grants: [] }, PIERCE],
+    },
+    { description: ROBE },
+  )
+  const [pierce] = reading.granted
+
+  assert.deepEqual(
+    reading.stats.map((stat) => stat.key),
+    ["magicAttack", "maxHealth"],
+  )
+  assert.deepEqual(
+    [pierce.key, pierce.effect, pierce.value, pierce.maxValue, pierce.cap],
+    ["magicPierce", "Phá phép", 32, 60, 150],
+  )
+  assert.equal(itemMatchesStatFilters(reading.stats, ["pierce"]), false)
+  assert.equal(itemMatchesStatFilters(itemFilterStats(reading), ["pierce"]), true)
+})
+
+test("a granted stat reads as the game writes it, with its scaling, growth and cap", () => {
+  const [pierce] = itemReaderContent(
+    { effects: [{ key: "linh-the", grants: [] }, PIERCE] },
+    { description: ROBE },
+  ).granted
+
+  assert.equal(formatItemGrantAmount(pierce), "+32–60")
+  assert.deepEqual(itemGrantScalings(pierce), ["+3% máu thêm"])
+  assert.deepEqual(itemGrantConditions(pierce), ["tăng theo cấp", "tối đa 150"])
+})
+
+test("a translation that writes a different number of effects is matched by the effect's name", () => {
+  const reading = itemReaderContent(
+    { effects: [{ key: "linh-the", grants: [] }, PIERCE] },
+    { description: "Nội tại – Phá phép: Nhận 32–60 xuyên giáp phép." },
+  )
+
+  assert.equal(reading.passives[0].gameplay?.key, "pha-phep")
+  assert.equal(reading.granted.length, 1)
+})
+
+test("with structured gameplay a passive written as a stat stays an effect", () => {
+  const description = "+240 Công phép\n\nNội tại duy nhất – Thuật sư: +35% Công phép"
+  const effects = itemEffectsFromDescription(description)
+  const reading = itemReaderContent(
+    { stats: [{ key: "magic-attack", value: 240, unit: null }], effects },
+    { description },
+  )
+
+  assert.deepEqual(effects, [
+    {
+      key: "thuat-su",
+      activation: "PASSIVE",
+      unique: true,
+      cooldownSeconds: null,
+      maxStacks: null,
+      grants: [{ stat: "magic-attack", value: 35, unit: "%" }],
+    },
+  ])
+  assert.deepEqual(
+    reading.stats.map((stat) => stat.value),
+    [240],
+  )
+  assert.deepEqual(
+    reading.granted.map((grant) => [grant.label, grant.percent, grant.unique]),
+    [["Công phép", true, true]],
+  )
 })
 
 test("stat filters require every chip and count what each chip would leave", () => {
@@ -242,13 +340,13 @@ test("items of another tier are never alternatives, and ties go to the closest p
   )
 })
 
-test("active items are marked, and names may come last in angle brackets", () => {
+test("active items are marked, a unique active is unique, and names may come last in angle brackets", () => {
   const { passives } = parseItemDescription(
     "Nhận 35% miễn thương trong 3 giây. <Bất khuất>– Kích hoạt duy nhất\nKích hoạt chủ động – Hồi huyết: Hồi máu cho đồng minh\nNội tại – Nguyên lực: Tăng giáp cho đồng đội",
   )
 
   assert.deepEqual(passives, [
-    { name: "Bất khuất", text: "Nhận 35% miễn thương trong 3 giây.", unique: false, active: true },
+    { name: "Bất khuất", text: "Nhận 35% miễn thương trong 3 giây.", unique: true, active: true },
     { name: "Hồi huyết", text: "Hồi máu cho đồng minh", unique: false, active: true },
     { name: "Nguyên lực", text: "Tăng giáp cho đồng đội", unique: false },
   ])
@@ -281,7 +379,7 @@ test("English markers for active effects and bare passive prefixes are read like
   )
 
   assert.deepEqual(passives, [
-    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: false, active: true },
+    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: true, active: true },
     { name: "Blood Recovery", text: "Heals an ally", unique: false, active: true },
     { name: "Source Power", text: "Grants armor to allies", unique: false },
   ])
@@ -306,4 +404,17 @@ test("stat names follow the reader's language, whatever language the description
 test("values read as gains, except a stat stored as a penalty", () => {
   assert.equal(formatItemStatValue({ value: 30, percent: true }), "+30%")
   assert.equal(formatItemStatValue({ value: -5, percent: false }), "-5")
+})
+
+test("an effect's cooldown is read whether it leads or follows the number", () => {
+  assert.equal(itemEffectFacts("Trở thành bất khả xâm phạm. Hồi chiêu: 75 giây.").cooldownSeconds, "75")
+  assert.equal(itemEffectFacts("Sống lại sau 2 giây; 150 giây hồi chiêu.").cooldownSeconds, "150")
+  assert.equal(itemEffectFacts("kéo dài 5 giây (hồi chiêu 0.3 giây)").cooldownSeconds, "0.3")
+  assert.equal(itemEffectFacts("Becomes untargetable. Cooldown: 75 seconds.").cooldownSeconds, "75")
+})
+
+test("an effect's stacks are read and a plain duration is not taken for a cooldown", () => {
+  const facts = itemEffectFacts("Gây sát thương sẽ trừ 6% Giáp, cộng dồn lên đến 4 lần, kéo dài 5 giây")
+  assert.deepEqual(facts, { cooldownSeconds: null, maxStacks: 4 })
+  assert.equal(itemEffectFacts("Stacks up to 3 times.").maxStacks, 3)
 })

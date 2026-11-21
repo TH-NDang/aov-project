@@ -1,3 +1,5 @@
+import { cn } from "@aov/ui/lib/utils"
+import { PAGE_MAX_WIDTH } from "@/components/page-header"
 import { useMemo, type ReactNode } from "react"
 import { Link, matchRoutes, useLocation, type UIMatch } from "react-router"
 import { ChevronRight } from "lucide-react"
@@ -51,7 +53,7 @@ export function AdminBreadcrumb() {
     ?.ownTrail
   if (steps.length < 2 || ownTrail || navItem?.to.split("?")[0] === pathname) return null
   return (
-    <nav aria-label="Vị trí trang" className="px-4 pt-3 md:px-6 md:pt-4">
+    <nav aria-label="Vị trí trang" className={cn("mx-auto w-full px-4 pt-3 md:px-6 md:pt-4", PAGE_MAX_WIDTH)}>
       <ol className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 type-meta">
         {steps.map((step, index) => {
           const last = index === steps.length - 1

@@ -78,13 +78,16 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 
 ## Minh họa
 
-Hình vẽ dùng chung nằm trong năm sprite ở `packages/ui/src/assets`, mỗi hình khung 64×64, cùng một bộ màu và viền tối để nhìn liền nhau:
+Hình vẽ dùng chung nằm trong bốn sprite ở `packages/ui/src/assets`, mỗi hình khung 64×64, cùng một bộ màu và viền tối để nhìn liền nhau:
 
 - `nav-art.svg`: mục điều hướng và các nhóm nội dung, dùng qua `navArtIcons`.
 - `catalog-art.svg`: sáu danh mục Tướng, Trang phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, dùng qua `catalogIcons`.
-- `item-category-art.svg`: nhóm trang bị trong cửa hàng khi nhóm chưa có ảnh tải lên, dùng qua `ItemCategoryArtwork`.
 - `gameplay-art.svg`: chỉ số và thuật ngữ trong game, dùng qua `gameplayIcons`. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng; đừng vẽ thêm bản có màu. `termIcon(term)` chọn hình cho một thuật ngữ: hình đã chọn lưu dạng `glyph:<tên>` trong trường `icon`, không chọn thì theo mặc định của thuật ngữ đó.
 - `change-art.svg`: loại thay đổi của một phiên bản, dùng qua `changeKindIcons`. Hiển thị từ 16px trở lên, nhỏ hơn thì viền lấn mất hình.
+
+Nhóm trang bị trong cửa hàng, khi nhóm chưa có ảnh tải lên, dùng icon nét của Lucide tô theo màu riêng của nhóm (token trạng thái), qua `ItemCategoryArtwork`.
+
+Chỉ số của trang bị (bộ lọc, thẻ và hàng trang bị) dùng một bộ icon nét Lucide riêng, `ItemStatIcon` trong `components/warehouse/item-stat-icons.tsx`, theo nhóm chỉ số của `ITEM_STAT_FILTERS`; màu của mỗi nhóm do trang đặt qua `data-stat`.
 
 Còn trống hình thì thêm symbol vào sprite rồi khai báo trong file `*-icons.tsx` tương ứng, không nhúng SVG rời vào từng trang. Chỉ số trang bị lấy icon từ `ITEM_STATS` trong `lib/item-description.ts`.
 

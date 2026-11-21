@@ -44,10 +44,19 @@ export function PageHeader({ title, description, actions, search, className, chi
   )
 }
 
+/**
+ * How wide a page's content grows: past it, on a very wide screen, the page stays centred instead of stretching lines
+ * and tables across the whole width. A page that needs less sets its own `max-w-*`.
+ */
+export const PAGE_MAX_WIDTH = "max-w-[110rem]"
+
 /** Standard padded page body. */
 export function Page({ className, children, ...props }: ComponentProps<"div">) {
   return (
-    <div className={cn("flex flex-1 flex-col gap-4 p-4 md:px-6 md:py-5", className)} {...props}>
+    <div
+      className={cn("mx-auto flex w-full flex-1 flex-col gap-4 p-4 md:px-6 md:py-5", PAGE_MAX_WIDTH, className)}
+      {...props}
+    >
       {children}
     </div>
   )

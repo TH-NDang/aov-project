@@ -1,0 +1,4162 @@
+{
+  "schemaVersion": 1,
+  "changeNote": "Chỉ số cố định và chỉ số từ hiệu ứng theo ADR-033, đọc từ mô tả đã xuất bản ngày 20/11/2026.",
+  "items": {
+    "ao-choang-bang-gia": {
+      "stats": [
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "armor",
+          "value": 200,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 800,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "suc-manh-nguyen-to",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.65,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "ao-choang-than-ra": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1000,
+          "unit": null
+        },
+        {
+          "key": "armor",
+          "value": 225,
+          "unit": null
+        },
+        {
+          "key": "health-regen-per-five-seconds",
+          "value": 60,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "hoa-diem",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "troc-na",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "bang-nhan-skadi": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 140,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "giap-bang",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor",
+              "value": null,
+              "scalings": [
+                {
+                  "source": "MAGIC_ATTACK",
+                  "value": 50,
+                  "unit": "%"
+                }
+              ],
+              "cap": 230
+            },
+            {
+              "stat": "magic-defense",
+              "value": null,
+              "scalings": [
+                {
+                  "source": "MAGIC_ATTACK",
+                  "value": 50,
+                  "unit": "%"
+                }
+              ],
+              "cap": 230
+            }
+          ]
+        }
+      ]
+    },
+    "bua-suc-manh": {
+      "stats": [
+        {
+          "key": "health-regen-per-five-seconds",
+          "value": 30,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "cau-chiem-tinh": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 80,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "vang-vong",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 5,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "chuy-bang-suong": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 60,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 30,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 900,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "dong-bang",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 2,
+          "grants": []
+        },
+        {
+          "key": "han-khi",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 3,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "chuy-co": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 25,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 15,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "cuong-bao",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 10,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "chuy-mau": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 10,
+          "unit": null
+        },
+        {
+          "key": "physical-lifesteal",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": []
+    },
+    "chuy-xich": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 40,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "cung-bao-to": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 30,
+          "unit": "%"
+        },
+        {
+          "key": "physical-lifesteal",
+          "value": 15,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 7,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "loc-xoay",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.3,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 25,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 0.8,
+              "growth": "STACK",
+              "unit": "%"
+            },
+            {
+              "stat": "physical-lifesteal",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "cung-gio-loc": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 12,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 15,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 0.8,
+              "growth": "STACK",
+              "unit": "%"
+            },
+            {
+              "stat": "physical-lifesteal",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "cung-ta-ma": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 90,
+          "unit": null
+        },
+        {
+          "key": "physical-lifesteal",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "critical-chance",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "hap-huyet",
+          "activation": "ACTIVE",
+          "unique": true,
+          "cooldownSeconds": 60,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "physical-lifesteal",
+              "value": 60,
+              "unit": "%",
+              "durationSeconds": 3
+            }
+          ]
+        }
+      ]
+    },
+    "dai-dia-hoi-huyet": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "hoi-huyet",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "nguyen-luc",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            },
+            {
+              "stat": "magic-defense",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "dai-dia-ma-nhan": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "ma-nhan",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 45,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "nguyen-luc",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            },
+            {
+              "stat": "magic-defense",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "dai-dia-mo-troi": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "mo-troi",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 90,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "nguyen-luc",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            },
+            {
+              "stat": "magic-defense",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "dai-dia-than-khien": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "than-khien",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 60,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "nguyen-luc",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            },
+            {
+              "stat": "magic-defense",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "dai-dia-than-toc": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "than-toc",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 75,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 20,
+              "maxValue": 100,
+              "unit": "%",
+              "target": "TEAM",
+              "durationSeconds": 4
+            }
+          ]
+        },
+        {
+          "key": "nguyen-luc",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            },
+            {
+              "stat": "magic-defense",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "dai-khang-phep": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 700,
+          "unit": null
+        },
+        {
+          "key": "magic-defense",
+          "value": 110,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "hoi-phuc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 15,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "dao-gam": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": []
+    },
+    "dao-truy-hon": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 80,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 800,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "troc-na",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "dao-truy-kich": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 25,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 15,
+          "grants": [
+            {
+              "stat": "physical-attack",
+              "value": 2,
+              "growth": "STACK"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "day-chuyen-hong-ngoc": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "day-chuyen-luc-bao": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 160,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 15,
+          "unit": "%"
+        },
+        {
+          "key": "mana-regen-per-five-seconds",
+          "value": 25,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "hien-gia",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "day-chuyen-ma-thuat": {
+      "stats": [
+        {
+          "key": "mana-regen-per-five-seconds",
+          "value": 10,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "diet-than-cung": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 50,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 30,
+          "unit": "%"
+        },
+        {
+          "key": "critical-chance",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "pha-than",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.35,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "xuyen-thau",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor-penetration",
+              "value": 20,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "gang-bach-kim": {
+      "stats": [
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "armor",
+          "value": 110,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "gang-giac-dau": {
+      "stats": [
+        {
+          "key": "magic-defense",
+          "value": 90,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "gang-tay": {
+      "stats": [
+        {
+          "key": "critical-chance",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": []
+    },
+    "giap-chan": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1000,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "giap-cuong-no": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 225,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "dien-cuong",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 5,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 1,
+              "growth": "STACK",
+              "unit": "%",
+              "durationSeconds": 3
+            }
+          ]
+        }
+      ]
+    },
+    "giap-gaia": {
+      "stats": [
+        {
+          "key": "magic-defense",
+          "value": 200,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "hoi-phuc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "huyet-thong",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giap-hiep-si": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 210,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "linh-gac",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giap-ho-menh": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 120,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "chien-khi",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "phuc-sinh",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 150,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giap-nhe": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 90,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "giap-thong-kho": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 50,
+          "unit": null
+        },
+        {
+          "key": "armor",
+          "value": 300,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 700,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "phan-phe",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "phan-phao",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 75,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giay-du-muc": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 20,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "gia-toc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "hoi-mau-khi-danh",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.3,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "hoan-doi-giay",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giay-hermes": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 300,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "gia-toc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 70,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "nhanh-nhay",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "key": "hoan-doi-giay",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giay-ho-ve": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 110,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "gia-toc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "giam-sat-thuong-vat-ly",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "hoan-doi-giay",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giay-kien-cuong": {
+      "stats": [
+        {
+          "key": "magic-defense",
+          "value": 90,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "gia-toc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "khang-hieu-ung",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "tenacity",
+              "value": 35,
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "hoan-doi-giay",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giay-phu-thuy": {
+      "stats": [],
+      "effects": [
+        {
+          "key": "toc-chay",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "xuyen-giap-phep",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "magic-penetration",
+              "value": 100,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "hoan-doi-giay",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "giay-thep": {
+      "stats": [],
+      "effects": [
+        {
+          "key": "gia-toc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 30,
+              "unit": null
+            }
+          ]
+        }
+      ]
+    },
+    "giay-thuat-si": {
+      "stats": [
+        {
+          "key": "cooldown-reduction",
+          "value": 15,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "gia-toc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "giam-hoi-chieu-phu-tro",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "hoan-doi-giay",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "guom-hien-te": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 40,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 15,
+          "grants": [
+            {
+              "stat": "magic-attack",
+              "value": 4,
+              "growth": "STACK"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "guom-hien-triet": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 140,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "diet-than",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 10,
+          "grants": []
+        }
+      ]
+    },
+    "guom-loki": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 150,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 5,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 7,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "suc-manh-nguyen-to",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 2,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 25,
+          "grants": [
+            {
+              "stat": "magic-attack",
+              "value": 4,
+              "growth": "STACK"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "guom-nguyen-to": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 40,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "suc-manh-nguyen-to",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 3,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "guom-sam-set": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 35,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "chop-giat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.3,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "guom-tan-the": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 180,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "suc-manh-nguyen-to",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 2,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "guom-uriel": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 80,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 25,
+          "unit": "%"
+        },
+        {
+          "key": "magic-defense",
+          "value": 200,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "bao-ho-ma-phap",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 75,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "tenacity",
+              "value": 25,
+              "unit": "%",
+              "durationSeconds": 5
+            },
+            {
+              "stat": "movement-speed",
+              "value": 30,
+              "unit": "%",
+              "durationSeconds": 5
+            }
+          ]
+        },
+        {
+          "key": "cuong-bao",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 10,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "hercule-thinh-no": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 80,
+          "unit": null
+        },
+        {
+          "key": "armor",
+          "value": 240,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "cuong-no",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 60,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "physical-lifesteal",
+              "value": 20,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "hoa-he-bao-thach": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 16,
+              "maxValue": 30,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 200,
+              "maxValue": 410,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "cuc-anh",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            }
+          ]
+        }
+      ]
+    },
+    "huan-chuong-troy": {
+      "stats": [
+        {
+          "key": "magic-defense",
+          "value": 200,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 1000,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "ho-than",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "noi-luc",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "magic-defense",
+              "value": 0,
+              "maxValue": 112,
+              "growth": "LEVEL"
+            }
+          ]
+        }
+      ]
+    },
+    "huyet-anh-dao": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 30,
+          "unit": null
+        },
+        {
+          "key": "physical-lifesteal",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "huyet-yen",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 20,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "huyet-cung": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 40,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "xuyen-thau",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor-penetration",
+              "value": 10,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "huyet-truong": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 80,
+          "unit": null
+        },
+        {
+          "key": "magic-lifesteal",
+          "value": 12,
+          "unit": "%"
+        }
+      ],
+      "effects": []
+    },
+    "khien-huyen-thoai": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 360,
+          "unit": null
+        },
+        {
+          "key": "max-mana",
+          "value": 400,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 20,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "troi-buoc-tinh-than",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "khien-thanh-quang": {
+      "stats": [
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "armor",
+          "value": 180,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 1000,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "quang-thuan",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "khien-that-truyen": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 275,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "linh-gac",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "kiem-dai": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 80,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "kiem-fafnir": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 60,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 30,
+          "unit": "%"
+        },
+        {
+          "key": "physical-lifesteal",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "hoi-tho-rong",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.3,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "kiem-muramasa": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 80,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 500,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "xuyen-thau",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor-penetration",
+              "value": 35,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "kiem-ngan": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 20,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "kiem-truy-hon": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 90,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 5,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "xuyen-chan",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor-penetration",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 25,
+          "grants": [
+            {
+              "stat": "physical-attack",
+              "value": 2,
+              "growth": "STACK"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "liem-doat-menh": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 75,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 15,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 500,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "than-linh-can-thiep",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 120,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 25,
+              "unit": "%"
+            },
+            {
+              "stat": "attack-speed",
+              "value": 25,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "liet-hoa-hoi-huyet": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "hoi-huyet",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "cuc-anh",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "liet-hoa-ma-nhan": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "ma-nhan",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 45,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "cuc-anh",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "liet-hoa-mo-troi": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "mo-troi",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 90,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "cuc-anh",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "liet-hoa-than-khien": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "than-khien",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 60,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "cuc-anh",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "liet-hoa-than-toc": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "than-toc",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 75,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 20,
+              "maxValue": 100,
+              "unit": "%",
+              "target": "TEAM",
+              "durationSeconds": 4
+            }
+          ]
+        },
+        {
+          "key": "cuc-anh",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 5,
+              "unit": "%",
+              "target": "TEAM"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 400,
+              "maxValue": 820,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": 10,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "ma-phap-truong-bao": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 120,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 900,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "linh-the",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "magic-attack",
+              "value": 26,
+              "maxValue": 40,
+              "growth": "LEVEL",
+              "scalings": [
+                {
+                  "source": "MAX_HEALTH",
+                  "value": 2,
+                  "unit": "%"
+                }
+              ],
+              "cap": 100
+            }
+          ]
+        },
+        {
+          "key": "pha-phep",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "magic-penetration",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "scalings": [
+                {
+                  "source": "BONUS_HEALTH",
+                  "value": 3,
+                  "unit": "%"
+                }
+              ],
+              "cap": 150
+            }
+          ]
+        }
+      ]
+    },
+    "mat-na-berith": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 140,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "thong-kho",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "mat-na-ma-quai": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 100,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "diet-than",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "magic-penetration",
+              "value": 75,
+              "unit": null
+            }
+          ]
+        }
+      ]
+    },
+    "nanh-fenrir": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 180,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "chinh-phat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "ngoc-dai-phap-su": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 140,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "truong-ton",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 10,
+          "grants": [
+            {
+              "stat": "magic-attack",
+              "value": 12,
+              "growth": "STACK"
+            },
+            {
+              "stat": "max-health",
+              "value": 120,
+              "growth": "STACK"
+            }
+          ]
+        },
+        {
+          "key": "tuong-thuong-anh-hung",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "nguyen-to-bao-thach": {
+      "stats": [
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "nham-thuan": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "armor",
+          "value": 240,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "tich-tu",
+          "activation": "ACTIVE",
+          "unique": true,
+          "cooldownSeconds": 60,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "nhan-hong-ngoc": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 300,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "nhan-lapis": {
+      "stats": [
+        {
+          "key": "max-mana",
+          "value": 300,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "nhan-ma-phap": {
+      "stats": [],
+      "effects": [
+        {
+          "key": "giam-hoi-chieu",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "cooldown-reduction",
+              "value": 5,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "phi-tieu": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 20,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "diem-yeu",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.3,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "phu-chu-truong-sinh": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 150,
+          "unit": null
+        },
+        {
+          "key": "magic-defense",
+          "value": 100,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 1500,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "truong-sinh",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "phuc-hop-kiem": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 70,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 15,
+          "unit": "%"
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "cuong-bao",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 10,
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "suc-manh-nguyen-to",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 2,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "phuong-hoang-le": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 50,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "tuong-thuong-anh-hung",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "qua-cau-bang-suong": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 220,
+          "unit": null
+        },
+        {
+          "key": "magic-lifesteal",
+          "value": 12,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "phong-an",
+          "activation": "ACTIVE",
+          "unique": true,
+          "cooldownSeconds": 75,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "quy-kiem": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 100,
+          "unit": null
+        },
+        {
+          "key": "physical-lifesteal",
+          "value": 25,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "huyet-yen",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 20,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "quyen-truong-rhea": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 160,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 800,
+          "unit": null
+        },
+        {
+          "key": "magic-lifesteal",
+          "value": 25,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "chuyen-hoa",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "riu-gnoll": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 400,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "hoa-diem",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 15,
+          "grants": [
+            {
+              "stat": "max-health",
+              "value": 25,
+              "growth": "STACK"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "riu-leviathan": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 1200,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 5,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 6,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "hoa-diem",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "lung-diet",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 25,
+          "grants": [
+            {
+              "stat": "max-health",
+              "value": 25,
+              "growth": "STACK"
+            },
+            {
+              "stat": "cooldown-reduction",
+              "value": 0.2,
+              "growth": "STACK",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "san-bat",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "rua-tho-san": {
+      "stats": [],
+      "effects": [
+        {
+          "key": "te-tai",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "tho-san",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "sach-co": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 80,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "sach-phep": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 40,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "sach-thanh": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 350,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "phap-the",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "sach-truy-hon": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 140,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "troc-na",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "so-ma-thuat": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 120,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "song-dao": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 25,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": []
+    },
+    "song-dao-bao-tap": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 35,
+          "unit": "%"
+        },
+        {
+          "key": "critical-chance",
+          "value": 25,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 7,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "cuong-phong",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "tenacity",
+              "value": 35,
+              "unit": "%",
+              "durationSeconds": 2
+            }
+          ]
+        }
+      ]
+    },
+    "thanh-kiem": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 100,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "ty-le-chi-mang",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "critical-chance",
+              "value": 25,
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "thanh-kiem",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 3,
+              "maxValue": 45,
+              "durationSeconds": 1.5
+            }
+          ]
+        },
+        {
+          "key": "sat-thuong-chi-mang",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "critical-damage",
+              "value": 40,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "thap-tu-kiem": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 180,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 20,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "cap-nhan",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 2,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 15,
+              "growth": "STACK",
+              "unit": "%",
+              "durationSeconds": 4
+            }
+          ]
+        },
+        {
+          "key": "thanh-quang",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.35,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "the-uoc-carano": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 180,
+          "unit": null
+        },
+        {
+          "key": "magic-lifesteal",
+          "value": 12,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "bao-ho-khan-cap",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 30,
+              "unit": "%",
+              "durationSeconds": 4
+            }
+          ]
+        }
+      ]
+    },
+    "tho-he-bao-thach": {
+      "stats": [
+        {
+          "key": "max-health",
+          "value": 600,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "tuong-thuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "adaptive-attack",
+              "value": 16,
+              "maxValue": 30,
+              "growth": "LEVEL"
+            },
+            {
+              "stat": "max-health",
+              "value": 200,
+              "maxValue": 410,
+              "growth": "LEVEL"
+            }
+          ]
+        },
+        {
+          "key": "hau-can",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "khiem-nhuong",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "nguyen-luc",
+          "activation": "PASSIVE",
+          "unique": false,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            },
+            {
+              "stat": "magic-defense",
+              "value": 32,
+              "maxValue": 60,
+              "growth": "LEVEL",
+              "target": "TEAM"
+            }
+          ]
+        }
+      ]
+    },
+    "thuong-dau-si": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 50,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "pha-giap",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor-penetration",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        }
+      ]
+    },
+    "thuong-khung-kiem": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 100,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 500,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "bat-khuat",
+          "activation": "ACTIVE",
+          "unique": true,
+          "cooldownSeconds": 90,
+          "maxStacks": null,
+          "grants": []
+        },
+        {
+          "key": "tri-tre",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 8,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "thuong-longinus": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 80,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 15,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 500,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "pha-giap",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "armor-penetration",
+              "value": 60,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "key": "toai-giap",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.3,
+          "maxStacks": 4,
+          "grants": []
+        }
+      ]
+    },
+    "thuong-xuyen-pha": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 110,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "khinh-cong",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 10,
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "key": "nghien-ep",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "tim-incubus": {
+      "stats": [
+        {
+          "key": "armor",
+          "value": 150,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "hoa-diem",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "truong-bang": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 140,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 850,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "gia-bang",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "truong-bung-no": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 200,
+          "unit": null
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "vang-vong",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 5,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "truong-hon-mang": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 180,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 10,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "xuyen-giap-phep",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "magic-penetration",
+              "value": 40,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "vo-anh-tien": {
+      "stats": [
+        {
+          "key": "physical-attack",
+          "value": 40,
+          "unit": null
+        },
+        {
+          "key": "attack-speed",
+          "value": 20,
+          "unit": "%"
+        },
+        {
+          "key": "critical-chance",
+          "value": 20,
+          "unit": "%"
+        },
+        {
+          "key": "max-health",
+          "value": 650,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "vo-hinh",
+          "activation": "ACTIVE",
+          "unique": false,
+          "cooldownSeconds": 75,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "movement-speed",
+              "value": 30,
+              "unit": "%",
+              "durationSeconds": 2.5
+            }
+          ]
+        }
+      ]
+    },
+    "vong-duc-hanh": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 60,
+          "unit": null
+        },
+        {
+          "key": "cooldown-reduction",
+          "value": 5,
+          "unit": "%"
+        },
+        {
+          "key": "mana-regen-per-five-seconds",
+          "value": 20,
+          "unit": null
+        }
+      ],
+      "effects": []
+    },
+    "vuong-mien-hecate": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 240,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "thuat-su",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "magic-attack",
+              "value": 35,
+              "unit": "%"
+            }
+          ]
+        }
+      ]
+    },
+    "vuot-hung-tan": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 30,
+          "unit": "%"
+        },
+        {
+          "key": "critical-chance",
+          "value": 20,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "hung-bao",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": 5,
+          "grants": [
+            {
+              "stat": "attack-speed",
+              "value": 10,
+              "growth": "STACK",
+              "unit": "%",
+              "durationSeconds": 2
+            }
+          ]
+        }
+      ]
+    },
+    "xa-nhat-cung": {
+      "stats": [
+        {
+          "key": "attack-speed",
+          "value": 30,
+          "unit": "%"
+        },
+        {
+          "key": "critical-chance",
+          "value": 10,
+          "unit": "%"
+        },
+        {
+          "key": "movement-speed",
+          "value": 5,
+          "unit": "%"
+        }
+      ],
+      "effects": [
+        {
+          "key": "xa-nhat",
+          "activation": "ACTIVE",
+          "unique": true,
+          "cooldownSeconds": 60,
+          "maxStacks": null,
+          "grants": [
+            {
+              "stat": "attack-range",
+              "value": 150,
+              "durationSeconds": 5
+            },
+            {
+              "stat": "movement-speed",
+              "value": 20,
+              "unit": "%",
+              "durationSeconds": 5
+            }
+          ]
+        },
+        {
+          "key": "ngam-chuan",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": 0.35,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    },
+    "xuyen-tam-lenh": {
+      "stats": [
+        {
+          "key": "magic-attack",
+          "value": 140,
+          "unit": null
+        },
+        {
+          "key": "max-health",
+          "value": 500,
+          "unit": null
+        }
+      ],
+      "effects": [
+        {
+          "key": "oan-chu",
+          "activation": "PASSIVE",
+          "unique": true,
+          "cooldownSeconds": null,
+          "maxStacks": null,
+          "grants": []
+        }
+      ]
+    }
+  }
+}

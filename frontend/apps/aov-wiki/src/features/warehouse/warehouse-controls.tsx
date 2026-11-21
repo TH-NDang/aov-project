@@ -2,8 +2,7 @@ import type { CSSProperties } from "react"
 import { EnchantmentSetTools } from "./warehouse-enchantment-set-tools"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { useRef, type ReactNode } from "react"
-import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
-import { ItemCategoryArtwork } from "@aov/ui/components/item-category-icons"
+import { ItemCategoryArtwork, itemCategoryTone } from "@aov/ui/components/item-category-icons"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
@@ -20,6 +19,7 @@ import {
   type ItemSort,
 } from "./use-item-catalog"
 import { useMediaQuery } from "./warehouse-layout"
+import { ChosenStats, StatBadge, StatFilterButton } from "./warehouse-stat-filter"
 import { itemMatchesCategory } from "./warehouse-item-layout"
 import { ArcanaColorArt, arcanaColorName, romanTier } from "./warehouse-parts"
 import {
@@ -54,11 +54,14 @@ function SearchField({
   onChange,
   label,
   placeholder,
+  result,
 }: {
   value: string
   onChange: (value: string) => void
   label: string
   placeholder: string
+  /** While a search is typed, how many entries it leaves, with their unit, such as "12 items". */
+  result?: string
 }) {
   const { locale } = useWikiContext()
   const input = useRef<HTMLInputElement>(null)
@@ -74,6 +77,11 @@ function SearchField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
       />
+      {value && result && (
+        <span className="wiki-warehouse-search-result" role="status">
+          {result}
+        </span>
+      )}
       {value && (
         <button
           type="button"
@@ -95,6 +103,7 @@ function Chip({
   count,
   label,
   tone,
+  accent,
   onClick,
   children,
 }: {
@@ -104,6 +113,8 @@ function Chip({
   label?: string
   /** A colour of its own, such as an enchantment branch's: the chip's picture is ringed with it and it marks the choice. */
   tone?: string
+  /** The colour a tab is marked in once chosen, such as a shop group's; the tabs fall back to gold. */
+  accent?: string
   onClick: () => void
   children: ReactNode
 }) {
@@ -114,7 +125,7 @@ function Chip({
       aria-pressed={pressed}
       aria-label={label}
       data-tone={tone ? "" : undefined}
-      style={tone ? ({ "--chip-tone": tone } as CSSProperties) : undefined}
+      style={tone || accent ? ({ "--chip-tone": tone, "--chip-accent": accent } as CSSProperties) : undefined}
       onClick={onClick}
     >
       {children}
@@ -126,11 +137,14 @@ function Chip({
 function ChipGroup({
   label,
   wrap = false,
+  tabs = false,
   caption,
   children,
 }: {
   label: string
   wrap?: boolean
+  /** Drawn as tabs on a rule, for a choice that changes what the page shows rather than narrowing it. */
+  tabs?: boolean
   /** A short visible name before the chips; such a group is a secondary one and is drawn lighter. */
   caption?: string
   children: ReactNode
@@ -141,6 +155,7 @@ function ChipGroup({
       role="group"
       aria-label={label}
       data-wrap={wrap || undefined}
+      data-tabs={tabs || undefined}
       data-secondary={caption ? "" : undefined}
     >
       {caption && (
@@ -200,15 +215,21 @@ function ItemCategories({
   group,
   onFilters,
   loading,
-}: Pick<ControlsProps, "groups" | "group" | "onFilters" | "loading"> & { view: ItemCatalogView }) {
+  tabs = false,
+}: Pick<ControlsProps, "groups" | "group" | "onFilters" | "loading"> & { view: ItemCatalogView; tabs?: boolean }) {
   const { locale } = useWikiContext()
   const text = useWikiText()
   const board = view.layout === "shop"
   const active = board ? view.category : group
   return (
-    <ChipGroup label={text("Nhóm trang bị", "Equipment category")}>
+    <ChipGroup label={text("Nhóm trang bị", "Equipment category")} tabs={tabs}>
       {!board && (
         <Chip pressed={!group} onClick={() => onFilters({ group: null })}>
+          {tabs && (
+            <span className="wiki-warehouse-chip-tile">
+              <WikiIcon name="all" size={18} />
+            </span>
+          )}
           {text("Tất cả", "All")}
         </Chip>
       )}
@@ -218,6 +239,7 @@ function ItemCategories({
           <Chip
             key={category.code}
             pressed={active === category.code}
+            accent={itemCategoryTone(category.code)}
             count={
               loading ? undefined : view.visible.filter((entry) => itemMatchesCategory(entry, category.code)).length
             }
@@ -227,11 +249,14 @@ function ItemCategories({
               else if (active !== category.code) onFilters({ group: category.code })
             }}
           >
-            {icon ? (
-              <WikiImage className="wiki-warehouse-chip-art" src={icon} alt="" width="20" height="20" />
-            ) : (
-              <ItemCategoryArtwork code={category.code} size={20} />
-            )}
+            {/* One tile for the uploaded picture and the drawn fallback alike; only the tabs draw it. */}
+            <span className="wiki-warehouse-chip-tile">
+              {icon ? (
+                <WikiImage className="wiki-warehouse-chip-art" src={icon} alt="" width="20" height="20" />
+              ) : (
+                <ItemCategoryArtwork code={category.code} size={20} />
+              )}
+            </span>
             {warehouseText(category.translations, locale)?.name || category.code}
           </Chip>
         )
@@ -284,10 +309,8 @@ function ItemViewSwitch({ view, listing, labels }: { view: ItemCatalogView; list
   )
 }
 
-function ItemControls({ search, onSearch, groups, group, onFilters, itemView: view, loading }: ControlsProps) {
+function ItemControls({ search, onSearch, entries, groups, group, onFilters, itemView: view, loading }: ControlsProps) {
   const compact = usePageLayout() === "compact"
-  // Seven groups with their counts, the search and the view switch need the full page column to share a line.
-  const roomy = useMediaQuery("(min-width: 1280px)")
   const { text, sorts, items } = useItemLabels()
   const stats = itemStatOptions(view)
   const statsLabel = text("Chỉ số", "Stats")
@@ -295,7 +318,7 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
   const listing = (loading ? view.preferred : view.layout) === "list"
   const switchable = groups.length > 0 || loading
   const categories = groups.length > 0 && (
-    <ItemCategories view={view} groups={groups} group={group} onFilters={onFilters} loading={loading} />
+    <ItemCategories view={view} groups={groups} group={group} onFilters={onFilters} loading={loading} tabs={!compact} />
   )
 
   if (compact)
@@ -307,6 +330,7 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
             onChange={onSearch}
             label={text("Tìm trang bị", "Search equipment")}
             placeholder={text("Tìm trang bị…", "Search items…")}
+            result={items(entries.length)}
           />
           <PublicFilterSheet
             title={text("Lọc trang bị", "Filter equipment")}
@@ -319,7 +343,6 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
             {stats.length > 0 && (
               <SheetGroup label={statsLabel}>
                 {stats.map((filter) => {
-                  const Art = gameplayIcons[filter.icon]
                   return (
                     <SheetChoice
                       key={filter.key}
@@ -327,7 +350,7 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
                       count={view.counts[filter.key] ?? 0}
                       onClick={() => view.setStats(toggled(view.stats, filter.key))}
                     >
-                      <Art size={18} />
+                      <StatBadge filter={filter} size={26} />
                       {text(filter.vi, filter.en)}
                     </SheetChoice>
                   )
@@ -350,21 +373,6 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
       </div>
     )
 
-  // A chip that is on shows it, and pressing it again takes the filter off; the groups above count what is left.
-  const statChips = stats.map((filter) => {
-    const Art = gameplayIcons[filter.icon]
-    return (
-      <Chip
-        key={filter.key}
-        pressed={view.stats.includes(filter.key)}
-        count={view.counts[filter.key] ?? 0}
-        onClick={() => view.setStats(toggled(view.stats, filter.key))}
-      >
-        <Art size={16} />
-        {text(filter.vi, filter.en)}
-      </Chip>
-    )
-  })
   const sort = listing && (
     <Select value={view.sort} onValueChange={(value) => view.setSort(value as ItemSort)}>
       <SelectTrigger className="wiki-warehouse-select" aria-label={text("Sắp xếp", "Sort")}>
@@ -379,6 +387,8 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
       </SelectContent>
     </Select>
   )
+  // One toolbar (search, the stat filter, the order and the view), the stats being filtered on, then the groups as
+  // tabs right above the catalog they switch.
   return (
     <div className="wiki-warehouse-controls">
       <div className="wiki-warehouse-toolbar">
@@ -386,29 +396,17 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
           value={search}
           onChange={onSearch}
           label={text("Tìm trang bị", "Search equipment")}
-          placeholder={text("Tìm theo tên, hiệu ứng…", "Search names, effects…")}
+          placeholder={text("Tìm theo tên, chỉ số, hiệu ứng…", "Search names, stats, effects…")}
+          result={items(entries.length)}
         />
-        {roomy && categories}
-        {switchable && (
-          <div className="wiki-warehouse-toolbar-end">
-            {/* Where the groups take a line of their own, this one has room for the sort order. */}
-            {!roomy && sort}
-            <ItemViewSwitch view={view} listing={listing} labels />
-          </div>
-        )}
+        {stats.length > 0 && <StatFilterButton view={view} options={stats} />}
+        <div className="wiki-warehouse-toolbar-end">
+          {sort}
+          {switchable && <ItemViewSwitch view={view} listing={listing} labels />}
+        </div>
       </div>
-      {!roomy && categories}
-      {/* The line stays in place while the catalog loads, so the catalog does not move when the chips arrive. */}
-      <div className="wiki-warehouse-subbar">
-        {stats.length > 0 && (
-          <ChipGroup label={text("Lọc theo chỉ số", "Filter by stat")} caption={statsLabel} wrap>
-            {statChips.slice(0, -2)}
-            {/* The last two wrap together, so a chip never stands alone on a line. */}
-            <span className="wiki-warehouse-chip-pair">{statChips.slice(-2)}</span>
-          </ChipGroup>
-        )}
-        {(roomy || !switchable) && sort && <div className="wiki-warehouse-toolbar-end">{sort}</div>}
-      </div>
+      <ChosenStats view={view} options={stats} />
+      {categories}
     </div>
   )
 }

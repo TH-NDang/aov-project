@@ -1,4 +1,6 @@
+import type { CSSProperties, ReactNode } from "react"
 import { ImageOff } from "lucide-react"
+import { itemCategoryTone } from "@aov/ui/components/item-category-icons"
 import { cn } from "@aov/ui/lib/utils"
 import { warehouseText, type WarehouseMetadata } from "@aov/ui/lib/warehouse-content"
 import { Button } from "@aov/ui/components/button"
@@ -18,6 +20,7 @@ export function ShopFilters({
   missingIcons,
   variants,
   variant,
+  toolbar,
   onCategory,
   onVariant,
   onSelect,
@@ -31,6 +34,8 @@ export function ShopFilters({
   missingIcons: Entry[]
   variants: string[]
   variant: string
+  /** A tool at the end of the row, such as a filter. */
+  toolbar?: ReactNode
   onCategory: (code: string) => void
   onVariant: (variant: string) => void
   onSelect: (id: string) => void
@@ -59,7 +64,13 @@ export function ShopFilters({
                     )
                   : undefined
               }
-              className={cn("[&_svg]:size-5", matches && !count && !active && "opacity-50")}
+              // The chosen group is underlined in its own colour, as the reader's armory marks it.
+              style={{ "--tab-tone": itemCategoryTone(group.code) ?? "var(--primary)" } as CSSProperties}
+              className={cn(
+                "[&_svg]:size-5",
+                active && "shadow-[inset_0_-2px_0_var(--tab-tone)]",
+                matches && !count && !active && "opacity-50",
+              )}
               onClick={() => onCategory(group.code)}
             >
               <ItemCategoryIcon category={group} />
@@ -69,6 +80,7 @@ export function ShopFilters({
         })}
       </FilterTabs>
       <span className="flex-1" />
+      {toolbar}
       {editable && missingIcons.length > 0 && (
         <Button
           variant="ghost"

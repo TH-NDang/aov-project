@@ -1,0 +1,146 @@
+/* The head of an armory page: the text on the left over a shade, a scene of the part's pictures on the right. */
+.wiki-warehouse-showcase {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 90% at 80% 46%, color-mix(in srgb, var(--aov-accent) 22%, transparent), transparent 70%),
+    radial-gradient(60% 70% at 0% 0%, color-mix(in srgb, var(--aov-wiki-gold) 8%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--aov-wiki-bar), var(--aov-bg));
+}
+/* The scene's edges melt into the page: a fade at the foot and a shade behind the text. */
+.wiki-warehouse-showcase::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 62%, var(--aov-bg)),
+    linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 80%, transparent) 34%, transparent 58%);
+  pointer-events: none;
+}
+.wiki-warehouse-showcase-scene {
+  position: absolute;
+}
+/* Phones: edge to edge, starting under the clear header so the scene shows through the bar until the page scrolls. */
+.wiki-warehouse-showcase[data-layout="compact"] {
+  min-height: 184px;
+  align-items: flex-end;
+  margin: calc(-12px - var(--wiki-header-height)) calc(-1 * var(--wiki-gutter)) 14px;
+  padding: calc(var(--wiki-header-height) + 12px) var(--wiki-gutter) 18px;
+}
+.wiki-warehouse-showcase[data-layout="compact"] > .wiki-warehouse-showcase-scene {
+  inset: var(--wiki-header-height) 0 0;
+}
+/* Wide screens: a framed banner; the scene takes the right three fifths, with room to spread out. */
+.wiki-warehouse-showcase[data-layout="wide"] {
+  /* Scenes size their pieces by this, so a wide banner holds them larger. */
+  --scene-scale: 1.25;
+  min-height: 220px;
+  align-items: center;
+  margin: 4px 0 20px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 24px 28px;
+}
+.wiki-warehouse-showcase[data-layout="wide"]::after {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 72%, transparent) 26%, transparent 46%);
+}
+.wiki-warehouse-showcase[data-layout="wide"] > .wiki-warehouse-showcase-scene {
+  inset: 0 0 0 auto;
+  width: 60%;
+}
+/* A faint stand under the front piece: two rings seen from above. */
+.wiki-warehouse-showcase-stand {
+  position: absolute;
+  top: 74%;
+  left: var(--piece-x);
+  width: calc(156px * var(--scene-scale, 1));
+  height: calc(38px * var(--scene-scale, 1));
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 34%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--aov-accent) 20%, transparent), transparent);
+  box-shadow: 0 0 0 14px color-mix(in srgb, var(--aov-accent) 5%, transparent);
+  transform: translate(-50%, -50%);
+}
+.wiki-warehouse-showcase-piece {
+  position: absolute;
+  top: var(--piece-y);
+  left: var(--piece-x);
+  width: calc(var(--piece-size) * var(--scene-scale, 1));
+  height: calc(var(--piece-size) * var(--scene-scale, 1));
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 38%, transparent);
+  border-radius: 14px;
+  background: var(--aov-surface);
+  box-shadow: 0 10px 22px -10px var(--aov-wiki-bar);
+  object-fit: cover;
+  transform: translate(-50%, -50%) rotate(var(--piece-turn));
+}
+/* The front piece is lit; the further back a piece stands, the dimmer and softer it is. */
+.wiki-warehouse-showcase-piece[data-depth="0"] {
+  z-index: 3;
+  border-color: color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--aov-accent) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--aov-accent) 45%, transparent),
+    0 14px 26px -12px var(--aov-wiki-bar);
+}
+.wiki-warehouse-showcase-piece[data-depth="1"] {
+  z-index: 2;
+  opacity: 0.86;
+}
+.wiki-warehouse-showcase-piece[data-depth="2"] {
+  z-index: 1;
+  opacity: 0.5;
+  filter: blur(0.6px);
+}
+.wiki-warehouse-showcase-piece[data-depth="3"] {
+  opacity: 0.3;
+  filter: blur(1.2px);
+}
+.wiki-warehouse-showcase-text {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  max-width: 56%;
+  justify-items: start;
+  gap: 6px;
+}
+.wiki-warehouse-showcase-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 2px;
+}
+.wiki-warehouse-showcase-title > h1 {
+  color: var(--aov-text);
+  font: var(--wiki-type-page);
+  letter-spacing: -0.02em;
+}
+/* The tagline speaks first: brighter and bold. The plain line under it stays quiet. */
+.wiki-warehouse-showcase-tagline {
+  color: var(--aov-text);
+  font: var(--wiki-type-section);
+  text-wrap: balance;
+}
+.wiki-warehouse-showcase-text > p:not(.wiki-warehouse-showcase-tagline) {
+  max-width: 60ch;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-body);
+  text-wrap: pretty;
+}
+.wiki-warehouse-showcase[data-layout="compact"] .wiki-warehouse-showcase-count {
+  margin-bottom: 2px;
+}
+.wiki-warehouse-showcase-count {
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 35%, transparent);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 10px;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+  font: 600 0.75rem/1.375rem var(--wiki-font-reading);
+  font-variant-numeric: tabular-nums;
+}

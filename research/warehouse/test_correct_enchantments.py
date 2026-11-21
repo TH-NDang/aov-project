@@ -62,6 +62,22 @@ class CorrectEnchantmentsTest(unittest.TestCase):
     def test_the_reviewed_file_covers_thirty_three_enchantments(self):
         self.assertEqual(len(module.load_corrections()["enchantments"]), 33)
 
+    def test_an_items_file_plans_its_items_and_changes_only_the_english_text(self):
+        corrections = {"kind": "items", "locale": "en-US", "items": {"a": {"description": "New."}}}
+        item = {"code": "a", "revision": {"state": "PUBLISHED"},
+                "content": {"tier": 3, "stats": [], "translations": [
+                    {"locale": "vi-VN", "name": "Tên", "description": "Cũ"},
+                    {"locale": "en-US", "name": "Name", "description": "Old."}]}}
+        self.assertEqual(module.plan([item], corrections)["change"], ["a"])
+        content = module.corrected(item["content"], corrections["items"]["a"], "en-US")
+        self.assertEqual([row["description"] for row in content["translations"]], ["Cũ", "New."])
+
+    def test_the_english_item_file_lines_its_effects_up_with_the_vietnamese_text(self):
+        corrections = module.load_corrections(HERE / "item-translations-en.json")
+        self.assertEqual(corrections["kind"], "items")
+        self.assertEqual(corrections["cause"], "TRANSLATION_UPDATE")
+        self.assertEqual(len(corrections["items"]), 90)
+
 
 if __name__ == "__main__":
     unittest.main()
