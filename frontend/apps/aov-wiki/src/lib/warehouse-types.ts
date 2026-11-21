@@ -1,4 +1,4 @@
-import type { ItemEffectGameplay } from "@aov/ui/lib/item-description"
+import { itemStatDefinitionByCode, type ItemEffectGameplay } from "@aov/ui/lib/item-description"
 import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
@@ -103,6 +103,16 @@ export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, loc
     .trim()
     .split(/\s+/)
     .every((term) => haystack.includes(term))
+}
+
+/**
+ * A stat's name: the shared stat list first, so every entry spells a stat the same way whatever its own record says,
+ * then the label the entry recorded, then the code itself.
+ */
+export function warehouseStatLabel(key: string, text: Pick<WarehouseText, "statLabels"> | undefined, locale: string) {
+  const shared = itemStatDefinitionByCode(key)
+  if (shared) return isEnglishLocale(locale) ? shared.en : shared.vi
+  return text?.statLabels?.[key] || key.replace(/_/g, " ")
 }
 
 export function warehouseStatValue(stat: WarehouseStat, locale = "vi-VN") {

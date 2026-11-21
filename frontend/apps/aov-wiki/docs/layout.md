@@ -155,8 +155,12 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   có đủ các chỉ số đó, mỗi chip có số món sẽ còn lại và chip không còn kết quả được ẩn. Trên wide chip nằm thành một hàng
   riêng dưới thanh công cụ, trên compact nằm trong nút Lọc. Sơ đồ làm mờ món không khớp nhưng giữ bố cục, Danh sách ẩn
   hẳn.
-- Phù hiệu có màu/icon từng hệ, đường nối liên tục từ biểu tượng hệ qua I–III. Bảng ngọc lọc theo màu; mỗi bậc chia cột
-  theo màu (hoặc theo nhóm chỉ số khi đã chọn một màu), bậc cao nhất mở sẵn, các bậc dưới thu gọn. Phụ trợ dùng ảnh tròn,
+- Phù hiệu có màu/icon từng hệ, đường nối liên tục từ biểu tượng hệ qua I–III. Bảng ngọc lọc theo màu và chỉ số, không
+  có bộ lọc bậc; mỗi bậc chia cột theo màu (hoặc theo nhóm chỉ số khi đã chọn một màu). Mỗi hàng ngọc là các chỉ số của
+  nó, mỗi chỉ số một dòng, tên chỉ số lấy từ danh sách chỉ số chung, con số canh phải; tên ngọc chỉ hiện ở chi tiết. Đầu
+  bậc cao nhất có nút "1 viên / 10 viên" (10 viên là lắp kín một màu). Khi lọc một chỉ số, ngọc xếp theo chỉ số đó từ
+  cao xuống và chỉ số đó sáng hơn. Bậc cao nhất mở sẵn; các bậc dưới gộp thành một dòng "Ngọc bậc I và II" thu gọn, mở
+  ra có một câu giải thích. Cột hẹp (cạnh khung chi tiết) bỏ hình ngọc để giữ chỗ cho chỉ số. Phụ trợ dùng ảnh tròn,
   xếp lớp ảnh khi có nhiều trạng thái; mục cũ thu gọn.
 - Trên wide, danh mục rộng hết cột trang cho tới khi mở một mục; khi đó chi tiết đứng thành cột bên phải (320–380px) cho
   cả bốn phần, để đọc món này sang món khác không phải mở rồi đóng. Trên compact, chọn mục mở tấm chi tiết từ bên phải,
@@ -235,7 +239,7 @@ Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có v
 - Chi tiết Tướng: nút `Video · N` cạnh vai trò ở đầu trang đưa xuống khối `Video` trước lịch sử thay đổi, gồm cả video
   cốt truyện, có bộ lọc theo loại khi có từ hai loại trở lên. Thứ tự theo loại rồi theo thứ tự đặt trong admin. Khi chỉ
   một phần video là cốt truyện, Tổng quan có nút `Video cốt truyện` mở thẳng video đầu tiên của cốt truyện. `Video kỹ
-  năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
+năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
 - Trang phục: danh sách video nằm trong cột thông tin của trình xem. Bấm phát thì video thay ảnh ở khu vực ảnh; chuyển
   sang trang phục khác thì quay về ảnh.
 - Kho trang bị: khối `Video` ở chi tiết mục, trước phần thay đổi.

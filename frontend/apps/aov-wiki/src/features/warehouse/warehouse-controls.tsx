@@ -21,8 +21,9 @@ import {
 import { useMediaQuery } from "./warehouse-layout"
 import { ChosenStats, StatBadge, StatFilterButton } from "./warehouse-stat-filter"
 import { itemMatchesCategory } from "./warehouse-item-layout"
-import { ArcanaColorArt, arcanaColorName, romanTier } from "./warehouse-parts"
+import { ArcanaColorArt, arcanaColorName } from "./warehouse-parts"
 import {
+  warehouseStatLabel,
   warehouseText,
   type PublishedWarehouseRecord,
   type WarehouseGroup,
@@ -420,13 +421,11 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
   const labels = new Map<string, string>()
   for (const entry of arcanaCandidates(entries, filters))
     for (const { key } of entry.content.stats)
-      labels.set(key, warehouseText(entry.content.translations, locale)?.statLabels?.[key] || key)
+      labels.set(key, warehouseStatLabel(key, warehouseText(entry.content.translations, locale), locale))
   const stats = [...labels]
     .map(([value, label]) => ({ value, label }))
     .sort((a, b) => a.label.localeCompare(b.label, locale))
   const allStats = text("Tất cả chỉ số", "All stats")
-  const tiers = [3, 2, 1]
-  const tierName = (tier: number) => `${text("Bậc", "Tier")} ${romanTier(tier)}`
   const reset = () => onFilters({ color: null, group: null, tier: null, stat: null })
   const searchField = (
     <SearchField
@@ -468,20 +467,6 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
             onReset={() => onFilters({ tier: null, stat: null })}
             resultLabel={text(`Xem ${found} ngọc`, `Show ${found} arcana`)}
           >
-            <SheetGroup label={text("Bậc ngọc", "Arcana tier")}>
-              <SheetChoice pressed={!filters.tier} onClick={() => onFilters({ tier: null, stat: null })}>
-                {text("Mọi bậc", "All tiers")}
-              </SheetChoice>
-              {tiers.map((tier) => (
-                <SheetChoice
-                  key={tier}
-                  pressed={filters.tier === String(tier)}
-                  onClick={() => onFilters({ tier: String(tier), stat: null })}
-                >
-                  {tierName(tier)}
-                </SheetChoice>
-              ))}
-            </SheetGroup>
             <SheetGroup label={text("Chỉ số", "Stats")}>
               <SheetChoice pressed={!filters.stat} onClick={() => onFilters({ stat: null })}>
                 {allStats}
@@ -502,21 +487,6 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
   const filterRow = (
     <div className="wiki-warehouse-filters">
       {colors}
-      <ChipGroup label={text("Bậc ngọc", "Arcana tier")}>
-        <Chip pressed={!filters.tier} onClick={() => onFilters({ tier: null, stat: null })}>
-          {text("Mọi bậc", "All tiers")}
-        </Chip>
-        {tiers.map((tier) => (
-          <Chip
-            key={tier}
-            pressed={filters.tier === String(tier)}
-            label={tierName(tier)}
-            onClick={() => onFilters({ tier: String(tier), stat: null })}
-          >
-            {romanTier(tier)}
-          </Chip>
-        ))}
-      </ChipGroup>
       <Select
         value={filters.stat || "all"}
         onValueChange={(value) => onFilters({ stat: value === "all" ? null : value })}

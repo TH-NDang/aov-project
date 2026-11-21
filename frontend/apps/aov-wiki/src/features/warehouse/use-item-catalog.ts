@@ -172,6 +172,9 @@ export function arcanaRows(
   locale: string,
 ) {
   const { compare } = new Intl.Collator(locale, { numeric: true, sensitivity: "base" })
+  // With one stat chosen, the reader is comparing it: the most of it comes first.
+  const chosen = (entry: WarehouseArcana) =>
+    filters.stat ? (entry.content.stats.find((stat) => stat.key === filters.stat)?.value ?? 0) : 0
   return arcanaCandidates(entries, filters)
     .filter((entry) => !filters.stat || entry.content.stats.some((stat) => stat.key === filters.stat))
     .map((entry) => ({ entry, family: arcanaCombatGroup(entry.content) }))
@@ -179,6 +182,7 @@ export function arcanaRows(
       (a, b) =>
         b.entry.content.tier - a.entry.content.tier ||
         ARCANA_COLORS.indexOf(a.entry.content.color) - ARCANA_COLORS.indexOf(b.entry.content.color) ||
+        chosen(b.entry) - chosen(a.entry) ||
         ARCANA_FAMILIES.indexOf(a.family) - ARCANA_FAMILIES.indexOf(b.family) ||
         compare(warehouseName(a.entry, locale), warehouseName(b.entry, locale)),
     )
