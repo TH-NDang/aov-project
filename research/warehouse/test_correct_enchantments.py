@@ -76,7 +76,7 @@ class CorrectEnchantmentsTest(unittest.TestCase):
         corrections = module.load_corrections(HERE / "item-translations-en.json")
         self.assertEqual(corrections["kind"], "items")
         self.assertEqual(corrections["cause"], "TRANSLATION_UPDATE")
-        self.assertEqual(len(corrections["items"]), 90)
+        self.assertEqual(len(corrections["items"]), 91)
 
 
 if __name__ == "__main__":
