@@ -15,6 +15,9 @@ concurrency:
 env:
   # Frontend configuration is compiled in (infra/web/Dockerfile). Set the repository variable for another origin.
   PUBLIC_ORIGIN: ${{ vars.STACK_PUBLIC_ORIGIN || 'https://athahub.com' }}
+  # Pictures are asked for resized through Cloudflare image transformations; set the variable to "off" to serve them
+  # at full size.
+  IMAGE_RESIZE: ${{ vars.STACK_IMAGE_RESIZE || 'cloudflare' }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -64,6 +67,7 @@ jobs:
             VITE_WIKI_URL=${{ env.PUBLIC_ORIGIN }}/
             VITE_STREAM_URL=${{ env.PUBLIC_ORIGIN }}/stream
             VITE_ADMIN_URL=${{ env.PUBLIC_ORIGIN }}/admin
+            VITE_IMAGE_RESIZE=${{ env.IMAGE_RESIZE }}
           push: true
           tags: ${{ steps.name.outputs.ref }}
           cache-from: type=gha,scope=${{ matrix.image }}
