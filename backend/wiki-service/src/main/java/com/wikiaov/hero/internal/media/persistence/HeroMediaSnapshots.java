@@ -71,6 +71,7 @@ public class HeroMediaSnapshots implements HeroSectionSnapshots {
     }
 
     /** Reads many snapshots in a bounded number of queries, for lists that cover every hero. */
+    @Override
     public Map<UUID, Bindings> contents(Collection<UUID> ids) {
         var references = sources.find(section(), ids);
         var boundAssets = bindings.findByMediaBindingRevisionIdIn(ids, Sort.by("mediaRole")).stream()

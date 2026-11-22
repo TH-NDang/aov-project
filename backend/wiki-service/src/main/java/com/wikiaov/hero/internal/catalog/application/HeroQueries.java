@@ -299,10 +299,26 @@ public class HeroQueries {
         var heroes = store.heroes(sort.endsWith("desc"));
         var codes = heroes.stream().collect(Collectors.toMap(HeroIdentity::getId, HeroIdentity::getCode));
 
+        // Every revision and every chosen profile in a bounded number of queries: the list covers all heroes, whatever
+        // page is asked for.
+        var revisions = store.revisions(heroes.stream().map(HeroIdentity::getId).toList()).stream()
+                .collect(Collectors.groupingBy(HeroRevisionView::heroId));
+        Map<UUID, HeroReadMoments.Choice<HeroRevisionView>> choices = new LinkedHashMap<>();
+        for (var hero : heroes) {
+            choose(hero.getId(), revisions.getOrDefault(hero.getId(), List.of()), moment, at)
+                    .ifPresent(choice -> choices.put(hero.getId(), choice));
+        }
+        var profiles = sections.contents(HeroSection.PROFILE, choices.values().stream()
+                .map(choice -> choice.revision().sections().get(HeroSection.PROFILE)).filter(Objects::nonNull)
+                .toList());
+
         Map<UUID, Published> published = new LinkedHashMap<>();
         for (var hero : heroes) {
-            choose(hero.getId(), moment, at).ifPresent(
-                    choice -> published.put(hero.getId(), published(hero, choice, locale)));
+            var choice = choices.get(hero.getId());
+            if (choice != null) {
+                var profile = (Profile) profiles.get(choice.revision().sections().get(HeroSection.PROFILE));
+                published.put(hero.getId(), published(hero, choice, profile, locale));
+            }
         }
 
         List<ListEntry> all = new ArrayList<>();
@@ -393,9 +409,9 @@ public class HeroQueries {
                 new HeroListView.Reference(c.patchId(), c.patchCode()), c.patchVariantId(), c.effectiveAt());
     }
 
-    private Published published(HeroIdentity hero, HeroReadMoments.Choice<HeroRevisionView> choice, String locale) {
+    private Published published(HeroIdentity hero, HeroReadMoments.Choice<HeroRevisionView> choice, Profile profile,
+            String locale) {
         var rev = choice.revision();
-        var profile = (Profile) sections.content(HeroSection.PROFILE, rev.sections().get(HeroSection.PROFILE));
         String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),
                 locale);
         var translated = profile.translations().stream().filter(t -> t.locale().equals(actual)).findFirst()
@@ -440,12 +456,13 @@ public class HeroQueries {
         var everyEntry = entries.stream().flatMap(entry -> Stream.concat(
                 Stream.of(entry), entry.forms().stream())).toList();
         Map<UUID, Bindings> bindings = new HashMap<>();
+        sections.contents(HeroSection.MEDIA_BINDINGS,
+                everyEntry.stream().map(ListEntry::mediaBindingRevisionId).filter(Objects::nonNull).distinct().toList())
+                .forEach((id, value) -> bindings.put(id, (Bindings) value));
         Set<UUID> assetIds = new HashSet<>();
         for (var entry : everyEntry) {
-            var value = bindings.computeIfAbsent(entry.mediaBindingRevisionId(),
-                    id -> (Bindings) sections.content(HeroSection.MEDIA_BINDINGS, id));
             for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
-                UUID assetId = value.bindings().get(role);
+                UUID assetId = boundAsset(bindings, entry, role);
                 if (assetId != null) {
                     assetIds.add(assetId);
                 }
@@ -454,9 +471,8 @@ public class HeroQueries {
 
         var assets = media.findAll(assetIds);
         for (var entry : everyEntry) {
-            var selected = bindings.get(entry.mediaBindingRevisionId()).bindings();
             for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
-                UUID assetId = selected.get(role);
+                UUID assetId = boundAsset(bindings, entry, role);
                 var asset = assetId == null ? null : assets.get(assetId);
                 if (asset != null && asset.usable()) {
                     entry.item().put(role.name().toLowerCase(Locale.ROOT), asset);
@@ -464,6 +480,12 @@ public class HeroQueries {
             }
         }
         return entries.stream().map(ListEntry::item).toList();
+    }
+
+    /** The asset an entry binds to a role, or null when the revision has no media bindings or none for the role. */
+    private static @Nullable UUID boundAsset(Map<UUID, Bindings> bindings, ListEntry entry, MediaRole role) {
+        var value = entry.mediaBindingRevisionId() == null ? null : bindings.get(entry.mediaBindingRevisionId());
+        return value == null ? null : value.bindings().get(role);
     }
 
     private record Published(
