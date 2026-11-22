@@ -23,8 +23,7 @@ import { WikiSearch } from "./wiki-search"
 import { WikiAccountMenu } from "./wiki-account"
 import { useWikiAccountPreferences } from "../lib/wiki-auth"
 
-type IconName =
-  "search" | "globe" | "user" | "chevron" | "check" | "home" | "more" | "close" | "chevronRight" | "contents"
+type IconName = "chevron" | "check" | "chevronRight"
 
 function Icon({ name, className }: { name: IconName; className?: string }) {
   return <WikiIcon name={name} className={cn("size-5 shrink-0", className)} />
@@ -157,7 +156,7 @@ function MoreMenu() {
       locale={locale}
       trigger={
         <button type="button" className="wiki-compact-button" aria-label={t("Thêm", "More")}>
-          <Icon name="more" />
+          <WikiIcon name="dots" />
         </button>
       }
     >
@@ -210,6 +209,8 @@ interface WikiHeaderProps {
   solid?: boolean
   /** Leaves the compact bar clear over a scene at the top of the page; it frosts over as the page scrolls. */
   clear?: boolean
+  /** The home page itself: the compact bar has no way home on its left, only the wordmark in the middle. */
+  home?: boolean
 }
 
 /** One row: the way back, where you are, then search, the contents and the sheet with everything else. */
@@ -221,6 +222,7 @@ function WikiHeaderCompact({
   section,
   solid = false,
   clear = false,
+  home = false,
 }: WikiHeaderProps) {
   const { href, locale } = useWikiContext()
   const t = useWikiText()
@@ -240,7 +242,7 @@ function WikiHeaderCompact({
           aria-label={wikiText(locale, "Đóng tìm kiếm", "Close search")}
           onClick={() => setSearching(false)}
         >
-          <WikiIcon name="chevronLeft" size={22} />
+          <WikiIcon name="chevronLeft" size={22} weight="bold" />
         </button>
         <WikiSearch size="sheet" autoFocus onDone={() => setSearching(false)} />
       </header>
@@ -252,26 +254,22 @@ function WikiHeaderCompact({
       data-variant={variant}
       data-solid={solid || undefined}
       data-clear={clear || undefined}
-      data-titled={pageTitle ? "" : undefined}
     >
       {backTo ? (
         <Link className="wiki-compact-button" to={href(backTo)} aria-label={wikiText(locale, "Quay lại", "Back")}>
-          <WikiIcon name="chevronLeft" size={22} />
+          <WikiIcon name="chevronLeft" size={22} weight="bold" />
         </Link>
-      ) : pageTitle ? (
-        <a className="wiki-compact-button" href={href("/")} aria-label={t("Trang chủ", "Home")}>
-          <Icon name="home" />
-        </a>
+      ) : home ? (
+        <span />
       ) : (
-        <a className="wiki-compact-brand" href={href("/")} aria-label={`${SITE_NAME} — ${t("Trang chủ", "Home")}`}>
-          <img src={WIKI_LOGO_URL} alt="" width={28} height={28} fetchPriority="high" />
-          <PublicAppWordmark product="Wiki" size="small" />
+        <a className="wiki-compact-button" href={href("/")} aria-label={t("Trang chủ", "Home")}>
+          <WikiIcon name="house" weight="bold" />
         </a>
       )}
       {pageTitle ? (
         <Title className="wiki-compact-title">{pageTitle.replace(/^Thư viện\s+/u, "")}</Title>
       ) : (
-        <span className="flex-1" />
+        <PublicAppWordmark product="Wiki" size="small" className="wiki-compact-wordmark" />
       )}
       <nav className="wiki-compact-utilities" aria-label={t("Tiện ích", "Utilities")}>
         <button
@@ -281,7 +279,7 @@ function WikiHeaderCompact({
           aria-label={t("Tìm kiếm", "Search")}
           onClick={() => setSearching(true)}
         >
-          <Icon name="search" />
+          <WikiIcon name="search" weight="bold" />
         </button>
         <LibraryContents active={section} />
         <MoreMenu />

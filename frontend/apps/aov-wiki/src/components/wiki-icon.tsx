@@ -164,6 +164,26 @@ const PATHS = {
     </>
   ),
   contents: <path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1" />,
+  // Bolder marks for the compact header, where they sit over artwork on a phone.
+  /** A house with a door. */
+  house: <path d="M4 10.2 12 4l8 6.2V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1Z" />,
+  /** Four rounded tiles: every section of the wiki. */
+  sections: (
+    <>
+      <rect x="4" y="4" width="6.5" height="6.5" rx="1.8" />
+      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8" />
+      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8" />
+      <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8" />
+    </>
+  ),
+  /** Three solid dots, large enough to read at 20px. */
+  dots: (
+    <g fill="currentColor" stroke="none">
+      <circle cx="5" cy="12" r="2.1" />
+      <circle cx="12" cy="12" r="2.1" />
+      <circle cx="19" cy="12" r="2.1" />
+    </g>
+  ),
 } satisfies Record<string, ReactNode>
 export type WikiIconName = keyof typeof PATHS | SectionIcon
 
@@ -171,7 +191,18 @@ function isSectionIcon(name: WikiIconName): name is SectionIcon {
   return name in sectionIcons
 }
 
-export function WikiIcon({ name, size = 20, className }: { name: WikiIconName; size?: number; className?: string }) {
+export function WikiIcon({
+  name,
+  size = 20,
+  weight = "regular",
+  className,
+}: {
+  name: WikiIconName
+  size?: number
+  /** "bold" is the heavier line of the compact header, whose buttons sit over artwork on a phone. */
+  weight?: "regular" | "bold"
+  className?: string
+}) {
   if (isSectionIcon(name)) {
     const Icon = sectionIcons[name]
     return <Icon size={size} className={className} />
@@ -184,7 +215,7 @@ export function WikiIcon({ name, size = 20, className }: { name: WikiIconName; s
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth={weight === "bold" ? 2.2 : 1.6}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

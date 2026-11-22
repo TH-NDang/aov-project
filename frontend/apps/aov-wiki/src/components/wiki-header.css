@@ -274,10 +274,10 @@
   gap: 6px;
   padding-inline: 6px 12px;
 }
-/* A titled bar centres the title on the screen, not between its buttons: the two sides share what the title leaves,
-   so one button on the left and three on the right still frame it evenly. A long title takes the space it needs and
-   ends in an ellipsis before it reaches a button. */
-.wiki-compact-header[data-titled] {
+/* The bar centres the page title, or the wordmark where a page has none, on the screen rather than between its buttons:
+   the two sides share what the middle leaves, so one button on the left and three on the right still frame it evenly.
+   A long title takes the space it needs and ends in an ellipsis before it reaches a button. */
+.wiki-compact-header:not([data-searching]) {
   display: grid;
   grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
 }
@@ -291,19 +291,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.wiki-compact-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding-inline: 8px 4px;
-  text-decoration: none;
-}
-.wiki-compact-brand > img {
-  width: 28px;
-  height: 28px;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 50%, transparent);
-  border-radius: var(--aov-radius-control);
-  object-fit: cover;
+.wiki-compact-wordmark {
+  justify-self: center;
 }
 .wiki-compact-utilities {
   display: flex;
@@ -335,11 +324,11 @@
 .wiki-compact-button:is(:hover, [data-state="open"])::before {
   background: var(--aov-raised);
 }
-/* Over a cover the buttons need their own backing until the bar has filled in. */
-.wiki-compact-header[data-variant="hero"] .wiki-compact-button {
+/* Over a cover or a clear scene the buttons need their own backing until the bar has filled in. */
+.wiki-compact-header:is([data-variant="hero"], [data-clear]) .wiki-compact-button {
   color: var(--aov-text);
 }
-.wiki-compact-header[data-variant="hero"] .wiki-compact-button::before {
+.wiki-compact-header:is([data-variant="hero"], [data-clear]) .wiki-compact-button::before {
   background: color-mix(in srgb, var(--aov-wiki-bar) calc((1 - var(--header-solid, 0)) * 55%), transparent);
   backdrop-filter: blur(calc((1 - var(--header-solid, 0)) * 4px));
 }

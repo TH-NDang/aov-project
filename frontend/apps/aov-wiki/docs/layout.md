@@ -34,7 +34,7 @@
 
 ## Hai bố cục
 
-Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. Hai bố cục là các component riêng, chọn bằng `usePageLayout`; nguyên tắc nằm ở `frontend/docs/RESPONSIVE.md`. Trên compact, đầu trang là một hàng gồm nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục và nút "⋯". Không có thanh điều hướng ở đáy màn hình.
+Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. Hai bố cục là các component riêng, chọn bằng `usePageLayout`; nguyên tắc nằm ở `frontend/docs/RESPONSIVE.md`. Trên compact, đầu trang là một hàng gồm nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục và nút "⋯". Các nút này dùng icon nét đậm (`weight="bold"`: ngôi nhà, kính lúp, lưới bốn ô, ba chấm đặc) vì thường nằm trên ảnh; khi thanh còn trong suốt, mỗi nút có nền tròn mờ phía sau. Không có thanh điều hướng ở đáy màn hình.
 
 ## Trang chủ
 

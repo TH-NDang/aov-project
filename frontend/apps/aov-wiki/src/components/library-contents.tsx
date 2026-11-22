@@ -18,7 +18,7 @@ export function LibraryContents({ active }: { active?: WikiSectionKey }) {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button type="button" className="wiki-compact-button" aria-label={t("Mở mục lục", "Open contents")}>
-          <WikiIcon name="contents" className="size-[18px]" />
+          <WikiIcon name="sections" weight="bold" />
         </button>
       </SheetTrigger>
       <SheetContent side="right" className="wiki-library-sheet" showCloseButton={false}>
