@@ -8,11 +8,12 @@
   color: var(--kind-color);
   white-space: nowrap;
 }
-.wiki-change-kind[data-kind="BUFF"] {
-  --kind-color: var(--aov-success);
-}
-.wiki-change-kind:is([data-kind="NERF"], [data-kind="REMOVED"]) {
+/* A buff reads red and a nerf green, as players here read rises and falls; a removal stays red. */
+.wiki-change-kind:is([data-kind="BUFF"], [data-kind="REMOVED"]) {
   --kind-color: var(--aov-danger);
+}
+.wiki-change-kind[data-kind="NERF"] {
+  --kind-color: var(--aov-success);
 }
 .wiki-change-kind[data-kind="REWORK"] {
   --kind-color: var(--aov-warning);

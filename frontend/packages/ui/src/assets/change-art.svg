@@ -24,14 +24,14 @@
   </defs>
 
   <symbol id="buff" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
-    <path fill="url(#jade)" d="M30 5 52 30H40v27H20V30H8z"/>
-    <path fill="none" stroke="#e3fbe0" stroke-width="3" d="M30 14 19 26m6 8v17"/>
+    <path fill="url(#coral)" d="M30 5 52 30H40v27H20V30H8z"/>
+    <path fill="none" stroke="#ffe3d6" stroke-width="3" d="M30 14 19 26m6 8v17"/>
     <path fill="url(#gold)" stroke-width="2" d="m51 6 2.6 6.4L60 15l-6.4 2.6L51 24l-2.6-6.4L42 15l6.4-2.6z"/>
   </symbol>
 
   <symbol id="nerf" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
-    <path fill="url(#coral)" d="M34 59 12 34h12V7h20v27h12z"/>
-    <path fill="none" stroke="#ffe3d6" stroke-width="3" d="M30 13v17"/>
+    <path fill="url(#jade)" d="M34 59 12 34h12V7h20v27h12z"/>
+    <path fill="none" stroke="#e3fbe0" stroke-width="3" d="M30 13v17"/>
     <path fill="url(#steel)" stroke-width="2" d="m5 10 8-3 3 7-8 3z"/>
     <path fill="url(#steel)" stroke-width="2" d="m6 23 5-1 1 5-5 1z"/>
   </symbol>

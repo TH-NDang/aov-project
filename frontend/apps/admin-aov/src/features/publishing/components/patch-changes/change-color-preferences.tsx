@@ -19,7 +19,8 @@ export const changeColorPalette = {
 export type ChangeColorName = keyof typeof changeColorPalette
 export type ChangeColors = Readonly<{ buff: ChangeColorName; nerf: ChangeColorName }>
 type Direction = "BUFF" | "NERF"
-export const defaultChangeColors: ChangeColors = Object.freeze({ buff: "emerald", nerf: "rose" })
+/** A buff reads red and a nerf green by default, as players here read rises and falls; each editor may pick others. */
+export const defaultChangeColors: ChangeColors = Object.freeze({ buff: "rose", nerf: "emerald" })
 
 function isColor(value: unknown): value is ChangeColorName {
   return typeof value === "string" && Object.hasOwn(changeColorPalette, value)

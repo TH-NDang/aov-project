@@ -194,10 +194,10 @@
   color: var(--change-tone, var(--aov-info));
 }
 .wiki-home-change-group[data-tone="up"] {
-  --change-tone: var(--aov-success);
+  --change-tone: var(--aov-danger);
 }
 .wiki-home-change-group[data-tone="down"] {
-  --change-tone: var(--aov-danger);
+  --change-tone: var(--aov-success);
 }
 .wiki-home-change-group[data-tone="rework"] {
   --change-tone: var(--aov-warning);

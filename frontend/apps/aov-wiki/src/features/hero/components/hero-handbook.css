@@ -705,10 +705,10 @@ button.wiki-handbook-action svg:first-child {
   scroll-margin-top: calc(var(--wiki-header-height) + 12px);
 }
 .wiki-version-changes[data-tone="up"] {
-  --change-tone: var(--aov-success);
+  --change-tone: var(--aov-danger);
 }
 .wiki-version-changes[data-tone="down"] {
-  --change-tone: var(--aov-danger);
+  --change-tone: var(--aov-success);
 }
 .wiki-version-changes[data-tone="rework"] {
   --change-tone: var(--aov-warning);
