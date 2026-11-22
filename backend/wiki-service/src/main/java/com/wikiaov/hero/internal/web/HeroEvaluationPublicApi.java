@@ -19,6 +19,12 @@ public interface HeroEvaluationPublicApi {
             @Parameter(description = "Mode code, default RANKED_ELITE.") String mode,
             @Parameter(hidden = true) HttpServletRequest request);
 
+    @Operation(operationId = "heroEvaluationPublicApi_rankings", summary = "Read every hero's ranked rates", description = "The latest confirmed snapshot of the game's ranking boards for a market in the RANKED_ELITE mode (ADR-025, ADR-029), the same snapshot the single-hero read shows: tier, win, pick and ban rates of every hero or form that read gives an entry, in the order of the game's rates board. Values waiting for review are null. The snapshot is null and the entries empty when no snapshot is confirmed. Not paged: one entry per hero of the game at most.", responses = {
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
+    })
+    HeroRankingViews.PublishedBoard rankings(@Parameter(description = "Market code, default VN.") String region,
+            @Parameter(hidden = true) HttpServletRequest request);
+
     @Operation(operationId = "heroEvaluationPublicApi_traits", summary = "List heroes by trait", description = "For every trait code (ADR-029), the heroes and forms readers see with it in a market today, as {id, code}. Heroes that hold forms are not listed; their forms are.", responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
