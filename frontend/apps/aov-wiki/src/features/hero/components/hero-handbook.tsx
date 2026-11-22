@@ -9,7 +9,7 @@ import { useWikiContext, wikiText, useWikiText } from "../../../context/wiki-con
 import { FeedbackDialog } from "../../../components/feedback-dialog"
 import { useHeroVersion } from "./hero-version-changes"
 import { HeroVersionChanges, HeroVersionUnchanged } from "./hero-version-notes"
-import { HeroChangeTag } from "./hero-change-tag"
+import { ChangeTag } from "../../../components/change-tag"
 import { WikiVersionPicker } from "../../../components/wiki-version-picker"
 import { changeSetKind } from "../../../lib/wiki-change-format"
 import {
@@ -535,7 +535,7 @@ function VersionScope({ hero, handbook, note }: Pick<HandbookLayoutProps, "hero"
       <WikiVersionPicker
         changedVariants={changed}
         className="wiki-hero-version-picker"
-        optionDetail={(patch) => <HeroChangeTag kind={kindOf(patch.id)} />}
+        optionDetail={(patch) => <ChangeTag kind={kindOf(patch.id)} />}
       />
       <HeroVersionUnchanged hero={hero} version={version} />
       {note}

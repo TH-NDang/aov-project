@@ -1,11 +1,11 @@
 import { localeText } from "@aov/ui/lib/locale-text"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
-import { changeKindIcon, changeKindIcons } from "@aov/ui/components/change-kind-icons"
+import { ChangeKindMark } from "../../components/change-tag"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
-import { patchChangeLabel } from "../../components/patch-changes-row"
+import { patchChangeLabel } from "../../lib/change-kinds"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText, type WikiPatch, useWikiText } from "../../context/wiki-context"
@@ -87,16 +87,13 @@ function PatchRow({
             ) : rows.length ? (
               <>
                 <b>{text(`${rows.length} tướng`, rows.length === 1 ? "1 hero" : `${rows.length} heroes`)}</b>
-                {ordered.map(([kind, count]) => {
-                  const Art = changeKindIcon(kind) ?? changeKindIcons.UPDATED
-                  return (
-                    <span className="wiki-updates-kind" data-kind={kind} key={kind}>
-                      <Art size={16} />
-                      <span>{patchChangeLabel(kind, locale)}</span>
-                      <b>{count}</b>
-                    </span>
-                  )
-                })}
+                {ordered.map(([kind, count]) => (
+                  <span className="wiki-updates-kind" data-kind={kind} key={kind}>
+                    <ChangeKindMark kind={kind} size={18} />
+                    <span>{patchChangeLabel(kind, locale)}</span>
+                    <b>{count}</b>
+                  </span>
+                ))}
               </>
             ) : null}
           </span>

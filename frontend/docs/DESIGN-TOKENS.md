@@ -83,7 +83,14 @@ Hình vẽ dùng chung nằm trong bốn sprite ở `packages/ui/src/assets`, m�
 - `nav-art.svg`: mục điều hướng và các nhóm nội dung, dùng qua `navArtIcons`.
 - `catalog-art.svg`: sáu danh mục Tướng, Trang phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, dùng qua `catalogIcons`.
 - `gameplay-art.svg`: chỉ số và thuật ngữ trong game, dùng qua `gameplayIcons`. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng; đừng vẽ thêm bản có màu. `termIcon(term)` chọn hình cho một thuật ngữ: hình đã chọn lưu dạng `glyph:<tên>` trong trường `icon`, không chọn thì theo mặc định của thuật ngữ đó.
-- `change-art.svg`: loại thay đổi của một phiên bản, dùng qua `changeKindIcons`. Hiển thị từ 16px trở lên, nhỏ hơn thì viền lấn mất hình.
+- `change-art.svg`: loại thay đổi của một phiên bản, dùng qua `changeKindIcons`. Hiển thị từ 16px trở lên, nhỏ hơn thì viền lấn mất hình. Wiki không còn dùng bộ này.
+
+Wiki vẽ loại thay đổi bằng `ChangeKindMark` (`apps/aov-wiki/src/components/change-tag.tsx`): icon nét của Lucide
+(`lucide-react`, cùng thư viện với `packages/ui` và Admin) trong một vòng tròn nền nhạt cùng màu, không vẽ icon riêng:
+`ArrowUp` cho tăng sức mạnh (đỏ), `ArrowDown` cho giảm (xanh lá), `RefreshCw` cho làm lại (cam), `Sparkles` cho mới
+(vàng), `SlidersHorizontal` cho điều chỉnh (xanh dương), `Wrench` cho sửa lỗi, `X` cho gỡ bỏ (đỏ). Icon lấy cỡ tròn số
+điểm ảnh để nét không nhòe. `ChangeTag` đặt dấu đó trước một chữ ngắn người chơi dùng (Buff, Nerf, Tweak, Fix, Rework,
+New), `ChangeTally` ghi nhiều loại kèm số lượng. Màu theo `patchChangeTone` trong `lib/change-kinds.ts`.
 
 Nhóm trang bị trong cửa hàng, khi nhóm chưa có ảnh tải lên, dùng icon nét của Lucide tô theo màu riêng của nhóm (token trạng thái), qua `ItemCategoryArtwork`.
 

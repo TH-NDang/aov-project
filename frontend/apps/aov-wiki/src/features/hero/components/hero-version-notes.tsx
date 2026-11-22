@@ -8,7 +8,7 @@ import { ChangeDisclosure, ChangeList } from "../../../components/change-list"
 import type { HeroDetail } from "../../../lib/hero-api"
 import { PatchName } from "../../../components/hero-patch-name"
 import { BackToChanges, CHANGE_TONES, usePatchOpener, type HeroVersion } from "./hero-version-changes"
-import { HeroChangeTag } from "./hero-change-tag"
+import { ChangeTag } from "../../../components/change-tag"
 
 /**
  * What the version being read changed for the hero, from its published notes: one band marked on its side with the tone
@@ -73,14 +73,14 @@ export function HeroVersionChanges({
             onClick={() => setUnfolded(!unfolded)}
           >
             <h2>{title}</h2>
-            <HeroChangeTag kind={overall} />
+            <ChangeTag kind={overall} />
             <WikiIcon name="chevron" size={16} />
           </button>
         ) : (
           <>
             <h2>{title}</h2>
             <span className="wiki-version-changes-kind">
-              <HeroChangeTag kind={overall} />
+              <ChangeTag kind={overall} />
             </span>
           </>
         )}
@@ -110,7 +110,7 @@ export function HeroVersionChanges({
                 hero={hero}
                 overallKind={overall}
                 layout="ruled"
-                kindMark={(kind) => <HeroChangeTag kind={kind} />}
+                kindMark={(kind) => <ChangeTag kind={kind} />}
                 skillAction={(key, skill) =>
                   skill && (
                     <button

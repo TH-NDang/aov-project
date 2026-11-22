@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { changeShortWord } from "../src/features/hero/model/change-short-word.ts"
+import { changeShortWord } from "../src/lib/change-short-word.ts"
 
 test("a change is tagged with the word players use for its tone", () => {
   assert.equal(changeShortWord("BUFF", "up"), "Buff")

@@ -4,25 +4,16 @@ import { Link } from "react-router"
 import {
   groupedChanges,
   PatchChangesTitle,
-  patchChangeLabel,
-  patchChangeTone,
   usePatchNotesPath,
   type ChangedSubject,
 } from "../../../components/patch-changes-row"
-import { WikiIcon, type WikiIconName } from "../../../components/wiki-icon"
+import { patchChangeLabel, patchChangeTone } from "../../../lib/change-kinds"
+import { WikiIcon } from "../../../components/wiki-icon"
+import { ChangeKindMark } from "../../../components/change-tag"
 import { WikiImage } from "../../../components/wiki-image"
 import { useWikiContext, wikiText } from "../../../context/wiki-context"
-import { changeShortWord } from "../model/change-short-word"
+import { changeShortWord } from "../../../lib/change-short-word"
 import "./hero-patch-board.css"
-
-/** The mark each tone of change is drawn with: up for stronger, down for weaker, a turn for remade, a spark for new. */
-const MARKS: Record<string, WikiIconName> = {
-  up: "stronger",
-  down: "weaker",
-  rework: "remade",
-  new: "spark",
-  adjust: "settings",
-}
 
 /** A changed hero, with its tall portrait for the board's cards. */
 export type ChangedHero = ChangedSubject & { portrait?: string }
@@ -75,7 +66,7 @@ export const HeroPatchBoard = memo(function HeroPatchBoard({
             return (
               <section key={kind} className="wiki-hero-patch-lane" data-tone={tone} aria-label={label}>
                 <h3 className="wiki-hero-patch-kind">
-                  <WikiIcon name={MARKS[tone] ?? "settings"} size={16} />
+                  <ChangeKindMark kind={kind} size={20} />
                   {label}
                   <small>{list.length}</small>
                 </h3>

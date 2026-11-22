@@ -217,6 +217,7 @@ function ChangeRow({
       {change.description && (
         <p>
           {markInSentence && mark}
+          {markInSentence && mark && " "}
           {change.description}
         </p>
       )}
