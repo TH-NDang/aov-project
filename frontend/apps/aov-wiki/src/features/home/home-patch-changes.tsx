@@ -121,7 +121,9 @@ export function HomePatchChanges() {
                     const image = shown?.head?.currentVersion?.url ?? shown?.portrait?.currentVersion?.url
                     const body = (
                       <>
-                        <span className="wiki-home-change-art">{image && <WikiImage src={image} alt="" />}</span>
+                        <span className="wiki-home-change-art">
+                          {image && <WikiImage frameWidth={64} src={image} alt="" />}
+                        </span>
                         <span className="wiki-home-change-copy">
                           <strong>{name}</strong>
                           {shown && (

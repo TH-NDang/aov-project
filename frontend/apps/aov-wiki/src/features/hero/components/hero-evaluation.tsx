@@ -81,7 +81,7 @@ function HeroChip({ id, code, links }: { id: string | null; code: string; links:
   return (
     <Link className="wiki-evaluation-hero" to={href(link.path)}>
       {image ? (
-        <WikiImage src={image} alt="" width="28" height="28" loading="lazy" decoding="async" />
+        <WikiImage frameWidth={96} src={image} alt="" width="28" height="28" loading="lazy" decoding="async" />
       ) : (
         <span className="wiki-evaluation-hero-initial" aria-hidden="true">
           {link.name.charAt(0)}

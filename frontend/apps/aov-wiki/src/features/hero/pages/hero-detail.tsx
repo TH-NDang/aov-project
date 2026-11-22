@@ -1,3 +1,4 @@
+import { resizedImageUrl } from "../../../lib/sized-image"
 import { localeText } from "@aov/ui/lib/locale-text"
 import { useState, type CSSProperties } from "react"
 import { Link, Navigate, useLocation, useParams } from "react-router"
@@ -158,7 +159,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
       {splash && (
         <div
           className="wiki-hero-profile-atmosphere"
-          style={{ backgroundImage: `url(${JSON.stringify(splash)})` }}
+          style={{ backgroundImage: `url(${JSON.stringify(resizedImageUrl(splash, 512))})` }}
           aria-hidden="true"
         />
       )}
@@ -167,6 +168,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
           key={artwork}
           className="wiki-hero-profile-art"
           src={artwork}
+          frameWidth={768}
           focus={media[kind]?.currentVersion?.focalPoint}
           alt={wikiText(locale, `Ảnh tướng ${hero.name}`, `${hero.name} artwork`)}
           fetchPriority="high"

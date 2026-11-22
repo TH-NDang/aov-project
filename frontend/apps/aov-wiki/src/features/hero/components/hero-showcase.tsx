@@ -1,3 +1,4 @@
+import { sizedImageSources } from "../../../lib/sized-image"
 import { useMemo, type CSSProperties, type ReactNode } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { CatalogShowcase } from "../../../components/catalog-showcase"
@@ -37,6 +38,12 @@ export function HeroShowcase({ heroes, version }: { heroes?: readonly HeroListIt
   )
 }
 
+/** A strip is about 90px wide but crops a tall portrait to its height, so the picture is fetched about 190px wide. */
+function stripSources(url: string) {
+  const { src, srcSet } = sizedImageSources(url, 192)
+  return { src, srcSet }
+}
+
 function PortraitWall({ portraits }: { portraits: string[] }) {
   return (
     <div className="wiki-hero-wall">
@@ -52,7 +59,7 @@ function PortraitWall({ portraits }: { portraits: string[] }) {
               } as CSSProperties
             }
           >
-            <img src={url} alt="" loading={index < portraits.length ? "eager" : "lazy"} decoding="async" />
+            <img {...stripSources(url)} alt="" loading={index < portraits.length ? "eager" : "lazy"} decoding="async" />
           </span>
         ))}
       </div>

@@ -1,3 +1,4 @@
+import { resizedImageUrl } from "../../lib/sized-image"
 import type { CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
@@ -26,7 +27,12 @@ export function HomeIntro() {
   return (
     <section
       className="wiki-home-intro"
-      style={{ "--home-art": `url("${banner.image}")`, "--home-art-position": banner.position } as CSSProperties}
+      style={
+        {
+          "--home-art": `url("${resizedImageUrl(banner.image, 1536)}")`,
+          "--home-art-position": banner.position,
+        } as CSSProperties
+      }
     >
       <div className="wiki-home-intro-inner">
         <p className="wiki-home-eyebrow">

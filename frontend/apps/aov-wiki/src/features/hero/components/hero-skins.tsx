@@ -1,3 +1,4 @@
+import { preloadPicture, resizedImageUrl } from "../../../lib/sized-image"
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
@@ -14,7 +15,7 @@ import "./hero-skins.css"
 
 const preload = (skin: SkinEntry) => {
   const source = previewSource(skin)
-  if (source) new Image().src = source
+  if (source) preloadPicture(source, 800)
 }
 
 /*
@@ -179,7 +180,7 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
             {!selected.art?.currentVersion?.url && previewSource(selected) && (
               <span
                 className="wiki-skin-preview-backdrop"
-                style={{ backgroundImage: `url("${previewSource(selected)}")` }}
+                style={{ backgroundImage: `url("${resizedImageUrl(previewSource(selected)!, 384)}")` }}
                 aria-hidden="true"
               />
             )}

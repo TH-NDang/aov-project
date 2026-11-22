@@ -73,6 +73,7 @@ export const HeroCard = memo(function HeroCard({
         <span className="wiki-hero-card-portrait" data-image-kind={imageUrl === portraitUrl ? "portrait" : "head"}>
           {imageUrl ? (
             <WikiImage
+              frameWidth={192}
               src={imageUrl}
               focus={media?.currentVersion?.focalPoint}
               alt=""
