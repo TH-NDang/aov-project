@@ -114,7 +114,7 @@ export function CreateProfileSheet({
               <Field
                 label="Đường dẫn hồ sơ *"
                 required
-                pattern="[a-z0-9][a-z0-9-]{1,99}"
+                pattern="[a-z0-9][a-z0-9\-]{1,99}"
                 placeholder={
                   kind === "CIRCUIT"
                     ? "dau-truong-danh-vong"

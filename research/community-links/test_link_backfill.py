@@ -105,6 +105,38 @@ class PlanTest(unittest.TestCase):
                          [("g-1", STARK)])
         self.assertIn(("GAME_MVP", "g-2", "Nobody", "no single player of the two rosters"), self.plan.review)
 
+    def test_a_game_mvp_missing_from_the_rosters_is_linked_through_the_team_history(self):
+        data = export()
+        data["players"].append({"id": "p-kai", "deleted": False, "nickname": "Kai", "aliases": []})
+        data["rosters"].append({"tournamentId": "t-old", "teamId": TEAM_B, "playerId": "p-kai"})
+        data["games"].append({"id": "g-3", "seriesId": "s-1", "note": "MVP: Kai", "players": [], "mvpPlayerId": None})
+        plan = backfill.build_plan(data)
+        self.assertIn(("g-3", "p-kai"), [(c["id"], c["value"]) for c in changes_of(plan, "mvpPlayerId")])
+
+    def test_the_team_history_is_not_asked_when_the_rosters_name_several_players(self):
+        data = export()
+        data["players"].append({"id": "p-zane-2", "deleted": False, "nickname": "Zane", "aliases": []})
+        data["rosters"].append({"tournamentId": TOURNAMENT, "teamId": TEAM_A, "playerId": "p-zane-2"})
+        data["games"].append({"id": "g-3", "seriesId": "s-1", "note": "MVP: Zane", "players": [], "mvpPlayerId": None})
+        plan = backfill.build_plan(data)
+        self.assertNotIn("g-3", [c["id"] for c in changes_of(plan, "mvpPlayerId")])
+
+    def test_a_namesake_who_never_played_for_either_team_is_left_for_review(self):
+        data = export()
+        data["players"].append({"id": "p-kai", "deleted": False, "nickname": "Kai", "aliases": []})
+        data["games"].append({"id": "g-3", "seriesId": "s-1", "note": "MVP: Kai", "players": [], "mvpPlayerId": None})
+        plan = backfill.build_plan(data)
+        self.assertIn(("GAME_MVP", "g-3", "Kai", "no single player of the two rosters"), plan.review)
+
+    def test_an_award_team_missing_from_the_tournament_is_linked_through_its_player_s_roster(self):
+        data = export()
+        data["teams"].append({"id": "team-c", "deleted": False, "name": "eArena", "shortName": None, "aliases": []})
+        data["rosters"].append({"tournamentId": "t-old", "teamId": "team-c", "playerId": ZANE})
+        data["tournaments"][0]["awards"].append({"title": "FMVP", "recipientName": "Zane", "playerId": ZANE,
+                                                 "teamName": "eArena"})
+        plan = backfill.build_plan(data)
+        self.assertIn("team-c", [c["value"] for c in changes_of(plan, "awards.teamId")])
+
     def test_a_series_mvp_is_linked_from_its_rated_line(self):
         series = [c for c in changes_of(self.plan, "mvpPlayerId") if c["record"] == "series"]
         self.assertEqual([(c["id"], c["value"]) for c in series], [("s-1", STARK)])

@@ -25,13 +25,13 @@ Ghi `ket-qua/plan.json` (các thay đổi đề xuất), `ket-qua/review.tsv` (c
 
 | Loại | Khớp khi |
 |---|---|
-| MVP của ván | Tên sau "MVP: " (tới câu kế tiếp của ghi chú) trùng đúng tên thi đấu hoặc tên gọi khác của một tuyển thủ ngồi trong ván hoặc có trong đội hình hai đội của trận ở giải đó. Liên kết Liquipedia dạng "Trang (Taiwanese Player)\|Tên" tính cả hai phía |
-| MVP của trận | Tên trước "(" ở dòng "MVP trận: " hoặc "MVP: " trùng đúng một tuyển thủ trong đội hình hai đội |
+| MVP của ván | Tên sau "MVP: " (tới câu kế tiếp của ghi chú) trùng đúng tên thi đấu hoặc tên gọi khác của một tuyển thủ ngồi trong ván hoặc có trong đội hình hai đội của trận ở giải đó. Liên kết Liquipedia dạng "Trang (Taiwanese Player)\|Tên" tính cả hai phía. Khi không ai trong đó mang tên này, xét những tuyển thủ từng có dòng đội hình với một trong hai đội ở bất kỳ giải nào; khớp khi đúng một người (bằng chứng ghi thêm "(team history)") |
+| MVP của trận | Tên trước "(" ở dòng "MVP trận: " hoặc "MVP: " trùng đúng một tuyển thủ trong đội hình hai đội, hoặc theo lịch sử đội như MVP của ván khi đội hình không có ai mang tên này |
 | Bình luận viên của trận | Mọi tên sau "Bình luận: " đều trùng đúng một hồ sơ PERSON hoặc PLAYER; thiếu một tên thì không ghi |
 | Ê-kíp phát sóng của giải | Mục lịch sử có URL nguồn `<URL của giải>#Broadcast`; vai trò từ chữ ("MC", "Bình luận viên", "Phỏng vấn", "Khách mời phân tích") |
 | Ban huấn luyện | Mục lịch sử có hồ sơ đội và URL nguồn trùng đúng một giải chưa xóa; "Huấn luyện viên…" là COACH, "…phân tích…" là TEAM_ANALYST, chữ gốc vào `title` |
 | Giải của mốc lịch sử | URL nguồn (bỏ phần sau "#") trùng đúng một giải, kể cả giải ở thùng rác |
-| Đội của giải thưởng | `teamName` trùng tên, tên ngắn hoặc tên gọi khác của đúng một đội có đội hình, thứ hạng hoặc trận ở giải đó |
+| Đội của giải thưởng | `teamName` trùng tên, tên ngắn hoặc tên gọi khác của đúng một đội có đội hình, thứ hạng hoặc trận ở giải đó; nếu không, và giải thưởng đã có `playerId`, trùng đúng một đội mà người nhận từng có dòng đội hình |
 
 Tên được so như `tournament.normalize_reference_search`: không phân biệt hoa thường và dấu, dấu câu coi như khoảng trắng.
 
