@@ -15,12 +15,15 @@ export function PublicFilterSheet({
   onReset,
   resultLabel,
   triggerClassName,
+  iconOnly = false,
   children,
 }: {
   title: string
   triggerLabel: string
   /** Places the button in the bar that holds it. */
   triggerClassName?: string
+  /** Draws the button as its mark alone; the label stays for screen readers. */
+  iconOnly?: boolean
   /** How many filters are on. */
   count: number
   resetLabel: string
@@ -37,10 +40,12 @@ export function PublicFilterSheet({
         aria-haspopup="dialog"
         aria-expanded={open}
         data-active={count > 0 || undefined}
+        data-icon-only={iconOnly || undefined}
+        title={iconOnly ? triggerLabel : undefined}
         onClick={() => setOpen(true)}
       >
         <SlidersHorizontal size={16} aria-hidden="true" />
-        {triggerLabel}
+        <span className={iconOnly ? "sr-only" : undefined}>{triggerLabel}</span>
         {count > 0 && <span className="public-filter-count">{count}</span>}
       </button>
       <PublicDrawer open={open} onOpenChange={setOpen}>

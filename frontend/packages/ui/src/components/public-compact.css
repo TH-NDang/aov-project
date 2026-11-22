@@ -71,6 +71,12 @@
   border-color: var(--aov-accent);
   color: var(--aov-accent);
 }
+/* The mark alone: a square button, with the count of filters on when there are some. */
+.public-filter-button[data-icon-only] {
+  min-width: 40px;
+  justify-content: center;
+  padding-inline: 10px;
+}
 .public-filter-count {
   display: grid;
   min-width: 18px;
