@@ -27,6 +27,8 @@ export function warehouseCatalogQuery(kind: WarehouseKind, scope: WikiCatalogSco
       const ids = new Set(current.map((entry) => entry.id))
       return [...current, ...archived.filter((entry) => !ids.has(entry.id))]
     },
+    // Each catalog keeps its last answer in the browser, so a return visit shows it at once.
+    meta: { storedAnswer: `wiki-warehouse-${kind}@1` },
     staleTime: 60_000,
     refetchOnWindowFocus: "always",
     retry: 1,
@@ -42,6 +44,7 @@ export function warehouseGroupsQuery(kind: WarehouseKind, locale: string) {
         signal,
       ),
     enabled: kind === "items" || kind === "enchantments",
+    meta: { storedAnswer: `wiki-warehouse-groups-${kind}@1` },
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: "always",
     retry: 1,

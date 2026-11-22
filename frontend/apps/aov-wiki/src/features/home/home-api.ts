@@ -34,6 +34,7 @@ export const seasonUpdatesQuery = (scope: WikiCatalogScope) =>
     queryKey: homeKeys.seasonUpdates(scope),
     queryFn: ({ signal }) =>
       wikiGet<SeasonUpdates>(`/seasons/current/updates?${wikiCatalogParameters(scope, false)}&limit=4`, signal),
+    meta: { storedAnswer: "wiki-season-updates@1" },
     staleTime: 60_000,
     refetchInterval: 5 * 60_000,
     retry: 1,

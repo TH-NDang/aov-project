@@ -71,6 +71,7 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
     }
 
     /** Reads many snapshots in a bounded number of queries, for lists that cover every hero. */
+    @Override
     public Map<UUID, Profile> contents(Collection<UUID> ids) {
         var references = sources.find(section(), ids);
         var texts = translations.findByProfileRevisionIdIn(ids, Sort.by("locale")).stream()

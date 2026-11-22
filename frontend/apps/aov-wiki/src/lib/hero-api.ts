@@ -155,18 +155,26 @@ export type HeroFormDetail = Omit<HeroDetail, "context" | "forms" | "parent"> & 
   actualLocale?: string
 }
 
+export interface HeroCatalog {
+  context: HeroPage["context"]
+  items: HeroListItem[]
+}
+
+/** Every published hero. The last answer is kept in the browser, so a returning reader sees the list at once. */
 export const heroCatalogQuery = (scope: WikiCatalogScope) =>
   queryOptions({
     queryKey: heroKeys.catalog(scope),
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }): Promise<HeroCatalog> => {
       const { first, items } = await wikiGetPages<HeroPage, HeroListItem>(
         "/heroes",
         wikiCatalogParameters(scope),
         signal,
-        { size: 100, items: (list) => list.page.items, total: (list) => list.page.totalElements },
+        // The game has more heroes than one page holds, so the second page is asked for beside the first.
+        { size: 100, items: (list) => list.page.items, total: (list) => list.page.totalElements, ahead: 1 },
       )
       return { context: first.context, items }
     },
+    meta: { storedAnswer: "wiki-heroes@1" },
     staleTime: 60_000,
     retry: 1,
   })

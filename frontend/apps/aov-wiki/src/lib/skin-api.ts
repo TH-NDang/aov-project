@@ -74,6 +74,8 @@ export function skinCatalogQuery(scope: WikiCatalogScope) {
         rarities: first.rarities.map((option) => ({ ...option, image: badges.get(option.code) })),
       }
     },
+    // The largest catalog of the wiki; IndexedDB keeps it whole for the next visit.
+    meta: { storedAnswer: "wiki-skins@1" },
     staleTime: 60_000,
     retry: 1,
   })

@@ -114,24 +114,34 @@ export async function wikiGetAll<T>(
 
 /**
  * Every row of a list whose pages carry more than the rows, such as the filters of the skin collection: the first
- * page comes back whole beside the rows of all pages. Later pages are read `parallel` at a time.
+ * page comes back whole beside the rows of all pages. Later pages are read `parallel` at a time. `ahead` pages are
+ * asked for together with the first, before the total is known, for a list known to fill more than one page; a page
+ * past the end is dropped.
  */
 export async function wikiGetPages<Page, Item>(
   path: string,
   params: URLSearchParams,
   signal: AbortSignal | undefined,
-  reading: { size: number; items: (page: Page) => readonly Item[]; total: (page: Page) => number; parallel?: number },
+  reading: {
+    size: number
+    items: (page: Page) => readonly Item[]
+    total: (page: Page) => number
+    parallel?: number
+    ahead?: number
+  },
 ) {
   const read = (index: number) => wikiGet<Page>(`${path}?${withPage(params, index, reading.size)}`, signal)
-  const first = await read(0)
-  const items = [...reading.items(first)]
-  const count = Math.ceil(reading.total(first) / reading.size)
+  const ahead = Math.max(0, reading.ahead ?? 0)
+  const [first, ...early] = await Promise.all(Array.from({ length: 1 + ahead }, (_, index) => read(index)))
+  const items = [...reading.items(first!)]
+  const count = Math.ceil(reading.total(first!) / reading.size)
+  for (const page of early.slice(0, Math.max(0, count - 1))) items.push(...reading.items(page))
   const step = Math.max(1, reading.parallel ?? 1)
-  for (let index = 1; index < count && items.length; index += step) {
+  for (let index = 1 + early.length; index < count && items.length; index += step) {
     const batch = await Promise.all(Array.from({ length: Math.min(step, count - index) }, (_, at) => read(index + at)))
     const rows = batch.flatMap((page) => [...reading.items(page)])
     items.push(...rows)
     if (!rows.length) break
   }
-  return { first, items }
+  return { first: first!, items }
 }

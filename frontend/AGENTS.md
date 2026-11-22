@@ -40,6 +40,10 @@ An allow list in a lint rule holds only code that existed when the rule came, an
   invalidation use the same object.
 - A screen picks a translation of catalog content with `pickTranslation` (`@aov/ui/lib/translation-fallback`): the
   requested locale, then en-US, then vi-VN, then the first by locale tag, the same order as the backend.
+- A query keeps its last answer in the browser (IndexedDB, `@aov/ui/lib/stored-answers`, connected once in each
+  public app's `main.tsx`) only when it opts in with `meta: { storedAnswer: "<app>-<kind>@<version>" }`. Opt in public
+  catalog answers that change rarely; never an answer about the signed-in reader or one that changes while it is read,
+  such as live scores. Bump the version when the shape of the answer changes.
 - Writes go through `useMutation`. An error is shown once: by the global toast, or inline when the mutation sets
   `meta: { silent: true }`.
 - Response types come from the generated OpenAPI file where one exists (`pnpm generate:hero-api` writes

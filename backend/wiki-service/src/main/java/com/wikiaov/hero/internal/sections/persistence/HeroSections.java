@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.sections.persistence;
 import com.wikiaov.access.Actor;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +26,11 @@ public class HeroSections {
 
     public Object content(HeroSection section, UUID id) {
         return snapshots.get(section).content(id);
+    }
+
+    /** Many snapshots of one section in a bounded number of queries, keyed by snapshot id. */
+    public Map<UUID, ?> contents(HeroSection section, Collection<UUID> ids) {
+        return ids.isEmpty() ? Map.of() : snapshots.get(section).contents(ids);
     }
 
     public Optional<UUID> lastSavedBetween(HeroSection section, UUID heroId, Instant from, Instant to) {

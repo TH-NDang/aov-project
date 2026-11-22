@@ -1,8 +1,10 @@
 package com.wikiaov.hero.internal.catalog.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -41,6 +43,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +71,33 @@ class HeroQueriesTest {
     void resolvePublishedContext() {
         when(contexts.resolve("VN", at)).thenReturn(context);
         when(forms.structure()).thenReturn(new HeroFormStructure(List.of()));
+        // The batch reads answer from the per-hero stubs, so a test can change one hero's revision or content alone.
+        when(store.revisions(anyCollection())).thenAnswer(call -> call.<Collection<UUID>>getArgument(0).stream()
+                .flatMap(id -> store.revisions(id).stream()).toList());
+        when(sections.contents(any(), anyCollection())).thenAnswer(call -> {
+            HeroSection section = call.getArgument(0);
+            Map<UUID, Object> contents = new HashMap<>();
+            for (UUID id : call.<Collection<UUID>>getArgument(1)) {
+                contents.put(id, sections.content(section, id));
+            }
+            return contents;
+        });
+    }
+
+    @Test
+    void theListReadsEveryRevisionAndEveryProfileInOneBatchWhicheverPageIsAsked() {
+        var airi = hero("airi", Map.of());
+        var baldum = hero("baldum", Map.of());
+        var dirak = hero("dirak", Map.of());
+        when(store.heroes(false)).thenReturn(List.of(airi.identity(), baldum.identity(), dirak.identity()));
+        clearInvocations(store, sections);
+
+        var result = queries.list("VN", "vi-VN", 2, 1, "", null, "code,asc", null, null, false, false);
+
+        assertThat(items(result)).singleElement().satisfies(item -> assertThat(item).containsEntry("code", "dirak"));
+        verify(store, times(1)).revisions(anyCollection());
+        verify(sections, times(1)).contents(eq(HeroSection.PROFILE), anyCollection());
+        verify(sections, times(1)).contents(eq(HeroSection.MEDIA_BINDINGS), anyCollection());
     }
 
     @Test
@@ -77,7 +107,7 @@ class HeroQueriesTest {
         var ids = List.of(airi.identity().getId(), baldum.identity().getId());
         when(store.heroes(false)).thenReturn(List.of(airi.identity(), baldum.identity()));
         var revisions = ids.stream().flatMap(id -> store.revisions(id).stream()).toList();
-        when(store.revisions(ids)).thenReturn(revisions);
+        doReturn(revisions).when(store).revisions(ids);
         clearInvocations(store);
 
         var published = queries.published("VN");
