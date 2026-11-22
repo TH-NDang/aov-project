@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor">
-  <path d="M5 35 35 5h8v8L13 43H5Z" />
-  <path d="M5 25V5h20m-2 38h20V23" fill="none" stroke="currentColor" stroke-width="2" />
+  <!-- The middle lane mark as the tournament broadcast draws it: the map is cut into separate pieces with a gap between them, the chosen piece filled and the others drawn as thin outlines; the middle band runs from corner to corner between the two side lanes -->
+  <path d="M40 2L46 2L46 8L8 46L2 46L2 40Z" />
+  <path d="M3.2 3.2L33.1 3.2L25.5 10.8L10.8 10.8L10.8 25.5L3.2 33.1Z" fill="none" stroke="currentColor" stroke-width="2.4" />
+  <path d="M44.8 44.8L14.9 44.8L22.5 37.2L37.2 37.2L37.2 22.5L44.8 14.9Z" fill="none" stroke="currentColor" stroke-width="2.4" />
 </svg>
