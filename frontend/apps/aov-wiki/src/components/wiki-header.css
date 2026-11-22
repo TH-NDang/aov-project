@@ -263,9 +263,10 @@
 .wiki-compact-header:is([data-variant="library"], [data-solid])::before {
   opacity: 1;
 }
-/* Clear over a scene; scrolling frosts the bar in over the first 100px: the page under it blurs and darkens. */
+/* Clear over a scene; scrolling frosts the bar in over the first 100px: a glass that blurs the page under it and only
+   dims it, so the page still shows through. */
 .wiki-compact-header[data-clear]::before {
-  background: color-mix(in srgb, var(--aov-wiki-bar) 72%, transparent);
+  background: color-mix(in srgb, var(--aov-wiki-bar) 58%, transparent);
   opacity: var(--header-solid, 0);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   backdrop-filter: blur(16px) saturate(140%);

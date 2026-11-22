@@ -218,6 +218,7 @@ export default function WarehousePage() {
   const version = (
     <WikiVersionPicker
       changedVariants={changes.changedVariants}
+      appearance="pill"
       optionDetail={(patch) => <ChangeTally kinds={tallies.get(patch.id) ?? new Map()} />}
     />
   )
@@ -230,12 +231,12 @@ export default function WarehousePage() {
           kind={kind}
           title={sectionName}
           count={catalog.isPending ? undefined : entries.length}
-          action={<div className="wiki-warehouse-version">{version}</div>}
+          version={version}
           showcase={(intro) =>
             kind === "enchantments" ? (
               <EnchantmentShowcase intro={intro} entries={entries} groups={groups} />
             ) : kind === "items" ? (
-              <ItemShowcase intro={intro} entries={entries} groups={groups} />
+              <ItemShowcase intro={intro} entries={entries} />
             ) : kind === "arcana" ? (
               <ArcanaShowcase intro={intro} entries={entries} params={params} />
             ) : (
@@ -256,7 +257,6 @@ export default function WarehousePage() {
           itemView={itemView}
           loading={catalog.isPending || metadata.isPending}
         />
-        {!wide && <div className="wiki-warehouse-version">{version}</div>}
         {metadata.isError && (
           <div className="wiki-warehouse-notice" role="status">
             {text("Chưa tải được bộ lọc nhóm.", "Group filters could not be loaded.")}

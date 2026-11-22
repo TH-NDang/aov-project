@@ -69,13 +69,18 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 ## Thư viện Tướng
 
 - `/hero` mở bằng phần trưng bày (`HeroShowcase` trong `src/features/hero/components/hero-showcase.tsx`, dựng trên
-  `CatalogShowcase` của `src/components/catalog-showcase.tsx` mà bốn phần kho cũng dùng). Chữ chỉ có tiêu đề và số tướng
+  `CatalogShowcase` của `src/components/catalog-showcase.tsx`, khung chung của mọi trang danh sách: Trang phục, bốn phần
+  kho, Ghi chú cập nhật, Thuật ngữ). Khung chỉ lo tiêu đề, số mục, viên phiên bản và lớp tối; cảnh luôn phủ cả banner
+  và mỗi trang tự dựng cảnh của mình, không lặp khuôn. Trên wide, `align` đặt chữ theo cảnh: giữa mép trái (Tướng, kho),
+  góc trên trái (Ghi chú cập nhật), góc dưới trái (Trang phục) hoặc chính giữa (Thuật ngữ), lớp tối đi theo chỗ chữ. Trên
+  compact, banner cao (thanh đầu trang cộng 236px) và cảnh chạy lên tận mép trên màn hình, sau thanh trong suốt; chữ ở
+  chân banner. Chữ chỉ có tiêu đề và số tướng
   (trên compact header đã ghi tên trang nên chỉ còn số tướng). Phiên bản dữ liệu là một viên kính mờ (`appearance="pill"`
   của `WikiVersionPicker`) ghim ở góc trên phải banner trên wide, cạnh số tướng trên compact. Phía sau là một bức tường chân dung phủ
   cả banner, kể cả sau chữ: 16 dải ảnh dọc cắt từ ảnh `PORTRAIT` để thấy mặt tướng, mỗi dải bắt đầu ở một độ cao khác nhau
   và chạy quá chân banner, nơi có lớp sương mờ. Bức tường trôi rất chậm sang trái rồi lặp lại không có chỗ nối (tắt khi
   người đọc giảm chuyển động). Lớp tối bên trái giữ chữ rõ. Tướng trên tường đổi theo ngày (`dailySpread` trong
-  `model/hero-daily-spread.ts`), rải đều khắp danh sách. Trên compact header trong suốt đè lên bức tường.
+  `src/lib/daily-spread.ts`), rải đều khắp danh sách. Trên compact header trong suốt đè lên bức tường.
 - Ngay sau phần trưng bày là bảng thay đổi ở bản đang xem (`HeroPatchBoard`): một khung nền tối nhạt chia thành các nhóm theo loại
   thay đổi, ngăn bằng một đường mảnh. Mỗi nhóm ghi tên loại và số tướng, kèm dấu theo màu của loại: hai mũi tên lên
   (tăng, đỏ), hai mũi tên xuống (giảm, xanh lá), mũi tên vòng (làm lại, cam), dấu lấp lánh (mới, vàng), thanh chỉnh (điều
@@ -163,9 +168,14 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Thư viện Trang phục
 
-- `/skins` mở bằng `CatalogHeading` "Trang phục": dòng mờ là số trang phục đang hiện, ví dụ "1.101 trang phục của 123
-  tướng", đổi theo bộ lọc; phiên bản dữ liệu nằm bên phải tiêu đề (trên compact là một dòng dưới thanh công cụ). Trang
-  dùng hết cột trang.
+- `/skins` mở bằng phần trưng bày (`SkinShowcase` trong `src/features/skins/skin-showcase.tsx`) gọn như thư viện tướng:
+  tiêu đề, tổng số trang phục và viên kính mờ phiên bản ở góc (trên compact cạnh số). Cảnh dựng như bìa tạp chí: ảnh `art`
+  (splash ngang) của trang phục nổi bật hôm nay phủ banner, nhân vật bên phải, tiến lại rất chậm; chữ ở góc dưới trái.
+  Trên wide thêm bốn thẻ `portrait` của các trang phục khác trong ngày ở bên phải và một dòng kính mờ ở chân banner "Nổi
+  bật hôm nay · tên · tướng", bấm mở xem trước trang phục đó. Trang phục lấy từ hai bậc cao nhất, đổi theo ngày
+  (`dailySpread`); chuyển động tắt khi giảm chuyển động. Dưới thanh công cụ, trên wide có một dòng mờ ghi số trang phục đang hiện, ví dụ "1.101 trang
+  phục của 123 tướng", đổi theo bộ lọc; trên compact dòng đó đi cùng các chip bộ lọc và chỉ hiện khi đã lọc. Trang dùng
+  hết cột trang.
 - Dữ liệu lấy từ API public `GET /api/wiki/v1/skins?region=VN&locale=vi-VN&page=0&size=60`; chương trình đọc hết các
   trang (ba trang một lượt) rồi lọc, sắp xếp ở client. API chọn bản tướng đã xuất bản theo gameplay context hiện hành, trả
   trang phục, tên tướng, ảnh và nhãn bậc đã bản địa hóa. Không gọi API admin hay tải detail riêng của từng tướng để dựng
@@ -211,9 +221,14 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   mục có trang và xem trước riêng; bộ lọc nhóm (`group`) và tìm kiếm (`q`) lưu trong query. Tất cả đều chia sẻ hoặc mở
   lại được; liên kết cũ dạng `?tab=&item=` tự chuyển sang địa chỉ mới. Mỗi phần có ô tìm riêng, tìm không dấu cả theo
   tên, tóm tắt và mô tả nên gõ tên hiệu ứng cũng ra; tìm kiếm chung trên header dẫn tới `/warehouse/items?q=...`.
-- Trên wide, `CatalogHeading` ghi tên phần đang xem với phiên bản dữ liệu bên phải; bên dưới là một hàng tìm kiếm và bộ
-  lọc. Trên compact, đầu trang ghi Kho trang bị và bốn phần Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ là dãy tab dính bên
-  dưới; bộ lọc nằm trong nút Lọc, phiên bản dữ liệu là một dòng dưới thanh công cụ.
+- Mỗi phần mở bằng phần trưng bày gọn như thư viện tướng (`WarehouseHeading`): chỉ tên phần, số mục và viên kính mờ
+  phiên bản (`appearance="pill"`) ở góc trên phải (trên compact cạnh số mục), không câu giới thiệu hay chú thích. Mỗi
+  phần có cảnh riêng phủ cả banner: Trang bị chỉ có bức tường icon mọi món nằm nghiêng như sàn cửa hàng dưới ánh
+  vàng, trôi chậm (không có khung sáu ô đổi liên tục); Phù hiệu là các hệ thành những dải cờ nghiêng cạnh nhau, mỗi dải màu của hệ với biểu tượng, tên và
+  phù hiệu đầu tiên mỗi bậc, ánh sáng lần lượt lướt qua từng dải (trên compact là bốn cột ánh sáng không viền, mỗi cột một biểu tượng hệ và ba phù hiệu); Bảng ngọc là vòng ngọc
+  lớn hơn chiều cao banner ở bên phải, ba màu loang ra nền; Phụ trợ là thanh kỹ năng. Bên dưới là một hàng tìm kiếm và bộ lọc. Trên compact,
+  đầu trang ghi Kho trang bị và bốn phần Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ là dãy tab dính bên dưới; bộ lọc nằm
+  trong nút Lọc.
 - Chỉ đọc dữ liệu công khai từ bốn API `/items`, `/enchantments`, `/arcana`, `/spells`; phụ trợ cũ đọc thêm `/spells/archived`. Không gọi API admin, không đưa bản nháp vào danh mục. Mục chưa xuất bản có trạng thái trống rõ ràng.
 - Trang bị/phụ trợ chưa biết patch gốc có thể được xuất bản như dữ liệu nền chưa rõ patch khi nội dung đã đủ. Chi tiết hiển thị rõ trạng thái này, không ghi nhận thành thay đổi mới của mùa hiện tại. Bản cập nhật gắn patch thật được ưu tiên hơn dữ liệu nền; mục còn thiếu nội dung vẫn giữ nháp.
 - TanStack Query giữ cache danh mục 60 giây, metadata nhóm 5 phút, hủy request khi không còn dùng. Danh mục hiện nhỏ nên tải tiếp các trang 100 mục rồi lọc không dấu ở client. Dữ liệu đã tải vẫn giữ nếu cập nhật nền lỗi; có nút thử lại. Metadata ảnh có ngay trong map `media` của từng mục; ảnh byte tiếp tục tải lười qua URL phiên bản CDN.
@@ -241,16 +256,16 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   game: viền vàng kép có vạch chia quay chậm, mỗi màu một phần ba (Đỏ trên, Tím dưới phải, Xanh dưới trái; 6 ô vòng
   ngoài rồi 4 ô vòng trong), ba nan chia có hạt kim cương ở đầu, quầng sáng mỗi phần ba lấy từ ảnh viên ngọc, và lõi
   giữa ghi cấp của bảng (tổng bậc các viên, 90 khi đủ 30 viên bậc III). Ở danh sách nó lần lượt đổi giữa ba bộ mẫu (Công
-  vật lý, Phép, Trung tính) kèm hai chỉ số lớn nhất; ở Lắp ngọc có bảng đang lắp thì vẽ đúng bảng đó.
+  vật lý, Phép, Trung tính); ở Lắp ngọc có bảng đang lắp thì vẽ đúng bảng đó.
 - Phụ trợ dùng ảnh tròn, xếp lớp ảnh khi có nhiều trạng thái; mục cũ thu gọn. Hồi chiêu ghi theo giây như game; từ 60
-  giây trở lên có thêm số phút gần bằng ("90 giây ≈ 1.5 phút"), ở thẻ, khung chi tiết và phần trưng bày. Phép tích trữ
+  giây trở lên có thêm số phút gần bằng ("90 giây ≈ 1.5 phút"), ở thẻ và khung chi tiết. Phép tích trữ
   (như Trừng trị) ghi hồi chiêu là "giữa hai lần dùng" và có một hạt vàng cho mỗi lần tích trữ, kèm "Tích trữ N lần ·
   mỗi lần hồi N giây"; khung chi tiết tách thành "Giữa hai lần dùng", "Tích trữ" (có các hạt) và "Mỗi lần tích hồi sau",
-  chú thích phần trưng bày ghi thêm "Tích trữ N lần". Mô tả hiện đầy đủ (không cắt dòng).
+  Mô tả hiện đầy đủ (không cắt dòng).
   Cấp mở khóa vẫn nằm trong dữ liệu nhưng không hiện ở trang công khai (thẻ, khung chi tiết, phần trưng bày). Phần trưng
-  bày đầu trang là "đồng hồ hồi chiêu": một phép lớn ở giữa có lớp tối quét theo chiều kim đồng hồ như khi phép đang hồi
-  trong trận rồi sáng lên khi sẵn sàng, các phép khác nằm trên một vòng quay chậm quanh nó; phép ở giữa đổi sau vài giây,
-  chú thích ghi tên và hồi chiêu. Bốn phần của kho đều có phần trưng bày riêng.
+  bày đầu trang là một thanh kỹ năng: mọi phép là nút tròn viền vàng, xếp hai hàng so le chạy ngang banner; một vệt
+  sáng lần lượt đi từ trái sang phải, nút nào nó qua thì sáng lên, to ra một chút rồi lắng lại, như phép vừa sẵn sàng.
+  Bốn phần của kho đều có phần trưng bày riêng.
 - Bảng ngọc có nút chuyển "Danh sách / Lắp ngọc" (`view=page`). Lắp ngọc giống màn bảng ngọc trong game: ba hàng
   Đỏ, Tím, Xanh, mỗi hàng 10 ô, chỉ dùng ngọc bậc cao nhất. Bảng ô là một "sân khấu" tối có ánh vàng ở góc; mỗi hàng
   được thắp bằng chính ảnh viên ngọc của màu đó (phóng to, làm nhòe thành quầng sáng bên trái, mờ và nghiêng ở mép
@@ -279,7 +294,12 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Ghi chú cập nhật
 
-- `/updates` mở bằng `CatalogHeading` "Ghi chú cập nhật" và liệt kê các bản cập nhật đã công bố theo mùa, mới nhất lên
+- `/updates` mở bằng phần trưng bày (`UpdatesShowcase` trong `src/features/updates/updates-showcase.tsx`): tiêu đề và số
+  bản cập nhật ở góc trên trái, bên dưới là dòng thời gian của năm bản mới nhất trải hết bề ngang, bản cũ bên trái. Mỗi bản là một mốc trên đường vàng, ngày
+  ("29/09") ở dưới, phía trên là mặt vài tướng bản đó thay đổi (bốn trên wide, ba trên compact, thêm "+N"), viền màu theo
+  loại thay đổi; bản đang áp dụng có chấm vàng đậm và nhịp sáng chậm. Đường tự vẽ từ trái rồi các mốc lần lượt hiện
+  (tắt khi giảm chuyển động). Ghi chú của mỗi mốc là đúng truy vấn hàng bên dưới dùng nên không tốn thêm request. Trang
+  liệt kê các bản cập nhật đã công bố theo mùa, mới nhất lên
   trước. Mỗi bản là một hàng: ngày, tên, nhãn Đang áp dụng, số thay đổi theo loại và ảnh các tướng thay đổi (thêm "+N"
   khi nhiều). Hàng hiện dần khi cuộn.
 - `/updates/:code` hiển thị thay đổi của một bản, chia theo Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ và chỉ giữ nhóm
@@ -313,7 +333,10 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Thuật ngữ
 
-- `/terms` mở bằng `CatalogHeading` "Thuật ngữ" với một dòng giải thích, rồi ô tìm và số kết quả. Danh sách lấy thuật
+- `/terms` mở bằng phần trưng bày (`TermsShowcase` trong `src/features/terms/terms-showcase.tsx`): tiêu đề và tổng
+  số thuật ngữ ở chính giữa, quanh đó là một bầu trời ký hiệu: ký hiệu của chính các thuật ngữ, mỗi cái trên một con dấu
+  tròn nhuộm màu thuật ngữ, ở ba độ xa (gần thì to và rõ, xa thì nhỏ, mờ), nhấp nhô lệch nhịp (tắt khi giảm chuyển động). Bên dưới là ô tìm; số kết quả chỉ hiện khi đang
+  tìm. Danh sách lấy thuật
   ngữ công khai từ `GET /reference-catalog`, sắp theo tên, tìm không dấu theo tên, tên khác và nội dung (`q`). Các mục
   xếp lưới 1, 2 hoặc 3 cột theo độ rộng, mục dài trải hết một hàng ở cuối. Mô tả có thể liên kết sang thuật ngữ khác.
 - Mọi nhắc tới thuật ngữ trong wiki có đích `/terms/{id}`, trang cuộn tới và đánh dấu mục đó. Liên kết cũ dạng `/?term={id}` tự chuyển sang đây; mã không tồn tại báo rõ và vẫn hiện danh sách.

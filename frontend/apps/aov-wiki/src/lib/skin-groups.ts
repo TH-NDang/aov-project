@@ -6,7 +6,7 @@ export type SkinSort = "tier" | "name"
 const tiers = ["a", "s", "s-plus", "ss", "ss-plus", "sss", "sss-plus"]
 
 /** Where a label sits among the game's ranks, lowest first; -1 for a label that is not a rank, such as an event. */
-function tierRank(code: string | undefined) {
+export function skinTierRank(code: string | undefined) {
   const rank = /^(?:bac-)?(sss|ss|s|a)(-plus)?(?:-|$)/.exec(code ?? "")
   return rank ? tiers.indexOf(rank[1] + (rank[2] ?? "")) : -1
 }
@@ -18,7 +18,7 @@ export function orderTierOptions<Option extends { code: string; name: string }>(
 ) {
   const { compare } = new Intl.Collator(locale, { numeric: true, sensitivity: "base" })
   return [...options].sort(
-    (a, b) => tierRank(b.code) - tierRank(a.code) || compare(a.name, b.name) || compare(a.code, b.code),
+    (a, b) => skinTierRank(b.code) - skinTierRank(a.code) || compare(a.name, b.name) || compare(a.code, b.code),
   )
 }
 
@@ -30,7 +30,7 @@ export function groupSkins(skins: SkinEntry[], heroSort: HeroSort, skinSort: Ski
     else byHero.set(skin.heroId, [skin])
   }
   const { compare } = new Intl.Collator(locale, { numeric: true, sensitivity: "base" })
-  const tier = (skin: SkinEntry) => tierRank(skin.rarityCode ?? skin.badge?.code)
+  const tier = (skin: SkinEntry) => skinTierRank(skin.rarityCode ?? skin.badge?.code)
   const groups = [...byHero.values()]
   for (const group of groups) {
     group.sort(

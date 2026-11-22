@@ -8,7 +8,7 @@ import { SkinReleases } from "./skin-releases"
 import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { normalizedHeroSearch } from "../../lib/hero-classifications"
 import { skinCatalogQuery, type SkinEntry } from "../../lib/skin-api"
-import { SkinCollectionHeading } from "./skin-collection-heading"
+import { SkinShowcase } from "./skin-showcase"
 import { useSkinColumns } from "./skin-columns"
 import { groupSkins, orderTierOptions } from "../../lib/skin-groups"
 import { SkinPreview } from "../../components/skin-preview"
@@ -128,17 +128,11 @@ export function SkinDirectory() {
       style={{ "--skin-columns": columns } as CSSProperties}
       aria-busy={query.isPending}
     >
-      <SkinCollectionHeading
-        lead={
-          <span className="wiki-skin-summary" role="status" aria-live="polite">
-            {summary}
-          </span>
-        }
-        action={
-          <div className="wiki-skin-version">
-            <WikiVersionPicker />
-          </div>
-        }
+      <SkinShowcase
+        skins={query.data?.items}
+        count={query.data?.items.length}
+        version={<WikiVersionPicker appearance="pill" />}
+        onOpen={open}
       />
       <SkinReleases current={query.data?.items ?? []} onOpen={open} />
       <SkinToolbar
@@ -149,6 +143,11 @@ export function SkinDirectory() {
         skinCount={skins.length}
         onFiltersCleared={focusFilters}
       />
+      {layout === "wide" && (
+        <p className="wiki-skin-summary" role="status" aria-live="polite">
+          {summary}
+        </p>
+      )}
       {layout === "compact" && (
         <SkinFilterStatus
           filters={filters}

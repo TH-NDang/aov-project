@@ -1,55 +1,27 @@
-/* The head of an armory page: the text on the left over a shade, a scene of the part's pictures on the right. */
+/*
+ * The head of a catalog page: a scene over the whole banner, and the title over a shade that is darkest where the text
+ * stands and clears away from it.
+ */
 .wiki-catalog-showcase {
   position: relative;
   isolation: isolate;
   display: flex;
   overflow: hidden;
   background:
-    radial-gradient(70% 90% at 80% 46%, color-mix(in srgb, var(--aov-accent) 22%, transparent), transparent 70%),
+    radial-gradient(70% 90% at 70% 46%, color-mix(in srgb, var(--aov-accent) 18%, transparent), transparent 70%),
     radial-gradient(60% 70% at 0% 0%, color-mix(in srgb, var(--aov-wiki-gold) 8%, transparent), transparent 70%),
     linear-gradient(180deg, var(--aov-wiki-bar), var(--aov-bg));
 }
-/* The scene's edges melt into the page: a fade at the foot and a shade behind the text. */
+.wiki-catalog-showcase-scene {
+  position: absolute;
+  inset: 0;
+}
 .wiki-catalog-showcase::after {
   content: "";
   position: absolute;
   z-index: 1;
   inset: 0;
-  background:
-    linear-gradient(180deg, transparent 62%, var(--aov-bg)),
-    linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 80%, transparent) 34%, transparent 58%);
   pointer-events: none;
-}
-.wiki-catalog-showcase-scene {
-  position: absolute;
-}
-/* Phones: edge to edge, starting under the clear header so the scene shows through the bar until the page scrolls. */
-.wiki-catalog-showcase[data-layout="compact"] {
-  min-height: 184px;
-  align-items: flex-end;
-  margin: calc(-12px - var(--wiki-header-height)) calc(-1 * var(--wiki-gutter)) 14px;
-  padding: calc(var(--wiki-header-height) + 12px) var(--wiki-gutter) 18px;
-}
-.wiki-catalog-showcase[data-layout="compact"] > .wiki-catalog-showcase-scene {
-  inset: var(--wiki-header-height) 0 0;
-}
-/* Wide screens: a framed banner; the scene takes the right three fifths, with room to spread out. */
-.wiki-catalog-showcase[data-layout="wide"] {
-  /* Scenes size their pieces by this, so a wide banner holds them larger. */
-  --scene-scale: 1.25;
-  min-height: 220px;
-  align-items: center;
-  margin: 4px 0 20px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-card);
-  padding: 24px 28px;
-}
-.wiki-catalog-showcase[data-layout="wide"]::after {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 72%, transparent) 26%, transparent 46%);
-}
-.wiki-catalog-showcase[data-layout="wide"] > .wiki-catalog-showcase-scene {
-  inset: 0 0 0 auto;
-  width: 60%;
 }
 .wiki-catalog-showcase-text {
   position: relative;
@@ -58,7 +30,88 @@
   max-width: 56%;
   justify-items: start;
   gap: 6px;
+  text-shadow: 0 1px 12px var(--aov-bg);
 }
+
+/*
+ * Phones: edge to edge and tall, the scene running up behind the clear header to the top of the screen, so the bar
+ * floats over it until the page scrolls. A dim band at the top keeps the bar's buttons clear.
+ */
+.wiki-catalog-showcase[data-layout="compact"] {
+  min-height: calc(var(--wiki-header-height) + 236px);
+  align-items: flex-end;
+  margin: calc(-12px - var(--wiki-header-height)) calc(-1 * var(--wiki-gutter)) 14px;
+  padding: calc(var(--wiki-header-height) + 12px) var(--wiki-gutter) 18px;
+}
+.wiki-catalog-showcase[data-layout="compact"]::after {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--aov-bg) 45%, transparent), transparent 24%),
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--aov-bg) 92%, transparent)),
+    linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 55%, transparent), transparent 55%);
+}
+.wiki-catalog-showcase[data-layout="compact"] .wiki-catalog-showcase-text {
+  max-width: none;
+}
+
+/* Wide screens: a framed banner, its text placed where the page's scene leaves room for it. */
+.wiki-catalog-showcase[data-layout="wide"] {
+  /* Scenes size their pieces by this, so a wide banner holds them larger. */
+  --scene-scale: 1.25;
+  min-height: 236px;
+  margin: 4px 0 20px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 26px 30px;
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="middle"] {
+  align-items: center;
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="middle"]::after {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--aov-bg) 88%, transparent) 0%,
+      color-mix(in srgb, var(--aov-bg) 55%, transparent) 30%,
+      transparent 62%
+    ),
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--aov-bg) 85%, transparent));
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="top"] {
+  align-items: flex-start;
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="top"]::after {
+  background: radial-gradient(
+    46% 70% at 0% 0%,
+    color-mix(in srgb, var(--aov-bg) 88%, transparent),
+    color-mix(in srgb, var(--aov-bg) 40%, transparent) 60%,
+    transparent
+  );
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="bottom"] {
+  align-items: flex-end;
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="bottom"]::after {
+  background:
+    linear-gradient(0deg, color-mix(in srgb, var(--aov-bg) 82%, transparent), transparent 58%),
+    linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 70%, transparent), transparent 46%);
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="center"] {
+  align-items: center;
+  justify-content: center;
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="center"]::after {
+  background: radial-gradient(
+    30% 62% at 50% 50%,
+    color-mix(in srgb, var(--aov-bg) 86%, transparent),
+    color-mix(in srgb, var(--aov-bg) 40%, transparent) 70%,
+    transparent
+  );
+}
+.wiki-catalog-showcase[data-layout="wide"][data-align="center"] .wiki-catalog-showcase-text {
+  justify-items: center;
+  text-align: center;
+}
+
 .wiki-catalog-showcase-title {
   display: flex;
   flex-wrap: wrap;
@@ -70,18 +123,6 @@
   color: var(--aov-text);
   font: var(--wiki-type-page);
   letter-spacing: -0.02em;
-}
-/* The tagline speaks first: brighter and bold. The plain line under it stays quiet. */
-.wiki-catalog-showcase-tagline {
-  color: var(--aov-text);
-  font: var(--wiki-type-section);
-  text-wrap: balance;
-}
-.wiki-catalog-showcase-text > p:not(.wiki-catalog-showcase-tagline) {
-  max-width: 60ch;
-  color: var(--aov-text-soft);
-  font: var(--wiki-type-body);
-  text-wrap: pretty;
 }
 .wiki-catalog-showcase[data-layout="compact"] .wiki-catalog-showcase-count {
   margin-bottom: 2px;
@@ -96,34 +137,19 @@
   font-variant-numeric: tabular-nums;
 }
 
-/*
- * A scene over the whole banner: it starts at the left edge too, under a shade that is darkest behind the text and
- * clears towards the right, and the text keeps a soft shadow of its own.
- */
-.wiki-catalog-showcase[data-fill] > .wiki-catalog-showcase-scene {
-  inset: 0;
-  width: auto;
-}
-.wiki-catalog-showcase[data-fill]::after {
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--aov-bg) 88%, transparent) 0%,
-      color-mix(in srgb, var(--aov-bg) 55%, transparent) 30%,
-      transparent 62%
-    ),
-    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--aov-bg) 85%, transparent));
-}
-.wiki-catalog-showcase[data-fill] .wiki-catalog-showcase-text {
-  text-shadow: 0 1px 12px var(--aov-bg);
-}
-
 /* A control pinned to the banner: its top right corner on wide screens, beside the count on phones. */
 .wiki-catalog-showcase-corner {
   position: absolute;
   z-index: 3;
   top: 16px;
   right: 16px;
+}
+/* A line about the scene, such as which skin it shows, at the banner's foot on the right. */
+.wiki-catalog-showcase-note {
+  position: absolute;
+  z-index: 3;
+  right: 18px;
+  bottom: 14px;
 }
 .wiki-catalog-showcase-meta {
   display: flex;

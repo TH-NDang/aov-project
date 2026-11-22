@@ -8,7 +8,7 @@ import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { createEntityIndex, defaultEntityColor, referenceTranslation } from "@aov/ui/lib/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
-import { CatalogHeading } from "../../layout/catalog-heading"
+import { TermsShowcase } from "./terms-showcase"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { notFoundMeta, termMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
@@ -95,13 +95,7 @@ export function TermsPage() {
 
   return (
     <>
-      <CatalogHeading
-        title={t("Thuật ngữ", "Glossary")}
-        lead={text(
-          "Giải thích các từ dùng trong mô tả kỹ năng, trang bị và ghi chú cập nhật.",
-          "Explains the words used in ability, item and patch descriptions.",
-        )}
-      />
+      <TermsShowcase terms={references.isSuccess ? terms.map(({ entity }) => entity) : undefined} />
       <div className="wiki-terms-tools">
         <label className="wiki-terms-search">
           <WikiIcon name="search" size={18} />
@@ -124,11 +118,12 @@ export function TermsPage() {
             </button>
           )}
         </label>
-        {references.isSuccess && (
-          <p className="wiki-terms-count" role="status">
-            {text(`${visible.length} thuật ngữ`, visible.length === 1 ? "1 term" : `${visible.length} terms`)}
-          </p>
-        )}
+        {/* The head counts the whole glossary; here only what a search leaves is counted. */}
+        <p className="wiki-terms-count" role="status">
+          {search &&
+            references.isSuccess &&
+            text(`${visible.length} thuật ngữ`, visible.length === 1 ? "1 term" : `${visible.length} terms`)}
+        </p>
       </div>
 
       {references.isPending ? (

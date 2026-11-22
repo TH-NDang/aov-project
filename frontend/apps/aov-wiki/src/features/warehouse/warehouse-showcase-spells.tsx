@@ -1,97 +1,47 @@
 import { useMemo, type CSSProperties } from "react"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext } from "../../context/wiki-context"
 import { isRetiredSpell, spellRows } from "./use-item-catalog"
-import { useShowcaseTurn } from "../../lib/use-showcase-turn"
 import { CatalogShowcase, type ShowcaseIntro } from "../../components/catalog-showcase"
-import { spellCooldownText, spellKeepsCharges } from "./warehouse-spells"
-import { warehouseImage, warehouseName, type PublishedWarehouseRecord } from "../../lib/warehouse-types"
+import { warehouseImage, type PublishedWarehouseRecord } from "../../lib/warehouse-types"
 import "./warehouse-showcase-spells.css"
 
-interface SpellScene {
-  key: string
-  url: string
-  name: string
-  cooldown: number | null
-  /** What a talent that keeps several charges says about them. */
-  charges: string | null
-}
-
 /**
- * The talents' head, drawn as a talent coming off cooldown in a match: one talent large in the middle, a dark sweep
- * turning off it clockwise until it is ready and lights up, and the other talents on a slow ring around it. Each
- * talent takes its turn, and the caption names it with its cooldown.
+ * The talents' head, drawn like a skill bar: every talent as a round button in a gilded ring, set in two staggered rows
+ * that zigzag across the banner. A light runs along them from left to right, each button flaring as it passes, as a
+ * talent lights up when it is ready to cast.
  */
 export function SpellShowcase({ intro, entries }: { intro: ShowcaseIntro; entries: PublishedWarehouseRecord[] }) {
   const { locale } = useWikiContext()
-  const scenes = useMemo(
+  const talents = useMemo(
     () =>
       spellRows(entries, locale)
         .filter((entry) => !isRetiredSpell(entry))
-        .flatMap((entry): SpellScene[] => {
+        .flatMap((entry) => {
           const url = warehouseImage(entry)
-          return url
-            ? [
-                {
-                  key: entry.code,
-                  url,
-                  name: warehouseName(entry, locale),
-                  cooldown: entry.content.cooldownSeconds,
-                  charges: spellKeepsCharges(entry.content)
-                    ? wikiText(
-                        locale,
-                        `Tích trữ ${entry.content.maxCharges} lần`,
-                        `${entry.content.maxCharges} charges`,
-                      )
-                    : null,
-                },
-              ]
-            : []
+          return url ? [{ key: entry.code, url }] : []
         }),
     [entries, locale],
   )
-  const { scene, leaving } = useShowcaseTurn(scenes, picturesOfScene)
-  const others = scene ? scenes.filter((candidate) => candidate.key !== scene.key) : []
+  const last = Math.max(1, talents.length - 1)
   return (
     <CatalogShowcase
       {...intro}
       scene={
-        scene && (
-          <div key={scene.key} className="wiki-spell-scene" data-leaving={leaving || undefined}>
-            <div className="wiki-spell-scene-ring">
-              {others.map((other, index) => (
-                <img
-                  key={other.key}
-                  className="wiki-spell-scene-orbit"
-                  src={other.url}
-                  alt=""
-                  decoding="async"
-                  style={{ "--turn": `${(index * 360) / others.length}deg` } as CSSProperties}
-                />
-              ))}
-            </div>
-            <span className="wiki-spell-scene-hero">
-              <img src={scene.url} alt="" decoding="async" />
-              <span className="wiki-spell-scene-sweep" />
-            </span>
+        talents.length > 0 && (
+          <div className="wiki-spell-bar" style={{ "--count": talents.length } as CSSProperties}>
+            {talents.map((talent, index) => (
+              <span
+                key={talent.key}
+                className="wiki-spell-bar-button"
+                data-row={index % 2 === 0 ? "top" : "bottom"}
+                style={{ "--x": `${(index * 100) / last}%`, "--i": index } as CSSProperties}
+              >
+                <img src={talent.url} alt="" decoding="async" />
+              </span>
+            ))}
           </div>
-        )
-      }
-      caption={
-        scene && (
-          // The caption changes with the scene every few seconds, so it is not read out each time.
-          <p className="wiki-spell-scene-caption" data-leaving={leaving || undefined} aria-hidden="true">
-            <b>{scene.name}</b>
-            <span>
-              {wikiText(locale, "Hồi chiêu", "Cooldown")} {spellCooldownText(scene.cooldown, locale)}
-            </span>
-            {scene.charges && <span>{scene.charges}</span>}
-          </p>
         )
       }
     />
   )
-}
-
-function picturesOfScene(scene: SpellScene) {
-  return [scene.url]
 }

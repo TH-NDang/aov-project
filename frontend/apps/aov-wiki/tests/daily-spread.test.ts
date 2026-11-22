@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { dailySpread } from "../src/features/hero/model/hero-daily-spread.ts"
+import { dailySpread } from "../src/lib/daily-spread.ts"
 
 test("the wall shows as many different heroes as it asks for", () => {
   const places = dailySpread(129, 20_000, 16)

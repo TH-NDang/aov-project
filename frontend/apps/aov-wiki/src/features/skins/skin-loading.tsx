@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { SkinCollectionHeading } from "./skin-collection-heading"
+import { SkinShowcase } from "./skin-showcase"
 import { useSkinColumns } from "./skin-columns"
 import "./skin-directory.css"
 
@@ -38,7 +38,8 @@ export function SkinDirectoryLoading() {
   const message = wikiText(locale, "Đang tải trang phục…", "Loading skins…")
   return (
     <div className="wiki-skin-directory" style={{ "--skin-columns": columns } as CSSProperties} aria-busy="true">
-      <SkinCollectionHeading lead={<span className="wiki-skin-summary">{message}</span>} />
+      <SkinShowcase />
+      <p className="sr-only">{message}</p>
       <div className={compact ? "wiki-skin-toolbar wiki-skin-toolbar-compact" : "wiki-skin-toolbar"} aria-hidden="true">
         <span className="wiki-skin-search wiki-skeleton" />
         <span className="wiki-skin-filter wiki-skeleton" />

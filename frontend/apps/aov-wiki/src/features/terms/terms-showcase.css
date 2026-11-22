@@ -1,0 +1,75 @@
+/*
+ * The glossary's scene: a sky of the terms' glyphs around the title, each on a round seal tinted with its colour. Near
+ * seals are large and sharp, far ones small, dim and soft, so the sky has depth; every seal drifts up and down on its
+ * own beat.
+ */
+.wiki-terms-sky {
+  position: absolute;
+  inset: 0;
+}
+.wiki-terms-seal {
+  --seal: calc(46px * var(--scene-scale, 1));
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  display: grid;
+  width: var(--seal);
+  height: var(--seal);
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--term-color) 45%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 35%,
+    color-mix(in srgb, var(--term-color) 26%, var(--aov-raised)),
+    var(--aov-raised) 72%
+  );
+  box-shadow: 0 8px 18px -10px var(--term-color);
+  color: var(--term-color);
+  translate: -50% -50%;
+  animation:
+    wiki-terms-seal-in 700ms ease-out backwards,
+    wiki-terms-seal-float 6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--float) * 50ms), calc(var(--float) * -0.5s);
+}
+.wiki-terms-seal[data-depth="near"] {
+  --seal: calc(60px * var(--scene-scale, 1));
+  box-shadow: 0 0 26px -6px var(--term-color);
+}
+.wiki-terms-seal[data-depth="far"] {
+  --seal: calc(30px * var(--scene-scale, 1));
+  opacity: 0.5;
+  filter: blur(1px);
+}
+.wiki-terms-seal > svg {
+  width: 54%;
+  height: 54%;
+}
+@keyframes wiki-terms-seal-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+@keyframes wiki-terms-seal-float {
+  from {
+    transform: translateY(-5px);
+  }
+  to {
+    transform: translateY(5px);
+  }
+}
+/* Phones: smaller seals; the title is in the bar, so the sky spreads over the whole width. */
+.wiki-catalog-showcase[data-layout="compact"] .wiki-terms-seal {
+  --seal: 40px;
+}
+.wiki-catalog-showcase[data-layout="compact"] .wiki-terms-seal[data-depth="near"] {
+  --seal: 54px;
+}
+.wiki-catalog-showcase[data-layout="compact"] .wiki-terms-seal[data-depth="far"] {
+  --seal: 28px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-terms-seal {
+    animation: none;
+  }
+}

@@ -177,7 +177,10 @@
   gap: 8px;
   margin: -4px calc(-1 * var(--wiki-gutter)) 0;
   padding: 8px var(--wiki-gutter);
-  background: var(--aov-bg);
+  /* The same glass as the bar above it, so the two read as one frosted band over the list. */
+  background: color-mix(in srgb, var(--aov-wiki-bar) 58%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 /* The filter button waits until the mark filters under the bar have scrolled away beneath it. */
 .wiki-hero-toolbar-compact:not([data-marks-covered]) .wiki-hero-filter-trigger {

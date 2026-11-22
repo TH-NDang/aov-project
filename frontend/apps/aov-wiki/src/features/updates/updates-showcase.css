@@ -1,0 +1,152 @@
+/*
+ * The patch notes' scene: a timeline of the latest updates. A gold line draws itself from the left, then each update
+ * rises onto it in turn: its faces over a dot, its day under it. The update in force has the brightest dot and a slow
+ * pulse around it.
+ */
+.wiki-updates-line {
+  --face: calc(38px * var(--scene-scale, 1));
+  --line-at: 70%;
+  position: absolute;
+  inset: 0;
+}
+.wiki-updates-line-track {
+  position: absolute;
+  top: var(--line-at);
+  right: 3%;
+  left: 3%;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--aov-wiki-gold) 55%, transparent) 18%,
+    var(--aov-wiki-gold) 88%,
+    transparent
+  );
+  transform-origin: left center;
+  animation: wiki-updates-line-draw 900ms cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+}
+/* A stop: no size of its own, a point on the line that its faces, dot and day are set around. */
+.wiki-updates-stop {
+  position: absolute;
+  top: var(--line-at);
+  left: var(--at);
+  width: 0;
+  height: 0;
+  animation: wiki-updates-stop-rise 560ms ease-out backwards;
+  animation-delay: calc(500ms + var(--order) * 140ms);
+}
+.wiki-updates-stop-dot {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--aov-wiki-gold);
+  border-radius: 50%;
+  background: var(--aov-bg);
+}
+.wiki-updates-stop[data-current] .wiki-updates-stop-dot {
+  top: -8px;
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  border-width: 3px;
+  background: var(--aov-wiki-gold);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--aov-wiki-gold) 50%, transparent);
+  animation: wiki-updates-stop-pulse 2.4s ease-out 1.6s infinite;
+}
+/* The faces stand over the dot, overlapping like a small crowd, each ringed in the colour of its change. */
+.wiki-updates-stop-faces {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  display: flex;
+  transform: translateX(-50%);
+}
+.wiki-updates-stop-face,
+.wiki-updates-stop-more {
+  --change-tone: var(--aov-info);
+  display: grid;
+  width: var(--face);
+  height: var(--face);
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid var(--change-tone);
+  border-radius: 50%;
+  background: var(--aov-raised);
+  box-shadow: 0 6px 14px -6px var(--aov-wiki-bar);
+}
+.wiki-updates-stop-face + :is(.wiki-updates-stop-face, .wiki-updates-stop-more) {
+  margin-left: calc(var(--face) * -0.3);
+}
+.wiki-updates-stop-face[data-tone="up"],
+.wiki-updates-stop-face[data-tone="removed"] {
+  --change-tone: var(--aov-danger);
+}
+.wiki-updates-stop-face[data-tone="down"] {
+  --change-tone: var(--aov-success);
+}
+.wiki-updates-stop-face[data-tone="rework"] {
+  --change-tone: var(--aov-warning);
+}
+.wiki-updates-stop-face[data-tone="new"] {
+  --change-tone: var(--aov-accent);
+}
+.wiki-updates-stop-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wiki-updates-stop-more {
+  --change-tone: var(--aov-line-strong);
+  color: var(--aov-text-soft);
+  font: 600 0.75rem/1 var(--wiki-font-reading);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-updates-stop-date {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.wiki-updates-stop[data-current] .wiki-updates-stop-date {
+  color: var(--aov-wiki-gold);
+  font-weight: 600;
+}
+@keyframes wiki-updates-line-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes wiki-updates-stop-rise {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+@keyframes wiki-updates-stop-pulse {
+  to {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+/* Phones: two smaller faces a stop, the line high enough that the days clear the count at the foot. */
+.wiki-catalog-showcase[data-layout="compact"] .wiki-updates-line {
+  --face: 34px;
+  --line-at: 56%;
+}
+.wiki-catalog-showcase[data-layout="compact"] :is(.wiki-updates-stop-face:nth-child(n + 4), .wiki-updates-stop-more) {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-updates-line-track,
+  .wiki-updates-stop,
+  .wiki-updates-stop[data-current] .wiki-updates-stop-dot {
+    animation: none;
+  }
+}

@@ -4,7 +4,7 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { CatalogShowcase } from "../../../components/catalog-showcase"
 import { useWikiContext, wikiText } from "../../../context/wiki-context"
 import type { HeroListItem } from "../../../lib/hero-api"
-import { dailySpread } from "../model/hero-daily-spread"
+import { dailySpread } from "../../../lib/daily-spread"
 import "./hero-showcase.css"
 
 /** How many portraits stand on the wall; the track repeats them once so it can drift without a seam. */
@@ -31,7 +31,6 @@ export function HeroShowcase({ heroes, version }: { heroes?: readonly HeroListIt
       title={wikiText(locale, "Thư viện Tướng", "Hero library")}
       count={count ? wikiText(locale, `${count} tướng`, `${count} heroes`) : undefined}
       wide={wide}
-      fill
       corner={version}
       scene={portraits.length > 0 && <PortraitWall portraits={portraits} />}
     />
