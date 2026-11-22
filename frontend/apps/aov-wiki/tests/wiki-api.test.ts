@@ -82,3 +82,30 @@ test("pages that carry more than rows keep the first page beside every row", asy
   assert.deepEqual(first.filters, ["a"])
   assert.deepEqual(items, [1, 2, 3, 4, 5])
 })
+
+test("pages asked for ahead arrive with the first and a page past the end is dropped", async (t) => {
+  const asked: string[] = []
+  const answers = new Map([
+    ["0", { rows: [1, 2], total: 3 }],
+    ["1", { rows: [3], total: 3 }],
+    ["2", { rows: [], total: 3 }],
+  ])
+  t.mock.method(globalThis, "fetch", async (url: string) => {
+    const page = new URL(url, "http://wiki.test").searchParams.get("page")!
+    asked.push(page)
+    return Response.json(answers.get(page))
+  })
+  const { items } = await wikiGetPages<{ rows: number[]; total: number }, number>(
+    "/heroes",
+    new URLSearchParams(),
+    undefined,
+    {
+      size: 2,
+      items: (read) => read.rows,
+      total: (read) => read.total,
+      ahead: 2,
+    },
+  )
+  assert.deepEqual(items, [1, 2, 3])
+  assert.deepEqual(asked.sort(), ["0", "1", "2"])
+})
