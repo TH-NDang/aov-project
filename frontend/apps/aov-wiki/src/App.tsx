@@ -74,7 +74,7 @@ function HomePage() {
   if (term) return <Navigate to={href(`/terms/${encodeURIComponent(term)}`)} replace />
   return (
     <>
-      <WikiHeader />
+      <WikiHeader home />
       <main
         id="main"
         tabIndex={-1}

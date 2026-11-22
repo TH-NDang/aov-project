@@ -1,0 +1,63 @@
+/* A slim column on the right edge, centred between the pinned bars and the bottom of the screen. */
+.wiki-hero-letter-rail {
+  position: fixed;
+  z-index: 30;
+  top: calc(50% + 56px);
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 2px;
+  background: color-mix(in srgb, var(--aov-surface) 82%, transparent);
+  box-shadow: var(--aov-shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  touch-action: none;
+  transform: translate(8px, -50%);
+  transition:
+    opacity 160ms ease-out,
+    transform 160ms ease-out;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.wiki-hero-letter-rail[data-shown] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -50%);
+}
+.wiki-hero-letter-rail > button {
+  display: grid;
+  width: 24px;
+  min-height: 18px;
+  place-items: center;
+  color: var(--aov-text-soft);
+  font: 700 0.75rem/1rem var(--wiki-font-display);
+}
+.wiki-hero-letter-rail > button[aria-current] {
+  color: var(--aov-wiki-gold);
+}
+
+/* The letter under the finger, large, to the left of the column. */
+.wiki-hero-letter-bubble {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 12px);
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 40%, transparent);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-popover);
+  color: var(--aov-wiki-gold);
+  font: 700 1.75rem/1 var(--wiki-font-display);
+  box-shadow: var(--aov-shadow-lg);
+  transform: translateY(-50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiki-hero-letter-rail {
+    transition: none;
+  }
+}

@@ -435,6 +435,7 @@ services:
         VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}/
         VITE_STREAM_URL: ${PUBLIC_ORIGIN:?set in .env}/stream
         VITE_ADMIN_URL: ${PUBLIC_ORIGIN:?set in .env}/admin
+        VITE_IMAGE_RESIZE: ${IMAGE_RESIZE:-}
     command: ["node", "--experimental-strip-types", "--disable-warning=ExperimentalWarning", "scripts/publish-apps.mts"]
     environment:
       WEB_APPS_DIR: /site
@@ -448,6 +449,7 @@ services:
     build: *web-build
     environment:
       VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}
+      VITE_IMAGE_RESIZE: ${IMAGE_RESIZE:-}
       WIKI_API_TARGET: http://wiki-service:8080
       WIKI_SITE_DIR: /site
     volumes:

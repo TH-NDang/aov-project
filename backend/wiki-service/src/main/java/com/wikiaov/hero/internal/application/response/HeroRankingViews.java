@@ -137,6 +137,28 @@ public final class HeroRankingViews {
     ) {
     }
 
+    /**
+     * The whole board readers see in the latest confirmed snapshot of a market and mode: every hero the single-hero
+     * read gives an entry, in the order of the rates board. The snapshot is null and the list empty when no snapshot
+     * is confirmed.
+     */
+    public record PublishedBoard(
+            PublishedSnapshot snapshot,
+            List<PublishedRates> entries
+    ) {
+    }
+
+    /** One hero's tier and rates on the board, as its single-hero entry shows them; values waiting for review are null. */
+    public record PublishedRates(
+            UUID heroId,
+            String heroCode,
+            String tier,
+            BigDecimal winRate,
+            BigDecimal pickRate,
+            BigDecimal banRate
+    ) {
+    }
+
     /** A per-match figure and its rank among the snapshot's heroes that have it, highest first. */
     public record Figure(
             String metric,

@@ -216,7 +216,7 @@ export function PatchChangesRow({
                       <>
                         {entry.image && (
                           <span className="wiki-changes-art">
-                            <WikiImage src={entry.image} alt="" />
+                            <WikiImage frameWidth={64} src={entry.image} alt="" />
                           </span>
                         )}
                         {entry.name}

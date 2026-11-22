@@ -227,6 +227,59 @@ class HeroEvaluationIntegrationTest {
         send(get(ROOT + "/heroes/" + gildur + "/ranking").param("unknown", "1"), null, 400);
     }
 
+    @Test
+    void readersSeeEveryHerosRatesInTheLatestConfirmedSnapshot() throws Exception {
+        UUID toro = rankedHero("toro");
+        rankedHero("gildur");
+        rankedHero("violet");
+
+        assertThat(send(get(ROOT + "/hero-rankings"), null, 200)).containsEntry("snapshot", null)
+                .containsEntry("entries", List.of());
+
+        var snapshot = send(post(ROOT + "/admin/ranking-snapshots"), snapshot(), 201);
+        assertThat(send(get(ROOT + "/hero-rankings"), null, 200)).containsEntry("snapshot", null)
+                .containsEntry("entries", List.of());
+        send(post(ROOT + "/admin/ranking-snapshots/" + snapshot.get("id") + "/confirm"),
+                Map.of("expectedVersion", 1), 200);
+
+        var board = send(get(ROOT + "/hero-rankings").param("region", "VN"), null, 200);
+        var single = send(get(ROOT + "/heroes/" + toro + "/ranking"), null, 200);
+        assertThat(board.get("snapshot")).isEqualTo(single.get("snapshot"));
+        assertThat((Map<String, Object>) board.get("snapshot")).containsEntry("code", "vn-evaluation")
+                .containsEntry("modeCode", "RANKED_ELITE").containsEntry("heroes", 3);
+        var entries = (List<Map<String, Object>>) board.get("entries");
+        assertThat(entries).extracting(entry -> entry.get("heroCode")).containsExactly("toro", "gildur", "violet");
+        var entry = (Map<String, Object>) single.get("entry");
+        assertThat(entries.getFirst()).containsOnlyKeys("heroId", "heroCode", "tier", "winRate", "pickRate", "banRate")
+                .containsEntry("heroId", toro.toString()).containsEntry("tier", "T0")
+                .containsEntry("winRate", 49.42).containsEntry("pickRate", null).containsEntry("banRate", null);
+        for (var key : List.of("heroId", "heroCode", "tier", "winRate", "pickRate", "banRate")) {
+            assertThat(entries.getFirst().get(key)).as(key).isEqualTo(entry.get(key));
+        }
+
+        assertThat(send(get(ROOT + "/hero-rankings").param("region", "TH"), null, 200))
+                .containsEntry("snapshot", null).containsEntry("entries", List.of());
+        assertThat(send(get(ROOT + "/hero-rankings").param("region", "vn"), null, 400)).containsEntry("code",
+                "INVALID_QUERY_PARAMETER");
+        send(get(ROOT + "/hero-rankings").param("mode", "RANKED_ELITE"), null, 400);
+    }
+
+    @Test
+    void theHeroListCarriesTheDifficultyTheDetailShows() throws Exception {
+        var draft = draft("florentino", "Florentino");
+        UUID hero = uuid(draft, "heroId");
+        publish(draft);
+
+        var page = (Map<String, Object>) send(get(ROOT + "/heroes"), null, 200).get("page");
+        var detail = (Map<String, Object>) send(get(ROOT + "/heroes/" + hero), null, 200).get("content");
+
+        var ratings = (Map<String, Object>) detail.get("overviewRatings");
+        assertThat((List<Map<String, Object>>) page.get("items")).singleElement().satisfies(item -> {
+            assertThat(item).containsEntry("code", "florentino").containsEntry("difficulty", ratings.get("difficulty"));
+            assertThat(((Number) item.get("difficulty")).doubleValue()).isEqualTo(8.0);
+        });
+    }
+
     private UUID rankedHero(String code) {
         UUID id = UUID.randomUUID();
         jdbc.sql("INSERT INTO hero.hero (id, code, created_at, created_by_issuer, created_by_subject) "

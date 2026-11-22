@@ -149,7 +149,7 @@ function KindMark({ kind, size }: { kind?: string | null; size: number }) {
 function EntryArt({ entry }: { entry: IndexEntry }) {
   return (
     <span className="wiki-patch-subject-art">
-      {entry.image ? <WikiImage src={entry.image} alt="" /> : entry.name.charAt(0)}
+      {entry.image ? <WikiImage frameWidth={64} src={entry.image} alt="" /> : entry.name.charAt(0)}
     </span>
   )
 }
@@ -268,7 +268,7 @@ function HeroNotes({
         {page ? (
           // The name beside it is the link readers and screen readers use; the picture is a second way to press it.
           <Link to={page} className="wiki-patch-subject-art" tabIndex={-1} aria-hidden="true">
-            {entry.image ? <WikiImage src={entry.image} alt="" /> : name.charAt(0)}
+            {entry.image ? <WikiImage frameWidth={64} src={entry.image} alt="" /> : name.charAt(0)}
           </Link>
         ) : (
           <EntryArt entry={entry} />

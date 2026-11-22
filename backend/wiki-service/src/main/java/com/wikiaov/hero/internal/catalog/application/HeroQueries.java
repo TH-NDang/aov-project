@@ -17,6 +17,7 @@ import com.wikiaov.hero.internal.domain.HeroContent.Skins;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
+import com.wikiaov.hero.internal.ratings.persistence.HeroRatingSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.MediaAssets;
@@ -26,6 +27,7 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.RevisionState;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,9 +62,11 @@ public class HeroQueries {
     private final HeroForms forms;
     private final SkillLibraryIcons libraryIcons;
     private final HeroReadMoments moments;
+    private final HeroRatingSnapshots ratings;
 
     public HeroQueries(HeroStore store, HeroSections sections, GameplayContexts contexts, MediaAssets media,
-            Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons, HeroReadMoments moments) {
+            Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons, HeroReadMoments moments,
+            HeroRatingSnapshots ratings) {
         this.store = store;
         this.sections = sections;
         this.contexts = contexts;
@@ -70,6 +75,7 @@ public class HeroQueries {
         this.forms = forms;
         this.libraryIcons = libraryIcons;
         this.moments = moments;
+        this.ratings = ratings;
     }
 
     public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at) {
@@ -329,6 +335,7 @@ public class HeroQueries {
         // Paged in memory: each hero shows the revision the read moment chooses and carries its forms, so the page is
         // cut after both; the list is bounded by the heroes of the game.
         var selected = PageSlice.of(all, page, size);
+        listDifficulties(selected.items());
         var items = listMedia(selected.items());
 
         return new HeroListView(listContext(ctx, locale), selected.withItems(items));
@@ -367,7 +374,7 @@ public class HeroQueries {
             formItem.put("formKey", form.formKey());
             formItem.put("roles", member.roles());
             formItem.put("positions", member.positions().stream().sorted().toList());
-            formEntries.add(new ListEntry(formItem, member.bindingsId(), List.of()));
+            formEntries.add(new ListEntry(formItem, member.bindingsId(), member.ratingsId(), List.of()));
         }
         if (holder) {
             item.put("forms", formEntries.stream().map(ListEntry::item).toList());
@@ -377,7 +384,7 @@ public class HeroQueries {
                     Map.of("id", form.holderId(), "code", codes.get(form.holderId()), "formKey", form.formKey())));
         }
 
-        return new ListEntry(item, hero.bindingsId(), formEntries);
+        return new ListEntry(item, hero.bindingsId(), hero.ratingsId(), formEntries);
     }
 
     private static HeroListView.Context listContext(GameplayContext c, String locale) {
@@ -405,6 +412,23 @@ public class HeroQueries {
         Set<T> result = new LinkedHashSet<>();
         heroes.forEach(hero -> result.addAll(values.apply(hero)));
         return result;
+    }
+
+    /**
+     * Gives every hero and form on the page the difficulty of its overview ratings, the value the detail shows under
+     * {@code content.overviewRatings.difficulty}, read in one batch; null when the revision has no ratings.
+     */
+    private void listDifficulties(List<ListEntry> entries) {
+        var everyEntry = entries.stream().flatMap(entry -> Stream.concat(
+                Stream.of(entry), entry.forms().stream())).toList();
+        var ids = everyEntry.stream().map(ListEntry::ratingsRevisionId).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<UUID, BigDecimal> difficulties = ids.isEmpty() ? Map.of() : ratings.difficulties(ids);
+        for (var entry : everyEntry) {
+            var id = entry.ratingsRevisionId();
+            entry.item().put("difficulty", id == null ? null : difficulties.get(id));
+        }
     }
 
     /** Reads the head and portrait of every hero and form on the page in one batch. */
@@ -457,6 +481,11 @@ public class HeroQueries {
             return identity.getCode().contains(query) || name.toLowerCase(Locale.ROOT).contains(query);
         }
 
+        @Nullable
+        UUID ratingsId() {
+            return revision.sections().get(HeroSection.OVERVIEW_RATINGS);
+        }
+
         Map<String, Object> item() {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("id", identity.getId());
@@ -475,6 +504,7 @@ public class HeroQueries {
     private record ListEntry(
             Map<String, Object> item,
             UUID mediaBindingRevisionId,
+            @Nullable UUID ratingsRevisionId,
             List<ListEntry> forms
     ) {
     }

@@ -3,6 +3,7 @@ import "./wiki-image.css"
 import { WikiImageCredit as ImageCredit } from "./wiki-image-credit"
 import type { HeroMedia } from "../lib/hero-api"
 import { focalPosition, type FocalPoint } from "@aov/ui/lib/focal-point"
+import { sizedImageSources } from "../lib/sized-image"
 
 type WikiImageProps = ComponentPropsWithoutRef<"img"> & {
   media?: HeroMedia
@@ -10,8 +11,18 @@ type WikiImageProps = ComponentPropsWithoutRef<"img"> & {
   focus?: FocalPoint | null
   /** False leaves out the shimmer shown while the picture loads, for a mark drawn over another picture. */
   placeholder?: boolean
+  /**
+   * The widest the frame is drawn, in CSS pixels: the picture is then fetched at that size instead of at full size.
+   * Without it, a numeric `width` stands for the drawn size.
+   */
+  frameWidth?: number
 }
 type ImageState = "loading" | "ready" | "error"
+
+type ImageFrameProps = Omit<WikiImageProps, "frameWidth"> & {
+  /** The full-size picture, tried once when the resized copy fails. */
+  original?: string
+}
 
 function ImageFrame({
   className,
@@ -24,11 +35,14 @@ function ImageFrame({
   media,
   focus,
   placeholder = true,
+  original,
   ...imageProps
-}: WikiImageProps) {
+}: ImageFrameProps) {
   const imageRef = useRef<HTMLImageElement | null>(null)
   const requestRef = useRef(0)
   const [state, setState] = useState<ImageState>("loading")
+  const [fullSize, setFullSize] = useState(false)
+  const sources = fullSize && original ? { src: original, srcSet: undefined } : {}
 
   const revealImage = useCallback(async (image: HTMLImageElement) => {
     const request = ++requestRef.current
@@ -63,6 +77,7 @@ function ImageFrame({
       {placeholder && <span className="wiki-image-placeholder" aria-hidden="true" />}
       <img
         {...imageProps}
+        {...sources}
         ref={attachImage}
         alt={alt}
         className="wiki-image-content"
@@ -75,6 +90,10 @@ function ImageFrame({
         }}
         onError={(event) => {
           requestRef.current++
+          if (original && !fullSize) {
+            setFullSize(true)
+            return
+          }
           setState("error")
           onError?.(event)
         }}
@@ -90,8 +109,11 @@ function ImageFrame({
 }
 
 /** The frame owns className/style geometry; all remaining image attributes target the native image. */
-export function WikiImage(props: WikiImageProps) {
-  const sourceKey = [props.src, props.srcSet, props.sizes].join("\u0000")
+export function WikiImage({ frameWidth, ...props }: WikiImageProps) {
+  const sourceKey = [props.src, props.srcSet, props.sizes, frameWidth].join("\u0000")
+  // A picture given a width but no frame width is drawn about that wide.
+  const drawn = frameWidth ?? (Number(props.width) || undefined)
+  const sized = drawn && props.src && !props.srcSet ? sizedImageSources(props.src, drawn) : undefined
 
-  return <ImageFrame key={sourceKey} {...props} />
+  return <ImageFrame key={sourceKey} {...props} {...sized} />
 }

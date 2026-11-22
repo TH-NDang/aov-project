@@ -415,6 +415,7 @@ Response conceptual:
         "name": "Nakroth",
         "roles": ["ASSASSIN"],
         "positions": ["DRAGON"],
+        "difficulty": 6.0,
         "head": {
           "assetId": "...",
           "semanticType": "HERO_HEAD",
@@ -456,6 +457,11 @@ Không trả toàn bộ skills/skins trong list.
 chưa có phiên bản hiện hành; không thay `portrait` bằng ảnh `head`. Chỉ tải metadata ảnh cho trang
 kết quả đang trả, gộp HEAD/PORTRAIT qua một lần đọc Media theo lô; không tải detail cho từng tướng.
 
+`difficulty` là độ khó trong đánh giá tổng quan của bản tướng được chọn, cùng giá trị và thang với
+`content.overviewRatings.difficulty` của hero detail; bản không có đánh giá tổng quan trả `null`. Mục nào cũng có
+trường này, kể cả từng dạng trong `forms` (mỗi dạng lấy độ khó của chính nó). Độ khó của mọi tướng và dạng trên trang
+được đọc trong một lần truy vấn theo lô.
+
 ### Tướng nhiều dạng (ADR-024)
 
 Danh sách mặc định trả thứ người đọc duyệt: tướng không có dạng và tướng chứa dạng (ví dụ `flowborn`). Dạng
@@ -463,9 +469,10 @@ Danh sách mặc định trả thứ người đọc duyệt: tướng không c�
 
 ```text
 item của tướng chứa dạng = {
-  id, code, revisionId, unscopedBaseline, name, actualLocale, head?, portrait?,
+  id, code, revisionId, unscopedBaseline, name, actualLocale, difficulty, head?, portrait?,
   roles, positions,            hợp của các dạng đã xuất bản, theo thứ tự dạng
-  forms: [{id, code, revisionId, unscopedBaseline, name, actualLocale, formKey, roles, positions, head?, portrait?}]
+  forms: [{id, code, revisionId, unscopedBaseline, name, actualLocale, formKey, roles, positions, difficulty,
+           head?, portrait?}]
 }
 ```
 
@@ -3411,7 +3418,8 @@ Tướng không có lần chụp xác nhận nào trả `sources: []`. Tên và 
 
 ## Thống kê đấu hạng (ADR-025)
 
-API admin ở mục này; người đọc xem bản chụp đã xác nhận qua `GET /heroes/{heroId}/ranking` ở mục Đánh giá tướng.
+API admin ở mục này; người đọc xem bản chụp đã xác nhận qua `GET /heroes/{heroId}/ranking` và
+`GET /hero-rankings` ở mục Đánh giá tướng.
 Mapping dùng `ApiPaths.ADMIN` và `version="1"`. Đọc cần `catalog:read`; nhập, sửa giá trị, xác nhận,
 xóa cần `hero:write`. Audit `HERO_RANKING_SNAPSHOT_IMPORTED`, `HERO_RANKING_VALUE_REVIEWED`,
 `HERO_RANKING_SNAPSHOT_CONFIRMED`, `HERO_RANKING_SNAPSHOT_DELETED`. Mã lỗi thuộc `HeroErrorCode`:
@@ -3507,6 +3515,7 @@ trả 200 với composition revision mới nhất như các section PUT. Mapping
 PUT    /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/traits
 PUT    /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/notes
 GET    /api/wiki/v1/heroes/{heroId}/ranking?region=VN&mode=RANKED_ELITE
+GET    /api/wiki/v1/hero-rankings?region=VN
 GET    /api/wiki/v1/hero-traits?region=VN
 ```
 
@@ -3566,6 +3575,31 @@ Giá trị còn chờ duyệt trả `null`; chỉ số chờ duyệt có `value`
 lớn hơn, `of` là số tướng có giá trị của chỉ số đó. `counters` theo `COUNTER_1..3`, bỏ ô chờ duyệt. Không trả
 `readText`, ghi chú, ảnh dẫn chứng. Chưa có bản đã xác nhận thì `snapshot` và `entry` là `null`; bản không có tướng
 (hoặc id lạ) thì `entry` là `null`. Dạng của tướng (ADR-024) đọc theo id của dạng.
+
+**Bảng xếp hạng của mọi tướng** — không cần đăng nhập; chỉ nhận `region` (mặc định `VN`, cùng mẫu như trên), chế độ
+luôn là `RANKED_ELITE`; giá trị sai mẫu hay tham số lạ (kể cả `mode`) trả 400 `INVALID_QUERY_PARAMETER`. Đọc cùng bản
+chụp đã xác nhận mới nhất và cùng các giá trị đã duyệt như endpoint của một tướng, nên hai endpoint luôn khớp nhau.
+Wiki dùng nó để sắp xếp và lọc danh sách tướng theo bậc và tỉ lệ:
+
+```json
+{
+  "snapshot": {
+    "code": "vn-ranked-elite-20261111-0705", "regionCode": "VN", "modeCode": "RANKED_ELITE",
+    "modeLabel": "Đấu hạng (Tinh Anh trở lên)", "periodLabel": null,
+    "capturedAt": "2026-11-11T00:07:49Z", "sourceTimeZone": "Asia/Ho_Chi_Minh", "heroes": 130
+  },
+  "entries": [
+    { "heroId": "…", "heroCode": "toro", "tier": "T0", "winRate": 49.42, "pickRate": 24.1, "banRate": null }
+  ]
+}
+```
+
+`snapshot` giống hệt `snapshot` của endpoint một tướng. `entries` gồm mọi tướng mà endpoint một tướng trả `entry` khác
+`null` (tướng có ít nhất một giá trị đã duyệt), với `tier`, `winRate`, `pickRate`, `banRate` như `entry` đó; giá trị
+còn chờ duyệt là `null`. Thứ tự theo vị trí trên bảng tỉ lệ của game (`ratesPosition`), tướng không có vị trí ở cuối.
+Không trả chỉ số theo trận, khắc chế, `readText`, ghi chú hay ảnh dẫn chứng. Dạng của tướng (ADR-024) có mục riêng
+theo id của dạng. Không phân trang: mỗi tướng của game có tối đa một mục. Chưa có bản đã xác nhận thì `snapshot` là
+`null` và `entries` rỗng.
 
 **Tướng theo đặc điểm** — không cần đăng nhập; chỉ nhận `region` (mặc định `VN`). Trả
 `{region, traits:[{code, heroes:[{id, code}]}]}` cho cả 22 mã theo thứ tự cố định, tính từ phiên bản người đọc đang

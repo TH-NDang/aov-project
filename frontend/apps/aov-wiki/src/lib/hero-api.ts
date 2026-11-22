@@ -10,6 +10,7 @@ export const heroKeys = {
   catalog: (scope: WikiCatalogScope) => ["wiki", "heroes", ...wikiScopeKey(scope)] as const,
   detail: (heroId: string, scope: WikiCatalogScope) => ["wiki", "hero", heroId, ...wikiScopeKey(scope)] as const,
   ranking: (heroId: string, region: string) => ["wiki", "hero-ranking", heroId, region] as const,
+  rankings: (region: string) => ["wiki", "hero-rankings", region] as const,
   traits: (region: string) => ["wiki", "hero-traits", region] as const,
   builds: (heroCode: string, region: string) => ["wiki", "hero-builds", heroCode, region] as const,
   shop: (heroId: string, region: string) => ["wiki", "hero-shop", heroId, region] as const,
@@ -46,6 +47,8 @@ export interface HeroListItem {
   positions?: HeroPosition[]
   head?: HeroMedia
   portrait?: HeroMedia
+  /** The difficulty of the hero profile's summary ratings, on the game's ten-point scale. */
+  difficulty?: number | null
   /** The published forms of a hero that holds forms, default form first (ADR-024). */
   forms?: HeroListForm[]
 }
@@ -216,6 +219,28 @@ export function heroRankingQuery(heroId: string, region: string) {
         `/heroes/${encodeURIComponent(heroId)}/ranking?region=${encodeURIComponent(region)}`,
         signal,
       ),
+    staleTime: 300_000,
+    retry: false,
+  })
+}
+
+/** Every hero's place in the latest confirmed ranked snapshot of a market, for ordering the library. */
+export interface HeroRankingBoard {
+  snapshot: HeroRankingReading["snapshot"]
+  entries: {
+    heroId: string
+    heroCode: string
+    tier: string | null
+    winRate: number | null
+    pickRate: number | null
+    banRate: number | null
+  }[]
+}
+
+export function heroRankingBoardQuery(region: string) {
+  return queryOptions({
+    queryKey: heroKeys.rankings(region),
+    queryFn: ({ signal }) => wikiGet<HeroRankingBoard>(`/hero-rankings?region=${encodeURIComponent(region)}`, signal),
     staleTime: 300_000,
     retry: false,
   })

@@ -1,3 +1,4 @@
+import { preloadPicture, resizedImageUrl } from "../lib/sized-image"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
@@ -92,6 +93,7 @@ export function SkinArtwork({
             : `wiki-skin-art wiki-skin-art-${artwork.kind}`
         }
         src={source}
+        frameWidth={preview ? 800 : card ? 128 : 96}
         focus={shown?.currentVersion?.focalPoint}
         media={credit ? shown : undefined}
         alt={preview ? `${skin.name} — ${skin.heroName}` : ""}
@@ -188,7 +190,7 @@ export function SkinPreview({
     if (!open || !canStep) return
     for (const delta of [1, -1, 2]) {
       const source = previewSource(list[(index + delta + list.length) % list.length])
-      if (source) new Image().src = source
+      if (source) preloadPicture(source, 800)
     }
   }, [open, canStep, index, list])
 
@@ -253,7 +255,7 @@ export function SkinPreview({
               {!skin.art?.currentVersion?.url && !skinVideos.playing && previewSource(skin) && (
                 <span
                   className="wiki-skin-preview-backdrop"
-                  style={{ backgroundImage: `url("${previewSource(skin)}")` }}
+                  style={{ backgroundImage: `url("${resizedImageUrl(previewSource(skin)!, 384)}")` }}
                   aria-hidden="true"
                 />
               )}

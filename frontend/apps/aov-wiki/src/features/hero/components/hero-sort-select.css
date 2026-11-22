@@ -1,0 +1,44 @@
+/* "Sort by" and a quiet field: the native select sits over the whole control so the phone opens its own picker. */
+.wiki-hero-sort {
+  position: relative;
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: 999px;
+  padding: 0 28px 0 12px;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
+  white-space: nowrap;
+}
+.wiki-hero-sort:hover,
+.wiki-hero-sort:focus-within {
+  border-color: var(--aov-line-strong);
+  color: var(--aov-text);
+}
+.wiki-hero-sort > select {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--aov-text);
+  font: 600 0.875rem/1.25rem var(--wiki-font-reading);
+  cursor: pointer;
+}
+.wiki-hero-sort > select:focus-visible {
+  outline: none;
+}
+.wiki-hero-sort:has(select:focus-visible) {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-hero-sort > svg {
+  position: absolute;
+  right: 8px;
+  pointer-events: none;
+}
+.wiki-hero-sort > select > option {
+  background: var(--aov-popover);
+  color: var(--aov-text);
+}

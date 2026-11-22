@@ -104,7 +104,7 @@ function PatchRow({
         <span className="wiki-updates-faces">
           {pictured.slice(0, faceCount).map((hero, index) => (
             <span className="wiki-updates-face" key={index}>
-              <WikiImage src={hero.image} alt="" />
+              <WikiImage frameWidth={32} src={hero.image} alt="" />
             </span>
           ))}
           {rows.length > faceCount && pictured.length >= faceCount && (

@@ -15,7 +15,7 @@ function PublishedAsset({ id, alt = "", className }: WarehouseImageProps) {
   const [failed, setFailed] = useState<string>()
   return src && src !== failed ? (
     <span className={`inline-grid place-items-center overflow-hidden ${className ?? ""}`}>
-      <WikiImage src={src} alt={alt} style={{ objectFit: "contain" }} onError={() => setFailed(src)} />
+      <WikiImage frameWidth={128} src={src} alt={alt} style={{ objectFit: "contain" }} onError={() => setFailed(src)} />
     </span>
   ) : (
     <span

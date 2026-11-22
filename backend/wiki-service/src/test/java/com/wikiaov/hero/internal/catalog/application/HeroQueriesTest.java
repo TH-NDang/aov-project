@@ -26,6 +26,7 @@ import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
+import com.wikiaov.hero.internal.ratings.persistence.HeroRatingSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.MediaAssetReference;
@@ -36,9 +37,11 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.RevisionState;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,9 +59,10 @@ class HeroQueriesTest {
             "aov-standard", UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, at);
     private final HeroForms forms = mock(HeroForms.class);
     private final HeroPatchHistory history = mock(HeroPatchHistory.class);
+    private final HeroRatingSnapshots ratings = mock(HeroRatingSnapshots.class);
     private final HeroQueries queries = new HeroQueries(store, sections, contexts, media,
             Clock.fixed(at, ZoneOffset.UTC), forms, mock(SkillLibraryIcons.class),
-            new HeroReadMoments(contexts, history));
+            new HeroReadMoments(contexts, history), ratings);
 
     @BeforeEach
     void resolvePublishedContext() {
@@ -210,6 +214,48 @@ class HeroQueriesTest {
         observeAt(hero, scheduled);
 
         assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", null, null, false, false))).isEmpty();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void everyHeroAndFormOnThePageCarriesItsDifficultyFromOneRatingsRead() {
+        var airi = hero("airi", Map.of());
+        var aya = hero("aya", Map.of());
+        var ayaForm = hero("aya-sky", Map.of());
+        var baldum = hero("baldum", Map.of());
+        when(forms.structure()).thenReturn(new HeroFormStructure(List.of(
+                new HeroFormStructure.Form(ayaForm.identity().getId(), aya.identity().getId(), "sky", 0))));
+        when(store.heroes(false))
+                .thenReturn(List.of(airi.identity(), aya.identity(), ayaForm.identity(), baldum.identity()));
+        UUID airiRatings = rate(airi);
+        UUID ayaRatings = rate(aya);
+        UUID formRatings = rate(ayaForm);
+        when(ratings.difficulties(Set.of(airiRatings, ayaRatings, formRatings))).thenReturn(Map.of(airiRatings,
+                new BigDecimal("2.0"), ayaRatings, new BigDecimal("3.0"), formRatings, new BigDecimal("4.5")));
+
+        var result = items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", null, null, false, false));
+
+        assertThat(result).extracting(item -> item.get("code")).containsExactly("airi", "aya", "baldum");
+        assertThat(result.get(0)).containsEntry("difficulty", new BigDecimal("2.0"));
+        assertThat(result.get(1)).containsEntry("difficulty", new BigDecimal("3.0"));
+        assertThat((List<Map<String, Object>>) result.get(1).get("forms")).singleElement()
+                .satisfies(form -> assertThat(form).containsEntry("code", "aya-sky")
+                        .containsEntry("difficulty", new BigDecimal("4.5")));
+        assertThat(result.get(2)).containsEntry("difficulty", null);
+        verify(ratings).difficulties(Set.of(airiRatings, ayaRatings, formRatings));
+        verifyNoMoreInteractions(ratings);
+    }
+
+    /** Gives the hero's published revision an overview ratings section and returns its id. */
+    private UUID rate(CatalogHero hero) {
+        var revision = store.revisions(hero.identity().getId()).getFirst();
+        UUID ratingsId = UUID.randomUUID();
+        Map<HeroSection, UUID> withRatings = new HashMap<>(revision.sections());
+        withRatings.put(HeroSection.OVERVIEW_RATINGS, ratingsId);
+        when(store.revisions(hero.identity().getId())).thenReturn(List.of(new HeroRevisionView(revision.id(),
+                revision.heroId(), revision.rulesetId(), 1, RevisionState.PUBLISHED, 1, 1L, at.minusSeconds(60),
+                Cause.DATA_BASELINE, null, null, withRatings)));
+        return ratingsId;
     }
 
     private void observeAt(CatalogHero hero, UUID variantId) {

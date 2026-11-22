@@ -95,7 +95,7 @@ export const HeroPatchBoard = memo(function HeroPatchBoard({
                       <>
                         <span className="wiki-hero-patch-art">
                           {entry.portrait || entry.image ? (
-                            <WikiImage src={(entry.portrait ?? entry.image)!} alt="" loading="lazy" />
+                            <WikiImage frameWidth={96} src={(entry.portrait ?? entry.image)!} alt="" loading="lazy" />
                           ) : (
                             <span>{entry.name.charAt(0)}</span>
                           )}

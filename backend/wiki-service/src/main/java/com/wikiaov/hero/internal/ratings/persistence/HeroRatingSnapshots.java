@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,6 +66,18 @@ public class HeroRatingSnapshots implements HeroSectionSnapshots {
         Map<UUID, Ratings> result = new HashMap<>();
         for (var rating : revisions.findAllById(ids)) {
             result.put(rating.getId(), ratings(rating, references.getOrDefault(rating.getId(), List.of())));
+        }
+        return result;
+    }
+
+    /**
+     * The difficulty of many snapshots in one query, without their sources, for the public hero list. A snapshot that
+     * does not exist is left out; one without a difficulty maps to null.
+     */
+    public Map<UUID, BigDecimal> difficulties(Collection<UUID> ids) {
+        Map<UUID, BigDecimal> result = new HashMap<>();
+        for (var rating : revisions.findAllById(ids)) {
+            result.put(rating.getId(), rating.getDifficulty());
         }
         return result;
     }

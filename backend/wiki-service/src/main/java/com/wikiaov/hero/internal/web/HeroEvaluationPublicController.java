@@ -30,9 +30,17 @@ public class HeroEvaluationPublicController implements HeroEvaluationPublicApi {
     @GetMapping(path = "/heroes/{heroId}/ranking", version = "1")
     public HeroRankingViews.Published ranking(@PathVariable UUID heroId,
             @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "RANKED_ELITE") String mode, HttpServletRequest request) {
+            @RequestParam(defaultValue = PublishedHeroRankings.DEFAULT_MODE) String mode, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "mode"));
         return rankings.published(heroId, region, mode);
+    }
+
+    @Override
+    @GetMapping(path = "/hero-rankings", version = "1")
+    public HeroRankingViews.PublishedBoard rankings(@RequestParam(defaultValue = "VN") String region,
+            HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("region"));
+        return rankings.board(region, PublishedHeroRankings.DEFAULT_MODE);
     }
 
     @Override

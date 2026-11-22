@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.ranking.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,7 @@ import com.wikiaov.hero.internal.ranking.domain.RankingMetric;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotHeroRepository;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotRepository;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotValueRepository;
+import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotHeroRow;
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotRow;
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotValueRow;
 import java.math.BigDecimal;
@@ -73,6 +75,73 @@ class HeroRankingsPublishedTest {
 
         assertThat(entry.winRate()).isNull();
         assertThat(entry.pickRate()).isEqualByComparingTo("3.1");
+    }
+
+    @Test
+    void withoutAConfirmedSnapshotTheBoardIsEmpty() {
+        when(snapshots.findFirstByRegionCodeAndModeCodeAndConfirmedAtIsNotNullOrderByCapturedAtDescIdAsc("VN",
+                "RANKED_ELITE")).thenReturn(Optional.empty());
+
+        var board = rankings.board("VN", "RANKED_ELITE");
+
+        assertThat(board.snapshot()).isNull();
+        assertThat(board.entries()).isEmpty();
+    }
+
+    @Test
+    void theBoardListsTheHeroesWithAReviewedValueInTheOrderOfTheRatesBoard() {
+        var airiTier = value(AIRI, RankingMetric.TIER, "0", false);
+        airiTier.setNumberValue(null);
+        airiTier.setTierValue("T1");
+        confirmed(airiTier, value(AIRI, RankingMetric.WIN_RATE, "51.2", false),
+                value(AIRI, RankingMetric.BAN_RATE, "8", true), value(BUTTERFLY, RankingMetric.PICK_RATE, "4.4", false),
+                value(ZATA, RankingMetric.WIN_RATE, "49", true));
+        listed(listedHero(AIRI, null), listedHero(ZATA, 1), listedHero(BUTTERFLY, 2));
+        when(heroes.findAllById(anyCollection()))
+                .thenReturn(List.of(identity(AIRI, "airi"), identity(BUTTERFLY, "butterfly")));
+
+        var board = rankings.board("VN", "RANKED_ELITE");
+
+        assertThat(board.snapshot().code()).isEqualTo("vn-elite-2026-11-11");
+        assertThat(board.snapshot().heroes()).isEqualTo(3);
+        assertThat(board.entries())
+                .extracting(entry -> entry.heroCode(), entry -> entry.tier(), entry -> entry.winRate(),
+                        entry -> entry.pickRate(), entry -> entry.banRate())
+                .containsExactly(tuple("butterfly", null, null, new BigDecimal("4.4"), null),
+                        tuple("airi", "T1", new BigDecimal("51.2"), null, null));
+    }
+
+    @Test
+    void theBoardShowsAHeroAsTheSingleHeroReadDoes() {
+        confirmed(value(AIRI, RankingMetric.WIN_RATE, "51.2", false),
+                value(AIRI, RankingMetric.PICK_RATE, "3.1", false),
+                value(AIRI, RankingMetric.BAN_RATE, "9.9", true));
+        listed(listedHero(AIRI, 1));
+
+        var single = rankings.published(AIRI, "VN", "RANKED_ELITE");
+        var board = rankings.board("VN", "RANKED_ELITE");
+
+        assertThat(board.snapshot()).isEqualTo(single.snapshot());
+        assertThat(board.entries()).singleElement().satisfies(entry -> {
+            assertThat(entry.heroId()).isEqualTo(single.entry().heroId());
+            assertThat(entry.heroCode()).isEqualTo(single.entry().heroCode());
+            assertThat(entry.tier()).isEqualTo(single.entry().tier());
+            assertThat(entry.winRate()).isEqualTo(single.entry().winRate());
+            assertThat(entry.pickRate()).isEqualTo(single.entry().pickRate());
+            assertThat(entry.banRate()).isEqualTo(single.entry().banRate());
+        });
+    }
+
+    private void listed(RankingSnapshotHeroRow... rows) {
+        when(entries.findBySnapshotId(snapshot.getId())).thenReturn(List.of(rows));
+    }
+
+    private RankingSnapshotHeroRow listedHero(UUID heroId, Integer ratesPosition) {
+        var row = new RankingSnapshotHeroRow();
+        row.setSnapshotId(snapshot.getId());
+        row.setHeroId(heroId);
+        row.setRatesPosition(ratesPosition);
+        return row;
     }
 
     private void confirmed(RankingSnapshotValueRow... rows) {

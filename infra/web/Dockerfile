@@ -17,10 +17,12 @@ ARG VITE_AUTH_ISSUER
 ARG VITE_WIKI_URL
 ARG VITE_STREAM_URL
 ARG VITE_ADMIN_URL
+ARG VITE_IMAGE_RESIZE
 ENV VITE_AUTH_ISSUER=$VITE_AUTH_ISSUER \
     VITE_WIKI_URL=$VITE_WIKI_URL \
     VITE_STREAM_URL=$VITE_STREAM_URL \
-    VITE_ADMIN_URL=$VITE_ADMIN_URL
+    VITE_ADMIN_URL=$VITE_ADMIN_URL \
+    VITE_IMAGE_RESIZE=$VITE_IMAGE_RESIZE
 RUN pnpm --filter @aov/aov-wiki run build
 RUN pnpm --filter @aov/aov-stream run build --base=/stream/
 RUN pnpm --filter @aov/admin-aov run build --base=/admin/
