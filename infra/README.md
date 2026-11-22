@@ -145,7 +145,7 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `STORAGE_BUCKET`, `STORAGE_ASSETS_BUCKET`, `STORAGE_SOURCES_BUCKET` | `aov-media-private`, `aov-media-assets`, `aov-source-private`; xem [Cloudflare R2](#cloudflare-r2) |
 | `MEDIA_PUBLIC_BASE_URL` | `https://img.athahub.com/assets`; đuôi `/assets` là bắt buộc |
 | `MEDIA_CLOUDFLARE_PURGE_ENABLED`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_CACHE_PURGE_TOKEN` | Purge cache Cloudflare khi xóa ảnh |
-| `IMAGE_RESIZE` | `cloudflare` để Wiki xin ảnh Media đúng cỡ hiển thị qua Cloudflare Image Transformations (`/cdn-cgi/image/...` trên host ảnh); bật Transformations cho zone trước, rồi build lại. Để trống thì phát ảnh gốc |
+| `IMAGE_RESIZE` | `cloudflare` để Wiki xin ảnh Media đúng cỡ hiển thị qua Cloudflare Image Transformations (`/cdn-cgi/image/...` trên host ảnh); bật Transformations cho zone trước, rồi build lại. Để trống thì phát ảnh gốc. Image `web` do CI build (`images.yml`) lấy giá trị từ biến repo `STACK_IMAGE_RESIZE`, mặc định `cloudflare`; đặt `off` để tắt |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ANALYTICS_TOKEN` | Tùy chọn: số liệu R2 thật trong Admin |
 | `REDIS_PASSWORD` | Mật khẩu cache |
 | `COMMUNITY_EXCHANGE_RATES_ENABLED` | Lấy tỷ giá hằng ngày từ `api.frankfurter.dev`; đặt `false` nếu không muốn gọi ra ngoài |
