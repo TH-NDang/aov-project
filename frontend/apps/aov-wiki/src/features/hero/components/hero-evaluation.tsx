@@ -2,7 +2,8 @@ import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
-import { HERO_TRAIT_GROUPS, heroTraitInfo, heroTraitOrder } from "@aov/ui/lib/hero-traits"
+import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
+import { HERO_TRAIT_GROUPS, heroTraitInfo, heroTraitOrder, type HeroTraitGroup } from "@aov/ui/lib/hero-traits"
 import { useWikiContext, useWikiText } from "../../../context/wiki-context"
 import { WikiImage } from "../../../components/wiki-image"
 import {
@@ -16,6 +17,10 @@ import {
 } from "../../../lib/hero-api"
 import { heroFormPath } from "../../../lib/hero-forms"
 import { marketName } from "@aov/ui/lib/locale-text"
+import { SkillIcon } from "../../../components/hero-skill-icon"
+import { WikiIcon } from "../../../components/wiki-icon"
+import { traitSkillNotes } from "../model/hero-trait-skills"
+import { skillLabel } from "./skill-slot-label"
 import "./hero-evaluation.css"
 
 /** A trait an editor confirmed, with its detail line in the reader's language when one is written. */
@@ -41,6 +46,14 @@ const FIGURES: Record<string, [string, string]> = {
   ASSISTS: ["Hỗ trợ", "Assists"],
   // The game gives this one per minute (570–740), unlike the per-match figures above it.
   GOLD: ["Vàng mỗi phút", "Gold per minute"],
+}
+/** The mark beside each group of traits, from the same set as the stats above. */
+const GROUP_ICONS: Record<HeroTraitGroup, (typeof gameplayIcons)[keyof typeof gameplayIcons]> = {
+  DAMAGE: gameplayIcons.sword,
+  MOBILITY: gameplayIcons.boot,
+  SURVIVAL: gameplayIcons.shield,
+  CONTROL: gameplayIcons.stun,
+  TEAM: gameplayIcons.heal,
 }
 const NOTES = [
   ["strengths", "Điểm mạnh", "Strengths"],
@@ -170,20 +183,69 @@ function RankingCard({ reading, links }: { reading: HeroRankingReading; links: M
   )
 }
 
+/** The skills a trait comes from, each with its picture, its place in the kit and what the editor noted about it. */
+function TraitSkills({
+  hero,
+  trait,
+  onOpenSkill,
+}: {
+  hero: HeroDetail
+  trait: PublicHeroTrait
+  onOpenSkill: (skillKey: string) => void
+}) {
+  const { locale } = useWikiContext()
+  const text = useWikiText()
+  const kit = hero.content.skills?.skills ?? []
+  const named = trait.skillKeys.flatMap((key) => kit.filter((skill: PublicSkill) => skill.skillKey === key))
+  const split = traitSkillNotes(trait.detail, named)
+
+  return (
+    <>
+      {named.length > 0 && (
+        <ul className="wiki-evaluation-skills">
+          {named.map((skill, position) => {
+            const note = split.skills[position]?.note
+            return (
+              <li key={skill.skillKey}>
+                <button
+                  type="button"
+                  aria-label={`${skillLabel(skill, locale)} · ${skill.name ?? ""}${note ? ` · ${note}` : ""}. ${text("Xem kỹ năng", "Open the ability")}`}
+                  onClick={() => onOpenSkill(skill.skillKey)}
+                >
+                  <span className="wiki-evaluation-skill-icon">
+                    <SkillIcon hero={hero} skill={skill} locale={locale} />
+                  </span>
+                  <span className="wiki-evaluation-skill-text">
+                    <small>{skillLabel(skill, locale)}</small>
+                    <strong>{skill.name || text("Chưa rõ tên", "Unnamed ability")}</strong>
+                  </span>
+                  {note && <span className="wiki-evaluation-skill-note">{note}</span>}
+                  <WikiIcon name="chevronRight" size={16} className="wiki-evaluation-skill-go" />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {split.rest && <p className="wiki-evaluation-detail">{split.rest}</p>}
+    </>
+  )
+}
+
 function TraitList({
   hero,
   traits,
   links,
+  onOpenSkill,
 }: {
   hero: HeroDetail
   traits: PublicHeroTrait[]
   links: Map<string, HeroLink>
+  onOpenSkill: (skillKey: string) => void
 }) {
   const { region } = useWikiContext()
   const text = useWikiText()
   const index = useQuery(heroTraitIndexQuery(region))
-  const skills = hero.content.skills?.skills ?? []
-  const skillName = (key: string) => skills.find((skill: PublicSkill) => skill.skillKey === key)?.name
   const others = (code: string) =>
     index.data?.traits.find((entry) => entry.code === code)?.heroes.filter((entry) => entry.id !== hero.id) ?? []
 
@@ -192,20 +254,21 @@ function TraitList({
       {HERO_TRAIT_GROUPS.map((group) => {
         const rows = traits.filter((trait) => heroTraitInfo(trait.code)?.group === group.key)
         if (!rows.length) return null
+        const Icon = GROUP_ICONS[group.key]
         return (
           <section key={group.key} className="wiki-evaluation-group" aria-label={text(group.vi, group.en)}>
-            <h3>{text(group.vi, group.en)}</h3>
+            <h3>
+              <Icon size={18} className="wiki-evaluation-group-icon" />
+              {text(group.vi, group.en)}
+            </h3>
             <ul>
               {rows.map((trait) => {
                 const info = heroTraitInfo(trait.code)!
-                const names = trait.skillKeys.map(skillName).filter(Boolean)
                 const same = others(trait.code)
                 return (
                   <li key={trait.code}>
                     <p className="wiki-evaluation-trait">{text(info.vi, info.en)}</p>
-                    {(trait.detail || names.length > 0) && (
-                      <p className="wiki-evaluation-detail">{trait.detail || names.join(", ")}</p>
-                    )}
+                    <TraitSkills hero={hero} trait={trait} onOpenSkill={onOpenSkill} />
                     {same.length > 0 && (
                       <details className="wiki-evaluation-same">
                         <summary>
@@ -241,7 +304,14 @@ const points = (value: string) =>
  * from the skill kit, and the editor's own strengths, weaknesses and counter tips. Each part shows only when it has
  * something to say, and the whole section stays away when none does.
  */
-export function HeroEvaluation({ hero }: { hero: HeroDetail }) {
+export function HeroEvaluation({
+  hero,
+  onOpenSkill,
+}: {
+  hero: HeroDetail
+  /** Shows a skill in the abilities above and scrolls to it. */
+  onOpenSkill: (skillKey: string) => void
+}) {
   const { region } = useWikiContext()
   const text = useWikiText()
   const ranking = useQuery(heroRankingQuery(hero.id, region))
@@ -284,7 +354,7 @@ export function HeroEvaluation({ hero }: { hero: HeroDetail }) {
       {!!traits.length && (
         <>
           <h3 className="wiki-evaluation-subtitle">{text("Đặc điểm bộ kỹ năng", "What the kit can do")}</h3>
-          <TraitList hero={hero} traits={traits} links={links} />
+          <TraitList hero={hero} traits={traits} links={links} onOpenSkill={onOpenSkill} />
         </>
       )}
     </section>

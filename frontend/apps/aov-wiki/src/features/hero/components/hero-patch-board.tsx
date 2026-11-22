@@ -12,6 +12,7 @@ import {
 import { WikiIcon, type WikiIconName } from "../../../components/wiki-icon"
 import { WikiImage } from "../../../components/wiki-image"
 import { useWikiContext, wikiText } from "../../../context/wiki-context"
+import { changeShortWord } from "../model/change-short-word"
 import "./hero-patch-board.css"
 
 /** The mark each tone of change is drawn with: up for stronger, down for weaker, a turn for remade, a spark for new. */
@@ -21,17 +22,6 @@ const MARKS: Record<string, WikiIconName> = {
   rework: "remade",
   new: "spark",
   adjust: "settings",
-}
-
-/**
- * The one short word a card is tagged with: the words players use for a change, the same in every language.
- */
-const SHORT: Record<string, string> = {
-  up: "Buff",
-  down: "Nerf",
-  rework: "Rework",
-  new: "New",
-  adjust: "Tweak",
 }
 
 /** A changed hero, with its tall portrait for the board's cards. */
@@ -101,7 +91,7 @@ export const HeroPatchBoard = memo(function HeroPatchBoard({
                           )}
                         </span>
                         <span className="wiki-hero-patch-mark" aria-hidden="true">
-                          {SHORT[tone] ?? SHORT.adjust}
+                          {changeShortWord(kind, tone)}
                         </span>
                         <span className="wiki-hero-patch-name">{entry.name}</span>
                         <span className="sr-only">, {label}</span>

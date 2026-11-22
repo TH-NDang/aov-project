@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react"
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
 import { Link } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
@@ -211,6 +211,8 @@ interface WikiHeaderProps {
   clear?: boolean
   /** The home page itself: the compact bar has no way home on its left, only the wordmark in the middle. */
   home?: boolean
+  /** What the compact bar shows in its middle in place of a title, such as the hero once its name scrolls away. */
+  centre?: ReactNode
 }
 
 /** One row: the way back, where you are, then search, the contents and the sheet with everything else. */
@@ -223,6 +225,7 @@ function WikiHeaderCompact({
   solid = false,
   clear = false,
   home = false,
+  centre,
 }: WikiHeaderProps) {
   const { href, locale } = useWikiContext()
   const t = useWikiText()
@@ -268,6 +271,11 @@ function WikiHeaderCompact({
       )}
       {pageTitle ? (
         <Title className="wiki-compact-title">{pageTitle.replace(/^Thư viện\s+/u, "")}</Title>
+      ) : centre ? (
+        <div className="wiki-compact-centre">{centre}</div>
+      ) : variant === "hero" ? (
+        // The hero's name stands large on its artwork just below, so the bar leaves the middle to the picture.
+        <span />
       ) : (
         <PublicAppWordmark product="Wiki" size="small" className="wiki-compact-wordmark" />
       )}

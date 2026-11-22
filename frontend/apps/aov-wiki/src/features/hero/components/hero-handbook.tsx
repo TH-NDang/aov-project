@@ -7,8 +7,11 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { createEntityIndex } from "@aov/ui/lib/entity-rich-text"
 import { useWikiContext, wikiText, useWikiText } from "../../../context/wiki-context"
 import { FeedbackDialog } from "../../../components/feedback-dialog"
-import { HeroHistory } from "./hero-history"
-import { HeroVersionChanges, HeroVersionUnchanged, useHeroVersion } from "./hero-version-changes"
+import { useHeroVersion } from "./hero-version-changes"
+import { HeroVersionChanges, HeroVersionUnchanged } from "./hero-version-notes"
+import { HeroChangeTag } from "./hero-change-tag"
+import { WikiVersionPicker } from "../../../components/wiki-version-picker"
+import { changeSetKind } from "../../../lib/wiki-change-format"
 import {
   localizedFormName,
   localizedRankLabel,
@@ -26,21 +29,13 @@ import { HeroSkins } from "./hero-skins"
 import { HeroBuilds } from "./hero-builds"
 import { HeroEvaluation } from "./hero-evaluation"
 import { HeroSectionNav } from "./hero-section-nav"
+import { HeroRelated } from "./hero-related"
+import { skillLabel } from "./skill-slot-label"
 import { WikiIcon } from "../../../components/wiki-icon"
 import { SkillVideos } from "../../../components/videos/skill-videos"
 import { SkillSummary, hasSkillSummary } from "./skill-summary"
 import { SkillFormSwitch, SkillStateToggle, SkillVariantDots } from "@aov/ui/components/skill-kit"
 import { groupSkillKit, skillCooldownRange, skillFormName } from "@aov/ui/lib/skill-kit"
-
-function skillLabel(skill: PublicSkill, locale: string) {
-  if (skill.kind === "PASSIVE") return wikiText(locale, "Nội tại", "Passive")
-  const source = skill.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata?.sourceSlot
-  const slot = typeof source === "number" ? source : /^skill_(\d+)$/.exec(String(source))?.[1]
-  const number = slot ?? /^(?:skill|capture-skill)-(\d+)(?:-\d+)?$/.exec(skill.skillKey)?.[1]
-  return Number(number) > 0
-    ? `${wikiText(locale, "Chiêu", "Ability")} ${number}`
-    : wikiText(locale, "Kỹ năng", "Ability")
-}
 
 const baseStats = [
   ["HP", "Máu", "HP", gameplayIcons.heart],
@@ -479,7 +474,10 @@ type HandbookLayoutProps = {
   handbook: Handbook
   art: ReactNode
   identity: ReactNode
-  picker: ReactNode
+  /** A line about the version being read, such as abilities recorded at a later version. */
+  note: ReactNode
+  /** The hero's picture and name that open the hero list, kept at the top of the side column. */
+  switcher: ReactNode
 }
 
 /** The abilities as a row of cards, the chosen one written out below at full width. */
@@ -496,30 +494,56 @@ function AbilitiesSection({ hero, handbook }: { hero: HeroDetail; handbook: Hand
   )
 }
 
-function HandbookParts({ hero, skinOwner, handbook }: { hero: HeroDetail; skinOwner?: string; handbook: Handbook }) {
+function HandbookParts({
+  hero,
+  skinOwner,
+  handbook,
+  onOpenSkill,
+}: {
+  hero: HeroDetail
+  skinOwner?: string
+  handbook: Handbook
+  onOpenSkill: (skillKey: string) => void
+}) {
   return (
     <>
       <AbilitiesSection hero={hero} handbook={handbook} />
-      <HeroEvaluation hero={hero} />
+      <HeroEvaluation hero={hero} onOpenSkill={onOpenSkill} />
       <HeroBuilds heroCode={hero.code} />
       <HeroSkins key={hero.id} hero={hero} owner={skinOwner} />
       <HeroVideos handbook={handbook} />
-      <HeroHistory hero={hero} version={handbook.version} />
+      <HeroRelated hero={hero} />
     </>
   )
 }
 
-/** The version being read: the picker, then what there is to say about that version in a line. */
-function VersionScope({ hero, handbook, picker }: Pick<HandbookLayoutProps, "hero" | "handbook" | "picker">) {
+/**
+ * The version being read and the way to others: the picker lists every version that changed the hero, each with the
+ * update's name and what it did (Buff, Nerf…); under it, a line when the version being read left the hero alone, and
+ * any note about that version. Its changes follow below the picker.
+ */
+function VersionScope({ hero, handbook, note }: Pick<HandbookLayoutProps, "hero" | "handbook" | "note">) {
+  const { version } = handbook
+  const changed = new Set(version.rows.flatMap((row) => (row.patchVariantId ? [row.patchVariantId] : [])))
+  const kindOf = (patchId: string) =>
+    version.rows
+      .filter((row) => row.patchVariantId === patchId)
+      .map((row) => changeSetKind(row))
+      .find(Boolean)
   return (
     <div className="wiki-hero-scope">
-      {picker}
-      <HeroVersionUnchanged hero={hero} version={handbook.version} />
+      <WikiVersionPicker
+        changedVariants={changed}
+        className="wiki-hero-version-picker"
+        optionDetail={(patch) => <HeroChangeTag kind={kindOf(patch.id)} />}
+      />
+      <HeroVersionUnchanged hero={hero} version={version} />
+      {note}
     </div>
   )
 }
 
-function HandbookWide({ hero, skinOwner, handbook, art, identity, picker }: HandbookLayoutProps) {
+function HandbookWide({ hero, skinOwner, handbook, art, identity, note, switcher }: HandbookLayoutProps) {
   const openSkill = useAbilityJump(handbook)
   return (
     <>
@@ -528,34 +552,34 @@ function HandbookWide({ hero, skinOwner, handbook, art, identity, picker }: Hand
           <OverviewPanel hero={hero} handbook={handbook} />
         </div>
       </HeroStage>
-      <VersionScope hero={hero} handbook={handbook} picker={picker} />
+      <VersionScope hero={hero} handbook={handbook} note={note} />
       <div className="wiki-handbook">
         <div className="wiki-handbook-main">
           <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} />
-          <HandbookParts hero={hero} skinOwner={skinOwner} handbook={handbook} />
+          <HandbookParts hero={hero} skinOwner={skinOwner} handbook={handbook} onOpenSkill={openSkill} />
         </div>
-        <HeroSectionNav />
+        <HeroSectionNav lead={switcher} />
       </div>
     </>
   )
 }
 
 /**
- * Compact screens: a single column in reading order. What changed in the chosen patch is one line under the patch
- * picker that opens downward, so who the hero is and the abilities follow without a long list between them.
+ * Compact screens: a single column in reading order. The changes of the version being read come first as one line that
+ * opens on a tap, so who the hero is and the abilities follow without a long list between them.
  */
-function HandbookCompact({ hero, skinOwner, handbook, art, picker }: HandbookLayoutProps) {
+function HandbookCompact({ hero, skinOwner, handbook, art, note }: HandbookLayoutProps) {
   const openSkill = useAbilityJump(handbook)
   return (
     <>
       {art}
-      <VersionScope hero={hero} handbook={handbook} picker={picker} />
+      <VersionScope hero={hero} handbook={handbook} note={note} />
       <div className="wiki-handbook wiki-handbook-compact">
-        <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} collapsible />
+        <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} />
         <div className="wiki-handbook-profile">
           <OverviewPanel hero={hero} handbook={handbook} />
         </div>
-        <HandbookParts hero={hero} skinOwner={skinOwner} handbook={handbook} />
+        <HandbookParts hero={hero} skinOwner={skinOwner} handbook={handbook} onOpenSkill={openSkill} />
         <HeroSectionNav />
       </div>
     </>
@@ -567,16 +591,18 @@ export function HeroHandbook({
   skinOwner,
   art,
   identity,
-  picker,
+  note,
+  switcher,
 }: {
   hero: HeroDetail
   /** The code of the hero that holds this form, whose shared skins the form shows too (ADR-024). */
   skinOwner?: string
   art: ReactNode
   identity: ReactNode
-  picker: ReactNode
+  note: ReactNode
+  switcher: ReactNode
 }) {
   const handbook = useHandbook(hero)
-  const props = { hero, skinOwner, handbook, art, identity, picker }
+  const props = { hero, skinOwner, handbook, art, identity, note, switcher }
   return usePageLayout() === "compact" ? <HandbookCompact {...props} /> : <HandbookWide {...props} />
 }

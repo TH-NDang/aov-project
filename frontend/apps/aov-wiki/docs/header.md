@@ -50,8 +50,9 @@ Một hàng cao 48px (`WikiHeaderCompact`):
 
 - Trái: trang chủ để trống (`home`); Liên hệ, Tài khoản, trang không tìm thấy và các trang danh sách có nút ngôi nhà về
   trang chủ; trang tướng có nút quay lại danh sách tướng, giữ nguyên bộ lọc đang dùng.
-- Giữa: chữ AOV WiKi (không có ảnh logo) ở trang chủ, Liên hệ, Tài khoản và trang không tìm thấy; các trang khác ghi
-  tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
+- Giữa: chữ AOV WiKi (không có ảnh logo) ở trang chủ, Liên hệ, Tài khoản và trang không tìm thấy; trang chi tiết tướng
+  để trống vì tên tướng đã lớn ngay trên ảnh bên dưới, rồi hiện nút ảnh, tên tướng và dấu đổi tướng khi tên đã cuộn
+  khuất (prop `centre`); các trang khác ghi tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
   trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
   trang bị", bốn phần là dãy tab dính ngay dưới header.
 - Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút quay lại và ô nhập bo tròn, và bên dưới header mở

@@ -1,0 +1,40 @@
+/* Heroes of the same lane at the end of the hero page: one row of small tiles, a sideways row on a phone. */
+.wiki-hero-related {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  scroll-margin-top: calc(var(--wiki-header-height) + 12px);
+}
+#wiki-hero-related-title:focus {
+  outline: none;
+}
+.wiki-hero-related-list {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-hero-related-list > li {
+  min-width: 0;
+}
+
+@media (max-width: 899.98px) {
+  /* Runs to the screen's edges so the next card peeks in and says the row goes on. */
+  .wiki-hero-related-list {
+    display: flex;
+    gap: 8px;
+    margin-inline: calc(var(--wiki-gutter) * -1);
+    padding-inline: var(--wiki-gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--wiki-gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .wiki-hero-related-list > li {
+    flex: 0 0 84px;
+    scroll-snap-align: start;
+  }
+}

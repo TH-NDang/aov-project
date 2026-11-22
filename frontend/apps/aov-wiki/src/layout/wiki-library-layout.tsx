@@ -77,11 +77,14 @@ export function HeroDetailLayout({
   backTo,
   children,
   style,
+  headerCentre,
 }: {
   meta: PageMeta | null
   backTo?: string
   children: ReactNode
   style?: CSSProperties
+  /** The phone header's middle, such as the hero once its name has scrolled away. */
+  headerCentre?: ReactNode
 }) {
   usePageHead(meta)
   const layout = usePageLayout()
@@ -93,7 +96,7 @@ export function HeroDetailLayout({
   // Wide screens keep the sections beside the hero, as on the list pages; the artwork then fills the page column.
   return (
     <div className="wiki-hero-detail-shell" style={style}>
-      <WikiHeader variant="hero" backTo={backTo} section="heroes" />
+      <WikiHeader variant="hero" backTo={backTo} section="heroes" centre={headerCentre} />
       {layout === "compact" ? (
         main
       ) : (

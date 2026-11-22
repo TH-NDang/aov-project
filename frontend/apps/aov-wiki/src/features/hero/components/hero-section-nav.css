@@ -2,60 +2,123 @@
 .wiki-hero-nav {
   display: none;
 }
+/*
+ * Both lists draw the reading line: a dot per section on one line from the first to the last, gold over the sections
+ * already passed, the one being read lit with a halo. The side column keeps it light and small; the drawer is roomier.
+ */
 .wiki-hero-nav-list {
+  --nav-dot: 10px;
+  --nav-dot-x: 6px;
+  --nav-dot-backing: var(--aov-bg);
   display: grid;
-  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.wiki-hero-nav-list li {
+  position: relative;
+}
+.wiki-hero-nav-list li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--nav-dot-x) + var(--nav-dot) / 2 - 1px);
+  width: 2px;
+  background: var(--aov-line);
+  pointer-events: none;
+}
+.wiki-hero-nav-list li:first-child::before {
+  top: 50%;
+}
+.wiki-hero-nav-list li:last-child::before {
+  bottom: 50%;
+}
+.wiki-hero-nav-list li[data-read]::before {
+  background: color-mix(in srgb, var(--aov-accent) 55%, transparent);
+}
+.wiki-hero-nav-list li:has(> a[aria-current])::before {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--aov-accent) 55%, transparent) 50%, var(--aov-line) 50%);
+}
 .wiki-hero-nav-list a {
   font: var(--wiki-type-meta);
+  position: relative;
   display: flex;
-  min-height: 36px;
+  min-height: 34px;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   border-radius: var(--aov-radius-control);
-  padding: 6px 10px;
+  padding: 4px 8px 4px var(--nav-dot-x);
   color: var(--aov-muted);
   text-decoration: none;
+  transition: color 140ms ease-out;
+}
+.wiki-hero-nav-list a::before {
+  content: "";
+  position: relative;
+  width: var(--nav-dot);
+  height: var(--nav-dot);
+  flex: none;
+  border: 2px solid var(--aov-line-strong);
+  border-radius: 50%;
+  background: var(--nav-dot-backing);
   transition:
     background 140ms ease-out,
-    color 140ms ease-out;
+    border-color 140ms ease-out;
 }
-.wiki-hero-nav-list a > svg {
-  flex: none;
-  opacity: 0.8;
+.wiki-hero-nav-list li[data-read] > a {
+  color: var(--aov-text-soft);
+}
+.wiki-hero-nav-list li[data-read] > a::before {
+  border-color: color-mix(in srgb, var(--aov-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 55%, var(--nav-dot-backing));
 }
 .wiki-hero-nav-list a:hover {
-  background: var(--aov-surface);
   color: var(--aov-text);
+}
+.wiki-hero-nav-list a:hover::before {
+  border-color: var(--aov-accent);
 }
 .wiki-hero-nav-list a:focus-visible {
   outline: 2px solid var(--aov-accent);
   outline-offset: -2px;
   color: var(--aov-text);
 }
-/* The section being read: the accent with a faint tint, as a chosen card has. */
+/* The section being read: a lit dot with a halo and gold text. */
 .wiki-hero-nav-list a[aria-current] {
-  background: color-mix(in srgb, var(--aov-accent) 12%, transparent);
   color: var(--aov-accent);
   font-weight: 600;
 }
-.wiki-hero-nav-list a[aria-current] > svg {
-  opacity: 1;
+.wiki-hero-nav-list a[aria-current]::before {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--aov-accent) 22%, transparent);
 }
-/* The drawer sits on a raised surface, where muted text would be too faint for the entries it exists to offer. */
+/* The drawer sits on a raised surface: larger rows to tap, brighter text, and a gold tint on the section being read. */
+.wiki-hero-nav-sheet .wiki-hero-nav-list {
+  --nav-dot: 12px;
+  --nav-dot-x: 14px;
+  --nav-dot-backing: var(--aov-popover);
+}
+.wiki-hero-nav-sheet .wiki-hero-nav-list li::before {
+  background: var(--aov-line-strong);
+}
+.wiki-hero-nav-sheet .wiki-hero-nav-list li:has(> a[aria-current])::before {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aov-accent) 55%, transparent) 50%,
+    var(--aov-line-strong) 50%
+  );
+}
 .wiki-hero-nav-sheet .wiki-hero-nav-list a {
   font: var(--wiki-type-body);
   min-height: 48px;
-  gap: 12px;
-  padding-inline: 12px;
+  gap: 14px;
+  padding-inline: var(--nav-dot-x) 12px;
   color: var(--aov-text-soft);
 }
 .wiki-hero-nav-sheet .wiki-hero-nav-list a[aria-current] {
-  font-weight: 600;
-  color: var(--aov-accent);
+  background: color-mix(in srgb, var(--aov-accent) 18%, transparent);
 }
 .wiki-hero-nav-fab {
   position: fixed;
@@ -66,11 +129,26 @@
   width: 48px;
   height: 48px;
   place-items: center;
-  border: 1px solid var(--aov-line-strong);
+  border: 1px solid var(--aov-line);
   border-radius: 50%;
-  background: var(--aov-popover);
+  /* See-through like the header's round buttons: the page shows behind it, blurred so the mark stays readable. */
+  background: color-mix(in srgb, var(--aov-popover) 50%, transparent);
+  backdrop-filter: blur(8px);
   color: var(--aov-accent);
-  box-shadow: var(--aov-shadow-lg);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--aov-bg) 35%, transparent);
+  transition:
+    transform 220ms ease-out,
+    opacity 220ms ease-out;
+}
+/* While the page scrolls the button slips into the right edge, a sliver left showing, and comes back once it stops. */
+.wiki-hero-nav-fab[data-tucked] {
+  transform: translateX(calc(100% + 2px));
+  opacity: 0.7;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-hero-nav-fab {
+    transition: none;
+  }
 }
 .wiki-hero-nav-fab:hover {
   border-color: var(--aov-accent);
@@ -101,10 +179,16 @@ body:has(.wiki-hero-nav-fab) {
   body:has(.wiki-hero-nav-fab) {
     --wiki-floating-button-space: 0;
   }
+  .wiki-hero-nav-lead {
+    display: flex;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--aov-line);
+  }
   .wiki-handbook .wiki-hero-nav h2 {
     font: 600 0.75rem/1rem var(--wiki-font-reading);
     margin: 0 0 8px;
-    padding-inline: 10px;
+    padding-inline: 6px;
     color: var(--aov-muted);
     letter-spacing: 0.06em;
     text-transform: uppercase;

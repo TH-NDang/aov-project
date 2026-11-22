@@ -294,6 +294,24 @@
 .wiki-compact-wordmark {
   justify-self: center;
 }
+/* A page's own piece in the middle of the bar keeps within it and ends in an ellipsis. */
+.wiki-compact-centre {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+  animation: wiki-compact-centre-in 180ms ease-out;
+}
+@keyframes wiki-compact-centre-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-compact-centre {
+    animation: none;
+  }
+}
 .wiki-compact-utilities {
   display: flex;
   justify-self: end;

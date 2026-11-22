@@ -1,6 +1,6 @@
 import { resizedImageUrl } from "../../../lib/sized-image"
 import { localeText } from "@aov/ui/lib/locale-text"
-import { useState, type CSSProperties } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import { Link, Navigate, useLocation, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { HeroDetailLayout } from "../../../layout/wiki-library-layout"
@@ -15,8 +15,6 @@ import {
   selectedForm,
 } from "../../../lib/hero-forms"
 import { heroAppearance } from "../model/hero-appearance"
-import { WikiVersionPicker } from "../../../components/wiki-version-picker"
-import { useHeroChangedVariants } from "../../../lib/wiki-patch-changes"
 import { HeroHandbook, HeroStage } from "../components/hero-handbook"
 import { HeroVideoButton } from "../../../components/videos/subject-videos"
 import { HeroPriceTag } from "../../../components/hero-shop"
@@ -33,6 +31,8 @@ import { useWikiContext, wikiText } from "../../../context/wiki-context"
 import { heroMeta, heroRoleLabels, notFoundMeta } from "../../../lib/seo/page-meta"
 import { PublicEmbers } from "@aov/ui/components/public-embers"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { useScrolledPast } from "../../../lib/use-scrolled-past"
+import { rememberHero } from "../../../lib/recent-heroes"
 
 function heroMetaForm(form: HeroListForm, forms: readonly HeroListForm[], locale: string) {
   const role = formLabelRole(form, forms)
@@ -62,7 +62,6 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
   const media = { ...detail?.media, ...formDetail?.media }
   const gameplay = form ?? hero
   const formRole = form && hero.forms ? formLabelRole(form, hero.forms) : undefined
-  const history = useHeroChangedVariants(gameplay.id)
   const layout = usePageLayout()
   const [failedUrls, setFailedUrls] = useState<string[]>([])
   const portrait = media.PORTRAIT?.currentVersion?.url
@@ -76,6 +75,13 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
     gameplay.portrait?.currentVersion?.url,
     hero.portrait?.currentVersion?.url,
   ].find((url) => url && !failedUrls.includes(url))
+  // Once the name is under the phone header, the header carries the hero and the way to switch.
+  const nameAway = useScrolledPast("hero-profile-title", 64, layout === "compact")
+  const switcher = (
+    <HeroQuickSwitch currentHeroId={hero.id} returnTo={returnTo} named={{ name: hero.name, head: identityImage }} />
+  )
+  // Kept for the quick switch's recently viewed row.
+  useEffect(() => rememberHero(hero.code), [hero.code])
   const appearance = heroAppearance(hero.code)
   const style = {
     "--hero-accent": appearance.accent,
@@ -200,12 +206,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
     </section>
   )
   const later = page?.laterObservation
-  const picker = (
-    <>
-      <WikiVersionPicker changedVariants={history.data} className="wiki-hero-version-picker" />
-      {later && <HeroLaterObservationNote later={later} />}
-    </>
-  )
+  const note = later && <HeroLaterObservationNote later={later} />
 
   return (
     <HeroDetailLayout
@@ -222,6 +223,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
       )}
       backTo={returnTo}
       style={style}
+      headerCentre={nameAway ? switcher : undefined}
     >
       {page ? (
         <HeroHandbook
@@ -229,7 +231,8 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
           skinOwner={form ? hero.code : undefined}
           art={art}
           identity={identity}
-          picker={picker}
+          note={note}
+          switcher={switcher}
         />
       ) : (
         <HeroStage art={art} identity={identity}>

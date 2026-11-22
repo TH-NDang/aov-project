@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from "react"
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react"
 import { cn } from "@aov/ui/lib/utils"
 import { LocalTime } from "@aov/ui/components/local-time"
 import {
@@ -30,12 +30,15 @@ export function WikiVersionPicker({
   changedVariants,
   className,
   appearance = "line",
+  optionDetail,
 }: {
   changedVariants?: ReadonlySet<string>
   /** Places the picker in the row that holds it. */
   className?: string
   /** `pill` draws it as a frosted pill, for a picker that stands over artwork such as a page's showcase. */
   appearance?: "line" | "pill"
+  /** More to say about a version in the menu, beside its day, such as what it did to the page's subject. */
+  optionDetail?: (patch: WikiPatch) => ReactNode
 }) {
   const { locale, options, optionsPending, seasonId, patchVariantId, setScope } = useWikiContext()
   const root = useRef<HTMLDivElement>(null)
@@ -177,6 +180,7 @@ export function WikiVersionPicker({
                       <span className="wiki-version-option-name">
                         <VersionName patch={patch} locale={locale} />
                         {patch.isCurrent && <span className="wiki-version-live">{current}</span>}
+                        {optionDetail?.(patch)}
                       </span>
                       {patch.id === activePatch && chosen}
                       {/* A version without a day is already named by its title. */}

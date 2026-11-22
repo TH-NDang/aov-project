@@ -1,0 +1,138 @@
+/* A hero in the quick switch: a square picture, the name below; gold ring on the hero being read. */
+.wiki-hero-tile {
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: 6px;
+  border-radius: var(--aov-radius-card);
+  padding: 4px 2px 2px;
+  color: var(--aov-text-soft);
+  text-decoration: none;
+  touch-action: manipulation;
+}
+.wiki-hero-tile-picture {
+  position: relative;
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  place-items: center;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-raised);
+  box-shadow: inset 0 0 0 1px var(--aov-line);
+}
+.wiki-hero-tile-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  transition: transform 220ms ease-out;
+}
+.wiki-hero-tile-picture[data-kind="head"] img {
+  object-position: center;
+}
+.wiki-hero-tile-initial {
+  font: var(--wiki-type-section);
+  color: var(--aov-accent);
+}
+.wiki-hero-tile-name {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The index tile of a letter: the letter outlined in gold over a dot screen, as the library's index cards. */
+.wiki-hero-tile-letter {
+  border: 1px dashed color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
+  background:
+    radial-gradient(color-mix(in srgb, var(--aov-wiki-gold) 16%, transparent) 1px, transparent 1.5px) 0 0 / 8px 8px,
+    linear-gradient(160deg, color-mix(in srgb, var(--aov-accent) 10%, var(--aov-surface)), var(--aov-bg));
+  box-shadow: none;
+}
+.wiki-hero-tile-letter > span {
+  color: transparent;
+  font: 700 2.25rem / 1 var(--wiki-font-display);
+  -webkit-text-stroke: 1.5px var(--aov-wiki-gold);
+  transform: rotate(-6deg);
+}
+.wiki-hero-tile-name-skeleton {
+  width: 70%;
+  height: 12px;
+  border-radius: var(--aov-radius-pill);
+}
+@media (hover: hover) {
+  .wiki-hero-tile:hover {
+    color: var(--aov-text);
+  }
+  .wiki-hero-tile:hover .wiki-hero-tile-picture {
+    box-shadow: inset 0 0 0 1px var(--aov-accent);
+  }
+  .wiki-hero-tile:hover img {
+    transform: scale(1.06);
+  }
+}
+.wiki-hero-tile:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 1px;
+}
+.wiki-hero-tile[aria-current] {
+  color: var(--aov-accent);
+  font-weight: 600;
+}
+.wiki-hero-tile[aria-current] .wiki-hero-tile-picture {
+  box-shadow:
+    inset 0 0 0 2px var(--aov-accent),
+    0 0 0 3px color-mix(in srgb, var(--aov-accent) 22%, transparent);
+}
+.wiki-hero-tile-current {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+/*
+ * What the update did to the hero, as the hero library's change board tags it: one short word set bold and slanted in
+ * the kind's colour with a faint glow, on a dark pill so it reads on any portrait.
+ */
+.wiki-hero-tile-mark {
+  --change-tone: var(--aov-info);
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: inline-flex;
+  height: 18px;
+  align-items: center;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 6px;
+  background: color-mix(in srgb, var(--aov-sunken) 84%, transparent);
+  color: var(--change-tone);
+  font: italic 700 0.75rem/1 var(--wiki-font-display);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--change-tone) 55%, transparent);
+  white-space: nowrap;
+}
+.wiki-hero-tile-mark[data-tone="up"] {
+  --change-tone: var(--aov-danger);
+}
+.wiki-hero-tile-mark[data-tone="down"] {
+  --change-tone: var(--aov-success);
+}
+.wiki-hero-tile-mark[data-tone="rework"] {
+  --change-tone: var(--aov-warning);
+}
+.wiki-hero-tile-mark[data-tone="new"] {
+  --change-tone: var(--aov-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-hero-tile-picture img {
+    transition: none;
+  }
+}

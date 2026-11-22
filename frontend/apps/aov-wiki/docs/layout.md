@@ -386,17 +386,25 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
 - Màn đầu trên wide: ảnh tướng phủ khoảng hai phần ba bên phải, mờ dần vào nền ở mép trái và mép dưới; bên trái đặt thẳng
   trên nền là liên kết "Thư viện Tướng" quay về danh sách (giữ bộ lọc), ảnh nhỏ và tên tướng, nút đổi tướng nhanh, nút
   chuyển dạng khi tướng có nhiều dạng, danh hiệu, vai trò, vị trí, giá và nút Video; dưới đó là Tổng quan. Ảnh dọc
-  `PORTRAIT` đứng ở mép phải cột trang thay vì bị kéo giãn. Trên compact ảnh nằm trên cùng dưới header trong suốt, tên và
-  các chip ở chân ảnh, nút nguồn ảnh lên góc trên.
+  `PORTRAIT` đứng ở mép phải cột trang thay vì bị kéo giãn. Trên compact ảnh nằm trên cùng dưới header trong suốt, cao
+  khoảng 60% màn hình (380–520px) để thấy rõ tướng, tên và các chip ở chân ảnh, nút nguồn ảnh lên góc trên.
 - Hiển thị ảnh nền `SPLASH` độ phân giải cao; chỉ dùng `PORTRAIT` dự phòng nếu thiếu hoặc lỗi ảnh nền. Không có nút chuyển loại ảnh và không phóng `HEAD` thành ảnh lớn. Nếu cả hai ảnh lớn đều không dùng được, giao diện hiển thị trạng thái thiếu ảnh.
 - Ảnh nhỏ cạnh tên dùng `HEAD` (56px trên wide, 40px trên compact). Thiếu hoặc lỗi ảnh thì dùng chân dung dự phòng, sau
   đó là chữ cái đầu của tên. Tên dài được xuống dòng, không đẩy nút ra ngoài màn hình.
 - Nút tròn cạnh tên mở bảng **Đổi tướng nhanh** từ bên trái, rộng tối đa 760px; trên compact nút giữ vùng chạm 44px.
-  Bảng dùng chung cache danh sách tướng: tiêu đề và số tướng, ô tìm tên hoặc mã không phân biệt dấu, hai hàng chip Vị trí
-  và Vai trò (mỗi hàng cuộn ngang, kéo được bằng chuột mà không bấm nhầm chip), rồi lưới thẻ tướng giống thư viện, tướng
-  đang xem được đánh dấu. Chọn một tướng thì bảng đóng và chuyển trang; chọn lại tướng đang xem chỉ đóng bảng. Ô tìm chỉ
-  nhận focus sẵn khi bảng mở bằng chuột hoặc bàn phím, để bàn phím cảm ứng không che danh sách. Đường dẫn bộ lọc của
-  danh sách được giữ để quay về.
+  Bảng dùng chung cache danh sách tướng: tiêu đề và số tướng, ô tìm tên hoặc mã không phân biệt dấu, hàng Vị trí và hàng
+  Vai trò (trên compact chỉ còn icon, chạm hiện tên; mỗi hàng cuộn ngang, kéo được bằng chuột mà không bấm nhầm chip).
+  Bên dưới, khi chưa lọc, là **Xem gần đây**: tối đa 8 tướng người đọc vừa mở (lưu trong trình duyệt, `recent-heroes.ts`),
+  không gồm tướng đang xem; rồi **Đổi ở bản <ngày>**: các tướng bản cập nhật đang xem đã thay đổi, cùng dữ liệu với bộ
+  lọc "Đổi ở bản này" của thư viện; cuối cùng là **Tất cả tướng**, xếp theo tên người đọc thấy, mỗi chữ cái mở đầu bằng một ô chữ (chữ viền vàng nghiêng trên
+  nền chấm và số tướng) như thẻ chữ của thư viện; khi đang lọc hoặc tìm thì chỉ còn kết quả, không có ô chữ. Tướng có thay đổi ở bản đó mang dấu loại thay đổi
+  (tăng sức mạnh đỏ, giảm xanh lá, làm lại cam) ở góc dưới bên trái ảnh, trong mọi nhóm. Mỗi tướng là một ô nhỏ (`hero-switch-tile.tsx`): ảnh vuông và tên, không
+  có dấu vai trò, 4 cột trên điện thoại và khoảng 8 cột trên bảng rộng, để một màn thấy nhiều tướng. Tướng đang xem có
+  viền vàng và dấu tích. Chọn một tướng thì bảng đóng và chuyển trang; chọn lại tướng đang xem chỉ đóng bảng. Gõ tên rồi
+  Enter mở tướng đầu tiên khớp. Ô tìm chỉ nhận focus sẵn khi bảng mở bằng chuột hoặc bàn phím, để bàn phím cảm ứng không
+  che danh sách. Đường dẫn bộ lọc của danh sách được giữ để quay về.
+- Khi tên tướng đã cuộn khuất dưới header, giữa header compact hiện một nút có ảnh nhỏ, tên tướng và dấu đổi tướng; bấm mở
+  cùng bảng Đổi tướng nhanh. Trên wide nút này đứng đầu cột "Trên trang này", dính theo khi cuộn.
 - `hero-appearance.ts` giữ màu riêng theo ảnh của từng tướng đang xuất bản; hiện chỉ màu điểm nhấn (`--hero-accent`) được
   dùng, cho nút đổi tướng nhanh. Tướng chưa có cấu hình dùng màu trung tính. Đây là lựa chọn biên tập tại frontend,
   không phải màu suy ra từ vai trò hoặc lấy bằng canvas trên trình duyệt: CDN hiện không cung cấp CORS để đọc pixel ảnh.
@@ -408,15 +416,28 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
   quan chỉ còn cho trình đọc màn hình và mục lục, nút góp ý đứng ở góc phải mẹo chơi. Trên compact Tổng quan là một thẻ
   giữa phần thay đổi và Bộ kỹ năng, bốn ô chia hai hàng, giới thiệu dài được rút gọn.
 - Dưới màn đầu là phiên bản dữ liệu. Bản không thay đổi tướng ghi rõ điều đó ngay dưới và dẫn tới lần thay đổi gần nhất.
-  Bản có thay đổi có khối "Thay đổi ở bản này" phía trên Bộ kỹ năng: một bề mặt có vạch màu theo loại thay đổi, tóm tắt,
-  từng thay đổi theo kỹ năng (`ChangeList`), nguồn công bố và so với bản nào; nút "Xem kỹ năng đầy đủ" mở đúng kỹ năng.
-  Trên compact khối này gấp thành một dòng, bấm để mở xuống.
+  Menu của phiên bản dữ liệu liệt kê các bản đã thay đổi tướng, mỗi bản ghi ngày, tên bản cập nhật và một chữ cho loại
+  thay đổi (Buff đỏ, Nerf xanh lá, Tweak, Fix, Rework, New) như thẻ trong thư viện Tướng; chọn một bản thì cả trang
+  chuyển sang bản đó. Dưới phiên bản dữ liệu chỉ có thay đổi của bản đang xem (`hero-version-notes.tsx`), phía trên Bộ
+  kỹ năng: một bề mặt có vạch màu theo loại thay đổi, tiêu đề "Thay đổi ở bản <ngày>" kèm chữ loại thay đổi, so với bản
+  nào, tóm tắt, từng thay đổi theo kỹ năng (`ChangeList`, mỗi thay đổi mang chữ loại riêng của nó, kể cả khi trùng loại chung) với nút "Xem kỹ năng đầy đủ" mở đúng kỹ năng, nguồn công bố và
+  ghi chú đầy đủ. Trên compact bề mặt này gấp thành một dòng, bấm để mở xuống. Bản đang xem không thay đổi tướng thì
+  không có bề mặt này, chỉ một dòng "Bản này không thay đổi <tướng>." dưới phiên bản dữ liệu.
 - Phần thay đổi chỉ lấy từ ghi chú đã công bố (`GET /heroes/{id}/changes`). Hai bản nội dung của tướng có thể khác nhau cả
   về câu chữ; việc so sánh đó thuộc Admin, trang công khai không hiện. Bản so sánh là bản liền trước cùng ruleset, không
   phải bản được chọn trong phiên bản dữ liệu.
 - Bộ kỹ năng là một hàng thẻ kỹ năng, kỹ năng đang chọn có viền vàng và nền vàng nhạt, chi tiết viết đầy đủ bên dưới. Thẻ
-  kỹ năng có dấu khi kỹ năng đó đổi ở bản đang xem; menu phiên bản dữ liệu chỉ liệt kê các bản có thay đổi. Mục Lịch sử
-  thay đổi liệt kê những bản còn lại thành hàng, mới nhất trước, phần cũ gấp lại; bấm để chuyển sang bản đó.
+  kỹ năng có dấu khi kỹ năng đó đổi ở bản đang xem; menu phiên bản dữ liệu chỉ liệt kê các bản có thay đổi.
+- Trong Đánh giá, đặc điểm bộ kỹ năng chia theo nhóm (Sát thương, Di chuyển, Sống sót, Khống chế, Đồng đội), mỗi nhóm
+  một thẻ có icon và tên nhóm màu vàng; trong thẻ là các đặc điểm, ngăn bằng đường mảnh. Dưới tên đặc điểm, mỗi kỹ năng
+  tạo ra nó là một hàng: ảnh kỹ năng, vị trí (Nội tại, Chiêu 1…) và tên, bên phải là phần ghi chú của biên tập viên về
+  kỹ năng đó (ví dụ "hồi chiêu 6 giây"). Ghi chú được tách theo dấu chấm phẩy, mỗi phần bắt đầu bằng tên kỹ năng
+  (`model/hero-trait-skills.ts`); phần không gọi tên kỹ năng nào hiện thành một dòng bên dưới. Bấm một hàng thì kỹ năng
+  đó được chọn trong Bộ kỹ năng và trang cuộn tới đó.
+- Cuối trang là **Tướng cùng vị trí** (`hero-related.tsx`, `model/hero-related.ts`): tối đa 8 tướng đi cùng đường với
+  tướng đang xem, tướng có chung vai trò đứng trước, rồi theo tên. Dạng của tướng dùng đường và vai trò của dạng đó và
+  không liệt kê chính tướng giữ dạng. Tướng chưa có vị trí thì lấy các tướng chung vai trò. Dữ liệu là danh sách tướng
+  của thư viện, không gọi thêm API. Mỗi tướng là ô nhỏ giống bảng Đổi tướng nhanh (ảnh vuông và tên). Trên wide là một hàng 8 ô; trên compact là một hàng cuộn ngang, ô kế tiếp ló ra ở mép màn hình. "Xem tất cả" mở thư viện lọc theo đường đó.
 - Build đề cử (`hero-builds.tsx`, ADR-026) đọc từ `GET /api/wiki/v1/builds?hero=<mã>&region=<thị trường>` và chỉ hiện khi
   đã có build được ghi nhận cho tướng.
 - Mục Trang phục nằm dưới bộ kỹ năng, lấy từ `GET /api/wiki/v1/skins?hero=<mã tướng>` theo đúng mốc dữ liệu đang xem, kèm
@@ -426,10 +447,13 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
   trình xem dùng chung với thư viện Trang phục, không có liên kết Xem tướng vì người đọc đang ở chính trang đó. Tướng chưa
   có trang phục thì mục này và dòng tương ứng trong mục lục đều ẩn. Dạng của một tướng hiện trang phục chung của tướng và
   trang phục riêng của dạng đó (ADR-024).
-- Mục lục trang tướng ("Trên trang này") liệt kê các phần thực sự có: Tổng quan, Chỉ số, Cốt truyện, Thay đổi ở bản này,
-  Bộ kỹ năng, Đánh giá, Build đề cử, Trang phục, Video, Lịch sử thay đổi. Từ 1180px trở lên là cột bên phải, dính theo khi cuộn và
-  tô sáng phần đang đọc. Dưới 1180px là nút tròn nổi ở góc dưới bên phải, bấm mở drawer từ dưới lên, các dòng theo thứ tự
-  trên trang; chọn một dòng thì drawer đóng rồi trang mới cuộn tới phần đó.
+- Mục lục trang tướng ("Trên trang này") liệt kê các phần thực sự có: Tổng quan, Chỉ số, Cốt truyện, Thay đổi,
+  Bộ kỹ năng, Đánh giá, Build đề cử, Trang phục, Video, Tướng cùng vị trí. Các dòng không có icon; bên trái là đường đọc
+  với một chấm cho mỗi phần, các phần đã qua tô vàng nhạt, phần đang đọc có chấm vàng sáng với quầng và chữ vàng đậm. Từ
+  1180px trở lên là cột bên phải, dính theo khi cuộn, dòng nhỏ và không có nền. Dưới 1180px là nút tròn nổi ở góc dưới
+  bên phải; trong lúc cuộn nút thu vào mép phải, chỉ còn một mẩu nhỏ, và trở ra khi trang dừng khoảng 0,6 giây. Bấm nút
+  mở drawer từ dưới lên, các dòng theo thứ tự trên trang, cao hơn để dễ chạm, phần đang đọc thêm nền ánh vàng. Chọn một
+  dòng thì drawer đóng rồi trang mới cuộn tới phần đó.
 - Nút quay về phần thay đổi chỉ hiện khi vừa bấm "Xem kỹ năng đầy đủ" từ một thay đổi, nằm cạnh nút mục lục và tự mất khi đã quay lại. Từ 1180px trở lên không có nút này vì mục lục đã là đường quay về.
 - Video kỹ năng hiện ngay trong phần kỹ năng đang đọc, dưới dòng thời gian hồi chiêu và trên phần mô tả; thẻ kỹ năng có video mang dấu tam giác nhỏ. Bấm một video là phát tại chỗ. Trong lúc đang xem, chọn kỹ năng khác sẽ phát video của kỹ năng đó ở đúng chỗ ấy, nên so sánh các kỹ năng chỉ tốn một lần bấm cho mỗi kỹ năng. Nút Xem lớn mở trình xem có danh sách phát; link chia sẻ tới một video kỹ năng sẽ tự chuyển sang đúng kỹ năng đó.
 - Tổng quan và kỹ năng đang xem có nút "Đề xuất chỉnh sửa" (xem `header.md`, mục Góp ý trang).
