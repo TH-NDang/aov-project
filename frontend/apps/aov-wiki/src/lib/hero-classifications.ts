@@ -28,7 +28,23 @@ export const HERO_POSITIONS: readonly HeroFilterOption<HeroPosition>[] = [
   { value: "SUPPORT", label: "Hỗ trợ", glyph: "roam" },
 ]
 
-const ENGLISH_LABELS: Record<HeroRole | HeroPosition, string> = {
+/** How hard a hero is to play, in the three bands the library filters by. */
+export type HeroDifficulty = "EASY" | "MEDIUM" | "HARD"
+
+export const HERO_DIFFICULTIES: readonly HeroFilterOption<HeroDifficulty>[] = [
+  { value: "EASY", label: "Dễ", glyph: "easy" },
+  { value: "MEDIUM", label: "Trung bình", glyph: "medium" },
+  { value: "HARD", label: "Khó", glyph: "hard" },
+]
+
+/** The one choice that keeps the heroes the selected version changed. */
+export type HeroChange = "CHANGED"
+
+export const HERO_CHANGE: readonly HeroFilterOption<HeroChange>[] = [
+  { value: "CHANGED", label: "Đổi ở bản này", glyph: "changed" },
+]
+
+const ENGLISH_LABELS: Record<HeroRole | HeroPosition | HeroDifficulty | HeroChange, string> = {
   TANK: "Tank",
   WARRIOR: "Warrior",
   ASSASSIN: "Assassin",
@@ -39,9 +55,13 @@ const ENGLISH_LABELS: Record<HeroRole | HeroPosition, string> = {
   JUNGLE: "Jungle",
   MID: "Mid lane",
   DRAGON: "Abyssal Dragon lane",
+  EASY: "Easy",
+  MEDIUM: "Medium",
+  HARD: "Hard",
+  CHANGED: "Changed in this version",
 }
 
-export function localizedHeroOptions<Value extends HeroRole | HeroPosition>(
+export function localizedHeroOptions<Value extends HeroRole | HeroPosition | HeroDifficulty | HeroChange>(
   options: readonly HeroFilterOption<Value>[],
   locale: string,
 ): readonly HeroFilterOption<Value>[] {

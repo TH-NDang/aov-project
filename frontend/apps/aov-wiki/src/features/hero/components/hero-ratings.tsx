@@ -2,7 +2,7 @@ import { gameplayIcons, type GameplayIconName } from "@aov/ui/components/gamepla
 import { heroRatingScale } from "@aov/ui/lib/hero-rating-scale"
 import { useWikiContext, wikiText } from "../../../context/wiki-context"
 import type { HeroDetail } from "../../../lib/hero-api"
-import { difficultyLevel } from "../model/hero-difficulty"
+import { DIFFICULTY_WORDS, difficultyLevel } from "../model/hero-difficulty"
 
 const RATINGS = [
   ["survivability", "Sinh tồn", "Survivability", "shield"],
@@ -12,16 +12,8 @@ const RATINGS = [
 ] as const satisfies readonly (readonly [string, string, string, GameplayIconName])[]
 
 /** Difficulty is not "more is better", so it also reads as a word, from very easy to very hard. */
-const DIFFICULTY = [
-  ["Rất dễ", "Very easy"],
-  ["Dễ", "Easy"],
-  ["Trung bình", "Medium"],
-  ["Khó", "Hard"],
-  ["Rất khó", "Very hard"],
-] as const
-
 function difficultyWord(value: number, maximum: number, locale: string) {
-  const [vi, en] = DIFFICULTY[difficultyLevel(value, maximum) - 1]!
+  const [vi, en] = DIFFICULTY_WORDS[difficultyLevel(value, maximum) - 1]!
   return wikiText(locale, vi, en)
 }
 

@@ -112,19 +112,29 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 - Rồi đến lưới tướng, tiêu đề "Tất cả tướng" hoặc "Kết quả" kèm số tướng; khi đang lọc có nút Xóa bộ lọc. Thẻ tướng là
   ảnh chân dung phủ kín thẻ (3:4), tên, vai trò và dấu vị trí nằm trên lớp tối ở chân ảnh như thẻ trang phục; rê chuột thì
   viền và tên chuyển vàng.
-  Mỗi nhóm tướng cùng chữ cái đầu mở bằng một ô mục lục cùng cỡ thẻ: chữ cái lớn viền vàng trên nền chấm và số tướng
-  của nhóm.
+  Mỗi nhóm tướng mở bằng một ô mục lục cùng cỡ thẻ: nhãn lớn viền vàng trên nền chấm và số tướng của nhóm.
+- Ô "Xếp theo" cạnh số tướng (`sort` trên URL) chỉ hiện những cách xếp có dữ liệu: Tên A–Z (mặc định), Độ khó (nhóm
+  Dễ/Trung bình/Khó theo `difficulty` của danh sách, thang 10), Bậc và Tỉ lệ thắng (từ `GET /hero-rankings`, chỉ khi có
+  bảng xếp hạng đã xác nhận; tướng có hình thái lấy dòng của hình thái mặc định). Tướng chưa có dữ liệu xếp cuối, trong
+  ô "Chưa có". Tên xếp và nhóm theo tên đang hiển thị, không theo mã: bỏ dấu, Đ tính như D, so sánh theo ngôn ngữ đang
+  chọn, nên Triệu Vân nằm ở T.
+- Trên compact, khi xếp theo tên và không lọc, một cột chữ cái nằm ở mép phải lúc lưới đang trên màn hình: chạm hoặc
+  vuốt dọc cột để nhảy tới chữ đó, chữ đang chọn hiện lớn bên cạnh ngón tay.
+- Trên desktop có chuột, rê lên thẻ khoảng 0,35 giây mở khung xem nhanh bên phải thẻ: vai trò, vị trí, độ khó và, khi có
+  bảng xếp hạng, bậc cùng tỉ lệ thắng, chọn, cấm.
 - Danh sách lấy các tướng đã xuất bản từ API public `GET /api/wiki/v1/heroes?region=VN&locale=vi-VN&size=100&page=0`. Nếu có nhiều trang, chương trình đọc tiếp trước khi lọc; số lượng kết quả được tính từ dữ liệu thực tế, không cố định theo một bộ mẫu. Mỗi mục có thể kèm trường `portrait` để dùng ảnh `PORTRAIT` ngay từ API danh sách, không cần tải chi tiết từng tướng chỉ để lấy ảnh.
 - TanStack Query giữ dữ liệu danh sách và chi tiết ở trạng thái mới trong 60 giây, dùng chung danh sách khi chuyển giữa thư viện và chi tiết. Khi lỗi có nút thử lại; khi chưa có dữ liệu hoặc không khớp bộ lọc có trạng thái riêng, không thay bằng tướng mẫu.
 - Hai nhóm bộ lọc phân biệt rõ: **Vị trí** gồm Đường Caesar, Rừng, Đường giữa, Đường Rồng, Hỗ trợ; **Vai trò** gồm Đỡ
   đòn, Đấu sĩ, Sát thủ, Pháp sư, Xạ thủ, Trợ thủ (`hero-classifications.ts`). Mỗi lựa chọn có icon và tên. Vai trò và vị
-  trí lấy từ dữ liệu tướng đã xuất bản (`roles`, `positions`), không suy luận vị trí từ vai trò.
-- Trạng thái lọc lưu trên URL: `q` là tên hoặc mã tướng, `role` và `position` là các giá trị phân cách bằng dấu phẩy, ví dụ `/hero?q=amily&role=WARRIOR&position=TOP,JUNGLE`. Trong cùng nhóm chỉ cần khớp một lựa chọn; giữa tìm kiếm, vai trò và vị trí phải đồng thời khớp. Tìm kiếm không phân biệt chữ hoa, chữ thường hoặc dấu tiếng Việt, gồm cả `đ`/`d`.
+  trí lấy từ dữ liệu tướng đã xuất bản (`roles`, `positions`), không suy luận vị trí từ vai trò. Thêm **Độ khó**
+  (Dễ, Trung bình, Khó; icon cột tăng dần) khi danh sách có độ khó, và **Phiên bản** với một lựa chọn "Đổi ở bản này"
+  giữ các tướng (hoặc hình thái) được đổi ở phiên bản đang chọn. Trên compact, hai nhóm này chỉ nằm trong tấm lọc.
+- Trạng thái lọc lưu trên URL: `q` là tên hoặc mã tướng, `role`, `position`, `difficulty` (`EASY`, `MEDIUM`, `HARD`) và `changed` (`CHANGED`) là các giá trị phân cách bằng dấu phẩy, ví dụ `/hero?q=amily&role=WARRIOR&position=TOP,JUNGLE`. Trong cùng nhóm chỉ cần khớp một lựa chọn; giữa tìm kiếm, vai trò và vị trí phải đồng thời khớp. Tìm kiếm không phân biệt chữ hoa, chữ thường hoặc dấu tiếng Việt, gồm cả `đ`/`d`.
 - Thẻ tướng (`hero-card.tsx`) ưu tiên ảnh `PORTRAIT` thật, dùng `HEAD` nếu thiếu hoặc lỗi chân dung, rồi mới dùng chỗ giữ
   chỗ. Ảnh dọc tỉ lệ 4:5 trên nền thẻ, không viền; tên, vai trò và vị trí nằm dưới ảnh: vai trò ghi chữ khi thẻ đủ rộng,
   chỉ còn icon khi hẹp; vị trí luôn là icon. Lưới 7 cột, 6 cột dưới 1100px, 5 cột trên compact, 4 cột dưới 720px, 3 cột
   dưới 480px. Toàn bộ thẻ mở chi tiết và giữ đường dẫn bộ lọc để quay về; nguồn ảnh mở từ nút nhỏ trên thẻ.
-- 11 icon vị trí/vai trò trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. PNG nguồn không còn trong `resources/` (ADR-030); bản PNG vai trò nằm trong `apps/admin-aov/public/images/hero/vai-tro/`.
+- 11 icon vị trí/vai trò và 4 icon lọc (`easy`, `medium`, `hard`: ba cột tăng dần tô 1, 2, 3 cột; `changed`: mũi tên lên cạnh mũi tên xuống) trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. PNG nguồn không còn trong `resources/` (ADR-030); bản PNG vai trò nằm trong `apps/admin-aov/public/images/hero/vai-tro/`.
   Sáu icon vai trò dò viền từ icon trong game. Bốn icon đường Caesar, Rừng, Giữa, Rồng vẽ lại bằng đường thẳng và hình
   tròn theo huy hiệu trên sóng giải đấu: bản đồ cắt thành các khối riêng (chữ L trên, dải chéo giữa, chữ L dưới) cách
   nhau một khe; khối được chọn tô đặc, các khối còn lại chỉ vẽ viền mảnh. Ở Caesar và Rồng, hai chữ L gặp nhau ở đường
@@ -136,6 +146,11 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 - Trong lúc tải mã trang hoặc dữ liệu, header, đầu trang, thanh công cụ và khung nội dung vẫn có bố cục tương ứng. Skeleton danh sách dùng cùng khung ảnh, thân thẻ và lưới responsive với thẻ thật; trang chi tiết giữ vùng ảnh lớn, ảnh đại diện và dòng tên trước khi dữ liệu sẵn sàng.
 - `WikiImage` dùng chung cho ảnh thẻ, bảng đổi tướng, ảnh đại diện và ảnh lớn. Kích thước được giữ bởi khung trước khi ảnh tải; chỉ hiện ảnh sau khi tải và giải mã xong, chuyển nhẹ trong 180ms. Các ảnh thẻ vẫn tải lười theo vùng nhìn thấy, không chờ toàn bộ danh sách mới hiện nội dung.
+- Ảnh Media lưu bản gốc (thẻ tướng khoảng 200KB). Khi build có `VITE_IMAGE_RESIZE=cloudflare`, `lib/sized-image.ts`
+  xin ảnh qua Cloudflare Image Transformations đúng cỡ khung vẽ: `WikiImage` nhận `frameWidth` (hoặc lấy `width`), tạo
+  `srcset` 1x/2x với các bề rộng cố định 64…2048 để số bản biến đổi ít; bản thu nhỏ lỗi thì tự quay về ảnh gốc một lần.
+  Ảnh nền mờ dùng 384–512px, ảnh đầu trang chủ 1536px, ảnh tải trước trong khung xem trang phục cùng cỡ với ảnh sẽ vẽ.
+  Để trống biến thì mọi ảnh giữ địa chỉ gốc.
 - Ảnh đã cache vẫn được nhận diện khi gắn vào trang. Đổi nguồn ảnh tạo trạng thái chờ riêng; kết quả tải/giải mã cũ không làm hiện nhầm ảnh mới. Lỗi chân dung thử ảnh head, lỗi ảnh lớn thử portrait; hết nguồn thì dùng chỗ giữ chỗ hoặc thông báo thiếu ảnh, không hiện biểu tượng ảnh hỏng của trình duyệt.
 - Dữ liệu đã có trong cache vẫn hiển thị nếu lần cập nhật nền bị lỗi. Hiệu ứng chờ và chuyển ảnh tắt khi thiết bị bật giảm chuyển động.
 

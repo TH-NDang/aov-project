@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor">
+  <!-- Hard heroes: all three rising bars filled -->
+  <rect x="7.5" y="28" width="9" height="14" rx="1.5" />
+  <rect x="19.5" y="18" width="9" height="24" rx="1.5" />
+  <rect x="31.5" y="8" width="9" height="34" rx="1.5" />
+</svg>
