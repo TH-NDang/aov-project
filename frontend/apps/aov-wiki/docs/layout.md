@@ -124,10 +124,13 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   bảng xếp hạng, bậc cùng tỉ lệ thắng, chọn, cấm.
 - Danh sách lấy các tướng đã xuất bản từ API public `GET /api/wiki/v1/heroes?region=VN&locale=vi-VN&size=100&page=0`. Nếu có nhiều trang, chương trình đọc tiếp trước khi lọc; số lượng kết quả được tính từ dữ liệu thực tế, không cố định theo một bộ mẫu. Mỗi mục có thể kèm trường `portrait` để dùng ảnh `PORTRAIT` ngay từ API danh sách, không cần tải chi tiết từng tướng chỉ để lấy ảnh.
 - TanStack Query giữ dữ liệu danh sách và chi tiết ở trạng thái mới trong 60 giây, dùng chung danh sách khi chuyển giữa thư viện và chi tiết. Khi lỗi có nút thử lại; khi chưa có dữ liệu hoặc không khớp bộ lọc có trạng thái riêng, không thay bằng tướng mẫu.
-- Danh sách gọi trang 1 và trang 2 cùng lúc (`ahead` của `wikiGetPages`), vì số tướng vượt một trang 100. Câu trả lời
-  gần nhất được giữ trong `localStorage` (`lib/stored-answer.ts`, khóa `aov-wiki:heroes:v1`, một bản cho mỗi loại, đổi
-  thị trường/ngôn ngữ/phiên bản thì thay bản cũ): lần mở sau hiện ngay danh sách đã lưu, và nếu bản đó cũ hơn 60 giây
-  thì danh sách được đọc lại ngầm phía sau. Bộ nhớ trình duyệt đầy hoặc bị chặn thì chỉ mất phần hiện sẵn này.
+- Danh sách gọi trang 1 và trang 2 cùng lúc (`ahead` của `wikiGetPages`), vì số tướng vượt một trang 100.
+- Câu trả lời gần nhất của các danh mục được giữ trong IndexedDB của trình duyệt (`@aov/ui/lib/stored-answers`, nối
+  một lần trong `main.tsx`): danh sách tướng, bốn kho và nhóm của kho, trang phục, danh sách phiên bản và tin cập nhật
+  ở trang chủ. Mỗi truy vấn tự bật bằng `meta: { storedAnswer: "wiki-…@1" }`; số sau @ tăng khi đổi cấu trúc dữ liệu.
+  Mỗi loại giữ một bản (đổi thị trường, ngôn ngữ hay phiên bản thì thay bản cũ), tổng tối đa khoảng 25MB, đầy thì bỏ
+  bản cũ nhất. Lần mở sau, bản đã lưu hiện ngay trong lúc danh sách được đọc lại từ API. Dữ liệu của người đã đăng
+  nhập không bao giờ được lưu. Trình duyệt không có hoặc từ chối IndexedDB thì chỉ mất phần hiện sẵn này.
 - Hai nhóm bộ lọc phân biệt rõ: **Vị trí** gồm Đường Caesar, Rừng, Đường giữa, Đường Rồng, Hỗ trợ; **Vai trò** gồm Đỡ
   đòn, Đấu sĩ, Sát thủ, Pháp sư, Xạ thủ, Trợ thủ (`hero-classifications.ts`). Mỗi lựa chọn có icon và tên. Vai trò và vị
   trí lấy từ dữ liệu tướng đã xuất bản (`roles`, `positions`), không suy luận vị trí từ vai trò. Thêm **Độ khó**

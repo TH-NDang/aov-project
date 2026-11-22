@@ -4,7 +4,6 @@ import type { HeroPosition, HeroRole } from "./hero-classifications"
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "./wiki-catalog"
 import { FocalPoint } from "@aov/ui/lib/focal-point"
 import { wikiGet, wikiGetPages } from "./wiki-api"
-import { storedAnswer } from "./stored-answer"
 
 /** Every query key of the hero feature; reads and invalidation both use these. */
 export const heroKeys = {
@@ -161,15 +160,10 @@ export interface HeroCatalog {
   items: HeroListItem[]
 }
 
-/**
- * Every published hero. The last answer is kept in the browser: a returning reader sees it at once, and as it is
- * older than the stale time the list is read again behind it.
- */
-export const heroCatalogQuery = (scope: WikiCatalogScope) => {
-  const queryKey = heroKeys.catalog(scope)
-  const stored = storedAnswer<HeroCatalog>("heroes", queryKey)
-  return queryOptions({
-    queryKey,
+/** Every published hero. The last answer is kept in the browser, so a returning reader sees the list at once. */
+export const heroCatalogQuery = (scope: WikiCatalogScope) =>
+  queryOptions({
+    queryKey: heroKeys.catalog(scope),
     queryFn: async ({ signal }): Promise<HeroCatalog> => {
       const { first, items } = await wikiGetPages<HeroPage, HeroListItem>(
         "/heroes",
@@ -178,16 +172,12 @@ export const heroCatalogQuery = (scope: WikiCatalogScope) => {
         // The game has more heroes than one page holds, so the second page is asked for beside the first.
         { size: 100, items: (list) => list.page.items, total: (list) => list.page.totalElements, ahead: 1 },
       )
-      const catalog = { context: first.context, items }
-      stored.save(catalog)
-      return catalog
+      return { context: first.context, items }
     },
-    initialData: stored.data,
-    initialDataUpdatedAt: stored.savedAt,
+    meta: { storedAnswer: "wiki-heroes@1" },
     staleTime: 60_000,
     retry: 1,
   })
-}
 
 export function heroDetailQuery(heroId: string, scope: WikiCatalogScope) {
   return queryOptions({

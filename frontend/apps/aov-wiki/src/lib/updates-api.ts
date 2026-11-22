@@ -40,6 +40,7 @@ export const patchReleasesQuery = (scope: WikiCatalogScope) =>
   queryOptions({
     queryKey: updateKeys.releases(scope),
     queryFn: ({ signal }) => readAll<PatchRelease>("/patches", wikiCatalogParameters(scope, false), signal),
+    meta: { storedAnswer: "wiki-patches@1" },
     staleTime: 60_000,
     retry: 1,
   })
