@@ -41,10 +41,10 @@
   visibility: hidden;
 }
 .wiki-changes [data-tone="up"] {
-  --change-tone: var(--aov-success);
+  --change-tone: var(--aov-danger);
 }
 .wiki-changes [data-tone="down"] {
-  --change-tone: var(--aov-danger);
+  --change-tone: var(--aov-success);
 }
 .wiki-changes [data-tone="rework"] {
   --change-tone: var(--aov-warning);

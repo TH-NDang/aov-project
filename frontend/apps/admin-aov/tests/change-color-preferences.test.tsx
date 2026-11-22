@@ -48,7 +48,8 @@ test("change color settings persist independent colors and synchronize all badge
       ),
     )
     const badges = (kind: string) => [...document.querySelectorAll<HTMLElement>(`[data-change-kind="${kind}"]`)]
-    assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-emerald-700")))
+    assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-rose-700")))
+    assert.ok(badges("NERF")[0].className.includes("text-emerald-700"))
     assert.ok(badges("BUFF").every((badge) => badge.querySelector('use[href$="#buff"]')))
     assert.ok(badges("NERF")[0].querySelector('use[href$="#nerf"]'))
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Thiết lập màu thay đổi"]')!.click())
@@ -59,14 +60,14 @@ test("change color settings persist independent colors and synchronize all badge
         select.value = color
         select.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
       })
-    await choose("Màu tăng sức mạnh", "rose")
+    await choose("Màu tăng sức mạnh", "amber")
     await choose("Màu giảm sức mạnh", "blue")
     assert.deepEqual(JSON.parse(dom.window.localStorage.getItem(changeColorsStorageKey)!), {
       version: 1,
-      buff: "rose",
+      buff: "amber",
       nerf: "blue",
     })
-    assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-rose-700")))
+    assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-amber-700")))
     assert.ok(badges("NERF")[0].className.includes("text-blue-700"))
     assert.ok(badges("BUFF").every((badge) => badge.querySelector('use[href$="#buff"]')))
     assert.ok(badges("NERF")[0].querySelector('use[href$="#nerf"]'))
@@ -87,18 +88,18 @@ test("change color settings persist independent colors and synchronize all badge
         .find((button) => button.textContent?.includes("Khôi phục màu mặc định"))!
         .click(),
     )
-    assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-emerald-700")))
-    assert.ok(badges("NERF")[0].className.includes("text-rose-700"))
+    assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-rose-700")))
+    assert.ok(badges("NERF")[0].className.includes("text-emerald-700"))
   })
 })
 
 test("stored preferences load on a fresh mount while malformed values and later storage clears restore safe defaults", async () => {
   const values = [
     { saved: '{"version":1,"buff":"blue","nerf":"emerald"}', buff: "blue", nerf: "emerald" },
-    { saved: "not-json", buff: "emerald", nerf: "rose" },
-    { saved: '{"version":2,"buff":"blue","nerf":"amber"}', buff: "emerald", nerf: "rose" },
-    { saved: '{"version":1,"buff":"<script>","nerf":"rose"}', buff: "emerald", nerf: "rose" },
-    { saved: '{"version":1,"buff":"__proto__","nerf":"rose"}', buff: "emerald", nerf: "rose" },
+    { saved: "not-json", buff: "rose", nerf: "emerald" },
+    { saved: '{"version":2,"buff":"blue","nerf":"amber"}', buff: "rose", nerf: "emerald" },
+    { saved: '{"version":1,"buff":"<script>","nerf":"rose"}', buff: "rose", nerf: "emerald" },
+    { saved: '{"version":1,"buff":"__proto__","nerf":"rose"}', buff: "rose", nerf: "emerald" },
   ]
   for (const { saved, buff, nerf } of values) {
     await withDocument(async (root, dom) => {
@@ -121,8 +122,8 @@ test("stored preferences load on a fresh mount while malformed values and later 
         dom.window.localStorage.clear()
         dom.window.dispatchEvent(new dom.window.StorageEvent("storage", { key: null, newValue: null }))
       })
-      assert.match(badge("BUFF").className, /text-emerald-700/)
-      assert.match(badge("NERF").className, /text-rose-700/)
+      assert.match(badge("BUFF").className, /text-rose-700/)
+      assert.match(badge("NERF").className, /text-emerald-700/)
     })
   }
 })
@@ -136,7 +137,7 @@ test("blocked storage retains usable session preferences and reloads changes rec
       const { setColor } = useChangeColors()
       return (
         <>
-          <button onClick={() => setColor("BUFF", "rose")}>Change</button>
+          <button onClick={() => setColor("BUFF", "violet")}>Change</button>
           <ChangeKindBadge kind="BUFF" />
         </>
       )
@@ -151,10 +152,10 @@ test("blocked storage retains usable session preferences and reloads changes rec
     await act(async () => root.render(<Host />))
     await act(async () => dom.window.document.querySelector<HTMLButtonElement>("button")!.click())
     const badge = () => dom.window.document.querySelector<HTMLElement>('[data-change-kind="BUFF"]')!
-    assert.match(badge().className, /text-rose-700/)
+    assert.match(badge().className, /text-violet-700/)
     await act(async () => root.render(null))
     await act(async () => root.render(<Host />))
-    assert.match(badge().className, /text-rose-700/)
+    assert.match(badge().className, /text-violet-700/)
     Object.defineProperty(dom.window, "localStorage", originalStorage)
     await act(async () => dom.window.document.querySelector<HTMLButtonElement>("button")!.click())
     await act(async () => root.render(null))

@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react"
+import { createContext, memo, useContext, useState, type MouseEvent } from "react"
 import { Link } from "react-router"
 import { WikiIcon } from "../../../components/wiki-icon"
 import { WikiImage } from "../../../components/wiki-image"
@@ -7,13 +7,16 @@ import { useWikiContext, wikiText } from "../../../context/wiki-context"
 import type { HeroListItem } from "../../../lib/hero-api"
 import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../../../lib/hero-classifications"
 import { HeroGlyph } from "../../../components/hero-glyph"
+import { searchMatchRange } from "../model/hero-search-highlight"
 import "./hero-card.css"
 
 /**
  * A hero as a card: the portrait, the name, the roles and the lanes. Roles are written out where the card has room and
- * drawn as marks where it does not; lanes are always marks, named by the filters above the list.
+ * drawn as marks where it does not; lanes are always marks, named by the filters above the list. Inside a
+ * {@link HeroSearchHighlight} the part of the name a search matched is lit. A card draws again only when what it shows
+ * changes; a new search redraws the names alone, so typing does not redraw every hero.
  */
-export function HeroCard({
+export const HeroCard = memo(function HeroCard({
   hero,
   from,
   current = false,
@@ -89,7 +92,9 @@ export function HeroCard({
           )}
         </span>
         <span className="wiki-hero-card-body" aria-hidden="true">
-          <span className="wiki-hero-card-name">{hero.name}</span>
+          <span className="wiki-hero-card-name">
+            <HighlightedName name={hero.name} />
+          </span>
           {!!roles.length && (
             <span className="wiki-hero-card-roles" title={roleLabel}>
               {roles.map((role) => (
@@ -118,5 +123,22 @@ export function HeroCard({
         />
       )}
     </div>
+  )
+})
+
+/** The search whose match the hero cards inside light in their names; empty lights nothing. */
+export const HeroSearchHighlight = createContext("")
+
+/** The name with the part a search matched lit in gold. */
+function HighlightedName({ name }: { name: string }) {
+  const search = useContext(HeroSearchHighlight)
+  const range = search ? searchMatchRange(name, search) : undefined
+  if (!range) return name
+  return (
+    <>
+      {name.slice(0, range[0])}
+      <mark className="wiki-hero-card-match">{name.slice(...range)}</mark>
+      {name.slice(range[1])}
+    </>
   )
 }

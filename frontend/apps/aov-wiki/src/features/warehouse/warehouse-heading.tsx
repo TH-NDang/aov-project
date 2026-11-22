@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiText } from "../../context/wiki-context"
 import type { WarehouseKind } from "../../lib/warehouse-types"
-import { WarehouseShowcase, type ShowcaseIntro } from "./warehouse-showcase"
+import { CatalogShowcase, type ShowcaseIntro } from "../../components/catalog-showcase"
 
 /**
  * How each part of the armory introduces itself, in two lines: a short tagline that says what the part gives in a
@@ -42,7 +42,7 @@ const ABOUT: Record<WarehouseKind, { tagline: [string, string]; lead: [string, s
 }
 
 /**
- * The head of an armory page: the part's two lines and count, drawn by {@link WarehouseShowcase} on wide screens and on
+ * The head of an armory page: the part's two lines and count, drawn by {@link CatalogShowcase} on wide screens and on
  * phones. The page passes `showcase` to give the part a scene of its own.
  */
 export function WarehouseHeading({
@@ -70,5 +70,5 @@ export function WarehouseHeading({
     action,
     wide: usePageLayout() === "wide",
   }
-  return showcase ? showcase(intro) : <WarehouseShowcase {...intro} />
+  return showcase ? showcase(intro) : <CatalogShowcase {...intro} />
 }

@@ -34,6 +34,51 @@ const KIND_ORDER = ["RELEASE", "ADDED", "REWORK", "BUFF", "NERF", "ADJUSTMENT", 
 /** The colour a kind of change is read by; every other kind reads as an adjustment. */
 const TONES: Record<string, string> = { RELEASE: "new", ADDED: "new", REWORK: "rework", BUFF: "up", NERF: "down" }
 
+export function patchChangeTone(kind: string) {
+  return TONES[kind] ?? "adjust"
+}
+
+/** The changed subjects grouped by kind, in the order readers look for, each group by name. */
+export function groupedChanges<T extends ChangedSubject>(entries: readonly T[], locale: string) {
+  const byKind = new Map<string, T[]>()
+  for (const entry of entries) byKind.set(entry.kind ?? "", [...(byKind.get(entry.kind ?? "") ?? []), entry])
+  return [...byKind]
+    .sort(([a], [b]) => (KIND_ORDER.indexOf(a) + 1 || 99) - (KIND_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b))
+    .map(([kind, list]) => ({ kind, list: list.sort((a, b) => a.name.localeCompare(b.name, locale)) }))
+}
+
+/**
+ * The title of a list of changes and the notes it leads to: the version on screen by its day, or the whole season when
+ * a season is read without a version.
+ */
+export function PatchChangesTitle() {
+  const { locale, patchVariantId, seasonId, options, region, regions } = useWikiContext()
+  const wholeSeason = !!seasonId && !patchVariantId
+  const patch = options?.patches.find((item) => (patchVariantId ? item.id === patchVariantId : item.isCurrent))
+  const season = options?.seasons.find((item) => item.id === seasonId)?.displayName
+  const day = patch?.regionalDate
+  if (wholeSeason) return wikiText(locale, `Thay đổi trong mùa ${season ?? ""}`, `Changed in ${season ?? "the season"}`)
+  if (!day) return wikiText(locale, "Thay đổi ở bản này", "Changed in this version")
+  return (
+    <>
+      {wikiText(locale, "Thay đổi ở bản ", "Changed in version ")}
+      <LocalTime
+        value={day}
+        sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
+        label={(zone) => patchDayLabel(day, zone)}
+      />
+    </>
+  )
+}
+
+/** Where the full notes of the changes on screen are: the season's list of versions, or the version's own notes. */
+export function usePatchNotesPath() {
+  const { patchVariantId, seasonId, options } = useWikiContext()
+  if (seasonId && !patchVariantId) return "/updates"
+  const patch = options?.patches.find((item) => (patchVariantId ? item.id === patchVariantId : item.isCurrent))
+  return patch ? `/updates/${patch.code}` : undefined
+}
+
 export function patchChangeLabel(kind: string, locale: string) {
   return wikiText(locale, ...(labels[kind] ?? labels.UPDATED))
 }
@@ -107,27 +152,20 @@ export function PatchChangesRow({
   failed?: boolean
   retry?: () => void
 }) {
-  const { locale, patchVariantId, seasonId, options, href, region, regions } = useWikiContext()
+  const { locale, href } = useWikiContext()
   const wide = usePageLayout() === "wide"
   const titleId = useId()
-  const byKind = new Map<string, ChangedSubject[]>()
-  for (const entry of entries) byKind.set(entry.kind ?? "", [...(byKind.get(entry.kind ?? "") ?? []), entry])
-  const groups = [...byKind]
-    .sort(([a], [b]) => (KIND_ORDER.indexOf(a) + 1 || 99) - (KIND_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b))
-    .map(([kind, list]) => ({ kind, list: list.sort((a, b) => a.name.localeCompare(b.name, locale)) }))
+  const notesPath = usePatchNotesPath()
+  const groups = groupedChanges(entries, locale)
   const chips = groups.flatMap((group) => group.list)
   const place = new Map(chips.map((chip, index) => [chip.id, index]))
   const { row, fit, edge } = useFittingChips(wide, chips.length, `${locale} ${chips.map((chip) => chip.id).join()}`)
   if (!entries.length && !failed && !pending) return null
 
-  // A season gathers the changes of several versions, so its notes are the whole list of them.
-  const wholeSeason = !!seasonId && !patchVariantId
-  const patch = options?.patches.find((item) => (patchVariantId ? item.id === patchVariantId : item.isCurrent))
-  const season = options?.seasons.find((item) => item.id === seasonId)?.displayName
-  const day = patch?.regionalDate
   const left = chips.length - fit
-  const notes = (wholeSeason || patch) && (
-    <Link className="wiki-changes-notes" to={href(wholeSeason ? "/updates" : `/updates/${patch?.code}`)} data-tail="">
+  // A season gathers the changes of several versions, so its notes are the whole list of them.
+  const notes = notesPath && (
+    <Link className="wiki-changes-notes" to={href(notesPath)} data-tail="">
       {/* Kept measurable while unused, so the row knows how long the link gets before it has to cut a chip. */}
       {wide && (
         <span data-rest={left ? "shown" : "spare"} aria-hidden={!left || undefined}>
@@ -143,20 +181,7 @@ export function PatchChangesRow({
     <section className="wiki-changes" aria-labelledby={titleId} aria-busy={pending || undefined}>
       <header className="wiki-changes-heading">
         <h2 id={titleId}>
-          {wholeSeason ? (
-            wikiText(locale, `Thay đổi trong mùa ${season ?? ""}`, `Changed in ${season ?? "the season"}`)
-          ) : day ? (
-            <>
-              {wikiText(locale, "Thay đổi ở bản ", "Changed in version ")}
-              <LocalTime
-                value={day}
-                sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
-                label={(zone) => patchDayLabel(day, zone)}
-              />
-            </>
-          ) : (
-            wikiText(locale, "Thay đổi ở bản này", "Changed in this version")
-          )}
+          <PatchChangesTitle />
         </h2>
         {chips.length > 0 && <small>{chips.length}</small>}
       </header>
@@ -166,7 +191,7 @@ export function PatchChangesRow({
           <div className="wiki-changes-track" style={{ maxWidth: edge }}>
             {groups.map(({ kind, list }) => {
               const Art = changeKindIcon(kind) ?? changeKindIcons.UPDATED
-              const tone = kind ? (TONES[kind] ?? "adjust") : undefined
+              const tone = kind ? patchChangeTone(kind) : undefined
               return (
                 <Fragment key={kind}>
                   {kind && (

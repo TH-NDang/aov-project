@@ -21,7 +21,7 @@
   );
   transition: opacity 360ms ease;
 }
-.wiki-warehouse-showcase[data-layout="wide"] .wiki-spell-scene {
+.wiki-catalog-showcase[data-layout="wide"] .wiki-spell-scene {
   --spot-x: 62%;
 }
 /* The talent on show fades before the next one takes its turn. */

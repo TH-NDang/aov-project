@@ -10,14 +10,6 @@
   }
 }
 
-/* The filter button of the compact toolbar. */
-.wiki-hero-filter-skeleton {
-  width: 76px;
-  height: 40px;
-  flex: none;
-  border-radius: var(--aov-radius-control);
-}
-
 /*
  * A hero's page while it loads. Wide: the opening's box with the way back, the name and the first chips on the left
  * and the artwork's place on the right. Compact: the artwork's box with the name at its foot.

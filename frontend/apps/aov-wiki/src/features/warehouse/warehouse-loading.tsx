@@ -2,7 +2,8 @@ import "./warehouse-page.css"
 import { useParams, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { NARROW_ITEM_LAYOUT, preferredItemLayout, useMediaQuery, type ItemLayout } from "./warehouse-layout"
+import { useMediaQuery } from "../../lib/use-media-query"
+import { NARROW_ITEM_LAYOUT, preferredItemLayout, type ItemLayout } from "./warehouse-layout"
 import { warehouseKind, type WarehouseKind } from "../../lib/warehouse-types"
 
 /** How many placeholders stand in for each catalog, close to what its first screen holds. */

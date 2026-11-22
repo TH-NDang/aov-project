@@ -1,20 +1,7 @@
-import { useSyncExternalStore } from "react"
-
 export type ItemLayout = "shop" | "list"
 
 /** Below this width the shop board has no room for its three columns, so the items read as a list. */
 export const NARROW_ITEM_LAYOUT = "(max-width: 767px)"
-
-export function useMediaQuery(query: string) {
-  return useSyncExternalStore(
-    (notify) => {
-      const list = window.matchMedia(query)
-      list.addEventListener("change", notify)
-      return () => list.removeEventListener("change", notify)
-    },
-    () => window.matchMedia(query).matches,
-  )
-}
 
 /**
  * How the reader asked to see the items: the address decides, otherwise the shop board where there is room for its

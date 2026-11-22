@@ -7,10 +7,10 @@ import {
   type PublishedWarehouseRecord,
   type WarehouseGroup,
 } from "../../lib/warehouse-types"
-import { useShowcaseTurn } from "./use-showcase-turn"
+import { useShowcaseTurn } from "../../lib/use-showcase-turn"
 import type { WarehouseItem } from "./use-item-catalog"
 import { itemMatchesCategory } from "./warehouse-item-layout"
-import { WarehouseShowcase, type ShowcaseIntro } from "./warehouse-showcase"
+import { CatalogShowcase, type ShowcaseIntro } from "../../components/catalog-showcase"
 import "./warehouse-showcase-items.css"
 
 /** A hero's six slots; at most five hold standout items, so the display never reads as a full build. */
@@ -48,7 +48,7 @@ export function ItemShowcase({
   const sets = useMemo(() => sixSlotSets(entries, groups, locale), [entries, groups, locale])
   const { scene: set, leaving } = useShowcaseTurn(sets, picturesOf)
   return (
-    <WarehouseShowcase
+    <CatalogShowcase
       {...intro}
       scene={set && <SixSlotScene set={set} leaving={leaving} wide={intro.wide} />}
       caption={

@@ -8,8 +8,8 @@ import {
   type WarehouseGroup,
 } from "../../lib/warehouse-types"
 import type { WarehouseEnchantment } from "./use-item-catalog"
-import { useShowcaseTurn } from "./use-showcase-turn"
-import { WarehouseShowcase, type ShowcaseIntro } from "./warehouse-showcase"
+import { useShowcaseTurn } from "../../lib/use-showcase-turn"
+import { CatalogShowcase, type ShowcaseIntro } from "../../components/catalog-showcase"
 import "./warehouse-showcase-enchantments.css"
 
 const TIER_NAMES = ["I", "II", "III"] as const
@@ -65,7 +65,7 @@ export function EnchantmentShowcase({
   const lead = set && groups.find((group) => group.code === set.code)
   const name = lead && (warehouseText(lead.translations, locale)?.name || lead.code)
   return (
-    <WarehouseShowcase
+    <CatalogShowcase
       {...intro}
       scene={set && <EnchantmentScene set={set} leaving={leaving} wide={intro.wide} />}
       caption={

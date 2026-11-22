@@ -1,0 +1,241 @@
+/*
+ * The hero library's changes: a heading with the notes link, then one group for each kind of change. The colour of a
+ * kind stays in its mark, its name and a thin line under each card; the panels themselves keep the page's quiet
+ * surfaces. The groups sit side by side, parted by a hairline, and scroll sideways when they do not fit.
+ */
+.wiki-hero-patch {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.wiki-hero-patch-head {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.wiki-hero-patch-head > h2 {
+  color: var(--aov-accent);
+  font: var(--wiki-type-section);
+}
+.wiki-hero-patch-head > small {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-hero-patch-notes {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--aov-accent);
+  font: var(--wiki-type-meta);
+  font-weight: 600;
+}
+.wiki-hero-patch-notes:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-hero-patch-lanes {
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.wiki-hero-patch-lane[data-tone="up"] {
+  --change-tone: var(--aov-danger);
+}
+.wiki-hero-patch-lane[data-tone="down"] {
+  --change-tone: var(--aov-success);
+}
+.wiki-hero-patch-lane[data-tone="rework"] {
+  --change-tone: var(--aov-warning);
+}
+.wiki-hero-patch-lane[data-tone="new"] {
+  --change-tone: var(--aov-accent);
+}
+.wiki-hero-patch-lane[data-tone="adjust"] {
+  --change-tone: var(--aov-info);
+}
+/* A group of one kind; a hairline parts it from the next. */
+.wiki-hero-patch-lane {
+  display: grid;
+  flex: none;
+  align-content: start;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  scroll-snap-align: start;
+}
+.wiki-hero-patch-lane + .wiki-hero-patch-lane {
+  border-left: 1px solid var(--aov-line);
+}
+.wiki-hero-patch-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-text);
+  font: var(--wiki-type-label);
+}
+.wiki-hero-patch-kind > svg {
+  flex: none;
+  color: var(--change-tone);
+}
+.wiki-hero-patch-kind > small {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-hero-patch-lane > ul {
+  display: flex;
+  gap: 8px;
+}
+/* A hero: the portrait with the name on a shade at its foot, a thin line of the kind's colour under it. */
+.wiki-hero-patch-card {
+  --card: 84px;
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: var(--card);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-hero-patch-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: color-mix(in srgb, var(--change-tone) 75%, transparent);
+}
+.wiki-hero-patch-art {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--aov-accent);
+  font: var(--wiki-type-section);
+}
+.wiki-hero-patch-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+  transition: transform 320ms ease-out;
+}
+.wiki-hero-patch-name {
+  position: absolute;
+  inset: auto 0 2px;
+  overflow: hidden;
+  padding: 20px 6px 4px;
+  background: linear-gradient(to top, color-mix(in srgb, var(--aov-sunken) 90%, transparent), transparent);
+  font: var(--wiki-type-meta);
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/*
+ * The kind's tag in the corner: one short word players use (Buff, Nerf, Rework, New, Tweak) set bold and slanted in the
+ * kind's colour with a faint glow, on a dark pill so it reads on any portrait.
+ */
+.wiki-hero-patch-mark {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  display: inline-flex;
+  height: 20px;
+  min-width: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 7px;
+  background: color-mix(in srgb, var(--aov-sunken) 84%, transparent);
+  color: var(--change-tone);
+  font: italic 700 0.75rem/1 var(--wiki-font-display);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--change-tone) 55%, transparent);
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  a.wiki-hero-patch-card:hover .wiki-hero-patch-art img {
+    transform: scale(1.06);
+  }
+  a.wiki-hero-patch-card:hover .wiki-hero-patch-name {
+    color: var(--aov-accent-strong);
+  }
+}
+.wiki-hero-patch-loading {
+  display: flex;
+  gap: 8px;
+}
+.wiki-hero-patch-loading > span {
+  width: 84px;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-hero-patch-failed {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-hero-patch-failed > button {
+  color: var(--aov-accent);
+  text-decoration: underline;
+}
+/*
+ * Phones: the groups stack, one row each, so every kind shows on the first look instead of hiding off to the right.
+ * A row of cards swipes sideways on its own and fades at its right edge while more cards wait; padding at its end lets
+ * the last card come out of the fade. The way to the notes closes the board as a full-width row.
+ */
+@media (max-width: 899.98px) {
+  .wiki-hero-patch {
+    margin-bottom: 20px;
+  }
+  .wiki-hero-patch-lanes {
+    display: grid;
+    overflow: visible;
+  }
+  .wiki-hero-patch-lane {
+    min-width: 0;
+    gap: 8px;
+    padding: 12px 0 12px 12px;
+  }
+  .wiki-hero-patch-lane + .wiki-hero-patch-lane {
+    border-top: 1px solid var(--aov-line);
+    border-left: 0;
+  }
+  .wiki-hero-patch-lane > ul {
+    overflow-x: auto;
+    padding-right: 28px;
+    mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent);
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 0;
+    scrollbar-width: none;
+  }
+  .wiki-hero-patch-lane > ul::-webkit-scrollbar {
+    display: none;
+  }
+  .wiki-hero-patch-lane > ul > li {
+    flex: none;
+    scroll-snap-align: start;
+  }
+  .wiki-hero-patch-card {
+    --card: 76px;
+  }
+  .wiki-hero-patch-lanes > .wiki-hero-patch-notes {
+    justify-content: center;
+    min-height: 44px;
+    margin: 0;
+    border-top: 1px solid var(--aov-line);
+  }
+}

@@ -12,10 +12,10 @@ import {
   type PageTotal,
 } from "./arcana-page-model"
 import { ARCANA_COLORS, ARCANA_FAMILIES, arcanaRows, type ArcanaFamily, type WarehouseArcana } from "./use-item-catalog"
-import { useShowcaseTurn } from "./use-showcase-turn"
+import { useShowcaseTurn } from "../../lib/use-showcase-turn"
 import { arcanaFamilyName } from "./warehouse-arcana"
 import { pageArcanaOf } from "./warehouse-arcana-page"
-import { WarehouseShowcase, type ShowcaseIntro } from "./warehouse-showcase"
+import { CatalogShowcase, type ShowcaseIntro } from "../../components/catalog-showcase"
 import {
   warehouseImage,
   warehouseStatLabel,
@@ -83,7 +83,7 @@ export function ArcanaShowcase({
     </p>
   )
   return (
-    <WarehouseShowcase {...intro} scene={scene && <ArcanaScene scene={scene} leaving={leaving} />} caption={caption} />
+    <CatalogShowcase {...intro} scene={scene && <ArcanaScene scene={scene} leaving={leaving} />} caption={caption} />
   )
 }
 

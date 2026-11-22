@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState, type PointerEvent } from "react"
 import { cn } from "@aov/ui/lib/utils"
 import { LocalTime } from "@aov/ui/components/local-time"
 import {
@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import { useWikiContext, type WikiPatch, useWikiText } from "../context/wiki-context"
+import { useMediaQuery } from "../lib/use-media-query"
 import { WikiIcon } from "./wiki-icon"
 import "./wiki-version-picker.css"
 
@@ -16,21 +17,52 @@ function VersionName({ patch, locale }: { patch: WikiPatch; locale: string }) {
   return <LocalTime value={patch.regionalDate} locale={locale} fallback={patch.title || patch.code} />
 }
 
+/** How long a mouse rests on the version before its menu opens, and how long it may wander off before it closes. */
+const HOVER_OPEN_MS = 120
+const HOVER_CLOSE_MS = 220
+
 /**
  * Says which game version the page shows. Where other versions changed what the page lists, the value opens a menu of
- * them; `changedVariants` names those versions.
+ * them; `changedVariants` names those versions. With a mouse the menu opens as soon as the pointer rests on the value
+ * and closes once it has left both the value and the menu; touch and the keyboard open it with a press.
  */
 export function WikiVersionPicker({
   changedVariants,
   className,
+  appearance = "line",
 }: {
   changedVariants?: ReadonlySet<string>
   /** Places the picker in the row that holds it. */
   className?: string
+  /** `pill` draws it as a frosted pill, for a picker that stands over artwork such as a page's showcase. */
+  appearance?: "line" | "pill"
 }) {
   const { locale, options, optionsPending, seasonId, patchVariantId, setScope } = useWikiContext()
   const root = useRef<HTMLDivElement>(null)
   const [align, setAlign] = useState<"start" | "end">("start")
+  const [open, setOpen] = useState(false)
+  const hoverable = useMediaQuery("(hover: hover) and (pointer: fine)")
+  const timer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+  const show = (next: boolean) => {
+    // The menu opens toward the middle of the page, whichever side the control stands on.
+    const box = next && root.current?.getBoundingClientRect()
+    if (box) setAlign(box.left + box.width / 2 > window.innerWidth / 2 ? "end" : "start")
+    setOpen(next)
+  }
+  const byMouse = (event: PointerEvent) => hoverable && event.pointerType === "mouse"
+  const later = (next: boolean, delay: number) => {
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => show(next), delay)
+  }
+  const hover = {
+    onPointerEnter: (event: PointerEvent) => {
+      if (byMouse(event)) later(true, open ? 0 : HOVER_OPEN_MS)
+    },
+    onPointerLeave: (event: PointerEvent) => {
+      if (byMouse(event)) later(false, HOVER_CLOSE_MS)
+    },
+  }
   const text = useWikiText()
   const historical = !!(seasonId || patchVariantId)
   const activePatch = patchVariantId || (!seasonId && options?.currentPatchVariantId) || ""
@@ -47,7 +79,7 @@ export function WikiVersionPicker({
 
   if (optionsPending)
     return (
-      <div className={cn("wiki-version-picker", className)} aria-busy="true">
+      <div className={cn("wiki-version-picker", className)} data-appearance={appearance} aria-busy="true">
         {label}
         <span className="wiki-version-loading" aria-hidden="true" />
       </div>
@@ -70,7 +102,12 @@ export function WikiVersionPicker({
       <span className="wiki-version-value">
         {selectedPatch ? <VersionName patch={selectedPatch} locale={locale} /> : seasonLabel}
       </span>
-      {selectedPatch?.isCurrent && <span className="wiki-version-live">{current}</span>}
+      {/* A pill keeps only the live dot; the word stays for screen readers and on hover. */}
+      {selectedPatch?.isCurrent && (
+        <span className="wiki-version-live" title={current}>
+          <span className="wiki-version-live-word">{current}</span>
+        </span>
+      )}
     </>
   )
 
@@ -78,6 +115,7 @@ export function WikiVersionPicker({
     <div
       ref={root}
       className={cn("wiki-version-picker", className)}
+      data-appearance={appearance}
       role="group"
       aria-label={text("Phiên bản dữ liệu", "Data version")}
       data-historical={historical || undefined}
@@ -86,13 +124,20 @@ export function WikiVersionPicker({
       {seasons.length && changedVariants?.size ? (
         <DropdownMenu
           modal={false}
-          onOpenChange={(open) => {
-            // The menu opens toward the middle of the page, whichever side the control stands on.
-            const box = open && root.current?.getBoundingClientRect()
-            if (box) setAlign(box.left + box.width / 2 > window.innerWidth / 2 ? "end" : "start")
+          open={open}
+          onOpenChange={(next) => {
+            window.clearTimeout(timer.current)
+            show(next)
           }}
         >
-          <DropdownMenuTrigger className="wiki-version-trigger">
+          <DropdownMenuTrigger
+            className="wiki-version-trigger"
+            {...hover}
+            onPointerDown={(event) => {
+              // A menu the mouse has already opened stays open when the value is then clicked.
+              if (open && byMouse(event)) event.preventDefault()
+            }}
+          >
             {value}
             <WikiIcon name="chevron" size={16} />
           </DropdownMenuTrigger>
@@ -100,6 +145,7 @@ export function WikiVersionPicker({
             align={align}
             sideOffset={6}
             className="wiki-version-menu"
+            {...hover}
             drawerTitle={text("Xem dữ liệu theo phiên bản", "Read the data of a version")}
           >
             <p className="wiki-version-note">

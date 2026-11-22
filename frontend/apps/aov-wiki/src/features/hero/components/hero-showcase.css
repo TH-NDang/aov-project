@@ -1,0 +1,60 @@
+/*
+ * The hero library's scene: a wall of tall portrait strips side by side, each starting at its own height and running
+ * past the banner's foot, where a mist rises over them. Each strip is the hero's portrait cut to show the face. The
+ * wall drifts slowly to the left and repeats without a seam.
+ */
+.wiki-hero-wall {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+/* Mist: a pale haze low in the scene and a darker fog at the very foot. */
+.wiki-hero-wall::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 45% at 60% 100%, color-mix(in srgb, var(--aov-text) 14%, transparent), transparent 70%),
+    linear-gradient(180deg, transparent 52%, color-mix(in srgb, var(--aov-bg) 70%, transparent) 88%);
+  pointer-events: none;
+}
+.wiki-hero-wall-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  gap: 10px;
+  padding-left: 10px;
+  animation: wiki-hero-wall-drift 140s linear infinite;
+}
+/* A strip: the portrait cut tall, with a thin gold edge and a shadow that parts it from the next. */
+.wiki-hero-wall-strip {
+  flex: none;
+  width: calc(var(--strip) * var(--scene-scale, 1));
+  height: calc(100% + 24px - var(--drop) * var(--scene-scale, 1));
+  margin-top: calc(var(--drop) * var(--scene-scale, 1));
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 28%, transparent);
+  border-radius: 6px;
+  background: var(--aov-raised);
+  box-shadow: 0 10px 24px -12px var(--aov-wiki-bar);
+}
+.wiki-hero-wall-strip > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 16%;
+}
+/* Phones: narrower strips, so the wall still shows several faces. */
+.wiki-catalog-showcase[data-layout="compact"] .wiki-hero-wall-strip {
+  width: calc(var(--strip) * 0.78);
+}
+@keyframes wiki-hero-wall-drift {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-hero-wall-track {
+    animation: none;
+  }
+}
