@@ -190,6 +190,11 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   họa. Skeleton dùng cùng lưới hoặc hàng, thanh công cụ và đầu trang như trang đã tải.
 - Tìm tên trang phục/tướng, lọc tướng và bậc, cách sắp xếp lưu trong query `q`, `hero`, `rarity`, `heroSort` (`most`,
   `fewest`, `name`) và `skinSort` (`tier`, `name`). TanStack Query giữ cache mới 60 giây và hủy request không còn dùng.
+- Trên danh sách có hàng **Trang phục mới ở bản <ngày>** (`skin-releases.tsx`): trang phục có ở bản đang xem mà bản
+  liền trước chưa có, mỗi trang phục là ảnh, tên và tướng, bấm mở trình xem. Dữ liệu chưa có ngày ra mắt của trang phục
+  nên hàng chỉ hiện khi bản liền trước có danh sách trang phục được ghi nhận, và không tính trang phục thuộc dữ liệu nền
+  chưa rõ mốc (`skinsNewIn` trong `skin-releases-model.ts`); hiện chưa bản nào đủ điều kiện nên hàng ẩn, và tự hiện khi
+  trang phục được ghi nhận theo từng bản. Xem cả mùa thì không có hàng này.
 - Chọn thẻ mở trình xem bằng Dialog (drawer dưới trên điện thoại), không điều hướng sang trang mới chỉ để xem ảnh. Khung
   ảnh theo tỉ lệ 13:8 của ảnh splash trong game và giữ nguyên khi đổi ảnh; bên dưới là dải ảnh của cùng danh sách, rồi
   tên, các thông tin (tướng có liên kết, bậc, cách nhận kèm giá) và nguồn ảnh có nút xem chi tiết. Từ 1100px phần ảnh và
@@ -283,10 +288,17 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   đang đọc. Trên compact đầu trang có "Tất cả bản cập nhật" và tên bản (`h1`), mục lục thành một hàng cuộn ngang có ảnh
   tướng. Nhảy tới một mục ghi vị trí đó vào địa chỉ để chia sẻ được.
 - Mọi nhãn loại thay đổi (Tăng sức mạnh, Giảm sức mạnh, Làm lại, Sửa lỗi…) đi kèm hình vẽ riêng, trên Wiki và Admin.
+- Mỗi tướng là một thẻ trên nền bề mặt, có vạch màu bên trái theo loại thay đổi như khối thay đổi ở trang tướng: đầu thẻ là
+  ảnh, tên, loại thay đổi và số thay đổi (trên wide thêm "Trang tướng →"), bên dưới là tóm tắt và các thay đổi trải hết
+  bề ngang. Phía trên các thẻ là hàng chip lọc theo loại ("Tất cả" rồi mỗi loại có trong bản kèm số tướng, dạng thẻ chữ
+  Buff, Nerf, Tweak, Fix, Rework, New); chọn một chip chỉ giữ các tướng loại đó, chọn lại để bỏ lọc. Trên compact hàng chip
+  cuộn ngang tới mép màn hình.
+- Mỗi mục Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ có ảnh của nó bên trái tên, loại thay đổi và ghi chú; ảnh lấy từ danh
+  mục kho đúng phiên bản của bản cập nhật (`warehouseCatalogQuery` không lưu vào trình duyệt) và hiện cả trong mục lục.
+  Mục chưa có ảnh hiện chữ cái đầu.
 - Thay đổi của tướng dùng chung `ChangeList` (`src/components/change-list.tsx`) cho trang này và trang tướng. Mỗi
   tướng có đánh giá tổng thể (hoặc nhãn suy ra khi chưa đánh giá), số thay đổi và tóm tắt; các thay đổi gom theo từng kỹ
-  năng, có ảnh và tên kỹ năng khi tướng đã có hồ sơ công khai. Loại thay đổi đã ghi cho cả tướng không lặp lại ở từng
-  dòng. Giá trị ngắn hiện thành "cũ → mới" trên một dòng, giá trị dài xếp hai dòng Trước/Sau. Giá trị đổi theo cấp chiêu
+  năng, có ảnh và tên kỹ năng khi tướng đã có hồ sơ công khai. Mỗi thay đổi mang thẻ loại riêng của nó (dấu và chữ ngắn như Buff, Nerf, Tweak, Fix), kể cả khi trùng loại của cả tướng. Giá trị ngắn hiện thành "cũ → mới" trên một dòng, giá trị dài xếp hai dòng Trước/Sau. Giá trị đổi theo cấp chiêu
   đọc trước thành một dòng; nút "Theo cấp" mở bảng Trước/Sau cho từng cấp, ô đã đổi được đánh dấu. Phần tính giá trị
   theo cấp nằm ở `packages/ui/src/lib/skill-rank-values.ts`, Admin và Wiki cùng dùng.
 - Chi tiết thay đổi hiện sẵn bên dưới phần tóm tắt. Bộ thay đổi dài được cắt ở khoảng một kỹ năng, mờ dần ở cuối và có
@@ -371,7 +383,9 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
   <ngày>" kèm nhãn Đang áp dụng; bản chưa có ngày thì ghi tên bản, xem cả mùa thì ghi tên mùa. Dòng này nằm bên phải tiêu
   đề trên wide và dưới ô tìm trên compact (thư viện Tướng, Trang phục, Kho trang bị), dưới màn đầu trên trang tướng. Khi
   có bản khác thay đổi trang đang xem, giá trị mở menu chỉ liệt kê các bản đó theo mùa, mới nhất trước, cùng lựa chọn
-  "Cả mùa …"; không có thì chỉ là chữ. Với chuột, menu mở ngay khi rê lên giá trị (sau khoảng 0,1 giây) và đóng khi
+  "Cả mùa …"; không có thì chỉ là chữ. Trang có thể ghi thêm cạnh ngày của mỗi bản (`optionDetail`): trang tướng ghi một
+  chữ cho việc bản đó làm với tướng (`ChangeTag`: Buff, Nerf, Tweak, Fix…), Kho trang bị đếm số mục đổi theo loại
+  (`ChangeTally`, ví dụ "Buff 2 · Nerf 1"). Với chuột, menu mở ngay khi rê lên giá trị (sau khoảng 0,1 giây) và đóng khi
   chuột rời cả giá trị lẫn menu; cảm ứng và bàn phím mở bằng cách bấm. Đang xem bản cũ thì có nút "Về bản hiện tại".
   Dạng viên kính mờ (`appearance="pill"`, dùng ở thư viện Tướng) gom nhãn, ngày và mũi tên vào một viên nền mờ trên
   ảnh; bản đang áp dụng chỉ hiện chấm xanh thở nhẹ, chữ "Đang áp dụng" để lại cho trình đọc màn hình và khi rê chuột;

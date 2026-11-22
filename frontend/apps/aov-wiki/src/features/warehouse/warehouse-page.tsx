@@ -3,6 +3,8 @@ import { SpellShowcase } from "./warehouse-showcase-spells"
 import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
+import { changedSubjects } from "../../lib/published-change-subjects"
+import { ChangeTally } from "../../components/change-tag"
 import { PublishedWarehouseView } from "./warehouse-view"
 import { WarehouseHeading } from "./warehouse-heading"
 import { EnchantmentShowcase } from "./warehouse-showcase-enchantments"
@@ -47,6 +49,8 @@ export default function WarehousePage() {
   const { tab, entryCode } = useParams()
   const kind = warehouseKind(tab ?? null)
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
+  // Every version's changes, for the version menu's tally; the queries are the same ones, already cached.
+  const history = usePublishedChanges(warehouseChangeDomain[kind], true)
   const sectionName = wikiText(scope.locale, ...SECTION_NAMES[kind])
   // Enchantments have no search field, so a search left in the address does not hide any of them.
   const search = kind === "enchantments" ? "" : (params.get("q") ?? "")
@@ -202,7 +206,21 @@ export default function WarehousePage() {
     if (name && !subjects.has(id) && !entries.some((e) => e.id === id) && !search) subjects.set(id, { id, name, kind })
   }
 
-  const version = <WikiVersionPicker changedVariants={changes.changedVariants} />
+  // What each version did in this section, counted by kind: "Buff 2 · Nerf 1".
+  const tallies = new Map(
+    history.patches.map(({ variant, rows }) => {
+      const counts = new Map<string, number>()
+      for (const subject of changedSubjects(rows).values())
+        counts.set(subject.kind, (counts.get(subject.kind) ?? 0) + 1)
+      return [variant.id, counts]
+    }),
+  )
+  const version = (
+    <WikiVersionPicker
+      changedVariants={changes.changedVariants}
+      optionDetail={(patch) => <ChangeTally kinds={tallies.get(patch.id) ?? new Map()} />}
+    />
+  )
   const scoped = !!(scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped
 
   return (

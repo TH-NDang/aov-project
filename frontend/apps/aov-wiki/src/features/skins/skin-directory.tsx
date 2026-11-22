@@ -4,6 +4,7 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useRevealedCount } from "@aov/ui/hooks/use-revealed-rows"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
+import { SkinReleases } from "./skin-releases"
 import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { normalizedHeroSearch } from "../../lib/hero-classifications"
 import { skinCatalogQuery, type SkinEntry } from "../../lib/skin-api"
@@ -139,6 +140,7 @@ export function SkinDirectory() {
           </div>
         }
       />
+      <SkinReleases current={query.data?.items ?? []} onOpen={open} />
       <SkinToolbar
         layout={layout}
         filters={filters}
