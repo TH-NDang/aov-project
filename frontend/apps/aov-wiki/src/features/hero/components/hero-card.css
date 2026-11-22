@@ -1,4 +1,7 @@
-/* A hero as a card: the portrait, then the name with the lane marks beside it and the roles below. */
+/*
+ * A hero as a card: the portrait fills it, and the name with the lane marks beside it and the roles below are read on a
+ * shade over the foot of the picture, as skin cards are.
+ */
 .wiki-hero-card-cell {
   position: relative;
   display: grid;
@@ -8,24 +11,34 @@
 .wiki-hero-card {
   --wiki-hero-glyph-size: 16px;
   position: relative;
-  display: flex;
+  isolation: isolate;
+  display: block;
   min-width: 0;
-  flex-direction: column;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
   color: var(--aov-text);
   text-decoration: none;
-  transition: background 160ms;
+}
+/* A thin frame that turns gold when the card is pointed at. */
+.wiki-hero-card::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border: 1px solid var(--aov-line);
+  border-radius: inherit;
+  pointer-events: none;
+  transition: border-color 160ms;
 }
 .wiki-hero-card:focus-visible {
   outline-offset: 2px;
 }
 .wiki-hero-card-portrait {
-  position: relative;
+  position: absolute;
+  inset: 0;
   display: block;
-  aspect-ratio: 4 / 5;
-  flex: none;
   overflow: hidden;
   background: var(--aov-raised);
 }
@@ -47,10 +60,19 @@
   font: var(--wiki-type-hero);
 }
 .wiki-hero-card-body {
+  position: absolute;
+  z-index: 2;
+  inset: auto 0 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 2px 8px;
-  padding: 8px 10px 10px;
+  padding: 36px 10px 10px;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--aov-sunken) 94%, transparent),
+    color-mix(in srgb, var(--aov-sunken) 76%, transparent) 55%,
+    transparent
+  );
 }
 .wiki-hero-card-name {
   grid-area: 1 / 1;
@@ -64,7 +86,7 @@
   grid-area: 1 / 2;
   align-items: center;
   gap: 4px;
-  color: var(--aov-muted);
+  color: var(--aov-text-soft);
   font: var(--wiki-type-entry);
 }
 .wiki-hero-card-roles {
@@ -72,7 +94,7 @@
   display: block;
   grid-area: 2 / 1 / auto / -1;
   overflow: hidden;
-  color: var(--aov-muted);
+  color: var(--aov-text-soft);
   font: var(--wiki-type-meta);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -111,7 +133,7 @@
     align-items: center;
     justify-content: center;
     gap: 2px 6px;
-    padding: 6px 6px 8px;
+    padding: 28px 6px 8px;
     text-align: center;
   }
   .wiki-hero-card-name {
@@ -154,31 +176,28 @@
 }
 
 @media (hover: hover) {
-  .wiki-hero-card:hover {
-    background: var(--aov-raised);
+  .wiki-hero-card:hover::before {
+    border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  }
+  .wiki-hero-card:hover .wiki-hero-card-name {
+    color: var(--aov-accent-strong);
   }
   .wiki-hero-card:hover .wiki-hero-card-portrait img {
-    transform: scale(1.04);
+    transform: scale(1.05);
   }
 }
 
 /* The hero whose page is open: an accent outline with a faint tint and a tick on the portrait. */
-.wiki-hero-card[aria-current="page"] {
-  background: color-mix(in srgb, var(--aov-accent) 10%, var(--aov-surface));
-}
-.wiki-hero-card[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 70%, transparent);
-  border-radius: inherit;
-  pointer-events: none;
+.wiki-hero-card[aria-current="page"]::before {
+  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--aov-accent) 30%, transparent);
 }
 .wiki-hero-card[aria-current="page"] .wiki-hero-card-name {
   color: var(--aov-accent);
 }
 .wiki-hero-card-current {
   position: absolute;
+  z-index: 2;
   top: 6px;
   right: 6px;
   display: grid;
@@ -227,4 +246,11 @@
   .wiki-hero-card-credit[data-state="open"] {
     opacity: 1;
   }
+}
+
+/* The part of the name a search matched: gold, on a faint gold wash. */
+.wiki-hero-card-match {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--aov-accent) 22%, transparent);
+  color: var(--aov-accent-strong);
 }

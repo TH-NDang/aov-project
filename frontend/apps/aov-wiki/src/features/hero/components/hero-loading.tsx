@@ -1,15 +1,15 @@
 import { type CSSProperties } from "react"
 import { useLocation, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { PatchChangesRow } from "../../../components/patch-changes-row"
-import { WikiIcon } from "../../../components/wiki-icon"
 import { WikiVersionPicker } from "../../../components/wiki-version-picker"
 import { useWikiContext, wikiText } from "../../../context/wiki-context"
-import { CatalogHeading } from "../../../layout/catalog-heading"
 import { HeroDetailLayout } from "../../../layout/wiki-library-layout"
 import { heroAppearance } from "../model/hero-appearance"
 import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../../../lib/hero-classifications"
 import { HeroFilterChips } from "./hero-filter-chips"
+import { HeroShowcase } from "./hero-showcase"
+import { HeroSearch } from "./hero-search"
+import { HeroPatchBoard } from "./hero-patch-board"
 import "./hero-card.css"
 import "../pages/hero-directory.css"
 import "../pages/hero-detail.css"
@@ -56,47 +56,58 @@ export function HeroDirectoryLoading() {
   const [searchParams] = useSearchParams()
   const compact = usePageLayout() === "compact"
   const filtered = ["q", "role", "position"].some((key) => searchParams.has(key))
-  const picker = <WikiVersionPicker />
+  const picker = <WikiVersionPicker appearance="pill" />
   const searchBox = (
-    <span className="wiki-hero-search">
-      <WikiIcon name="search" size={18} />
-    </span>
+    <HeroSearch value="" onChange={() => undefined} size={compact ? "large" : "regular"} atEnd={!compact} />
+  )
+  const heading = (
+    <h2>{filtered ? wikiText(locale, "Kết quả", "Results") : wikiText(locale, "Tất cả tướng", "All heroes")}</h2>
+  )
+  const filters = (layout?: "icons") => (
+    <>
+      <HeroFilterChips
+        layout={layout}
+        label={wikiText(locale, "Vị trí", "Lane")}
+        options={localizedHeroOptions(HERO_POSITIONS, locale)}
+        selected={[]}
+        onToggle={() => undefined}
+      />
+      <HeroFilterChips
+        layout={layout}
+        label={wikiText(locale, "Vai trò", "Role")}
+        options={localizedHeroOptions(HERO_ROLES, locale)}
+        selected={[]}
+        onToggle={() => undefined}
+      />
+    </>
   )
   return (
     <div className="wiki-hero-directory">
-      <CatalogHeading title={wikiText(locale, "Thư viện Tướng", "Hero library")} action={picker} />
+      {/* The head has its text and no scene until the heroes arrive. */}
+      <HeroShowcase version={picker} />
+      <HeroPatchBoard entries={[]} pending />
       {compact ? (
         <>
-          <div className="wiki-hero-toolbar-compact" aria-hidden="true">
+          <div className="wiki-hero-toolbar-compact" aria-hidden="true" inert>
             {searchBox}
-            <span className="wiki-hero-filter-skeleton wiki-skeleton" />
           </div>
-          <div className="wiki-hero-version">{picker}</div>
+          <div className="wiki-hero-mark-filters" aria-hidden="true" inert>
+            {filters("icons")}
+          </div>
         </>
-      ) : (
-        <div className="wiki-hero-controls" aria-hidden="true" inert>
-          {searchBox}
-          <div className="wiki-hero-filter-groups">
-            <HeroFilterChips
-              label={wikiText(locale, "Vị trí", "Lane")}
-              options={localizedHeroOptions(HERO_POSITIONS, locale)}
-              selected={[]}
-              onToggle={() => undefined}
-            />
-            <HeroFilterChips
-              label={wikiText(locale, "Vai trò", "Role")}
-              options={localizedHeroOptions(HERO_ROLES, locale)}
-              selected={[]}
-              onToggle={() => undefined}
-            />
+      ) : null}
+      <section className="wiki-hero-library">
+        {compact ? (
+          <header className="wiki-hero-list-heading">{heading}</header>
+        ) : (
+          <div className="wiki-hero-finder" aria-hidden="true" inert>
+            <header className="wiki-hero-finder-head">
+              {heading}
+              {searchBox}
+            </header>
+            <div className="wiki-hero-filter-groups">{filters()}</div>
           </div>
-        </div>
-      )}
-      <PatchChangesRow entries={[]} pending />
-      <section>
-        <header className="wiki-hero-list-heading">
-          <h2>{filtered ? wikiText(locale, "Kết quả", "Results") : wikiText(locale, "Tất cả tướng", "All heroes")}</h2>
-        </header>
+        )}
         <HeroGridSkeleton />
       </section>
     </div>

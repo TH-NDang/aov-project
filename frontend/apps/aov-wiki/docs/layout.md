@@ -68,14 +68,52 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Thư viện Tướng
 
-- `/hero` mở bằng `CatalogHeading` "Thư viện Tướng" với phiên bản dữ liệu bên phải. Trên wide, dưới tiêu đề là ô tìm và
-  hai nhóm chip Vị trí, Vai trò, mỗi chip có icon và tên. Trên compact, ô tìm và nút Lọc dính dưới đầu trang; bộ lọc Vị
-  trí và Vai trò nằm trong drawer dưới, có ghi tên từng lựa chọn và số tướng tìm được; phiên bản dữ liệu là một dòng dưới
-  ô tìm. Mỗi chip (và mỗi lựa chọn trong drawer) ghi số tướng nó sẽ cho thấy khi giữ nguyên ô tìm và nhóm lọc còn lại;
-  lựa chọn cho 0 tướng bị làm mờ nhưng vẫn bấm được.
-- Tiếp theo là hàng thay đổi ở bản đang xem (`PatchChangesRow` trong `src/components/patch-changes-row.tsx`): các tướng
-  có thay đổi, chia theo loại, dẫn tới ghi chú đầy đủ. Rồi đến lưới tướng, tiêu đề "Tất cả tướng" hoặc "Kết quả" kèm số
-  tướng; khi đang lọc có nút Xóa bộ lọc.
+- `/hero` mở bằng phần trưng bày (`HeroShowcase` trong `src/features/hero/components/hero-showcase.tsx`, dựng trên
+  `CatalogShowcase` của `src/components/catalog-showcase.tsx` mà bốn phần kho cũng dùng). Chữ chỉ có tiêu đề và số tướng
+  (trên compact header đã ghi tên trang nên chỉ còn số tướng). Phiên bản dữ liệu là một viên kính mờ (`appearance="pill"`
+  của `WikiVersionPicker`) ghim ở góc trên phải banner trên wide, cạnh số tướng trên compact. Phía sau là một bức tường chân dung phủ
+  cả banner, kể cả sau chữ: 16 dải ảnh dọc cắt từ ảnh `PORTRAIT` để thấy mặt tướng, mỗi dải bắt đầu ở một độ cao khác nhau
+  và chạy quá chân banner, nơi có lớp sương mờ. Bức tường trôi rất chậm sang trái rồi lặp lại không có chỗ nối (tắt khi
+  người đọc giảm chuyển động). Lớp tối bên trái giữ chữ rõ. Tướng trên tường đổi theo ngày (`dailySpread` trong
+  `model/hero-daily-spread.ts`), rải đều khắp danh sách. Trên compact header trong suốt đè lên bức tường.
+- Ngay sau phần trưng bày là bảng thay đổi ở bản đang xem (`HeroPatchBoard`): một khung nền tối nhạt chia thành các nhóm theo loại
+  thay đổi, ngăn bằng một đường mảnh. Mỗi nhóm ghi tên loại và số tướng, kèm dấu theo màu của loại: hai mũi tên lên
+  (tăng, đỏ), hai mũi tên xuống (giảm, xanh lá), mũi tên vòng (làm lại, cam), dấu lấp lánh (mới, vàng), thanh chỉnh (điều
+  chỉnh, xanh dương). Mỗi tướng là một thẻ chân dung có tên ở chân và một vạch mảnh màu của loại dưới thẻ. Góc thẻ có
+  một nhãn chữ ngắn mà người chơi hay dùng: Buff, Nerf, Rework, New, Tweak; chữ đậm, nghiêng, màu của
+  loại, có quầng sáng nhẹ, trên nền tối. Màu chỉ nằm ở các chi tiết này để khối không chói. Ở mọi chỗ trong Wiki (hàng thay đổi ở trang chủ, trang kho, trang tướng), tăng sức mạnh là màu đỏ và giảm sức mạnh là màu xanh lá. Các nhóm nằm cạnh nhau và
+  cuộn ngang khi không đủ chỗ. Liên kết "Xem ghi chú đầy đủ" nằm bên phải tiêu đề. Tướng chưa có hồ sơ vẫn được liệt kê
+  nhưng không có liên kết. Trên compact các nhóm xếp dọc, mỗi nhóm một hàng, để mọi loại thay đổi hiện ngay từ cái nhìn đầu; thẻ trong một hàng vuốt ngang riêng, có chặn theo từng thẻ, và mép phải mờ dần khi còn thẻ phía sau. Liên kết ghi chú chuyển xuống thành một hàng rộng ở cuối khung. Các trang kho vẫn dùng hàng chip `PatchChangesRow`.
+- Bảng thay đổi luôn hiện đủ mọi tướng đổi ở bản đó, không theo ô tìm và bộ lọc: đó là tin của bản, đọc trước khi tra
+  cứu. Ô tìm và bộ lọc nằm sau, ngay trên lưới tướng mà chúng thu hẹp. Trên wide chúng gom vào một khung tra cứu
+  (`wiki-hero-finder`): dòng đầu là tên danh sách ("Tất cả tướng" hoặc "Kết quả"), số tướng, nút Xóa bộ lọc khi đang lọc
+  và ô tìm ở cuối dòng; dưới một đường mảnh là hai nhóm chip Vị trí, Vai trò, mỗi chip có icon, tên và số tướng nó sẽ cho
+  thấy khi giữ nguyên ô tìm và nhóm lọc còn lại; lựa chọn cho 0 tướng bị làm mờ nhưng vẫn bấm được. Trên compact, ô tìm
+  dính dưới đầu trang; ngay dưới là hai hàng nút tròn chỉ có icon (Vị trí rồi Vai trò). Nút đang chọn hiện thêm tên. Rê
+  chuột hoặc focus thì tooltip ghi tên và số tướng; trên màn cảm ứng tooltip hiện khoảng 1,6 giây sau khi chạm. Khi hai
+  hàng icon cuộn khuất dưới thanh dính, nút Lọc chỉ có icon hiện trong thanh, mở drawer có đủ tên và số tướng. Sau đó là
+  tiêu đề danh sách và lưới.
+- Ô tìm (`HeroSearch` trong `components/hero-search.tsx`) chỉ tìm theo tên: tên, mã và tên các dạng của tướng, không
+  cần dấu. Vai trò và vị trí không được tìm qua ô này vì đã có bộ lọc riêng; tìm cả chúng làm lẫn vào những tướng người
+  đọc không định tìm (gõ "tro" ra cả nhóm Trợ thủ). Kết quả xếp theo mức khớp (`heroSearchRank` trong
+  `model/hero-search-rank.ts`): tên bắt đầu bằng chữ đã gõ trước, rồi tên có một từ bắt đầu bằng chữ đó, cuối cùng là
+  tên chỉ chứa chữ đó ở giữa; cùng mức thì theo thứ tự thư viện. Bấm / ở bất kỳ đâu trên trang (khi không
+  đang gõ ở chỗ khác) để vào ô; lúc ô trống, phím / hiện như một nút nhỏ ở cuối ô trên máy có bàn phím. Đã gõ thì cuối ô
+  có nút × để xóa, Esc cũng xóa. Khi chỉ còn đúng một tướng, Enter mở trang tướng đó. Trên compact ô cao 44px, chữ 16px
+  để iOS không phóng to khi focus.
+- Gõ trong ô hiện chữ ngay; lưới đi theo sau một nhịp (giá trị tìm được hoãn bằng `useDeferredValue`), và địa chỉ trang
+  chỉ ghi `q` khi ngừng gõ khoảng 0,25 giây, để chia sẻ hoặc quay lại được. Danh sách đã lọc, bảng thay đổi và lưới được
+  giữ nguyên khi không đổi, nên một phím bấm không vẽ lại cả trang.
+- Khi đang tìm hoặc lọc, tướng không khớp không bị ẩn: tướng khớp lên đầu theo thứ tự xếp hạng trên, phần chữ khớp trong tên được tô vàng (so khớp
+  không dấu nhưng tô đúng chữ có dấu); sau một đường đứt là dòng "Không khớp · N" có nút Thu gọn/Hiện, rồi các tướng còn
+  lại mờ và xám, rê chuột thì rõ lại. Ô chữ cái chỉ hiện khi xem toàn bộ. Không có tướng nào khớp thì một dòng phía trên
+  lưới nói vậy, kèm nút Xóa bộ lọc. Mọi thẻ nằm trong một lưới duy nhất và chỉ đổi thứ tự bằng CSS `order`, nên gõ tìm
+  không dựng lại thẻ hay tải lại ảnh.
+- Rồi đến lưới tướng, tiêu đề "Tất cả tướng" hoặc "Kết quả" kèm số tướng; khi đang lọc có nút Xóa bộ lọc. Thẻ tướng là
+  ảnh chân dung phủ kín thẻ (3:4), tên, vai trò và dấu vị trí nằm trên lớp tối ở chân ảnh như thẻ trang phục; rê chuột thì
+  viền và tên chuyển vàng.
+  Mỗi nhóm tướng cùng chữ cái đầu mở bằng một ô mục lục cùng cỡ thẻ: chữ cái lớn viền vàng trên nền chấm và số tướng
+  của nhóm.
 - Danh sách lấy các tướng đã xuất bản từ API public `GET /api/wiki/v1/heroes?region=VN&locale=vi-VN&size=100&page=0`. Nếu có nhiều trang, chương trình đọc tiếp trước khi lọc; số lượng kết quả được tính từ dữ liệu thực tế, không cố định theo một bộ mẫu. Mỗi mục có thể kèm trường `portrait` để dùng ảnh `PORTRAIT` ngay từ API danh sách, không cần tải chi tiết từng tướng chỉ để lấy ảnh.
 - TanStack Query giữ dữ liệu danh sách và chi tiết ở trạng thái mới trong 60 giây, dùng chung danh sách khi chuyển giữa thư viện và chi tiết. Khi lỗi có nút thử lại; khi chưa có dữ liệu hoặc không khớp bộ lọc có trạng thái riêng, không thay bằng tướng mẫu.
 - Hai nhóm bộ lọc phân biệt rõ: **Vị trí** gồm Đường Caesar, Rừng, Đường giữa, Đường Rồng, Hỗ trợ; **Vai trò** gồm Đỡ
@@ -87,6 +125,12 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   chỉ còn icon khi hẹp; vị trí luôn là icon. Lưới 7 cột, 6 cột dưới 1100px, 5 cột trên compact, 4 cột dưới 720px, 3 cột
   dưới 480px. Toàn bộ thẻ mở chi tiết và giữ đường dẫn bộ lọc để quay về; nguồn ảnh mở từ nút nhỏ trên thẻ.
 - 11 icon vị trí/vai trò trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. PNG nguồn không còn trong `resources/` (ADR-030); bản PNG vai trò nằm trong `apps/admin-aov/public/images/hero/vai-tro/`.
+  Sáu icon vai trò dò viền từ icon trong game. Bốn icon đường Caesar, Rừng, Giữa, Rồng vẽ lại bằng đường thẳng và hình
+  tròn theo huy hiệu trên sóng giải đấu: bản đồ cắt thành các khối riêng (chữ L trên, dải chéo giữa, chữ L dưới) cách
+  nhau một khe; khối được chọn tô đặc, các khối còn lại chỉ vẽ viền mảnh. Ở Caesar và Rồng, hai chữ L gặp nhau ở đường
+  chéo và ô vuông giữa trống, có chấm tròn (Caesar thêm một chấm nhỏ bị che một phần phía sau); ở Giữa, dải chéo chạy từ
+  góc tới góc và hai chữ L lùi lại nhường chỗ. Rừng là hai tam giác trong khung mảnh. Đường Hỗ trợ dùng chung hình đôi
+  cánh của vai trò Trợ thủ. Nét mảnh dày 2,4/48.
 
 ## Trạng thái chờ của thư viện
 
@@ -305,7 +349,11 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
   <ngày>" kèm nhãn Đang áp dụng; bản chưa có ngày thì ghi tên bản, xem cả mùa thì ghi tên mùa. Dòng này nằm bên phải tiêu
   đề trên wide và dưới ô tìm trên compact (thư viện Tướng, Trang phục, Kho trang bị), dưới màn đầu trên trang tướng. Khi
   có bản khác thay đổi trang đang xem, giá trị mở menu chỉ liệt kê các bản đó theo mùa, mới nhất trước, cùng lựa chọn
-  "Cả mùa …"; không có thì chỉ là chữ. Đang xem bản cũ thì có nút "Về bản hiện tại".
+  "Cả mùa …"; không có thì chỉ là chữ. Với chuột, menu mở ngay khi rê lên giá trị (sau khoảng 0,1 giây) và đóng khi
+  chuột rời cả giá trị lẫn menu; cảm ứng và bàn phím mở bằng cách bấm. Đang xem bản cũ thì có nút "Về bản hiện tại".
+  Dạng viên kính mờ (`appearance="pill"`, dùng ở thư viện Tướng) gom nhãn, ngày và mũi tên vào một viên nền mờ trên
+  ảnh; bản đang áp dụng chỉ hiện chấm xanh thở nhẹ, chữ "Đang áp dụng" để lại cho trình đọc màn hình và khi rê chuột;
+  đang xem bản cũ thì viên chuyển viền vàng như một bộ lọc đang bật.
 
 ## Chi tiết Tướng
 

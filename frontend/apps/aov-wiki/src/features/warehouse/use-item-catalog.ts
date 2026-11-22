@@ -12,7 +12,8 @@ import {
   type ItemTextStat,
 } from "@aov/ui/lib/item-description"
 import { itemMatchesCategory, warehouseItemLayout } from "./warehouse-item-layout"
-import { NARROW_ITEM_LAYOUT, preferredItemLayout, useMediaQuery, type ItemLayout } from "./warehouse-layout"
+import { useMediaQuery } from "../../lib/use-media-query"
+import { NARROW_ITEM_LAYOUT, preferredItemLayout, type ItemLayout } from "./warehouse-layout"
 import {
   warehouseName,
   warehouseText,

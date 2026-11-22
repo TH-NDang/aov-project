@@ -189,3 +189,66 @@
     display: none;
   }
 }
+
+/*
+ * The pill: the picker as one frosted capsule laid over artwork, with the quiet label, the version in bold, its live dot
+ * and the chevron inside it. The whole capsule lights up on hover, so the value needs no frame of its own.
+ */
+.wiki-version-picker[data-appearance="pill"] {
+  min-height: 36px;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--aov-text) 16%, transparent);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 4px 0 14px;
+  background: color-mix(in srgb, var(--aov-bg) 62%, transparent);
+  box-shadow: 0 8px 24px -14px var(--aov-wiki-bar);
+  backdrop-filter: blur(10px) saturate(1.2);
+  transition:
+    border-color 160ms,
+    background 160ms;
+}
+.wiki-version-picker[data-appearance="pill"]:has(.wiki-version-trigger:is(:hover, [data-state="open"])) {
+  border-color: color-mix(in srgb, var(--aov-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--aov-bg) 78%, transparent);
+}
+.wiki-version-picker[data-appearance="pill"] .wiki-version-trigger {
+  height: 34px;
+  margin-left: 0;
+  border: 0;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 8px 0 2px;
+  background: none;
+}
+.wiki-version-picker[data-appearance="pill"] .wiki-version-static {
+  padding-right: 10px;
+}
+/* An earlier version is a filter on the whole page: the capsule takes the gold of a chosen filter. */
+.wiki-version-picker[data-appearance="pill"][data-historical] {
+  border-color: var(--aov-accent);
+  background: color-mix(in srgb, var(--aov-accent) 14%, color-mix(in srgb, var(--aov-bg) 70%, transparent));
+}
+
+/* The pill shows the live version by its dot alone, breathing slowly; the word is kept for screen readers. */
+.wiki-version-picker[data-appearance="pill"] .wiki-version-live-word {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.wiki-version-picker[data-appearance="pill"] .wiki-version-live::before {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wiki-version-picker[data-appearance="pill"] .wiki-version-live::before {
+    animation: wiki-version-live-breath 2.4s ease-in-out infinite;
+  }
+}
+@keyframes wiki-version-live-breath {
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 8%, transparent);
+  }
+}

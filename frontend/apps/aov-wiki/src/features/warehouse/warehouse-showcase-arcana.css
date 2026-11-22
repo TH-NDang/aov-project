@@ -58,7 +58,7 @@
   box-shadow: 0 0 12px color-mix(in srgb, var(--gold) 8%, transparent);
 }
 /* A wide banner sets the wheel in the middle of its scene. */
-.wiki-warehouse-showcase[data-layout="wide"] .wiki-arcana-scene-wheel {
+.wiki-catalog-showcase[data-layout="wide"] .wiki-arcana-scene-wheel {
   right: 24%;
   translate: 50% -50%;
 }

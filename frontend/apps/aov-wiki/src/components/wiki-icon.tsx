@@ -110,6 +110,12 @@ const PATHS = {
     </>
   ),
   chevron: <path d="m7 9.5 5 5 5-5" />,
+  // The marks of a change: stronger, weaker, remade.
+  stronger: <path d="m7 12.5 5-5 5 5M7 18l5-5 5 5" />,
+  weaker: <path d="m7 6 5 5 5-5M7 11.5l5 5 5-5" />,
+  remade: (
+    <path d="M19.5 10.5A7.5 7.5 0 0 0 6 6.6L4.5 8.2M4.5 4v4.2h4.2M4.5 13.5A7.5 7.5 0 0 0 18 17.4l1.5-1.6m0 4.2v-4.2h-4.2" />
+  ),
   chevronRight: <path d="m9.5 7 5 5-5 5" />,
   chevronLeft: <path d="m14.5 7-5 5 5 5" />,
   rows: <path d="M4 7h16M4 12h16M4 17h16" />,

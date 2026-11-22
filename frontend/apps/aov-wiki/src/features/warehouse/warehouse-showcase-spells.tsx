@@ -1,8 +1,8 @@
 import { useMemo, type CSSProperties } from "react"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { isRetiredSpell, spellRows } from "./use-item-catalog"
-import { useShowcaseTurn } from "./use-showcase-turn"
-import { WarehouseShowcase, type ShowcaseIntro } from "./warehouse-showcase"
+import { useShowcaseTurn } from "../../lib/use-showcase-turn"
+import { CatalogShowcase, type ShowcaseIntro } from "../../components/catalog-showcase"
 import { spellCooldownText, spellKeepsCharges } from "./warehouse-spells"
 import { warehouseImage, warehouseName, type PublishedWarehouseRecord } from "../../lib/warehouse-types"
 import "./warehouse-showcase-spells.css"
@@ -52,7 +52,7 @@ export function SpellShowcase({ intro, entries }: { intro: ShowcaseIntro; entrie
   const { scene, leaving } = useShowcaseTurn(scenes, picturesOfScene)
   const others = scene ? scenes.filter((candidate) => candidate.key !== scene.key) : []
   return (
-    <WarehouseShowcase
+    <CatalogShowcase
       {...intro}
       scene={
         scene && (

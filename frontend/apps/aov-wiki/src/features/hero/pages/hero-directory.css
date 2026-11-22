@@ -4,7 +4,7 @@
   --wiki-changes-bleed: var(--wiki-gutter);
 }
 
-/* The field that searches the heroes by name, on this page and in the quick switch. */
+/* The field that searches the heroes by name in the quick switch; the library itself uses HeroSearch. */
 .wiki-hero-search {
   display: flex;
   flex: 1;
@@ -40,12 +40,38 @@
   background: var(--aov-sunken);
 }
 
-/* Wide layout: the search on its own line, then the lanes and the roles as two groups of chips. */
-.wiki-hero-controls {
+/*
+ * Wide layout: one finder heads the list it narrows. Its first line holds the list's name and count and, at the end,
+ * the search; under a hairline the lanes and the roles follow as two groups of chips.
+ */
+.wiki-hero-finder {
   display: grid;
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 12px 14px 14px;
+  background: var(--aov-surface);
 }
+.wiki-hero-finder-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--aov-line);
+}
+.wiki-hero-finder-head > h2 {
+  color: var(--aov-accent);
+  font: var(--wiki-type-section);
+}
+.wiki-hero-finder-head > small {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* A group that does not fit beside the other moves to the next line whole; a single chip never wraps alone. */
 .wiki-hero-filter-groups {
   display: flex;
@@ -153,19 +179,29 @@
   padding: 8px var(--wiki-gutter);
   background: var(--aov-bg);
 }
-/* The version the list shows: one quiet line under the search. */
-.wiki-hero-version {
-  display: flex;
-  min-width: 0;
-  margin-bottom: 12px;
+/* The filter button waits until the mark filters under the bar have scrolled away beneath it. */
+.wiki-hero-toolbar-compact:not([data-marks-covered]) .wiki-hero-filter-trigger {
+  display: none;
 }
-.wiki-hero-toolbar-compact .wiki-hero-search {
-  height: 40px;
-  max-width: none;
+.wiki-hero-toolbar-compact[data-marks-covered] .wiki-hero-filter-trigger {
+  animation: wiki-hero-trigger-in 200ms ease-out;
 }
-/* 16px keeps iOS from zooming the page when the field gets focus. */
-.wiki-hero-toolbar-compact .wiki-hero-search input {
-  font-size: 16px;
+@keyframes wiki-hero-trigger-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-hero-toolbar-compact[data-marks-covered] .wiki-hero-filter-trigger {
+    animation: none;
+  }
+}
+/* The lanes, then the roles, each a line of marks under the search. */
+.wiki-hero-mark-filters {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 10px;
 }
 .wiki-hero-sheet-group {
   min-width: 0;
@@ -263,4 +299,17 @@
       animation-range: entry 0% entry 26%;
     }
   }
+}
+
+/* No hero matches: one line above the faded grid, with the way back to every hero. */
+.wiki-hero-no-match {
+  margin-bottom: 4px;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-body);
+}
+.wiki-hero-no-match > button {
+  color: var(--aov-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

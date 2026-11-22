@@ -78,3 +78,39 @@
 .wiki-hero-chip[data-empty] {
   opacity: 0.45;
 }
+/*
+ * Phones: each choice is a round mark, so a group fits one line. A chosen one grows to spell out its name, and the
+ * group's own label is left to screen readers.
+ */
+.wiki-hero-chips[data-layout="icons"] {
+  gap: 6px;
+}
+.wiki-hero-chips[data-layout="icons"] .wiki-hero-chips-label {
+  display: none;
+}
+.wiki-hero-chips[data-layout="icons"] .wiki-hero-chip {
+  --wiki-hero-glyph-size: 18px;
+  height: 36px;
+  min-width: 36px;
+  justify-content: center;
+  padding: 0 9px;
+}
+.wiki-hero-chips[data-layout="icons"] .wiki-hero-chip:not([aria-pressed="true"]) .wiki-hero-chip-name {
+  display: none;
+}
+.wiki-hero-chips[data-layout="icons"] .wiki-hero-chip::before {
+  inset: 0;
+}
+/* The name of a mark filter: a small dark label under it. */
+.wiki-hero-chip-tip[data-slot="tooltip-content"] {
+  font: var(--wiki-type-meta);
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 4px 8px;
+  background: var(--aov-popover);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-hero-chip-tip[data-slot="tooltip-content"] > svg {
+  visibility: hidden;
+}

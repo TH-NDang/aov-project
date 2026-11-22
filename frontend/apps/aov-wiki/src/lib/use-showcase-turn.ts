@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useMediaQuery } from "./warehouse-layout"
+import { useMediaQuery } from "./use-media-query"
 
 /** How long one scene stays before the next takes its turn, and how long the old one takes to fade. */
 const STAYS_MS = 7000
