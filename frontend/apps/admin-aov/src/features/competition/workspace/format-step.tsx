@@ -7,10 +7,12 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { FORMAT_NAMES, hostOf, isLeagueStage, stageProgress } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { StageFields, TIE_BREAK_PRESETS } from "./plan-fields"
+import { StageRulesView } from "./stage-rules-view"
 
 /** One card per stage in playing order; a stage opens for editing only when asked. */
 export function FormatStep({ ws }: { ws: Workspace }) {
   const { plan } = ws
+  const region = (ws.entry.content.tournament.region || "VN").toUpperCase()
   const [selected, setSelected] = useState(plan.stages[0]?.code ?? "")
   const [editing, setEditing] = useState(false)
   const stage = plan.stages.find((entry) => entry.code === selected) ?? plan.stages[0]
@@ -157,37 +159,39 @@ export function FormatStep({ ws }: { ws: Workspace }) {
         >
           {editing && ws.canEdit ? (
             <div className="space-y-3 p-4">
-              <StageFields stage={stage} disabled={!ws.canEdit} onChange={update} />
+              <StageFields stage={stage} region={region} disabled={!ws.canEdit} onChange={update} />
               <p className="type-meta">Thay đổi thể thức nằm trong bản nháp và được ghi khi bạn bấm Lưu bản nháp.</p>
             </div>
           ) : (
-            <dl className="grid gap-x-6 gap-y-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Fact label="Cách đấu">
-                {FORMAT_NAMES[stage.format] ?? stage.format}
-                {isLeagueStage(stage) ? ` · ${stage.legs} lượt` : ""} · BO{stage.bestOf}
-              </Fact>
-              {isLeagueStage(stage) && (
-                <>
-                  <Fact label="Điểm">
-                    Thắng {stage.winPoints} · Thua {stage.lossPoints}
-                  </Fact>
-                  <Fact label="Đi tiếp">{stage.advance ? `${stage.advance} đội` : "Không xét"}</Fact>
-                  <Fact label="Khi bằng điểm">
-                    {TIE_BREAK_PRESETS[stage.tieBreakers.join(",")] ?? stage.tieBreakers.join(" → ")}
-                  </Fact>
-                </>
-              )}
-              <Fact label="Nguồn điều lệ">
-                {stage.sourceUrl ? (
-                  <a className="underline" href={stage.sourceUrl} target="_blank" rel="noreferrer">
-                    {hostOf(stage.sourceUrl)}
-                  </a>
-                ) : (
-                  "Chưa có"
+            <>
+              <dl className="grid gap-x-6 gap-y-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Fact label="Cách đấu">
+                  {FORMAT_NAMES[stage.format] ?? stage.format}
+                  {isLeagueStage(stage) ? ` · ${stage.legs} lượt` : ""} · BO{stage.bestOf}
+                </Fact>
+                {isLeagueStage(stage) && (
+                  <>
+                    <Fact label="Điểm">
+                      Thắng {stage.winPoints} · Thua {stage.lossPoints}
+                    </Fact>
+                    <Fact label="Đi tiếp">{stage.advance ? `${stage.advance} đội` : "Không xét"}</Fact>
+                    <Fact label="Khi bằng điểm">
+                      {TIE_BREAK_PRESETS[stage.tieBreakers.join(",")] ?? stage.tieBreakers.join(" → ")}
+                    </Fact>
+                  </>
                 )}
-              </Fact>
-              <Fact label="Phiên bản / quy tắc cấm chọn">{stage.patchNote || "Chưa ghi"}</Fact>
-            </dl>
+                <Fact label="Nguồn điều lệ">
+                  {stage.sourceUrl ? (
+                    <a className="underline" href={stage.sourceUrl} target="_blank" rel="noreferrer">
+                      {hostOf(stage.sourceUrl)}
+                    </a>
+                  ) : (
+                    "Chưa có"
+                  )}
+                </Fact>
+              </dl>
+              <StageRulesView stage={stage} region={region} />
+            </>
           )}
         </Panel>
       )}

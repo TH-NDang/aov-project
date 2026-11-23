@@ -72,7 +72,7 @@ const plan = (matches: PlannedMatch[], more: Partial<CompetitionPlan> = {}): Com
       advance: 6,
       tieBreakers: [],
       sourceUrl: "",
-      patchNote: "",
+      patches: [],
     },
     {
       code: "PLAYOFF",
@@ -85,7 +85,7 @@ const plan = (matches: PlannedMatch[], more: Partial<CompetitionPlan> = {}): Com
       advance: 1,
       tieBreakers: [],
       sourceUrl: "",
-      patchNote: "",
+      patches: [],
     },
   ],
   playoffSeeds: { 1: "sgp", 2: "fpl", 3: "bme", 4: "fl", 5: "gam", 6: "box" },
