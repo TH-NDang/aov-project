@@ -84,6 +84,14 @@
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
+.wiki-footer-note a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.wiki-footer-note a:hover {
+  color: var(--aov-text);
+}
 
 /* Compact: the links become a list under the introduction, each one an easy target. */
 @media (max-width: 899.98px) {

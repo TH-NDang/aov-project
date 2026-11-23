@@ -1,9 +1,47 @@
-import { navArtIcons } from "@aov/ui/components/nav-art-icons"
+import { gameIcon } from "@aov/ui/components/game-icons"
 import { cn } from "@aov/ui/lib/utils"
-import { catalogIcons } from "@aov/ui/components/catalog-icons"
 
-/** Catalog navigation shares its artwork with the public wiki. */
-export const NAV_ICONS = { ...navArtIcons, ...catalogIcons }
+/**
+ * Navigation marks, from Game Icons, as the public wiki draws its sections: the entries the wiki also has use the same
+ * icon there and here. The names are those of the navigation, so the pages that pick an icon by name stay as they are.
+ */
+export const NAV_ICONS = {
+  dashboard: gameIcon("speedometer"),
+  imageLibrary: gameIcon("wood-frame"),
+  profile: gameIcon("person"),
+  users: gameIcon("three-friends"),
+  characterBook: gameIcon("book-cover"),
+  heroes: gameIcon("samurai-helmet"),
+  skins: gameIcon("robe"),
+  heroMedia: gameIcon("mona-lisa"),
+  portrait: gameIcon("portrait"),
+  head: gameIcon("woman-elf-face"),
+  cover: gameIcon("stick-frame"),
+  badges: gameIcon("rank-3"),
+  builds: gameIcon("anvil-impact"),
+  ranking: gameIcon("podium-winner"),
+  armory: gameIcon("open-treasure-chest"),
+  items: gameIcon("battle-gear"),
+  enchantments: gameIcon("winged-emblem"),
+  arcana: gameIcon("gem-pendant"),
+  spells: gameIcon("magic-swirl"),
+  gameModes: gameIcon("gamepad"),
+  releases: gameIcon("tied-scroll"),
+  glossary: gameIcon("spell-book"),
+  videos: gameIcon("clapperboard"),
+  streams: gameIcon("tv"),
+  competition: gameIcon("crossed-swords"),
+  competitionProfile: gameIcon("id-card"),
+  tournaments: gameIcon("trophy-cup"),
+  page: gameIcon("papers"),
+  moderation: gameIcon("gavel"),
+  organizations: gameIcon("castle"),
+  circuits: gameIcon("laurels"),
+  teams: gameIcon("meeple-group"),
+  players: gameIcon("swordman"),
+  coaches: gameIcon("whistle"),
+  broadcast: gameIcon("microphone"),
+}
 
 export type AovNavIconName = keyof typeof NAV_ICONS
 

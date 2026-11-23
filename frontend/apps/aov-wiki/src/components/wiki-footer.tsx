@@ -55,7 +55,17 @@ export function WikiFooter() {
           {text(
             "Tên, hình ảnh và dữ liệu game thuộc về Garena / Liên Quân Mobile.",
             "Game names, images and data belong to Garena / Arena of Valor.",
-          )}
+          )}{" "}
+          {/* The section marks are Game Icons, whose licence asks for this credit. */}
+          {text("Biểu tượng các mục từ ", "Section icons from ")}
+          <a href="https://game-icons.net" target="_blank" rel="noopener noreferrer">
+            Game Icons
+          </a>
+          {", "}
+          <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">
+            CC BY 3.0
+          </a>
+          .
         </p>
         {patch && (
           <p>

@@ -82,6 +82,16 @@ Hình vẽ dùng chung nằm trong bốn sprite ở `packages/ui/src/assets`, m�
 
 - `nav-art.svg`: mục điều hướng và các nhóm nội dung, dùng qua `navArtIcons`.
 - `catalog-art.svg`: sáu danh mục Tướng, Trang phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, dùng qua `catalogIcons`.
+
+Wiki và Admin không dùng `navArtIcons` và `catalogIcons` cho điều hướng nữa mà dùng icon khối đơn sắc của Game Icons
+(game-icons.net, giấy phép CC BY 3.0), qua `GameIcon` và `gameIcon(name)` trong `packages/ui/src/components/game-icons.tsx`.
+File đó chỉ chép đúng các hình đang dùng, không cài cả bộ; thêm hình thì chép đường vẽ của nó từ cùng bộ theo tên trên
+game-icons.net. Mười mục của Wiki: Trang chủ `family-house`, Tướng `samurai-helmet`, Trang phục `robe`, Trang bị
+`battle-gear`, Phù hiệu `winged-emblem`, Bảng ngọc `gem-pendant`, Phụ trợ `magic-swirl`, Chế độ chơi `gamepad`, Ghi chú
+cập nhật `tied-scroll`, Thuật ngữ `spell-book`; chúng hiện ở sidebar, mục lục của điện thoại, bảng tìm kiếm và ô mục trên
+trang chủ qua `WikiIcon`. Admin (`NAV_ICONS` trong `apps/admin-aov/src/app/aov-nav-icon.tsx`) dùng cùng hình cho các mục
+trùng với Wiki, các mục riêng của Admin có hình riêng trong cùng bộ. Hình lấy màu chữ (`currentColor`). Chân trang Wiki
+và chân sidebar Admin ghi công Game Icons theo giấy phép; giữ các dòng đó khi còn dùng bộ này.
 - `gameplay-art.svg`: chỉ số và thuật ngữ trong game, dùng qua `gameplayIcons`. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng; đừng vẽ thêm bản có màu. `termIcon(term)` chọn hình cho một thuật ngữ: hình đã chọn lưu dạng `glyph:<tên>` trong trường `icon`, không chọn thì theo mặc định của thuật ngữ đó.
 - `change-art.svg`: loại thay đổi của một phiên bản, dùng qua `changeKindIcons`. Hiển thị từ 16px trở lên, nhỏ hơn thì viền lấn mất hình. Wiki không còn dùng bộ này.
 

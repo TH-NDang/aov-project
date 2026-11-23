@@ -1,5 +1,4 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -33,27 +32,16 @@ test("page tabs use the selected media view and specific profile directory artwo
   assert.equal(pageNavIcon("/unknown"), "page")
 })
 
-test("navigation artwork resolves to unique symbols with valid local references", () => {
-  const sources = new Set<string>()
-  for (const Icon of Object.values(NAV_ICONS)) {
+test("every navigation concept draws a shape of its own", () => {
+  const shapes = new Set<string>()
+  for (const [name, Icon] of Object.entries(NAV_ICONS)) {
     const markup = renderToStaticMarkup(createElement(Icon, { size: 20 }))
     assert.match(markup, /aria-hidden="true"/)
     assert.match(markup, /width="20"/)
-    const href = markup.match(/<use href="([^"]+)"/)?.[1]
-    assert.ok(href)
-    assert.ok(!sources.has(href), `Artwork is reused for a distinct concept: ${href}`)
-    sources.add(href)
-    const url = new URL(href)
-    const symbol = url.hash.slice(1)
-    url.hash = ""
-    url.search = ""
-    const svg = readFileSync(url, "utf8")
-    assert.ok(svg.includes(`<symbol id="${symbol}"`), `Missing symbol ${symbol}`)
-    const ids = [...svg.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1])
-    assert.equal(new Set(ids).size, ids.length, "SVG IDs must be unique within each sprite")
-    for (const [, target] of svg.matchAll(/url\(#([^)]*)\)/g)) {
-      assert.ok(ids.includes(target), `Missing local SVG reference ${target}`)
-    }
+    const shape = markup.match(/<path d="([^"]+)"/)?.[1]
+    assert.ok(shape, `No shape for ${name}`)
+    assert.ok(!shapes.has(shape), `The shape of ${name} is reused for another concept`)
+    shapes.add(shape)
   }
   for (const item of [...NAV_ITEMS, ...MEDIA_NAV]) assert.ok(item.icon in NAV_ICONS)
   const profile = NAV_ITEMS.find((item) => item.to === "/organizations")
