@@ -7,11 +7,14 @@ import com.wikiaov.community.tournament.internal.domain.MatchTitle;
 import com.wikiaov.community.tournament.internal.domain.MatchTitle.Kind;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.SeriesResult;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.DraftRule;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Entry;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.EntryStatus;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Match;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.PatchLine;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Slot;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Stage;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,11 +23,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 class CompetitionRulesTest {
     private Stage group(int legs, List<String> ties) {
-        return new Stage("GROUP", "Group", "ROUND_ROBIN", 5, legs, 1, 0, 2, ties, "https://example.com", "");
+        return new Stage("GROUP", "Group", "ROUND_ROBIN", 5, legs, 1, 0, 2, ties, "https://example.com", null, null,
+                null, null);
+    }
+
+    private Stage ruled(@Nullable DraftRule draftRule, List<PatchLine> patches) {
+        return new Stage("GROUP", "Group", "ROUND_ROBIN", 5, 1, 1, 0, 2, List.of(), "https://example.com", draftRule,
+                null, null, patches);
     }
 
     private List<Entry> entrants(int count) {
@@ -35,6 +45,31 @@ class CompetitionRulesTest {
     private CompetitionPlan plan(List<Entry> entrants, Stage stage, List<Match> matches) {
         return new CompetitionPlan("", "", null, null, "", "", "https://example.com", "", null, entrants,
                 List.of(stage), null, matches, null);
+    }
+
+    @Test
+    void aPatchLineNeedsAWikiPatchAReleaseDayOrASource() {
+        var entries = entrants(2);
+        var bare = new PatchLine("Week 1", null, "Patch", null, null, "S4 2026", " ", null);
+        var dated = new PatchLine("Week 1", LocalDate.of(2026, 8, 13), null, null, null, null, null, null);
+        var linked = new PatchLine(null, null, null, UUID.randomUUID(), null, null, null, null);
+
+        assertThatThrownBy(() -> CompetitionRules.validate(plan(entries, ruled(null, List.of(bare)), List.of())))
+                .isInstanceOf(IllegalArgumentException.class);
+        CompetitionRules.validate(plan(entries, ruled(null, List.of(dated, linked)), List.of()));
+    }
+
+    @Test
+    void onlyAStandardDraftLetsNewSeriesPickAHeroAgain() {
+        var entries = entrants(2);
+
+        assertThat(plan(entries, ruled(DraftRule.STANDARD, List.of()), List.of()).repeatPicksAllowed("GROUP"))
+                .isTrue();
+        assertThat(plan(entries, ruled(DraftRule.GLOBAL, List.of()), List.of()).repeatPicksAllowed("GROUP"))
+                .isFalse();
+        assertThat(plan(entries, ruled(null, List.of()), List.of()).repeatPicksAllowed("GROUP")).isFalse();
+        assertThat(plan(entries, ruled(DraftRule.STANDARD, List.of()), List.of()).repeatPicksAllowed("OTHER"))
+                .isFalse();
     }
 
     @Test
@@ -86,7 +121,8 @@ class CompetitionRulesTest {
     @Test
     void bracketResolvesWinnerAndLoserSlotsWithoutInventingTeams() {
         var entries = entrants(6);
-        var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", "");
+        var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", null, null, null,
+                null);
         var fixtures = new ArrayList<>(CompetitionRules.aogPlayoffs(stage, 4));
         var seeds = new HashMap<Integer, UUID>();
         entries.forEach(entry -> seeds.put(entry.seed(), entry.teamId()));
@@ -131,7 +167,8 @@ class CompetitionRulesTest {
 
     @Test
     void playoffFixturesCarryTheirBracketTitleWithoutAName() {
-        var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", "");
+        var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", null, null, null,
+                null);
 
         var titles = CompetitionRules.aogPlayoffs(stage, 3).stream().map(Match::title).toList();
 

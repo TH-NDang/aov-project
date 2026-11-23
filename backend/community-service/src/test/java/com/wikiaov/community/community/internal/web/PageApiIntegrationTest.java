@@ -995,6 +995,61 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void aStageKeepsItsRulesAndPatchesAndAStandardDraftLetsNewSeriesRepeatPicks() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String a = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "rules-a-" + suffix, "name", "First"))).path("id").asText();
+        String b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "rules-b-" + suffix, "name", "Second"))).path("id").asText();
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content", Map.of("code", "rules-" + suffix, "name", "Ruled season", "region", "VN")))
+                .path("id").asText();
+        var stage = new HashMap<String, Object>(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN",
+                "bestOf", 3, "legs", 1, "winPoints", 1, "lossPoints", 0, "advance", 1));
+        stage.put("draftRule", "STANDARD");
+        stage.put("sideSelection", "HOME_FIRST_THEN_LOSER");
+        stage.put("rulesNote", "Tie-breaker games are BO1.");
+        stage.put("patches", List.of(Map.of("label", "Week 1", "releasedOn", "2026-08-13", "name", "Aug 13 patch",
+                "sourceUrl", "https://example.com/patch-notes-13aug26", "seasonName", "S4 2026")));
+        var content = new HashMap<String, Object>();
+        content.put("sourceUrl", "https://example.com/rules");
+        content.put("entrants", List.of(Map.of("teamId", a), Map.of("teamId", b)));
+        content.put("stages", List.of(stage));
+        content.put("matches", send(post(ROOT + "/admin/competitions/preview"), "editor", true,
+                Map.of("content", content, "stageCode", "GROUP", "opponent", 3)));
+
+        var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", content));
+        var kept = saved.path("content").path("plan").path("stages").get(0);
+        assertThat(kept.path("draftRule").asText()).isEqualTo("STANDARD");
+        assertThat(kept.path("sideSelection").asText()).isEqualTo("HOME_FIRST_THEN_LOSER");
+        assertThat(kept.path("patches").get(0).path("releasedOn").asText()).isEqualTo("2026-08-13");
+        assertThat(kept.path("patches").get(0).path("patchId").isNull()).isTrue();
+
+        var materialized = send(post(ROOT + "/admin/competitions/" + id + "/materialize"), "editor", true,
+                Map.of("version", saved.path("version").asLong()));
+        String seriesId = materialized.path("content").path("plan").path("matches").get(0).path("seriesId").asText();
+        var created = send(get(ROOT + "/admin/series/" + seriesId), "editor", true, null).path("content");
+        assertThat(created.path("repeatPicksAllowed").asBoolean()).isTrue();
+    }
+
+    @Test
+    void aStagePatchWithoutAWikiPatchReleaseDayOrSourceIsRejected() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content", Map.of("code", "bare-patch-" + suffix, "name", "Bare patch", "region", "VN")))
+                .path("id").asText();
+        var stage = new HashMap<String, Object>(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN",
+                "bestOf", 3, "legs", 1, "winPoints", 1, "lossPoints", 0, "advance", 1));
+        stage.put("patches", List.of(Map.of("label", "Week 1")));
+
+        mvc.perform(as(put(ROOT + "/admin/competitions/" + id), "editor", true)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", 0, "content", Map.of("stages", List.of(stage))))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void matchTitlesWithoutAKindOrWithNumbersOutOfRangeAreRejected() throws Exception {
         String suffix = UUID.randomUUID().toString();
         String a = send(post(ROOT + "/admin/teams"), "editor", true,
