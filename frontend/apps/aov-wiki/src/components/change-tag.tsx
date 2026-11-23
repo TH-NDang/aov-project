@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, RefreshCw, SlidersHorizontal, Sparkles, Wrench, X, type LucideIcon } from "lucide-react"
+import { changeKindIcon, changeKindIcons } from "@aov/ui/components/change-kind-icons"
 import { patchChangeLabel, patchChangeTone } from "../lib/change-kinds"
 import { changeShortWord } from "../lib/change-short-word"
 import { useWikiContext } from "../context/wiki-context"
@@ -36,36 +36,25 @@ export function ChangeTally({ kinds }: { kinds: ReadonlyMap<string, number> }) {
   )
 }
 
-/** The Lucide icon of each kind of change. */
-const ICONS: Record<string, LucideIcon> = {
-  up: ArrowUp,
-  down: ArrowDown,
-  rework: RefreshCw,
-  new: Sparkles,
-  adjust: SlidersHorizontal,
-  fix: Wrench,
-  removed: X,
-}
-const ICON_OF: Record<string, string> = { FIX: "fix", BUG_FIX: "fix", REMOVED: "removed" }
-
 /**
- * The mark of a change kind: a Lucide icon in a soft disc of the kind's colour — an arrow up for a buff (red), down for a
- * nerf (green), a turn for a rework, sparkles for something new, sliders for a tweak, a wrench for a fix. The icon is
- * drawn at a whole number of pixels so its lines stay sharp.
+ * The mark of a change kind: the shared change icon (`changeKindIcons`, also drawn by Admin) in a soft disc of the
+ * kind's colour — a rising line for a buff (red), a falling one for a nerf (green), a hammer for a rework, a falling
+ * star for something new. A kind without a mark of its own reads as an adjustment. The icon is drawn at a whole number
+ * of pixels so its lines stay sharp.
  */
 export function ChangeKindMark({ kind, size = 20 }: { kind?: string | null; size?: number }) {
   if (!kind) return null
   const tone = patchChangeTone(kind)
-  const Icon = ICONS[ICON_OF[kind] ?? tone] ?? SlidersHorizontal
+  const Icon = changeKindIcon(kind) ?? changeKindIcons.ADJUSTMENT
   return (
     <span
       className="wiki-change-mark"
       data-tone={tone}
-      data-kind={ICON_OF[kind]}
+      data-kind={kind === "REMOVED" ? "removed" : undefined}
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      <Icon size={Math.round(size * 0.68)} strokeWidth={2.75} absoluteStrokeWidth={false} />
+      <Icon size={Math.round(size * 0.68)} strokeWidth={2.75} />
     </span>
   )
 }

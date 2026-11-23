@@ -1,7 +1,6 @@
 import { Link } from "react-router"
 import {
   ArrowUpRight,
-  BookOpenText,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -10,15 +9,13 @@ import {
   Layers3,
   Search,
   Sparkles,
-  UserRound,
-  Users,
   X,
 } from "lucide-react"
 import { useId, useMemo, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
-import { catalogIcons } from "@aov/ui/components/catalog-icons"
+import { NAV_ICONS } from "@/app/aov-nav-icon"
 import {
   resolveEntityRoute,
   foldEntitySearch,
@@ -35,16 +32,16 @@ import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 const kinds = entityKindLabels
 const fold = foldEntitySearch
 const kindIcons = {
-  hero: catalogIcons.heroes,
+  hero: NAV_ICONS.heroes,
   skill: Sparkles,
-  item: catalogIcons.items,
-  enchantment: catalogIcons.enchantments,
-  arcana: catalogIcons.arcana,
-  spell: catalogIcons.spells,
-  team: Users,
-  player: UserRound,
+  item: NAV_ICONS.items,
+  enchantment: NAV_ICONS.enchantments,
+  arcana: NAV_ICONS.arcana,
+  spell: NAV_ICONS.spells,
+  team: NAV_ICONS.teams,
+  player: NAV_ICONS.players,
   country: Globe2,
-  term: BookOpenText,
+  term: NAV_ICONS.glossary,
 }
 
 function AliasChips({ aliases }: { aliases: string[] }) {

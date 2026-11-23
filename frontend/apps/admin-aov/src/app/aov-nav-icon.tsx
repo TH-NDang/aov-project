@@ -39,7 +39,7 @@ export const NAV_ICONS = {
   circuits: gameIcon("laurels"),
   teams: gameIcon("meeple-group"),
   players: gameIcon("swordman"),
-  coaches: gameIcon("whistle"),
+  coaches: gameIcon("teacher"),
   broadcast: gameIcon("microphone"),
 }
 

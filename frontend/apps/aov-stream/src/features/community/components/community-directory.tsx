@@ -10,7 +10,7 @@ import {
   type ProfileKind,
 } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
-import { navArtIcons } from "@aov/ui/components/nav-art-icons"
+import { gameIcon } from "@aov/ui/components/game-icons"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import {
   DropdownMenu,
@@ -38,12 +38,13 @@ import "./community-directory.css"
 
 export const profileKinds = Object.keys(profileKindLabels) as ProfileKind[]
 
+/** The same marks as Admin's directory of these pages. */
 const kindArt = {
-  CIRCUIT: navArtIcons.circuits,
-  ORGANIZATION: navArtIcons.organizations,
-  TEAM: navArtIcons.teams,
-  PLAYER: navArtIcons.players,
-  PERSON: navArtIcons.coaches,
+  CIRCUIT: gameIcon("laurels"),
+  ORGANIZATION: gameIcon("castle"),
+  TEAM: gameIcon("meeple-group"),
+  PLAYER: gameIcon("swordman"),
+  PERSON: gameIcon("teacher"),
 }
 
 function KindArt({ kind }: { kind: keyof typeof kindArt }) {

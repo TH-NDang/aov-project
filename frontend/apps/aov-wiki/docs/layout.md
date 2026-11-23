@@ -146,7 +146,7 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   chỗ. Ảnh dọc tỉ lệ 4:5 trên nền thẻ, không viền; tên, vai trò và vị trí nằm dưới ảnh: vai trò ghi chữ khi thẻ đủ rộng,
   chỉ còn icon khi hẹp; vị trí luôn là icon. Lưới 7 cột, 6 cột dưới 1100px, 5 cột trên compact, 4 cột dưới 720px, 3 cột
   dưới 480px. Toàn bộ thẻ mở chi tiết và giữ đường dẫn bộ lọc để quay về; nguồn ảnh mở từ nút nhỏ trên thẻ.
-- 11 icon vị trí/vai trò và 4 icon lọc (`easy`, `medium`, `hard`: ba cột tăng dần tô 1, 2, 3 cột; `changed`: mũi tên lên cạnh mũi tên xuống) trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. PNG nguồn không còn trong `resources/` (ADR-030); bản PNG vai trò nằm trong `apps/admin-aov/public/images/hero/vai-tro/`.
+- 11 icon vị trí/vai trò và 4 icon lọc (`easy`, `medium`, `hard`: ba cột tăng dần tô 1, 2, 3 cột; `changed`: mũi tên lên cạnh mũi tên xuống) nằm trong `packages/ui/src/components/hero-marks.tsx`, dùng chung với Admin và Stream (`HeroMark`, `HeroLaneIcon`, `HeroRoleIcon`). `HeroGlyph` vẽ chúng bằng SVG `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. PNG nguồn không còn trong `resources/` (ADR-030); bản PNG vai trò nằm trong `apps/admin-aov/public/images/hero/vai-tro/`, chỉ để lưu, không trang nào dùng.
   Sáu icon vai trò dò viền từ icon trong game. Bốn icon đường Caesar, Rừng, Giữa, Rồng vẽ lại bằng đường thẳng và hình
   tròn theo huy hiệu trên sóng giải đấu: bản đồ cắt thành các khối riêng (chữ L trên, dải chéo giữa, chữ L dưới) cách
   nhau một khe; khối được chọn tô đặc, các khối còn lại chỉ vẽ viền mảnh. Ở Caesar và Rồng, hai chữ L gặp nhau ở đường

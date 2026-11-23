@@ -7,11 +7,5 @@
   width: var(--wiki-hero-glyph-size, 25px);
   height: var(--wiki-hero-glyph-size, 25px);
   flex-shrink: 0;
-  background: var(--wiki-hero-glyph-color, currentColor);
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: contain;
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
+  color: var(--wiki-hero-glyph-color, currentColor);
 }

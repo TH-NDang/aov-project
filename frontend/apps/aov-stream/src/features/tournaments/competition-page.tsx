@@ -8,7 +8,7 @@ import type {
   RosterMembershipContent,
   TournamentAward,
 } from "@aov/community-contracts"
-import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
+import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { LocalMoney, LocalPrizeText } from "@aov/ui/components/local-money"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamShell } from "../../components/stream-shell"

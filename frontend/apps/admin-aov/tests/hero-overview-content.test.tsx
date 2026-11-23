@@ -19,7 +19,8 @@ test("hero overview shows the hero's positions and five-point ratings without ch
       </MemoryRouter>,
     )
     const role = document.querySelector('[aria-label="Vai trò: Sát thủ"]')!
-    assert.match(role.querySelector("img")!.getAttribute("src")!, /images\/hero\/vai-tro\/sat-thu.png$/)
+    assert.equal(role.querySelector("img"), null)
+    assert.equal(role.querySelector("svg")!.getAttribute("fill"), "currentColor")
     const position = document.querySelector('[aria-label="Vị trí đi: Đi rừng"]')!
     assert.equal(position.querySelector("img"), null)
     assert.equal(position.querySelector("svg")!.getAttribute("fill"), "currentColor")

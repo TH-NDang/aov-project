@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor">
-  <!-- The Abyssal Dragon (bottom) lane mark as the tournament broadcast draws it: the map is cut into separate pieces with a gap between them, the chosen piece filled and the others drawn as thin outlines; the bottom lane and the top lane meet at the diagonal and the empty centre holds a dot -->
-  <path d="M46 46L4.1 46L14.1 36L36 36L36 14.1L46 4.1Z" />
-  <path d="M3.2 41L3.2 3.2L41 3.2L33.4 10.8L10.8 10.8L10.8 33.4Z" fill="none" stroke="currentColor" stroke-width="2.4" />
-  <circle cx="24" cy="24" r="6" />
-</svg>

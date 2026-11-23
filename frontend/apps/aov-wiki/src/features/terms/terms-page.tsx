@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useParams, useSearchParams } from "react-router"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { termIcon } from "@aov/ui/components/gameplay-icons"
-import { navArtIcons } from "@aov/ui/components/nav-art-icons"
+import { gameIcon } from "@aov/ui/components/game-icons"
 import { createEntityIndex, defaultEntityColor, referenceTranslation } from "@aov/ui/lib/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
@@ -14,6 +14,9 @@ import { notFoundMeta, termMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 import "./terms.css"
+
+/** A term with no picture of its own wears the glossary's mark. */
+const GlossaryMark = gameIcon("spell-book")
 
 /** An explanation this long, or one that holds a table, needs a row of its own instead of a third of one. */
 const LONG_EXPLANATION = 320
@@ -159,7 +162,7 @@ export function TermsPage() {
               {visible.map(({ entity, translation, wide }, position) => {
                 const current = entity.id === termId
                 const color = entity.display?.color ?? defaultEntityColor(entity)
-                const Art = termIcon(entity) ?? navArtIcons.glossary
+                const Art = termIcon(entity) ?? GlossaryMark
                 const share = wide ? undefined : lastRowShare(short, short - position)
                 return (
                   <li

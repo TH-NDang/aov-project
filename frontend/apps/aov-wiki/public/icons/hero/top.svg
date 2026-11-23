@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="currentColor">
-  <!-- The Dark Slayer (top) lane mark as the tournament broadcast draws it: the map is cut into separate pieces with a gap between them, the chosen piece filled and the others drawn as thin outlines; the top lane and the bottom lane meet at the diagonal and the empty centre holds a dot with a second one half hidden behind it -->
-  <path d="M2 2L43.9 2L33.9 12L12 12L12 33.9L2 43.9Z" />
-  <path d="M44.8 7L44.8 44.8L7 44.8L14.6 37.2L37.2 37.2L37.2 14.6Z" fill="none" stroke="currentColor" stroke-width="2.4" />
-  <circle cx="22.5" cy="25.5" r="6" />
-  <path d="M24.37 17.72A4.5 4.5 0 1 1 30.28 23.63A8 8 0 0 0 24.37 17.72Z" />
-</svg>

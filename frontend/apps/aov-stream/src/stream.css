@@ -428,6 +428,14 @@ button:disabled {
   min-width: 0;
   margin: 0;
 }
+/* The icon credit inside the footer line. */
+.hub-footer p a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.hub-footer p a:hover {
+  color: var(--hub-text);
+}
 .hub-footer strong {
   color: var(--hub-text-soft);
 }

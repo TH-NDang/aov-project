@@ -1,18 +1,8 @@
 import type { ReactNode } from "react"
 import { Badge } from "@aov/ui/components/badge"
-import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
+import { HeroLaneIcon, HeroRoleIcon } from "@aov/ui/components/hero-marks"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { MediaImage } from "@/components/media-image"
 import { POSITIONS, ROLES, type Position, type Role } from "@/lib/hero-types"
-
-export const roleIcons: Record<Role, string> = {
-  TANK: "do-don",
-  WARRIOR: "dau-si",
-  ASSASSIN: "sat-thu",
-  MAGE: "phap-su",
-  MARKSMAN: "xa-thu",
-  SUPPORT: "tro-thu",
-}
 
 function ClassificationBadge({
   label,
@@ -50,17 +40,7 @@ function ClassificationBadge({
 
 export function HeroRoleBadge({ role, children }: { role: Role; children?: ReactNode }) {
   return (
-    <ClassificationBadge
-      label={ROLES[role]}
-      group="Vai trò"
-      icon={
-        <MediaImage
-          path={`${import.meta.env?.BASE_URL ?? "/"}images/hero/vai-tro/${roleIcons[role]}.png`}
-          alt=""
-          className="size-5 shrink-0 object-contain"
-        />
-      }
-    >
+    <ClassificationBadge label={ROLES[role]} group="Vai trò" icon={<HeroRoleIcon role={role} />}>
       {children}
     </ClassificationBadge>
   )

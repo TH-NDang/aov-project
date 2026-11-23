@@ -5,7 +5,8 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { StreamBrand } from "./stream-brand"
 import { StreamAppSwitcher } from "./stream-app-switcher"
-import { StreamIcon, type StreamIconName } from "./stream-icon"
+import { GameIcon, type GameIconName } from "@aov/ui/components/game-icons"
+import { StreamIcon } from "./stream-icon"
 import { useStreamLocale } from "./stream-locale"
 import { CommunitySessionButton } from "./community-session"
 import { SignInDialog } from "./community-signin"
@@ -17,7 +18,8 @@ type Destination = {
   to: string
   label: string
   english: string
-  icon: StreamIconName
+  /** Drawn with Game Icons, as the Wiki and Admin draw their sections. */
+  icon: GameIconName
   active: (path: string) => boolean
 }
 
@@ -27,14 +29,14 @@ const destinations: Destination[] = [
     to: "/",
     label: "Bảng tin",
     english: "Feed",
-    icon: "feed",
+    icon: "newspaper",
     active: (path) => path === "/",
   },
   {
     to: "/competitions",
     label: "Giải đấu",
     english: "Tournaments",
-    icon: "trophy",
+    icon: "trophy-cup",
     active: (path) => path.startsWith("/competitions") || path.startsWith("/matches") || path.startsWith("/games"),
   },
   {
@@ -81,7 +83,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
     <nav className="hub-topnav" aria-label={text("Điều hướng chính", "Main navigation")}>
       {destinations.map((item) => (
         <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
-          <StreamIcon name={item.icon} size={16} />
+          <GameIcon name={item.icon} size={18} />
           {text(item.label, item.english)}
         </Link>
       ))}
@@ -134,7 +136,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
             <nav aria-label={text("Điều hướng chính", "Main navigation")}>
               {destinations.map((item) => (
                 <Link key={item.to} to={item.to} onClick={closeSearch}>
-                  <StreamIcon name={item.icon} size={20} />
+                  <GameIcon name={item.icon} size={22} />
                   {text(item.label, item.english)}
                 </Link>
               ))}
@@ -166,7 +168,15 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
           {text(
             "· Quan sát trận đấu, khám phá cách chơi. Dữ liệu được biên tập từ nguồn đối chiếu.",
             "· Watch matches, explore how the game is played. Data is compiled from reference sources.",
-          )}
+          )}{" "}
+          {text("· Biểu tượng mục từ", "· Section icons from")}{" "}
+          <a href="https://game-icons.net" target="_blank" rel="noopener noreferrer">
+            Game Icons
+          </a>
+          ,{" "}
+          <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">
+            CC BY 3.0
+          </a>
         </p>
         <nav aria-label={text("Liên kết cuối trang", "Footer links")}>
           <a href={WIKI_URL}>AOV WiKi</a>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { navArtIcons } from "@aov/ui/components/nav-art-icons"
+import { GameIcon } from "@aov/ui/components/game-icons"
 import { WikiIcon } from "../../../components/wiki-icon"
 import { useWikiContext, type WikiPatch } from "../../../context/wiki-context"
 import { heroChangesQuery } from "../../../lib/updates-api"
@@ -90,7 +90,7 @@ export function BackToChanges({
   if (!away) return null
   return (
     <button type="button" className="wiki-version-float" onClick={onBack}>
-      <navArtIcons.releases size={22} />
+      <GameIcon name="tied-scroll" size={22} />
       <span>{label}</span>
       <WikiIcon name="chevron" size={16} />
     </button>
