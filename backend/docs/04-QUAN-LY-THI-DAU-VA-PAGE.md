@@ -71,6 +71,36 @@ Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhấ
 nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
 cuộc). Mục nên bổ sung không chặn công bố.
 
+### Luật và phiên bản của giai đoạn (23/11/2026)
+
+Người dùng chọn cách này ngày 23/11/2026. Ô chữ `patchNote` ("Phiên bản / quy tắc cấm chọn") của giai đoạn gộp hai
+việc và không liên kết được tới Wiki, nên được thay bằng các trường có cấu trúc. Chưa giai đoạn nào ghi `patchNote`
+(0/714 trên dữ liệu thật ngày 23/11/2026); migration bỏ khóa này khỏi kế hoạch đã lưu.
+
+| Trường | Giá trị |
+|---|---|
+| `draftRule` | `GLOBAL`: cấm chọn toàn cục, đội không chọn lại tướng đã dùng trong loạt (luật hiện có ở 01, kể cả ngoại lệ ván cuối). `STANDARD`: cấm chọn thường, đội được chọn lại tướng. Bỏ trống là chưa ghi |
+| `sideSelection` | `HOME_FIRST_THEN_LOSER`: đội đứng trước trong lịch đấu chọn bên ván 1, các ván sau đội thua ván trước chọn. `OTHER`: cách khác, ghi ở `rulesNote`. Bỏ trống là chưa ghi |
+| `rulesNote` | Luật khác của giai đoạn, tối đa 2000 ký tự |
+| `patches` | Tối đa 30 dòng phiên bản dùng trong giai đoạn, theo thứ tự thời gian |
+
+Mỗi dòng phiên bản có `label` (khoảng áp dụng, ví dụ "Tuần 2–4"), `releasedOn` (ngày bản cập nhật có hiệu lực theo
+nguồn), `name` (tên bản cập nhật), `patchId` (patch của Wiki), `seasonId` và `seasonName` (mùa xếp hạng của Wiki, ví dụ
+"S4 2026"), `sourceUrl` (bài cập nhật chính thức của nhà phát hành, ví dụ trang patch notes của Garena) và `note`
+(ngoại lệ, ví dụ tướng mới được phép dùng). Một dòng cần ít nhất `patchId`, `releasedOn` hoặc `sourceUrl`.
+
+Liên kết tới Wiki là tham chiếu mềm: community-service không gọi Wiki khi lưu kế hoạch. Admin chọn patch và mùa từ danh
+sách của Wiki. Khi Wiki chưa có bản đó, dòng giữ ngày, tên và bài viết chính thức, Admin gắn nhãn "Chưa có trong Wiki"
+và gợi ý liên kết khi Wiki có patch cùng ngày (mã patch của Wiki là ngày `yyyy-mm-dd`). `seasonName` được lưu kèm để
+Stream hiển thị mà không gọi Wiki.
+
+`draftRule` là luật của giai đoạn; mỗi loạt trận vẫn giữ `repeatPicksAllowed` riêng. Loạt trận do materialize tạo mới
+nhận `repeatPicksAllowed = true` khi giai đoạn của nó là `STANDARD`, còn lại giữ mặc định áp dụng luật. Loạt trận đã
+có không bị đổi.
+
+Admin hiện luật và phiên bản trong thẻ giai đoạn ở bước "Thể thức" và cho sửa trong phần sửa giai đoạn. Stream hiện
+chúng trong phần thể thức của trang giải.
+
 ### Tên trận theo mã (18/11/2026)
 
 Người dùng chọn cách này ngày 18/11/2026 để tên trận do lịch tự động sinh ra hiển thị đúng ngôn ngữ người đọc. Trận

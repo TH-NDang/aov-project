@@ -10,6 +10,7 @@ import { CompetitionChoiceField } from "../competition-choice-field"
 import { bestOfOptions, stageNameOptions } from "../competition-field-options"
 import { FORMAT_NAMES, matchLabel } from "./model"
 import { NativeSelect } from "@/components/native-select"
+import { StageRulesFields } from "./stage-rules-fields"
 
 export function BestOfField({
   label,
@@ -126,10 +127,13 @@ export const TIE_BREAK_PRESETS: Record<string, string> = {
 /** The fields of one stage, grouped the way an editor reads a rulebook: how it is played, how it ranks, its source. */
 export function StageFields({
   stage,
+  region,
   disabled,
   onChange,
 }: {
   stage: CompetitionStage
+  /** The market whose Wiki patches the stage can link to. */
+  region: string
   disabled: boolean
   onChange: (value: CompetitionStage) => void
 }) {
@@ -224,13 +228,9 @@ export function StageFields({
             value={stage.sourceUrl}
             onChange={(event) => onChange({ ...stage, sourceUrl: event.target.value })}
           />
-          <Field
-            label="Phiên bản / quy tắc cấm chọn"
-            value={stage.patchNote}
-            onChange={(event) => onChange({ ...stage, patchNote: event.target.value })}
-          />
         </div>
       </fieldset>
+      <StageRulesFields stage={stage} region={region} disabled={disabled} onChange={onChange} />
     </div>
   )
 }
