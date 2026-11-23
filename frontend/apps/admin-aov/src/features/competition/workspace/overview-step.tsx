@@ -12,6 +12,7 @@ import type { EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { CompetitionInformationFields } from "../competition-information-fields"
 import { OrganizationPicker } from "../organization-picker"
 import { BroadcastCrew } from "./broadcast-crew"
+import { DataChecksPanel } from "./data-checks-panel"
 import { EventPartsPanel } from "./event-parts"
 import { hasScore, type RecordingTotals, type WorkspaceCheck } from "./model"
 import { Panel, Progress, type Workspace } from "./parts"
@@ -139,6 +140,7 @@ export function OverviewStep({
       </div>
 
       <aside className="space-y-5">
+        <DataChecksPanel ws={ws} record={record} />
         <Panel title="Việc nên làm tiếp" icon={ListChecks}>
           <ul>
             {next.map((check) => (
