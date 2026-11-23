@@ -67,6 +67,17 @@ bản nháp với snapshot công khai và liệt kê "thay đổi chưa công b�
 đội tham dự, thể thức, thông tin giải); nút cập nhật bản công bố có ở đầu trang của mọi bước. Mỗi lần công bố
 vẫn chụp toàn bộ giải, không công bố riêng từng trận. Bảng xếp hạng chưa đủ trận giữ nhãn tạm tính.
 
+Từ 24/11/2026, bước "Tổng quan" có khối "Kiểm tra dữ liệu": các lỗi dữ liệu Admin tự nhận ra được trong giải, mỗi lỗi
+kèm cách sửa. Khối chỉ dùng dữ liệu không gian giải đã đọc và các API sẵn có; không thêm endpoint hay migration. Mỗi
+thao tác sửa đều hỏi xác nhận, nêu giá trị cũ → mới, và ghi thẳng vào bản ghi (không nằm trong bản nháp kế hoạch).
+
+| Lỗi | Cách nhận ra | Cách sửa |
+|---|---|---|
+| Ban huấn luyện gắn với đội không tham dự | Dòng `staff` của giải có `teamId` không thuộc đội tham dự, đội có đội hình hay đội có loạt trận ở giải | Chuyển dòng sang đội của giải có cùng tên chính (bỏ hậu tố như "Esports", "VN", "Vietnam") khi chỉ có một đội như vậy; bỏ dòng nếu đội đó đã có đúng người và vai này |
+| Một người hai dòng trong một đội hình | Hai dòng đội hình của cùng đội ở giải, của hai hồ sơ khác nhau mà biệt danh hoặc tên khác trùng nhau | Bỏ một trong hai dòng vào thùng rác; gộp hồ sơ vẫn làm ở bảng sửa tuyển thủ |
+| Đội đá trận mà không có đội hình | Đội có loạt trận ở giải nhưng không có dòng đội hình | Khi đúng một đội có đội hình mà không đá trận nào mang cùng tên chính, chuyển các dòng đội hình đó sang đội đá trận |
+| MVP chưa liên kết | Ván của giải có ghi chú "MVP: …" mà chưa có `mvpPlayerId` | Mở màn "Liên kết cần xem" |
+
 Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhất hai đội, ít nhất một giai đoạn, tổ chức đã công bố
 nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
 cuộc). Mục nên bổ sung không chặn công bố.
