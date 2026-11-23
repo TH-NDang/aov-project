@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import type {
   CompetitionStage,
   CompetitionView,
+  DraftRule,
   Lane,
   RosterMembershipContent,
   TournamentAward,
@@ -11,6 +12,7 @@ import type {
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { LocalMoney, LocalPrizeText } from "@aov/ui/components/local-money"
 import { LocalTime } from "@aov/ui/components/local-time"
+import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
@@ -667,8 +669,17 @@ const TIE_BREAKERS: Record<string, readonly [string, string]> = {
   GAME_WINS: ["số ván thắng", "game wins"],
 }
 
+/** The draft rule of a stage, in Vietnamese and in English. */
+const DRAFT_RULES: Record<DraftRule, readonly [string, string]> = {
+  GLOBAL: [
+    "Cấm chọn toàn cục: đội không chọn lại tướng đã dùng trong loạt",
+    "Global ban/pick: no team picks a hero again in a series",
+  ],
+  STANDARD: ["Cấm chọn thường", "Standard ban/pick"],
+}
+
 function Format({ view }: { view: CompetitionView }) {
-  const { text } = useStreamLocale()
+  const { text, languageTag } = useStreamLocale()
   const { plan } = view.content
   if (!plan.stages.length) return null
   return (
@@ -699,7 +710,43 @@ function Format({ view }: { view: CompetitionView }) {
                 {stage.tieBreakers.map((rule) => (TIE_BREAKERS[rule] ? text(...TIE_BREAKERS[rule]) : rule)).join(" → ")}
               </small>
             )}
-            {stage.patchNote && <small>{stage.patchNote}</small>}
+            {stage.draftRule && <small>{text(...DRAFT_RULES[stage.draftRule])}</small>}
+            {stage.sideSelection === "HOME_FIRST_THEN_LOSER" && (
+              <small>
+                {text(
+                  "Chọn bên: đội đứng trước chọn ván 1, sau đó đội thua chọn",
+                  "Sides: the first-listed team picks in game 1, then the loser of each game",
+                )}
+              </small>
+            )}
+            {stage.rulesNote?.trim() && <small>{stage.rulesNote}</small>}
+            {!!stage.patches?.length && (
+              <small>
+                {text("Phiên bản:", "Patches:")}{" "}
+                {stage.patches.map((line, index) => (
+                  <Fragment key={index}>
+                    {index > 0 && "; "}
+                    {[
+                      line.label,
+                      line.name || (line.releasedOn && formatCalendarDate(line.releasedOn, undefined, languageTag)),
+                      line.seasonName,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {line.sourceUrl && (
+                      <>
+                        {" ("}
+                        <a href={line.sourceUrl} target="_blank" rel="noreferrer noopener">
+                          {text("ghi chú cập nhật", "patch notes")}
+                        </a>
+                        {")"}
+                      </>
+                    )}
+                    {line.note?.trim() && ` — ${line.note}`}
+                  </Fragment>
+                ))}
+              </small>
+            )}
           </li>
         ))}
       </ol>

@@ -2,6 +2,7 @@ package com.wikiaov.community.tournament.internal.planning.domain;
 
 import com.wikiaov.community.tournament.internal.domain.MatchTitle;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -70,11 +71,48 @@ public record CompetitionPlan(
             int advance,
             List<String> tieBreakers,
             String sourceUrl,
-            String patchNote
+            @Nullable DraftRule draftRule,
+            @Nullable SideSelection sideSelection,
+            @Nullable String rulesNote,
+            List<PatchLine> patches
     ) {
         public Stage {
             tieBreakers = tieBreakers == null ? List.of("GAME_DIFF", "GAME_WINS") : List.copyOf(tieBreakers);
+            patches = patches == null ? List.of() : List.copyOf(patches);
         }
+    }
+
+    /** How heroes may be picked again across the games of a series; absent when the sources do not say. */
+    public enum DraftRule {
+        /** A team may not pick a hero it already played in the series. */
+        GLOBAL,
+        /** A team may pick a hero again in a later game. */
+        STANDARD
+    }
+
+    /** Who chooses the side of each game; absent when the sources do not say. */
+    public enum SideSelection {
+        /** The team listed first chooses in game one, then the loser of the previous game. */
+        HOME_FIRST_THEN_LOSER,
+        /** Described in the stage's rules note. */
+        OTHER
+    }
+
+    /**
+     * A game update used during a stage. {@code patchId} and {@code seasonId} point to the Wiki when it has them;
+     * until then the publisher's patch notes ({@code sourceUrl}) and the release day stand for the update.
+     * {@code seasonName} is kept so readers can show the season without asking the Wiki.
+     */
+    public record PatchLine(
+            @Nullable String label,
+            @Nullable LocalDate releasedOn,
+            @Nullable String name,
+            @Nullable UUID patchId,
+            @Nullable UUID seasonId,
+            @Nullable String seasonName,
+            @Nullable String sourceUrl,
+            @Nullable String note
+    ) {
     }
 
     public record Slot(
@@ -132,6 +170,12 @@ public record CompetitionPlan(
     public CompetitionPlan inCircuit(String name) {
         return new CompetitionPlan(name, organizer, organizerPageId, timezone, prizePool, currency, sourceUrl,
                 notes, venues, entrants, stages, playoffSeeds, matches, circuitPageId);
+    }
+
+    /** Whether a new series of this stage is played without the rule against picking a hero again. */
+    public boolean repeatPicksAllowed(String stageCode) {
+        return stages.stream()
+                .anyMatch(stage -> stage.code().equals(stageCode) && stage.draftRule() == DraftRule.STANDARD);
     }
 
     public static CompetitionPlan empty() {

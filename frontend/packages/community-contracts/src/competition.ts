@@ -35,7 +35,32 @@ export type CompetitionStage = {
   advance: number
   tieBreakers: string[]
   sourceUrl: string
-  patchNote: string
+  /** How heroes may be picked again within a series; absent or null when the sources do not say. */
+  draftRule?: DraftRule | null
+  sideSelection?: SideSelection | null
+  rulesNote?: string | null
+  /** Game updates used during the stage, in time order. Absent in plans saved before 23/11/2026. */
+  patches?: StagePatch[]
+}
+export const DRAFT_RULES = ["GLOBAL", "STANDARD"] as const
+export type DraftRule = (typeof DRAFT_RULES)[number]
+export const SIDE_SELECTIONS = ["HOME_FIRST_THEN_LOSER", "OTHER"] as const
+export type SideSelection = (typeof SIDE_SELECTIONS)[number]
+/**
+ * A game update used during a stage. `patchId` and `seasonId` point to the Wiki when it has them; until then the
+ * publisher's patch notes (`sourceUrl`) and the release day stand for the update. `seasonName` lets readers show the
+ * season without asking the Wiki.
+ */
+export type StagePatch = {
+  label?: string | null
+  /** yyyy-mm-dd */
+  releasedOn?: string | null
+  name?: string | null
+  patchId?: string | null
+  seasonId?: string | null
+  seasonName?: string | null
+  sourceUrl?: string | null
+  note?: string | null
 }
 export type CompetitionPlan = {
   circuit: string
@@ -120,7 +145,7 @@ export function aogStages(sourceUrl = ""): CompetitionStage[] {
       advance: 6,
       tieBreakers: ["GAME_DIFF", "GAME_WINS"],
       sourceUrl,
-      patchNote: "",
+      patches: [],
     },
     {
       code: "PLAYOFF",
@@ -133,7 +158,7 @@ export function aogStages(sourceUrl = ""): CompetitionStage[] {
       advance: 1,
       tieBreakers: [],
       sourceUrl,
-      patchNote: "",
+      patches: [],
     },
   ]
 }

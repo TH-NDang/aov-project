@@ -159,7 +159,8 @@ public class CompetitionPlanning {
             if (match.seriesId() == null && resolved.teamAId() != null && resolved.teamBId() != null) {
                 var created = series.create(new Series("match-" + UUID.randomUUID(), id, match.label(),
                         match.stageCode(), resolved.teamAId(), resolved.teamBId(), match.bestOf(), match.scheduledAt(),
-                        row.getContent().sourceUrl(), "", null, false, match.title()), actor.key());
+                        row.getContent().sourceUrl(), "", null,
+                        row.getContent().repeatPicksAllowed(match.stageCode()), match.title()), actor.key());
                 match = match.linked(created.id());
             }
             matches.add(match);
@@ -258,7 +259,8 @@ public class CompetitionPlanning {
             throw TournamentErrors.invalid(error.getMessage());
         }
         if (!SourceUrls.valid(plan.sourceUrl())
-                || plan.stages().stream().anyMatch(stage -> !SourceUrls.valid(stage.sourceUrl()))) {
+                || plan.stages().stream().anyMatch(stage -> !SourceUrls.valid(stage.sourceUrl())
+                        || stage.patches().stream().anyMatch(line -> !SourceUrls.valid(line.sourceUrl())))) {
             throw TournamentErrors.invalid("Source URLs must be absolute HTTP or HTTPS URLs without credentials.");
         }
     }

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class CompetitionRules {
     public static final int MAX_ENTRANTS = 128;
@@ -34,8 +35,10 @@ public final class CompetitionRules {
     /** Stage codes of a venue. */
     public static final int MAX_CODE = 100;
     public static final int MAX_CURRENCY = 30;
-    /** Links and short notes: a source, a stage patch note, an entrant note. */
+    /** Links and short notes: a source, a stage rules note, an entrant note. */
     public static final int MAX_TEXT = 2000;
+    /** Game updates listed for one stage. */
+    public static final int MAX_PATCHES = 30;
     public static final int MAX_NOTES = 20_000;
     public static final Set<String> FORMATS = Set.of("ROUND_ROBIN", "DOUBLE_ELIMINATION", "SINGLE_ELIMINATION",
             "CUSTOM");
@@ -107,7 +110,8 @@ public final class CompetitionRules {
                 throw new IllegalArgumentException("Unsupported format.");
             }
             text(stage.sourceUrl(), MAX_TEXT);
-            text(stage.patchNote(), MAX_TEXT);
+            text(stage.rulesNote(), MAX_TEXT);
+            patches(stage);
             bestOf(stage.bestOf());
             if (stage.legs() < 1 || stage.legs() > MAX_LEGS || stage.winPoints() < 0 || stage.lossPoints() < 0
                     || stage.advance() < 0 || stage.advance() > MAX_ADVANCE) {
@@ -119,6 +123,27 @@ public final class CompetitionRules {
             }
         }
         return stages;
+    }
+
+    /** Each patch line names an update by a Wiki patch, a release day or the publisher's patch notes. */
+    private static void patches(Stage stage) {
+        if (stage.patches().size() > MAX_PATCHES) {
+            throw new IllegalArgumentException("Too many patches in a stage.");
+        }
+        for (var line : stage.patches()) {
+            if (line == null || line.patchId() == null && line.releasedOn() == null && blank(line.sourceUrl())) {
+                throw new IllegalArgumentException("A stage patch needs a Wiki patch, a release day or a source.");
+            }
+            text(line.label(), MAX_LABEL);
+            text(line.name(), MAX_NAME);
+            text(line.seasonName(), MAX_LABEL);
+            text(line.sourceUrl(), MAX_TEXT);
+            text(line.note(), MAX_TEXT);
+        }
+    }
+
+    private static boolean blank(@Nullable String value) {
+        return value == null || value.isBlank();
     }
 
     private static void seeds(CompetitionPlan plan, Set<UUID> teams) {
