@@ -177,6 +177,7 @@ của người xem, riêng thanh trên và chân trang luôn màu đêm ngả t�
 | Bản quyền ảnh | Một dòng cuối trang giải, đội, tuyển thủ (`ImageRights`) và trang `/credits` từ chân trang |
 | Tuyển thủ, nhân sự | Không có ảnh: `PlayerMark` vẽ chữ cái đầu của tên trên màu sinh từ tên; tuyển thủ hình khiên, nhân sự hình tròn |
 | Liên kết qua lại | `GoLink`: tên mở trang khác có mũi tên nhỏ phía sau, đổi màu và gạch chân khi rê; trên sân khấu là một viên `hub-go-pill`; thẻ mở cả khối có mũi tên ở cuối |
+| Tên trong văn bản | `ReferenceText`: trong câu tên có gạch chân màu nhấn, không có mũi tên vì mũi tên chen giữa tên và dấu câu. Rê chuột hiện thẻ xem trước; chạm lần đầu hiện thẻ cạnh tên (không dùng bảng trượt, để người đọc giữ chỗ đang đọc), chạm tiếp mở trang |
 | Thứ hạng | `RankBadge`: ba hạng đầu là đồng xu trong vòng nguyệt quế, hạng 1 có vương miện; không dùng quầng sáng |
 | Tìm kiếm | Mỗi màn hình một ô, ở thanh trên. Trang có danh sách riêng truyền `search` cho `StreamShell` để ô đó lọc danh sách |
 | Trang trong danh bạ | Thẻ gọn: logo hoặc ảnh, tên tối đa ba dòng, nút theo dõi; không dùng ảnh bìa |
