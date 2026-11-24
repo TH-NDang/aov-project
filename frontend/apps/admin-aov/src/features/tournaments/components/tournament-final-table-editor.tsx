@@ -7,11 +7,11 @@ import type {
   TournamentPlacement,
 } from "@aov/community-contracts"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Pencil, Plus, Save, X } from "lucide-react"
+import { Pencil, Plus, Save, UserRoundPlus, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
-import { confirmAction } from "@/components/confirm-dialog"
+import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { tournamentApi, tournamentError, tournamentKeys } from "../api/tournament-api"
 import {
   awardRecipient,
@@ -20,26 +20,33 @@ import {
   placementTeam,
   withAwardRecipient,
   withAwardTeam,
+  withNextRecipient,
   withPlacementTeam,
+  type LinkedName,
 } from "../model/final-table-model"
 import { LinkedNameField } from "./linked-name-field"
 
 /** Opens the editor of a tournament's final table. */
-export function FinalTableEditButton({ tournament }: { tournament: DocumentView<TournamentContent> }) {
+export function FinalTableEditButton({
+  tournament,
+  teamOfPlayer,
+}: {
+  tournament: DocumentView<TournamentContent>
+  /** The team a player is rostered in at this tournament, filled in when they are picked for an award. */
+  teamOfPlayer?: (playerId: string) => LinkedName | undefined
+}) {
   const [editing, setEditing] = useState(false)
   const { placements, awards, links } = tournament.content
   const empty = !placements?.length && !awards?.length && !links?.length
   return (
     <>
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-        onClick={() => setEditing(true)}
-      >
-        <Pencil className="size-3.5" aria-hidden />
+      <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
+        <Pencil aria-hidden />
         {empty ? "Thêm" : "Sửa"}
-      </button>
-      {editing && <FinalTableEditor tournament={tournament} onClose={() => setEditing(false)} />}
+      </Button>
+      {editing && (
+        <FinalTableEditor tournament={tournament} teamOfPlayer={teamOfPlayer} onClose={() => setEditing(false)} />
+      )}
     </>
   )
 }
@@ -61,9 +68,11 @@ const shownText = (...parts: (string | null | undefined)[]) =>
  */
 function FinalTableEditor({
   tournament,
+  teamOfPlayer,
   onClose,
 }: {
   tournament: DocumentView<TournamentContent>
+  teamOfPlayer?: (playerId: string) => LinkedName | undefined
   onClose: () => void
 }) {
   const client = useQueryClient()
@@ -85,6 +94,24 @@ function FinalTableEditor({
       onClose()
     },
   })
+  const dirty =
+    JSON.stringify([placements, awards, links, currency]) !==
+    JSON.stringify([
+      tournament.content.placements ?? [],
+      tournament.content.awards ?? [],
+      tournament.content.links ?? [],
+      tournament.content.localCurrency ?? "",
+    ])
+  const close = async () => {
+    if (save.isPending) return
+    const leave =
+      !dirty ||
+      (await confirmDiscard({
+        title: "Bỏ thay đổi ở bảng kết quả?",
+        description: "Thứ hạng, giải thưởng và liên kết vừa sửa chưa được ghi.",
+      }))
+    if (leave) onClose()
+  }
   const submit = (event: FormEvent) => {
     event.preventDefault()
     save.mutate()
@@ -115,7 +142,7 @@ function FinalTableEditor({
   const placedTeams = (index: number) =>
     placements.flatMap((line, at) => (line.teamId && at !== index ? [line.teamId] : []))
   return (
-    <Sheet open onOpenChange={(open) => !open && !save.isPending && onClose()}>
+    <Sheet open onOpenChange={(open) => !open && void close()}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-3xl">
         <SheetTitle>Kết quả chung cuộc</SheetTitle>
         <SheetDescription>Bảng xếp hạng, giải thưởng và liên kết của {tournament.content.name}.</SheetDescription>
@@ -195,6 +222,17 @@ function FinalTableEditor({
                       setAwards(update(awards, index, (row) => ({ ...row, title: event.target.value })))
                     }
                   />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Thêm người nhận ${award.title || "giải thưởng"}`}
+                    title="Thêm người nhận cùng giải"
+                    disabled={!award.title.trim()}
+                    onClick={() => setAwards(withNextRecipient(awards, index))}
+                  >
+                    <UserRoundPlus className="size-4" aria-hidden />
+                  </Button>
                   {removeButton(`Gỡ ${award.title || "giải thưởng"}`, shownText(award.title, award.recipientName), () =>
                     setAwards(awards.filter((_, at) => at !== index)),
                   )}
@@ -207,7 +245,13 @@ function FinalTableEditor({
                     pickerLabel="Tuyển thủ"
                     context={{ tournamentId, teamId: award.teamId || undefined }}
                     onChange={(recipient) =>
-                      setAwards(update(awards, index, (row) => withAwardRecipient(row, recipient)))
+                      setAwards(
+                        update(awards, index, (row) => {
+                          const next = withAwardRecipient(row, recipient)
+                          const rostered = !row.teamName && recipient.id ? teamOfPlayer?.(recipient.id) : undefined
+                          return rostered ? withAwardTeam(next, rostered) : next
+                        }),
+                      )
                     }
                   />
                   <LinkedNameField

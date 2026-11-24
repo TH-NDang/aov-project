@@ -54,6 +54,13 @@ export const withAwardTeam = (award: TournamentAward, team: LinkedName): Tournam
   teamName: team.name || null,
 })
 
+/** One more recipient of the same award, right after the line it starts from. */
+export const withNextRecipient = (awards: readonly TournamentAward[], index: number): TournamentAward[] => [
+  ...awards.slice(0, index + 1),
+  { title: awards[index]!.title, recipientName: "" },
+  ...awards.slice(index + 1),
+]
+
 /**
  * The final table as it is saved: lines without their required text are left out and names are trimmed. A link
  * stays only beside the name it was made with, so an award whose team name was cleared loses its team too.

@@ -3,6 +3,7 @@ import type { TournamentContent } from "@aov/community-contracts"
 import { ExternalLink, Trophy } from "lucide-react"
 import { LocalMoney } from "@aov/ui/components/local-money"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
+import { awardGroups } from "../model/award-groups"
 import type { TeamView } from "../model/game-view"
 import { PlayerPhoto, SectionTitle } from "./primitives"
 import { ThemedLogoImg } from "@/components/themed-logo-img"
@@ -89,39 +90,47 @@ export function TournamentFinalTable({
         </div>
       )}
       {!!awards.length && (
-        <ul className="grid gap-2 @2xl:grid-cols-2">
-          {awards.map((award, index) => {
-            const recipient = award.playerId ? player?.(award.playerId) : undefined
-            const logo = award.teamId ? team(award.teamId).logoUrl : undefined
-            return (
-              <li key={`${award.title}-${index}`} className="admin-section px-3 py-2">
-                <p className="type-label">{award.title}</p>
-                <p className="type-body flex min-w-0 items-center gap-2">
-                  {award.playerId && (
-                    <PlayerPhoto name={award.recipientName} url={recipient?.photoUrl ?? undefined} size={24} />
-                  )}
-                  <span className="truncate">{award.recipientName}</span>
-                  {award.teamName && (
-                    <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
-                      ·{logo && <img src={logo} alt="" className="size-5 shrink-0 object-contain" />}
-                      <span className="truncate">{award.teamName}</span>
-                    </span>
-                  )}
-                </p>
-                {(award.prizeUsd != null || award.prizeLocal != null) && (
-                  <p className="type-meta">
-                    <LocalMoney
-                      amounts={[
-                        { amount: award.prizeUsd, currency: "USD" },
-                        { amount: award.prizeLocal, currency },
-                      ]}
-                      on={prizeDay}
-                    />
-                  </p>
-                )}
-              </li>
-            )
-          })}
+        <ul className="grid gap-x-6 @2xl:grid-cols-2">
+          {awardGroups(awards).map((group) => (
+            <li key={group.title} className="space-y-1.5 border-t py-3">
+              <p className="type-label text-muted-foreground">{group.title}</p>
+              <ul className="space-y-1.5">
+                {group.awards.map((award, index) => {
+                  const recipient = award.playerId ? player?.(award.playerId) : undefined
+                  const view = award.teamId ? team(award.teamId) : undefined
+                  return (
+                    <li key={index} className="type-body flex min-w-0 items-center gap-2">
+                      {award.playerId && (
+                        <PlayerPhoto name={award.recipientName} url={recipient?.photoUrl ?? undefined} size={24} />
+                      )}
+                      <span className="truncate">{award.recipientName}</span>
+                      {award.teamName && (
+                        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                          <ThemedLogoImg
+                            url={view?.logoUrl}
+                            darkUrl={view?.logoDarkUrl}
+                            className="size-5 shrink-0 object-contain"
+                          />
+                          <span className="truncate">{award.teamName}</span>
+                        </span>
+                      )}
+                      {(award.prizeUsd != null || award.prizeLocal != null) && (
+                        <span className="type-meta ml-auto shrink-0">
+                          <LocalMoney
+                            amounts={[
+                              { amount: award.prizeUsd, currency: "USD" },
+                              { amount: award.prizeLocal, currency },
+                            ]}
+                            on={prizeDay}
+                          />
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </li>
+          ))}
         </ul>
       )}
       {!!links.length && (
