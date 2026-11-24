@@ -22,7 +22,7 @@ class GamePatchScopesTest {
 
     private static CompetitionPlan plan() {
         var stage = new Stage("GROUP", "Group", "ROUND_ROBIN", 5, 1, 1, 0, 2, List.of(), "", null, null, null,
-                List.of(WEEK_ONE));
+                List.of(WEEK_ONE), null);
         return new CompetitionPlan("", "", null, "Asia/Ho_Chi_Minh", "", "", "", "", null, null, List.of(stage), null,
                 null, null);
     }

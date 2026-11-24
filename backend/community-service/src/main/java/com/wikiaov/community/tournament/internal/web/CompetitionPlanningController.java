@@ -75,7 +75,26 @@ public class CompetitionPlanningController implements CompetitionPlanningApi {
     @Override
     @PostMapping(path = "/admin/competitions/preview", version = "1")
     public List<CompetitionPlan.Match> preview(@RequestBody Preview body) {
-        return planning.preview(body.content(), body.stageCode(), body.opponent());
+        return planning.preview(body.content(), body.stageCode(),
+                new CompetitionPlanning.BracketOptions(body.teams(), Boolean.TRUE.equals(body.thirdPlace()),
+                        body.opponent()));
+    }
+
+    @Override
+    @GetMapping(path = "/admin/competitions/{id}/revisions", version = "1")
+    public PageSlice<CompetitionPlanning.Revision> revisions(@PathVariable UUID id,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
+        return planning.revisions(id, page, size);
+    }
+
+    @Override
+    @GetMapping(path = "/admin/competitions/{id}/revisions/{revisionId}", version = "1")
+    public CompetitionPlan revision(@PathVariable UUID id, @PathVariable UUID revisionId,
+            HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return planning.revision(id, revisionId);
     }
 
     @Override

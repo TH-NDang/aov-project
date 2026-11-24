@@ -75,11 +75,18 @@ public record CompetitionPlan(
             @Nullable DraftRule draftRule,
             @Nullable SideSelection sideSelection,
             @Nullable String rulesNote,
-            List<PatchLine> patches
+            List<PatchLine> patches,
+            List<UUID> teamIds
     ) {
         public Stage {
             tieBreakers = tieBreakers == null ? List.of("GAME_DIFF", "GAME_WINS") : List.copyOf(tieBreakers);
             patches = patches == null ? List.of() : List.copyOf(patches);
+            teamIds = teamIds == null ? List.of() : List.copyOf(teamIds);
+        }
+
+        /** Whether the team plays this stage; a stage that names no team is played by every entrant. */
+        public boolean includes(UUID teamId) {
+            return teamIds.isEmpty() || teamIds.contains(teamId);
         }
     }
 
@@ -171,6 +178,11 @@ public record CompetitionPlan(
     public CompetitionPlan inCircuit(String name) {
         return new CompetitionPlan(name, organizer, organizerPageId, timezone, prizePool, currency, sourceUrl,
                 notes, venues, entrants, stages, playoffSeeds, matches, circuitPageId);
+    }
+
+    /** The entrants that play a stage, in entry order. */
+    public List<Entry> playing(Stage stage) {
+        return entrants.stream().filter(entry -> entry.plays() && stage.includes(entry.teamId())).toList();
     }
 
     /** Whether a new series of this stage is played without the rule against picking a hero again. */

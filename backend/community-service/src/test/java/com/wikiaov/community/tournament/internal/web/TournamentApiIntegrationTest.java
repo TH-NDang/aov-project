@@ -787,6 +787,49 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aRosterBatchTakesOutChangesAndAddsLinesAndBringsATrashedLineBack() throws Exception {
+        var fixture = fixture();
+        var side = fixture.game().sides().get(0);
+        var first = rosterLine(fixture.tournamentId(), side.teamId(), side.participants().get(0).playerId(), Lane.TOP);
+        var second = rosterLine(fixture.tournamentId(), side.teamId(), side.participants().get(1).playerId(), null);
+        var kept = create("roster-memberships", first);
+        var dropped = create("roster-memberships", second);
+
+        mvc.perform(batch(Map.of("remove", List.of(Map.of("id", dropped.get("id"), "version", version(dropped))),
+                "update", List.of(Map.of("id", kept.get("id"), "version", version(kept), "content",
+                        rosterLine(first.tournamentId(), first.teamId(), first.playerId(), Lane.MID))))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.removed").value(1))
+                .andExpect(jsonPath("$.updated[0].content.lane").value("MID"));
+        mvc.perform(batch(Map.of("create", List.of(rosterLine(second.tournamentId(), second.teamId(),
+                second.playerId(), Lane.SUPPORT))))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.created[0].id").value(dropped.get("id")))
+                .andExpect(jsonPath("$.created[0].content.lane").value("SUPPORT"));
+    }
+
+    @Test
+    void aRosterBatchWithOneLineThatDoesNotHoldWritesNothing() throws Exception {
+        var fixture = fixture();
+        var side = fixture.game().sides().get(0);
+        var line = rosterLine(fixture.tournamentId(), side.teamId(), side.participants().get(0).playerId(), Lane.TOP);
+        var unknown = rosterLine(fixture.tournamentId(), side.teamId(), UUID.randomUUID(), null);
+
+        mvc.perform(batch(Map.of("create", List.of(line, unknown)))).andExpect(status().isBadRequest());
+
+        mvc.perform(authorized(get(ADMIN + "/roster-memberships")).param("tournamentId",
+                fixture.tournamentId().toString())).andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    private MockHttpServletRequestBuilder batch(Map<String, Object> body) throws Exception {
+        return authorized(post(ADMIN + "/roster-memberships/batch")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(body));
+    }
+
+    private static RosterMembership rosterLine(UUID tournamentId, UUID teamId, UUID playerId, Lane lane) {
+        return new RosterMembership(tournamentId, teamId, playerId, lane, null, RosterStatus.ACTIVE, null, null, null,
+                null, null);
+    }
+
+    @Test
     void rosterRejectsMissingIdentitiesUnsafeEvidenceAndUnboundedListQueries() throws Exception {
         var unknown = new RosterMembership(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null,
                 null, null, null, null, null, null, null);

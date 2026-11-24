@@ -7,6 +7,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RegistryArc
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.planning.domain.BracketTemplates;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionRules;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionSnapshot;
@@ -35,6 +36,29 @@ public class CompetitionPlanning {
             long version,
             Instant publishedAt,
             CompetitionSnapshot content
+    ) {
+    }
+
+    /**
+     * How a bracket is drawn: how many seeds it holds (null: every entrant of the stage, or the six of the AOG
+     * playoffs), whether the losing semifinalists play for third place, and the seed that seed one chose to meet in
+     * the AOG playoffs.
+     */
+    public record BracketOptions(
+            @Nullable Integer teams,
+            boolean thirdPlace,
+            int opponent
+    ) {
+    }
+
+    /** One entry of a plan's history, without the plan itself. */
+    public record Revision(
+            UUID id,
+            PlanRevisionAction action,
+            Instant createdAt,
+            int entrants,
+            int stages,
+            int matches
     ) {
     }
 
@@ -102,6 +126,22 @@ public class CompetitionPlanning {
                 .published(text(filter.teamId()), text(filter.playerId()), text(filter.organizerPageId()),
                         text(filter.circuitPageId()), PageRequest.of(page, size))
                 .map(row -> new View(row.getId(), 0, row.getPublishedAt(), row.getPublishedSnapshot())));
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public PageSlice<Revision> revisions(UUID id, int page, int size) {
+        return PageSlice.from(revisions.history(id, PageRequest.of(page, size)).map(row -> new Revision(row.getId(),
+                PlanRevisionAction.valueOf(row.getAction()), row.getCreatedAt(), row.getEntrants(), row.getStages(),
+                row.getMatches())));
+    }
+
+    /** The plan as one revision of its history holds it, to look at or to start the draft from again. */
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public CompetitionPlan revision(UUID id, UUID revisionId) {
+        return revisions.findById(revisionId).filter(row -> row.getTournamentId().equals(id))
+                .map(row -> row.getContent().plan()).orElseThrow(TournamentErrors::missing);
     }
 
     @PreAuthorize("hasAuthority('tournament:write') and hasAuthority('tournament:read')")
@@ -209,25 +249,37 @@ public class CompetitionPlanning {
 
     @PreAuthorize("hasAuthority('tournament:write') and hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public List<CompetitionPlan.Match> preview(CompetitionPlan content, String stageCode, int opponent) {
+    public List<CompetitionPlan.Match> preview(CompetitionPlan content, String stageCode, BracketOptions options) {
         validate(content);
         var stage = content.stages().stream().filter(value -> value.code().equals(stageCode)).findFirst()
                 .orElseThrow(() -> TournamentErrors.invalid("Unknown stage."));
         try {
             return switch (stage.format()) {
                 case "ROUND_ROBIN" -> CompetitionRules.roundRobin(stage, content.entrants());
+                case "SINGLE_ELIMINATION" -> BracketTemplates.singleElimination(stage,
+                        seeds(content, stage, options.teams()), options.thirdPlace());
                 case "DOUBLE_ELIMINATION" -> {
-                    if (content.entrants().stream().filter(CompetitionPlan.Entry::plays)
-                            .count() < CompetitionRules.AOG_PLAYOFF_TEAMS) {
-                        throw TournamentErrors.invalid("The AOG playoff template requires six entrants.");
-                    }
-                    yield CompetitionRules.aogPlayoffs(stage, opponent);
+                    int teams = options.teams() == null ? CompetitionRules.AOG_PLAYOFF_TEAMS : options.teams();
+                    int seeds = seeds(content, stage, teams);
+                    yield teams == CompetitionRules.AOG_PLAYOFF_TEAMS
+                            ? CompetitionRules.aogPlayoffs(stage, options.opponent())
+                            : BracketTemplates.doubleElimination(stage, seeds);
                 }
                 default -> throw TournamentErrors.invalid("This format uses manual fixtures.");
             };
         } catch (IllegalArgumentException error) {
             throw TournamentErrors.invalid(error.getMessage());
         }
+    }
+
+    /** How many seeds a bracket is drawn for: the number asked for, at most one seed per entrant of the stage. */
+    private static int seeds(CompetitionPlan content, CompetitionPlan.Stage stage, @Nullable Integer asked) {
+        int playing = content.playing(stage).size();
+        int seeds = asked == null ? playing : asked;
+        if (seeds > playing) {
+            throw TournamentErrors.invalid("A bracket cannot have more seeds than the stage has entrants.");
+        }
+        return seeds;
     }
 
     private static String text(@Nullable UUID id) {

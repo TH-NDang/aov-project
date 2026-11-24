@@ -953,6 +953,30 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void theHistoryOfAPlanListsItsSavesAndReadsBackAnEarlierOne() throws Exception {
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content", Map.of("code", "history-" + UUID.randomUUID(), "name", "History", "region", "VN")))
+                .path("id").asText();
+        var first = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", Map.of("timezone", "Asia/Ho_Chi_Minh", "notes", "First")));
+        send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", first.path("version").asLong(), "content",
+                        Map.of("timezone", "Asia/Ho_Chi_Minh", "notes", "Second")));
+
+        var history = json.readTree(mvc
+                .perform(as(get(ROOT + "/admin/competitions/" + id + "/revisions").param("size", "10"), "editor", true))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.items[0].action").value("SAVE")).andReturn().getResponse().getContentAsString());
+        var oldest = history.path("items").get(1).path("id").asText();
+
+        mvc.perform(as(get(ROOT + "/admin/competitions/" + id + "/revisions/" + oldest), "editor", true))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.notes").value("First"));
+        mvc.perform(as(get(ROOT + "/admin/competitions/" + UUID.randomUUID() + "/revisions/" + oldest), "editor", true))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(ROOT + "/admin/competitions/" + id + "/revisions")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void generatedMatchesCarryTheirTitleIntoTheirSeriesAndKeepItWhenRenamed() throws Exception {
         String suffix = UUID.randomUUID().toString();
         String a = send(post(ROOT + "/admin/teams"), "editor", true,

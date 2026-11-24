@@ -19,6 +19,18 @@ public record MatchTitle(
     public enum Kind {
         /** A round of a round robin: {@code leg} and {@code round}. */
         ROUND_ROBIN,
+        /** A knockout round before the quarterfinals: {@code round} teams are left, {@code number} is the match. */
+        ROUND_OF,
+        /** One of the quarterfinals of a knockout: {@code number}. */
+        QUARTERFINAL,
+        /** One of the semifinals of a knockout: {@code number}. */
+        SEMIFINAL,
+        /** The match between the losers of the semifinals. */
+        THIRD_PLACE,
+        /** The last match of a knockout without a lower bracket. */
+        FINAL,
+        /** An upper bracket round before its semifinals: {@code round} and {@code number}. */
+        UPPER_ROUND,
         /** One of the upper bracket semifinals: {@code number}. */
         UPPER_SEMIFINAL,
         UPPER_FINAL,

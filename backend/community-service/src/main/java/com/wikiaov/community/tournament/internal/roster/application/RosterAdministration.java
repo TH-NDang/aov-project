@@ -18,6 +18,7 @@ import com.wikiaov.community.tournament.internal.registry.persistence.Tournament
 import com.wikiaov.community.tournament.internal.roster.domain.RosterRules;
 import com.wikiaov.community.tournament.internal.roster.persistence.RosterRecord;
 import com.wikiaov.community.tournament.internal.roster.persistence.RosterRepository;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -80,6 +81,49 @@ public class RosterAdministration {
         RegistryArchivePolicy.requireActive(row);
         TournamentErrors.version(row.getVersion(), version);
 
+        row.setContent(content, actor());
+        memberships.flush();
+        return TournamentViews.view(row, row.getContent());
+    }
+
+    /**
+     * Writes a whole roster at once: lines taken out, changed and added, all or none of them. Adding a player whose
+     * line of that team sits in the trash brings the line back instead of refusing it.
+     */
+    @PreAuthorize("hasAuthority('tournament:write')")
+    @Transactional
+    public RosterBatch.Result batch(RosterBatch batch) {
+        if (batch.size() > RosterRules.MAX_BATCH) {
+            throw TournamentErrors.invalid("A roster batch holds at most " + RosterRules.MAX_BATCH + " lines.");
+        }
+        archives.lockWrites();
+
+        for (var line : batch.remove()) {
+            lifecycle(line.id(), line.version(), Action.DELETE, actor());
+        }
+
+        var updated = new ArrayList<View<RosterMembership>>();
+        for (var line : batch.update()) {
+            updated.add(update(line.id(), line.version(), line.content()));
+        }
+
+        var created = new ArrayList<View<RosterMembership>>();
+        for (var content : batch.create()) {
+            created.add(add(content));
+        }
+        return new RosterBatch.Result(created, updated, batch.remove().size());
+    }
+
+    private View<RosterMembership> add(RosterMembership content) {
+        validate(content);
+        var trashed = memberships.findByTournamentIdAndTeamIdAndPlayerId(content.tournamentId(), content.teamId(),
+                content.playerId()).filter(row -> row.getDeletedAt() != null);
+        if (trashed.isEmpty()) {
+            return create(content);
+        }
+
+        var row = trashed.get();
+        row.restore(actor());
         row.setContent(content, actor());
         memberships.flush();
         return TournamentViews.view(row, row.getContent());

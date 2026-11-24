@@ -9,6 +9,8 @@ import java.util.List;
 public final class RosterRules {
     public static final int MAX_JERSEY_NUMBER = 20;
     public static final int MAX_NOTE = 2000;
+    /** Lines one batch may take out, change and add together. */
+    public static final int MAX_BATCH = 500;
 
     private RosterRules() {
     }
