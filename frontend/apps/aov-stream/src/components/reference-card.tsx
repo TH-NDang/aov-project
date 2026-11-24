@@ -9,9 +9,10 @@ import {
   safeEntityIconUrl,
   type EntityReference,
 } from "@aov/ui/lib/entity-rich-text"
+import { previewKind } from "@aov/ui/lib/running-text-names"
 import { codeName, TIER_NAMES } from "../lib/competition-model"
 import { referencePreviewQuery } from "../lib/reference-api"
-import { firstLine, previewKind } from "../lib/reference-model"
+import { firstLine } from "../lib/reference-model"
 import { dayRange, personRoleEnglish, regionName } from "./community-ui"
 import { PlayerMark } from "./player-mark"
 import { RegionMark } from "./region-mark"

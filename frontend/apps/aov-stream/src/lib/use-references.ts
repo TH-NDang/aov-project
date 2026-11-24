@@ -1,25 +1,13 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import type { ReferenceName } from "@aov/community-contracts"
-import { createEntityIndex, parseRichText, type EntityIndex, type EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { parseRichText, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
+import { runningTextReferences, type RunningTextReferences } from "@aov/ui/lib/running-text"
+import type { WikiMode } from "@aov/ui/lib/running-text-names"
 import { useStreamLocale } from "../components/stream-locale"
 import { referenceNamesQuery, referencePeopleQuery, wikiCatalogQuery, wikiModesQuery } from "./reference-api"
-import {
-  addressResolver,
-  communityReferences,
-  DATA_LOCALE,
-  mayNamePeople,
-  wikiReferences,
-  type WikiMode,
-} from "./reference-model"
-
-/** Everything texts can name now, ready to be found in one. */
-export type References = {
-  entities: EntityReference[]
-  index: EntityIndex
-  resolveAddress: (address: string) => string | undefined
-}
+import { mayNamePeople } from "./reference-model"
 
 type Source = {
   names: ReferenceName[]
@@ -31,21 +19,16 @@ type Source = {
 
 const none: never[] = []
 
-function build({ names, people = none, catalog, modes, locale }: Source): References {
-  const wikiUrl = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
-  const entities = [
-    ...communityReferences(people.length ? [...names, ...people] : names),
-    ...wikiReferences(catalog, modes, { wikiUrl, locale }),
-  ]
-  return {
-    entities,
-    index: createEntityIndex(entities, locale, DATA_LOCALE, { scope: "all" }),
-    resolveAddress: addressResolver(entities, new URL(import.meta.env.BASE_URL, window.location.origin).href),
-  }
-}
+const build = ({ names, people = none, ...source }: Source) =>
+  runningTextReferences({
+    ...source,
+    names: people.length ? [...names, ...people] : names,
+    streamUrl: new URL(import.meta.env.BASE_URL, window.location.origin).href,
+    wikiUrl: publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin),
+  })
 
 // Every text of a page reads the same answers, so the index is built once for all of them: with and without people.
-const built: { source: Source; references: References }[] = []
+const built: { source: Source; references: RunningTextReferences }[] = []
 
 function references(source: Source) {
   const known = built.find((entry) =>
@@ -62,7 +45,7 @@ function references(source: Source) {
  * What a text can name, once it is known; until then the text reads as plain words. Names of people are three quarters
  * of all names, so they are only read for a text that may hold one.
  */
-export function useReferences(text: string, about: readonly string[] = none): References | undefined {
+export function useReferences(text: string, about: readonly string[] = none): RunningTextReferences | undefined {
   const { languageTag } = useStreamLocale()
   const enabled = !!text.trim()
   const names = useQuery({ ...referenceNamesQuery, enabled })
