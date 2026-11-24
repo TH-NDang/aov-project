@@ -120,6 +120,25 @@ public class PatchDrafts {
         return variantId;
     }
 
+    /** Puts an unseasoned patch into a season; returns false when it already is in that season. */
+    public boolean assignSeason(UUID variantId, UUID seasonId) {
+        var snapshot = variants.snapshotById(variantId).orElseThrow(PatchDrafts::notFound);
+        rulesets.lockById(snapshot.getRulesetId()).orElseThrow(PatchDrafts::notFound);
+        var variant = variants.lockById(variantId).orElseThrow(PatchDrafts::notFound);
+
+        if (seasonId.equals(variant.getSeasonId())) {
+            return false;
+        }
+        if (variant.getSeasonId() != null) {
+            throw new ApiException(PatchErrorCode.PATCH_CONFLICT, "The patch already belongs to another season.");
+        }
+        seasonPlacement.requireSeasonOrder(variant, seasonId);
+
+        variant.setSeasonId(seasonId);
+        record("PATCH_VARIANT_SEASON_ASSIGNED", variantId);
+        return true;
+    }
+
     public void publish(UUID variantId) {
         var snapshot = variants.snapshotById(variantId).orElseThrow(PatchDrafts::notFound);
         rulesets.lockById(snapshot.getRulesetId()).orElseThrow(PatchDrafts::notFound);

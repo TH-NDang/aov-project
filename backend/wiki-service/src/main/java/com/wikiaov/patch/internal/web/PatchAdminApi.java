@@ -8,6 +8,7 @@ import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchCommands.Title;
 import com.wikiaov.patch.internal.application.PatchCommands.Variant;
+import com.wikiaov.patch.internal.application.PatchCommands.VariantSeason;
 import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.PageLimits;
@@ -95,6 +96,12 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "204", description = "Successful operation; no response body.", content = @Content)
     })
     void publish(@Parameter(description = "Id identifier.") UUID id);
+
+    @Operation(operationId = "patchAdminApi_season", summary = "Season - patch admin", description = "Puts an existing unseasoned patch variant into a season without moving it in the ruleset. The season order of the ruleset's patches must stay intact and every release must fit the season's market schedule; releases without a season join it. Repeating the same season is a no-op; another season answers 409. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write') and hasAuthority('patch:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "204", description = "Successful operation; no response body.", content = @Content)
+    })
+    void season(@Parameter(description = "Id identifier.") UUID id,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid VariantSeason body);
 
     @Operation(operationId = "patchAdminApi_confirm", summary = "Confirm - patch admin", description = "Confirm for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "204", description = "Successful operation; no response body.", content = @Content)

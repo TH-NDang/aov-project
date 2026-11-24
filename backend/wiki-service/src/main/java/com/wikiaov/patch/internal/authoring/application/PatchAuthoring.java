@@ -8,6 +8,7 @@ import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchCommands.Title;
 import com.wikiaov.patch.internal.application.PatchCommands.Variant;
+import com.wikiaov.patch.internal.application.PatchCommands.VariantSeason;
 import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.patch.internal.context.application.PatchAdminCatalog;
 import com.wikiaov.patch.internal.release.application.PatchReleaseWorkflow;
@@ -69,6 +70,13 @@ public class PatchAuthoring {
     @PreAuthorize("hasAuthority('patch:write')")
     public UUID seasonPatch(SeasonPatch input) {
         return drafts.seasonPatch(input);
+    }
+
+    @PreAuthorize("hasAuthority('patch:write') and hasAuthority('patch:publish')")
+    public void assignSeason(UUID variantId, VariantSeason input) {
+        if (drafts.assignSeason(variantId, input.seasonId())) {
+            releases.adoptSeason(variantId, input.seasonId());
+        }
     }
 
     @PreAuthorize("hasAuthority('patch:publish')")

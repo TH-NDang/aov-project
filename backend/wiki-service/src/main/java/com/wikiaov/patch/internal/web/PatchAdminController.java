@@ -8,6 +8,7 @@ import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchCommands.Title;
 import com.wikiaov.patch.internal.application.PatchCommands.Variant;
+import com.wikiaov.patch.internal.application.PatchCommands.VariantSeason;
 import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.patch.internal.authoring.application.PatchAuthoring;
 import com.wikiaov.platform.ApiPaths;
@@ -114,6 +115,13 @@ public class PatchAdminController implements PatchAdminApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void publish(@PathVariable UUID id) {
         authoring.publish(id);
+    }
+
+    @Override
+    @PutMapping(path = "/patch-variants/{id}/season", version = "1")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void season(@PathVariable UUID id, @RequestBody VariantSeason body) {
+        authoring.assignSeason(id, body);
     }
 
     @Override
