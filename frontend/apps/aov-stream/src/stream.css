@@ -919,6 +919,11 @@ button:disabled {
 .stream-image[data-ready] img {
   opacity: 1;
 }
+/* A logo keeps its whole shape, with a little room from the edge of its plate. */
+.stream-image[data-logo] img {
+  padding: 8%;
+  object-fit: contain;
+}
 .stream-image > span {
   color: var(--stream-image-ink, var(--hub-on-plate));
   font-size: var(--stream-image-initials, 12px);

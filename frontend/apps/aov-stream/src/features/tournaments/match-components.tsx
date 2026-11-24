@@ -55,7 +55,7 @@ function FixtureTeam({ team }: { team: MatchSide }) {
       data-open={!team.known || undefined}
     >
       {team.known ? (
-        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} name={team.name} />
+        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
       ) : (
         <span className="tn-fixture-blank" aria-hidden="true" />
       )}
@@ -181,7 +181,7 @@ function DuelTeam({ team, side }: { team: HeadTeam; side: "a" | "b" }) {
       {open ? (
         <span className="tn-duel-blank" aria-hidden="true" />
       ) : (
-        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} name={team.name} />
+        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
       )}
       <span>
         {team.teamId && !open ? (

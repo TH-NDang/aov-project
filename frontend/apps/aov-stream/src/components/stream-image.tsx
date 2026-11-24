@@ -8,18 +8,25 @@ export function StreamImage({
   src,
   darkSrc,
   name,
+  logo = false,
   className = "",
 }: {
   src?: string | null
   darkSrc?: string | null
   name: string
+  /** A logo is drawn whole and inset from the plate's edge; a photo fills the plate. */
+  logo?: boolean
   className?: string
 }) {
   const [failed, setFailed] = useState<string[]>([])
   const [loaded, setLoaded] = useState<string>()
   const shown = [darkSrc, src].find((url): url is string => !!url && !failed.includes(url))
   return (
-    <span className={`stream-image ${className}`} data-ready={(!!shown && loaded === shown) || undefined}>
+    <span
+      className={`stream-image ${className}`}
+      data-logo={logo || undefined}
+      data-ready={(!!shown && loaded === shown) || undefined}
+    >
       {shown ? (
         <img
           key={shown}

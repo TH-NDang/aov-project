@@ -117,6 +117,7 @@ export function PublicCompetitionPage() {
             name={tournament.name}
             url={tournament.logoUrl}
             darkUrl={tournament.logoDarkUrl}
+            onLight
             className="tn-logo-large"
           />
           <div className="tn-comp-title">
@@ -165,6 +166,7 @@ export function PublicCompetitionPage() {
                   src={"logoUrl" in won.winner ? won.winner.logoUrl : undefined}
                   darkSrc={"logoDarkUrl" in won.winner ? won.winner.logoDarkUrl : undefined}
                   name={won.winner.name}
+                  logo
                 />
                 <strong>{won.winner.name}</strong>
               </span>
@@ -414,7 +416,7 @@ function StandingsTable({
                 </td>
                 <th scope="row">
                   <span className="tn-team">
-                    <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} name={team?.shortName || name} />
+                    <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
                     <EntityPageLink kind="TEAM" id={row.teamId} name={name} />
                   </span>
                 </th>
@@ -535,7 +537,7 @@ function Teams({ view }: { view: CompetitionView }) {
           return (
             <section className="tn-team-card" key={entrant.teamId}>
               <h2>
-                <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} name={team?.shortName || name} />
+                <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
                 <EntityPageLink kind="TEAM" id={entrant.teamId} name={name} />
                 {entrant.status === "WITHDRAWN" && <span className="cp-badge">{text("Đã rút lui", "Withdrawn")}</span>}
               </h2>

@@ -85,7 +85,7 @@ export function MatchCard({
           data-lost={team.lost || undefined}
           data-open={!team.known || undefined}
         >
-          <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} name={team.name} />
+          <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
           <strong title={team.fullName}>{team.name}</strong>
           <b>{team.score ?? "–"}</b>
         </span>

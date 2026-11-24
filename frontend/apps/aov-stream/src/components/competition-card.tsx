@@ -37,22 +37,26 @@ export function StatusBadge({
 
 /**
  * A competition's mark on a tile; one without artwork gets its initials on a colour taken from its name. The tile is
- * dark in both themes, so the logo drawn for dark backgrounds comes first.
+ * dark in both themes, so the logo drawn for dark backgrounds comes first, unless the tile is white.
  */
 export function CompetitionLogo({
   name,
   url,
   darkUrl,
+  onLight = false,
   className = "",
 }: {
   name: string
   url?: string | null
   darkUrl?: string | null
+  /** The tile is white, as at the head of a competition page, so the light version comes first. */
+  onLight?: boolean
   className?: string
 }) {
+  const shown = onLight ? url || darkUrl : darkUrl || url
   return (
     <span className={`tn-logo hub-art ${className}`} style={hue(name)}>
-      {darkUrl || url ? <img src={(darkUrl || url)!} alt="" loading="lazy" /> : <b>{monogram(name)}</b>}
+      {shown ? <img src={shown} alt="" loading="lazy" /> : <b>{monogram(name)}</b>}
     </span>
   )
 }
