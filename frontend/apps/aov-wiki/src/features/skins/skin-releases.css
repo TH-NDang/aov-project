@@ -1,0 +1,72 @@
+/* The skins a version brought: a heading with the version and a row of portraits that scrolls sideways. */
+.wiki-skin-releases {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+.wiki-skin-releases > h2 {
+  font: var(--wiki-type-section);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  color: var(--aov-accent);
+}
+.wiki-skin-releases > h2 > small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-skin-releases > ul {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  list-style: none;
+}
+.wiki-skin-releases li {
+  flex: 0 0 120px;
+}
+.wiki-skin-releases button {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  color: var(--aov-text);
+  text-align: left;
+}
+.wiki-skin-release-art {
+  display: block;
+  margin-bottom: 6px;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-raised);
+  box-shadow: inset 0 0 0 1px var(--aov-line);
+}
+.wiki-skin-release-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+}
+.wiki-skin-releases button > strong {
+  font: var(--wiki-type-meta);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-skin-releases button > small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-skin-releases button:hover > strong {
+  color: var(--aov-accent);
+}
+.wiki-skin-releases button:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}

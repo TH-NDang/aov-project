@@ -1,5 +1,6 @@
 import { useCallback, useId, useSyncExternalStore } from "react"
-import { ArrowDown, ArrowUp, Palette, RotateCcw } from "lucide-react"
+import { Palette, RotateCcw } from "lucide-react"
+import { changeKindIcons } from "@aov/ui/components/change-kind-icons"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { NativeSelect } from "@/components/native-select"
@@ -162,7 +163,7 @@ export function ChangeColorSettings({ className = "" }: { className?: string }) 
         {(["BUFF", "NERF"] as const).map((kind) => {
           const isBuff = kind === "BUFF"
           const color = colors[isBuff ? "buff" : "nerf"]
-          const Icon = isBuff ? ArrowUp : ArrowDown
+          const Icon = isBuff ? changeKindIcons.BUFF : changeKindIcons.NERF
           const label = isBuff ? "Tăng sức mạnh" : "Giảm sức mạnh"
           return (
             <div key={kind} className="flex items-center justify-between gap-3">

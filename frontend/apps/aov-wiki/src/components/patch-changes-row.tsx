@@ -1,10 +1,11 @@
 import { Fragment, useId, useLayoutEffect, useRef, useState } from "react"
 import { Link } from "react-router"
-import { changeKindIcon, changeKindIcons } from "@aov/ui/components/change-kind-icons"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { patchDayLabel } from "../lib/patch-day-label"
+import { KIND_ORDER, patchChangeLabel, patchChangeTone } from "../lib/change-kinds"
+import { ChangeKindMark } from "./change-tag"
 import { WikiIcon } from "./wiki-icon"
 import { WikiImage } from "./wiki-image"
 import "./patch-changes-row.css"
@@ -17,27 +18,6 @@ export type ChangedSubject = {
   href?: string
   open?: (button: HTMLButtonElement) => void
 }
-const labels: Record<string, [string, string]> = {
-  ADDED: ["Mới", "New"],
-  REMOVED: ["Đã gỡ", "Removed"],
-  BUFF: ["Tăng sức mạnh", "Buff"],
-  NERF: ["Giảm sức mạnh", "Nerf"],
-  REWORK: ["Làm lại", "Rework"],
-  FIX: ["Sửa lỗi", "Fix"],
-  RELEASE: ["Ra mắt", "New hero"],
-  ADJUSTMENT: ["Điều chỉnh", "Adjustment"],
-  BALANCE: ["Cân bằng", "Balance"],
-  UPDATED: ["Cập nhật", "Updated"],
-}
-/** The order readers look for: what is new, what was remade, what got stronger, what got weaker, then the rest. */
-const KIND_ORDER = ["RELEASE", "ADDED", "REWORK", "BUFF", "NERF", "ADJUSTMENT", "BALANCE", "FIX", "UPDATED", "REMOVED"]
-/** The colour a kind of change is read by; every other kind reads as an adjustment. */
-const TONES: Record<string, string> = { RELEASE: "new", ADDED: "new", REWORK: "rework", BUFF: "up", NERF: "down" }
-
-export function patchChangeTone(kind: string) {
-  return TONES[kind] ?? "adjust"
-}
-
 /** The changed subjects grouped by kind, in the order readers look for, each group by name. */
 export function groupedChanges<T extends ChangedSubject>(entries: readonly T[], locale: string) {
   const byKind = new Map<string, T[]>()
@@ -79,16 +59,12 @@ export function usePatchNotesPath() {
   return patch ? `/updates/${patch.code}` : undefined
 }
 
-export function patchChangeLabel(kind: string, locale: string) {
-  return wikiText(locale, ...(labels[kind] ?? labels.UPDATED))
-}
-/** A change kind as readers see it: its drawn mark and its name. */
+/** A change kind as readers see it: its mark and its name. */
 export function ChangeKindLabel({ kind, size = 18 }: { kind: string; size?: number }) {
   const { locale } = useWikiContext()
-  const Art = changeKindIcon(kind) ?? changeKindIcons.UPDATED
   return (
-    <span className="inline-flex items-center gap-1">
-      <Art size={size} className="shrink-0" />
+    <span className="inline-flex items-center gap-1.5">
+      <ChangeKindMark kind={kind} size={size} />
       {patchChangeLabel(kind, locale)}
     </span>
   )
@@ -190,7 +166,6 @@ export function PatchChangesRow({
           {/* A wide row ends where its last whole chip ends, so the link follows the chips without a gap. */}
           <div className="wiki-changes-track" style={{ maxWidth: edge }}>
             {groups.map(({ kind, list }) => {
-              const Art = changeKindIcon(kind) ?? changeKindIcons.UPDATED
               const tone = kind ? patchChangeTone(kind) : undefined
               return (
                 <Fragment key={kind}>
@@ -201,7 +176,7 @@ export function PatchChangesRow({
                       data-cut={place.get(list[0].id)! >= fit || undefined}
                       aria-hidden="true"
                     >
-                      <Art size={18} className="shrink-0" />
+                      <ChangeKindMark kind={kind} size={18} />
                       {patchChangeLabel(kind, locale)}
                     </span>
                   )}

@@ -50,8 +50,8 @@ test("change color settings persist independent colors and synchronize all badge
     const badges = (kind: string) => [...document.querySelectorAll<HTMLElement>(`[data-change-kind="${kind}"]`)]
     assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-rose-700")))
     assert.ok(badges("NERF")[0].className.includes("text-emerald-700"))
-    assert.ok(badges("BUFF").every((badge) => badge.querySelector('use[href$="#buff"]')))
-    assert.ok(badges("NERF")[0].querySelector('use[href$="#nerf"]'))
+    assert.ok(badges("BUFF").every((badge) => badge.querySelector(".lucide-trending-up")))
+    assert.ok(badges("NERF")[0].querySelector(".lucide-trending-down"))
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Thiết lập màu thay đổi"]')!.click())
     const choose = async (label: string, color: string) =>
       act(async () => {
@@ -69,8 +69,8 @@ test("change color settings persist independent colors and synchronize all badge
     })
     assert.ok(badges("BUFF").every((badge) => badge.className.includes("text-amber-700")))
     assert.ok(badges("NERF")[0].className.includes("text-blue-700"))
-    assert.ok(badges("BUFF").every((badge) => badge.querySelector('use[href$="#buff"]')))
-    assert.ok(badges("NERF")[0].querySelector('use[href$="#nerf"]'))
+    assert.ok(badges("BUFF").every((badge) => badge.querySelector(".lucide-trending-up")))
+    assert.ok(badges("NERF")[0].querySelector(".lucide-trending-down"))
     assert.match(badges("BUFF")[0].textContent!, /Tăng sức mạnh/)
     assert.match(badges("NERF")[0].textContent!, /Giảm sức mạnh/)
     assert.ok(badges("ADJUSTMENT")[0].className.includes("text-amber-700"))

@@ -229,6 +229,27 @@ export function AppSidebar() {
       <SidebarFooter>
         <BackgroundTaskStatus />
         <UserMenu />
+        {/* The navigation marks are Game Icons, whose licence asks for this credit; hidden while the rail is collapsed. */}
+        <p className="type-meta px-2 group-data-[collapsible=icon]:hidden">
+          Biểu tượng từ{" "}
+          <a
+            className="underline underline-offset-2 hover:text-foreground"
+            href="https://game-icons.net"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Game Icons
+          </a>
+          ,{" "}
+          <a
+            className="underline underline-offset-2 hover:text-foreground"
+            href="https://creativecommons.org/licenses/by/3.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            CC BY 3.0
+          </a>
+        </p>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

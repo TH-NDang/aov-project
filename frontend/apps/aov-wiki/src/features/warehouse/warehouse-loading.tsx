@@ -41,11 +41,7 @@ export function WarehouseRouteLoading() {
   const wide = usePageLayout() === "wide"
   return (
     <div className={`wiki-warehouse-page wiki-warehouse-${kind}`} aria-busy="true">
-      {wide ? (
-        <div className="wiki-warehouse-loading-heading wiki-skeleton" />
-      ) : (
-        <div className="wiki-warehouse-version" />
-      )}
+      {wide && <div className="wiki-warehouse-loading-heading wiki-skeleton" />}
       <div className="wiki-warehouse-controls">
         <div className="wiki-warehouse-toolbar">
           <span className="wiki-warehouse-search wiki-skeleton" />

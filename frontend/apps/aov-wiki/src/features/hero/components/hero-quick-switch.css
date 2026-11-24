@@ -25,6 +25,58 @@
     background 160ms,
     border-color 160ms;
 }
+/* The trigger where the name is not on screen: the hero's picture and name, then the switch mark. */
+.wiki-hero-switch-named {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--hero-accent, var(--aov-accent)) 30%, transparent);
+  border-radius: var(--aov-radius-pill);
+  padding: 3px 10px 3px 3px;
+  background: color-mix(in srgb, var(--aov-raised) 70%, transparent);
+  color: var(--aov-text);
+  transition:
+    background 160ms,
+    border-color 160ms;
+}
+.wiki-hero-switch-named:hover {
+  border-color: var(--hero-accent, var(--aov-accent));
+}
+.wiki-hero-switch-named:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-hero-switch-named > svg {
+  flex: none;
+  color: var(--hero-accent, var(--aov-accent));
+}
+.wiki-hero-switch-named-head {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--aov-surface);
+  color: var(--aov-accent);
+  font: var(--wiki-type-meta);
+}
+.wiki-hero-switch-named-head img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wiki-hero-switch-named-name {
+  font: var(--wiki-type-entry);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .wiki-hero-switch-trigger > svg {
   width: 16px;
   height: 16px;
@@ -120,10 +172,31 @@
   scrollbar-width: thin;
   scrollbar-color: var(--aov-line-strong) transparent;
 }
+/* Recently viewed, then every hero: each a small heading over a grid of tiles. */
+.wiki-hero-switch-group {
+  display: grid;
+  gap: 8px;
+}
+.wiki-hero-switch-group + .wiki-hero-switch-group {
+  margin-top: 20px;
+}
+.wiki-hero-switch-group h3 {
+  font: var(--wiki-type-meta);
+  margin: 0;
+  color: var(--aov-muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wiki-hero-switch-group h3 small {
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
 .wiki-hero-switch-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 8px 6px;
 }
 .wiki-hero-switch-state {
   font: var(--wiki-type-body);
@@ -187,7 +260,8 @@
     padding: 12px 12px max(24px, env(safe-area-inset-bottom));
   }
   .wiki-hero-switch-grid {
-    gap: 8px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px 4px;
   }
 }
 /* A side panel on wide screens; on a phone the shared bottom sheet takes most of the screen. */

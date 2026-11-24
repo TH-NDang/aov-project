@@ -1,10 +1,10 @@
 import { localeText } from "@aov/ui/lib/locale-text"
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { changeKindIcon } from "@aov/ui/components/change-kind-icons"
+import { ChangeKindMark, ChangeTag } from "../../components/change-tag"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { Link, useLocation, useNavigate, useParams } from "react-router"
-import { patchChangeLabel } from "../../components/patch-changes-row"
+import { KIND_ORDER, patchChangeLabel, patchChangeTone } from "../../lib/change-kinds"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
@@ -15,6 +15,8 @@ import type { ChangeDomain } from "../../lib/wiki-patch-changes"
 import { notFoundMeta, patchMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
+import { warehouseCatalogQuery } from "../../lib/warehouse-api"
+import { warehouseImage, type WarehouseKind } from "../../lib/warehouse-types"
 import { heroDetailQuery, type HeroDetail } from "../../lib/hero-api"
 import { activeSection } from "../../lib/hero-section-position"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "../../components/change-list"
@@ -28,7 +30,7 @@ import {
 } from "../../lib/updates-api"
 import "./updates.css"
 
-const DOMAINS: { domain: ChangeDomain; title: [string, string]; tab?: string }[] = [
+const DOMAINS: { domain: ChangeDomain; title: [string, string]; tab?: WarehouseKind }[] = [
   { domain: "HERO", title: ["Tướng", "Heroes"] },
   { domain: "ITEM", title: ["Trang bị", "Equipment"], tab: "items" },
   { domain: "ENCHANTMENT", title: ["Phù hiệu", "Enchantments"], tab: "enchantments" },
@@ -74,7 +76,7 @@ interface IndexEntry {
 interface IndexGroup {
   id: string
   title: string
-  /** Heroes show their picture; armory entries are listed by name. */
+  /** Shown with pictures where the entries have them. */
   pictured: boolean
   entries: IndexEntry[]
 }
@@ -136,13 +138,12 @@ function useReadingPlace(ids: string[]) {
 
 function KindMark({ kind, size }: { kind?: string | null; size: number }) {
   const { locale } = useWikiContext()
-  const Art = kind ? changeKindIcon(kind) : undefined
-  if (!kind || !Art) return null
+  if (!kind) return null
   return (
-    <>
-      <Art size={size} />
+    <span className="wiki-patch-kind">
+      <ChangeKindMark kind={kind} size={size} />
       <span className="sr-only">{patchChangeLabel(kind, locale)}</span>
-    </>
+    </span>
   )
 }
 
@@ -205,7 +206,7 @@ function PatchRail({ groups, title }: { groups: IndexGroup[]; title: string }) {
 function PatchStrip({ groups, title }: { groups: IndexGroup[]; title: string }) {
   const { locale } = useWikiContext()
   const jump = useJump()
-  const heroes = groups.find((group) => group.pictured)
+  const heroes = groups.find((group) => group.id === "patch-hero")
   return (
     <>
       {groups.length > 1 && (
@@ -245,6 +246,7 @@ function HeroNotes({
   open,
   onToggle,
   onLongChange,
+  hidden,
 }: {
   entry: HeroEntry
   variantId: string
@@ -253,6 +255,8 @@ function HeroNotes({
   open: boolean
   onToggle: () => void
   onLongChange: (long: boolean) => void
+  /** Left out by the kind filter: kept on the page so its place and its open state stay. */
+  hidden: boolean
 }) {
   const scope = useWikiContext()
   const layout = usePageLayout()
@@ -263,7 +267,14 @@ function HeroNotes({
   const page = hero ? scope.href(`/hero/${hero.code}`) : null
   const nameId = `${entry.id}-name`
   return (
-    <article className="wiki-patch-subject wiki-patch-hero" id={entry.id} tabIndex={-1} aria-labelledby={nameId}>
+    <article
+      className="wiki-patch-subject wiki-patch-hero"
+      id={entry.id}
+      tabIndex={-1}
+      aria-labelledby={nameId}
+      data-tone={kind ? patchChangeTone(kind) : undefined}
+      hidden={hidden}
+    >
       <header className="wiki-patch-hero-head">
         {page ? (
           // The name beside it is the link readers and screen readers use; the picture is a second way to press it.
@@ -286,6 +297,12 @@ function HeroNotes({
             {count > 0 && <span>{text(`${count} thay đổi`, count === 1 ? "1 change" : `${count} changes`)}</span>}
           </p>
         </div>
+        {page && layout === "wide" && (
+          <Link className="wiki-patch-hero-page" to={page} tabIndex={-1}>
+            {text("Trang tướng", "Hero page")}
+            <WikiIcon name="arrow" size={14} />
+          </Link>
+        )}
       </header>
       <div className="wiki-patch-hero-body">
         {showSummary && entry.summary && <p lang={row.actualLocale ?? undefined}>{entry.summary}</p>}
@@ -295,6 +312,7 @@ function HeroNotes({
               changes={row.changes ?? []}
               hero={hero}
               overallKind={kind}
+              kindMark={(change) => <ChangeTag kind={change} />}
               skillAction={
                 hero
                   ? (key) => (
@@ -320,18 +338,29 @@ function HeroNotes({
   )
 }
 
-function CatalogNotes({ id, row, tab }: { id: string; row: PatchChangeRow; tab?: string }) {
+/** An armory entry: its picture beside its name, the kind of its change and its note. */
+function CatalogNotes({ entry, row, tab }: { entry: IndexEntry; row: PatchChangeRow; tab?: string }) {
   const { href } = useWikiContext()
-  const entry = row.subject?.id ?? row.spellId
-  const name = row.subject?.displayName ?? row.name ?? row.subject?.code ?? row.code ?? ""
+  const target = row.subject?.id ?? row.spellId
+  const page = target && tab ? href(warehousePath(tab, target)) : null
   const summary = parseChangeSummary(row.summary).text
   return (
-    <article className="wiki-patch-subject" id={id} tabIndex={-1}>
-      <header>
-        <h3>{entry && tab ? <Link to={href(warehousePath(tab, entry))}>{name}</Link> : name}</h3>
-        <ChangeKind kind={changeKind(row)} />
-      </header>
-      {summary && <p lang={row.actualLocale ?? undefined}>{summary}</p>}
+    <article className="wiki-patch-subject wiki-patch-catalog" id={entry.id} tabIndex={-1}>
+      {page ? (
+        // The name is the link readers and screen readers use; the picture is a second way to press it.
+        <Link to={page} className="wiki-patch-subject-art" tabIndex={-1} aria-hidden="true">
+          {entry.image ? <WikiImage frameWidth={64} src={entry.image} alt="" /> : entry.name.charAt(0)}
+        </Link>
+      ) : (
+        <EntryArt entry={entry} />
+      )}
+      <div className="wiki-patch-catalog-body">
+        <header>
+          <h3>{page ? <Link to={page}>{entry.name}</Link> : entry.name}</h3>
+          <ChangeKind kind={entry.kind} />
+        </header>
+        {summary && <p lang={row.actualLocale ?? undefined}>{summary}</p>}
+      </div>
     </article>
   )
 }
@@ -356,6 +385,27 @@ function PatchContent({ release }: { release: PatchRelease }) {
   const filled = sections.filter((section) => section.rows.length)
   const pending = results.some((result) => result.isPending)
   const failed = results.some((result) => result.isError)
+
+  // The armory as of this update gives each entry its picture; read only for the kinds the update changed.
+  const catalogScope = {
+    region: scope.region,
+    locale: scope.locale,
+    seasonId: variant?.seasonId,
+    patchVariantId: release.variantId,
+  }
+  const catalogs = useQueries({
+    queries: sections.map((section) => ({
+      ...warehouseCatalogQuery(section.tab ?? "items", catalogScope),
+      // The browser keeps one copy of each armory: the version the reader picked, not this one.
+      meta: undefined,
+      enabled: !!section.tab && !!variant && section.rows.length > 0,
+    })),
+  })
+  const pictureOf = (index: number, row: PatchChangeRow) => {
+    const id = row.subject?.id ?? row.spellId
+    const entry = id ? catalogs[index]?.data?.find((item) => item.id === id) : undefined
+    return entry && warehouseImage(entry)
+  }
 
   const heroRows = sections.find((section) => section.domain === "HERO")?.rows ?? []
   // The hero as of this update gives its name and picture, names its skills and tells how many levels each has.
@@ -397,26 +447,37 @@ function PatchContent({ release }: { release: PatchRelease }) {
   const sharedSummary =
     heroes.length > 1 && heroes.every((entry) => entry.summary === heroes[0].summary) ? heroes[0].summary : ""
   const catalogEntries = new Map(
-    filled
-      .filter((section) => section.domain !== "HERO")
-      .map((section) => [
+    sections
+      .map((section, at) => ({ section, at }))
+      .filter(({ section }) => section.domain !== "HERO" && section.rows.length)
+      .map(({ section, at }) => [
         section.domain,
-        section.rows.map((row, index) => ({
+        section.rows.map((row, index): IndexEntry => ({
           id: place(`${section.id}-${row.subject?.code ?? row.code ?? index}`),
           name: row.subject?.displayName ?? row.name ?? row.subject?.code ?? row.code ?? "",
           kind: changeKind(row),
+          image: pictureOf(at, row),
         })),
       ]),
   )
-  const groups: IndexGroup[] = filled.map((section) => ({
-    id: section.id,
-    title: text(...section.title),
-    pictured: section.domain === "HERO",
-    entries: section.domain === "HERO" ? heroes : (catalogEntries.get(section.domain) ?? []),
-  }))
+  const groups: IndexGroup[] = filled.map((section) => {
+    const entries = section.domain === "HERO" ? heroes : (catalogEntries.get(section.domain) ?? [])
+    return {
+      id: section.id,
+      title: text(...section.title),
+      pictured: section.domain === "HERO" || entries.some((entry) => entry.image),
+      entries,
+    }
+  })
   const indexed = groups.reduce((total, group) => total + group.entries.length, 0) > 1
   const indexTitle = text("Trong bản cập nhật này", "In this update")
 
+  // The kinds among the heroes, in the order readers look for, each with how many heroes it covers.
+  const [kindFilter, setKindFilter] = useState<string | null>(null)
+  const heroKinds = [...new Set(heroes.map((entry) => entry.kind ?? "UPDATED"))].sort(
+    (a, b) => (KIND_ORDER.indexOf(a) + 1 || 99) - (KIND_ORDER.indexOf(b) + 1 || 99),
+  )
+  const heroCount = (kind: string) => heroes.filter((entry) => (entry.kind ?? "UPDATED") === kind).length
   const [openHeroes, setOpenHeroes] = useState<ReadonlySet<string>>(new Set())
   const [longHeroes, setLongHeroes] = useState<ReadonlySet<string>>(new Set())
   const toggleHero = (key: string) =>
@@ -538,6 +599,29 @@ function PatchContent({ release }: { release: PatchRelease }) {
                   </button>
                 )}
               </header>
+              {section.domain === "HERO" && heroKinds.length > 1 && (
+                <div
+                  className="wiki-patch-filter"
+                  role="group"
+                  aria-label={text("Lọc theo loại thay đổi", "Filter by kind")}
+                >
+                  <button type="button" aria-pressed={!kindFilter} onClick={() => setKindFilter(null)}>
+                    {text("Tất cả", "All")} <b>{heroes.length}</b>
+                  </button>
+                  {heroKinds.map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      aria-pressed={kindFilter === kind}
+                      onClick={() => setKindFilter(kindFilter === kind ? null : kind)}
+                    >
+                      <ChangeTag kind={kind} />
+                      <span className="sr-only">{patchChangeLabel(kind, locale)}</span>
+                      <b>{heroCount(kind)}</b>
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="wiki-patch-subjects">
                 {section.domain === "HERO"
                   ? heroes.map((entry) => (
@@ -549,12 +633,18 @@ function PatchContent({ release }: { release: PatchRelease }) {
                         open={openHeroes.has(entry.key)}
                         onToggle={() => toggleHero(entry.key)}
                         onLongChange={(long) => markLong(entry.key, long)}
+                        hidden={!!kindFilter && (entry.kind ?? "UPDATED") !== kindFilter}
                       />
                     ))
                   : section.rows.map((row, index) => (
                       <CatalogNotes
                         key={row.changeSetId ?? row.id ?? index}
-                        id={catalogEntries.get(section.domain)?.[index]?.id ?? `${section.id}-${index}`}
+                        entry={
+                          catalogEntries.get(section.domain)?.[index] ?? {
+                            id: `${section.id}-${index}`,
+                            name: row.name ?? row.code ?? "",
+                          }
+                        }
                         row={row}
                         tab={section.tab}
                       />

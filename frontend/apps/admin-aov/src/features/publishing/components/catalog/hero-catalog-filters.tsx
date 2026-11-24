@@ -1,7 +1,7 @@
 import { AlertTriangle, SlidersHorizontal } from "lucide-react"
 import { useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
-import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
+import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { positions, positionLanes } from "../../model/hero-classifications"
 import { patchHeroLocation } from "../../model/hero-location"

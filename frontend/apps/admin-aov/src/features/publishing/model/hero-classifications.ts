@@ -1,4 +1,4 @@
-import type { HeroLane } from "@aov/ui/components/hero-lane-icon"
+import type { HeroLane } from "@aov/ui/components/hero-marks"
 
 export const positions = {
   top: "Đường Tà thần Caesar",

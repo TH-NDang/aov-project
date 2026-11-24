@@ -11,11 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@aov/ui/components/dialog"
+import { HeroRoleIcon } from "@aov/ui/components/hero-marks"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
-import { MediaImage } from "@/components/media-image"
 import { errorMessage } from "@/lib/api/errors"
-import { roleIcons } from "../workspace/hero-classification-badges"
 import { formCandidates, heroFormChoices, replaceFormsBody } from "../../model/hero-forms-model"
 import { createPublishingApi, publishingKeys, type HeroForms } from "@/lib/api/publishing-api"
 import { ROLES } from "@/lib/hero-types"
@@ -74,13 +73,7 @@ export function HeroFormSwitcher({
             title={choice.form ? choice.form.code : undefined}
             onClick={() => onSelect(choice.id)}
           >
-            {choice.role && (
-              <MediaImage
-                path={`${import.meta.env?.BASE_URL ?? "/"}images/hero/vai-tro/${roleIcons[choice.role]}.png`}
-                alt=""
-                className="size-4 shrink-0 object-contain"
-              />
-            )}
+            {choice.role && <HeroRoleIcon role={choice.role} size={16} />}
             <span className="type-body">{choice.label}</span>
             {choice.form && !choice.form.published && <span className="type-meta">· chưa xuất bản</span>}
             {choice.form?.draftOpen && (

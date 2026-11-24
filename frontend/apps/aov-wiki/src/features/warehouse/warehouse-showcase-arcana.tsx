@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties } from "react"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext } from "../../context/wiki-context"
 import {
   ARCANA_PAGE_SLOTS,
   addPieces,
@@ -13,15 +13,9 @@ import {
 } from "./arcana-page-model"
 import { ARCANA_COLORS, ARCANA_FAMILIES, arcanaRows, type ArcanaFamily, type WarehouseArcana } from "./use-item-catalog"
 import { useShowcaseTurn } from "../../lib/use-showcase-turn"
-import { arcanaFamilyName } from "./warehouse-arcana"
 import { pageArcanaOf } from "./warehouse-arcana-page"
 import { CatalogShowcase, type ShowcaseIntro } from "../../components/catalog-showcase"
-import {
-  warehouseImage,
-  warehouseStatLabel,
-  warehouseStatValue,
-  type PublishedWarehouseRecord,
-} from "../../lib/warehouse-types"
+import { warehouseImage, type PublishedWarehouseRecord } from "../../lib/warehouse-types"
 import "./warehouse-showcase-arcana.css"
 
 /** One line of the page on show: its gem for the light behind it, and the picture in each of its ten slots. */
@@ -63,28 +57,7 @@ export function ArcanaShowcase({
     return page.length ? sceneOf("own", null, page, pool, arcana) : null
   }, [slots, pool, arcana])
   const { scene, leaving } = useShowcaseTurn(own ? [own] : samples, picturesOfScene)
-  const caption = scene && (
-    // The caption changes with the scene every few seconds, so it is not read out each time.
-    <p className="wiki-arcana-scene-caption" data-leaving={leaving || undefined} aria-hidden="true">
-      <span>
-        {scene.family
-          ? wikiText(
-              locale,
-              `Bộ mẫu · ${arcanaFamilyName(scene.family, locale)}`,
-              `Sample page · ${arcanaFamilyName(scene.family, locale)}`,
-            )
-          : wikiText(locale, "Bảng ngọc đang lắp", "The page being built")}
-      </span>
-      {scene.totals.slice(0, 2).map((total) => (
-        <span key={`${total.key}|${total.unit ?? ""}`}>
-          <b>{warehouseStatValue(total, locale)}</b> {warehouseStatLabel(total.key, undefined, locale)}
-        </span>
-      ))}
-    </p>
-  )
-  return (
-    <CatalogShowcase {...intro} scene={scene && <ArcanaScene scene={scene} leaving={leaving} />} caption={caption} />
-  )
+  return <CatalogShowcase {...intro} scene={scene && <ArcanaScene scene={scene} leaving={leaving} />} />
 }
 
 function picturesOfScene(scene: ArcanaScene) {

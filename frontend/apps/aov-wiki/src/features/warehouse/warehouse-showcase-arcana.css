@@ -57,10 +57,28 @@
   border-radius: 50%;
   box-shadow: 0 0 12px color-mix(in srgb, var(--gold) 8%, transparent);
 }
-/* A wide banner sets the wheel in the middle of its scene. */
+/*
+ * A wide banner holds the wheel huge on its right, larger than the banner is tall, so only its middle band shows: a
+ * jewel too big for its case, the title across from it.
+ */
+/* Phones: a bigger wheel past the right edge, level with the middle of the tall banner. */
+.wiki-catalog-showcase[data-layout="compact"] .wiki-arcana-scene-wheel {
+  --wheel: 230px;
+  --gem: 26px;
+  top: 46%;
+  right: -46px;
+}
+/* Its three colours spill across the banner as soft light, so the case glows with the jewel. */
+.wiki-catalog-showcase[data-layout="wide"] .wiki-arcana-scene {
+  background:
+    radial-gradient(40% 70% at 70% 0%, color-mix(in srgb, var(--aov-danger) 16%, transparent), transparent),
+    radial-gradient(36% 70% at 58% 100%, color-mix(in srgb, var(--aov-info) 16%, transparent), transparent),
+    radial-gradient(36% 70% at 96% 90%, color-mix(in srgb, var(--aov-accent) 18%, transparent), transparent);
+}
 .wiki-catalog-showcase[data-layout="wide"] .wiki-arcana-scene-wheel {
-  right: 24%;
-  translate: 50% -50%;
+  --wheel: 380px;
+  --gem: 36px;
+  right: 6%;
 }
 /* The dial: fine ticks just inside the rim, every sixth one brighter, turning slowly. */
 .wiki-arcana-scene-rim {
@@ -190,30 +208,6 @@
   }
 }
 
-/* Under the two lines: the page on show and the two stats it adds the most of. */
-.wiki-arcana-scene-caption {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px 10px;
-  margin-top: 2px;
-  color: var(--aov-muted);
-  font: var(--wiki-type-meta);
-  transition: opacity 360ms ease;
-}
-/* The dot closes the fact before it, so a wrapped line never starts with one. */
-.wiki-arcana-scene-caption > :not(:last-child)::after {
-  content: "·";
-  margin-left: 10px;
-}
-.wiki-arcana-scene-caption b {
-  color: var(--aov-accent);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.wiki-arcana-scene-caption[data-leaving] {
-  opacity: 0;
-}
 @media (prefers-reduced-motion: reduce) {
   .wiki-arcana-scene-rim,
   .wiki-arcana-scene-glow,

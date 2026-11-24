@@ -163,8 +163,9 @@
 }
 /* The compact header sits on top of the artwork, so the page starts behind it. */
 @media (max-width: 899.98px) {
+  /* The artwork is the page's picture: it takes most of the first screen, the name standing at its foot. */
   .wiki-hero-profile {
-    min-height: 280px;
+    min-height: clamp(380px, 60svh, 520px);
   }
   .wiki-hero-profile-art {
     top: 55px;
@@ -182,7 +183,13 @@
     mask-image: linear-gradient(180deg, black 65%, transparent);
   }
   .wiki-hero-profile::after {
-    background: linear-gradient(180deg, transparent 0, transparent 22%, var(--aov-bg) 86%);
+    background: linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 40%,
+      color-mix(in srgb, var(--aov-bg) 72%, transparent) 70%,
+      var(--aov-bg) 94%
+    );
   }
   /* The name stands at the foot of the artwork, where the fade has darkened it enough to read. */
   .wiki-hero-profile-content {

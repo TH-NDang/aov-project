@@ -146,7 +146,7 @@
   color: var(--kind-color, var(--aov-info));
   white-space: nowrap;
 }
-.wiki-updates-kind > svg {
+.wiki-updates-kind > :first-child {
   flex: none;
 }
 .wiki-updates-kind > b {
@@ -363,7 +363,11 @@
   height: 28px;
   border-radius: var(--aov-radius-control);
 }
-.wiki-patch-rail li a > svg {
+/* The kind of a change beside its subject: the shared mark, with its name for screen readers. */
+.wiki-patch-kind {
+  display: inline-flex;
+}
+.wiki-patch-rail li a > .wiki-patch-kind {
   flex: none;
 }
 /* The same index on compact screens: the kinds of thing changed as chips, the heroes as a row that scrolls sideways. */
@@ -430,7 +434,7 @@
   width: 48px;
   height: 48px;
 }
-.wiki-patch-strip-art > svg {
+.wiki-patch-strip-art > .wiki-patch-kind {
   position: absolute;
   right: -5px;
   bottom: -5px;
@@ -499,12 +503,90 @@
   height: 100%;
   object-fit: cover;
 }
-/* A hero: who it is, then what changed. The portrait hangs left of one edge shared by the name and every change. */
+/* An armory entry: its picture beside its name and note, as it shows in the armory. */
+.wiki-patch-catalog {
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+.wiki-patch-catalog > .wiki-patch-subject-art {
+  width: 44px;
+  height: 44px;
+}
+.wiki-patch-catalog-body {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  padding-top: 2px;
+}
+.wiki-patch-catalog-body > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+}
+.wiki-patch-catalog-body > header h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.wiki-patch-catalog-body > p {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+/*
+ * A hero: a card of its own, marked on its side with the tone of its change as on the hero page; who it is on top, what
+ * changed across the whole width below.
+ */
+.wiki-patch-hero {
+  --change-tone: var(--aov-info);
+  gap: 14px;
+  border-radius: var(--aov-radius-card);
+  padding: 16px 20px 18px 23px;
+  background: var(--aov-surface);
+  box-shadow: inset 3px 0 0 var(--change-tone);
+}
+.wiki-patch-hero[data-tone="up"] {
+  --change-tone: var(--aov-danger);
+}
+.wiki-patch-hero[data-tone="down"] {
+  --change-tone: var(--aov-success);
+}
+.wiki-patch-hero[data-tone="rework"] {
+  --change-tone: var(--aov-warning);
+}
+.wiki-patch-hero[data-tone="new"] {
+  --change-tone: var(--aov-accent);
+}
+.wiki-patch-subject.wiki-patch-hero + .wiki-patch-hero {
+  margin-top: 12px;
+  border-top: 0;
+}
+.wiki-patch-subject.wiki-patch-hero:last-child {
+  padding-bottom: 18px;
+}
+.wiki-patch-hero[hidden] {
+  display: none;
+}
 .wiki-patch-hero > .wiki-patch-hero-head {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
+}
+.wiki-patch-hero-page {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 4px;
+  color: var(--aov-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.wiki-patch-hero-page:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .wiki-patch-hero > .wiki-patch-hero-head h3 {
   font: var(--wiki-type-section);
@@ -513,27 +595,49 @@
   display: grid;
   min-width: 0;
   gap: 10px;
-  padding-left: 62px;
 }
 .wiki-patch-hero-body > p {
   font: var(--wiki-type-body);
   max-width: 72ch;
   color: var(--aov-text-soft);
 }
-/* With room to spare the hero stands beside its changes and stays in sight while they are read. */
-@media (min-width: 1180px) {
-  .wiki-patch-hero {
-    grid-template-columns: 260px minmax(0, 1fr);
-    align-items: start;
-    column-gap: 24px;
-  }
-  .wiki-patch-hero > .wiki-patch-hero-head {
-    position: sticky;
-    top: calc(var(--wiki-header-height) + 16px);
-  }
-  .wiki-patch-hero-body {
-    padding-left: 0;
-  }
+/* The kinds of change among the heroes, each a chip that shows only those heroes; "All" brings them back. */
+.wiki-patch-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.wiki-patch-filter > button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 4px 12px 4px 8px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  transition:
+    border-color 140ms ease-out,
+    background 140ms ease-out;
+}
+.wiki-patch-filter > button:first-child {
+  padding-left: 12px;
+}
+.wiki-patch-filter > button:hover {
+  border-color: var(--aov-line-strong);
+}
+.wiki-patch-filter > button[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: color-mix(in srgb, var(--aov-accent) 12%, var(--aov-surface));
+  color: var(--aov-text);
+}
+.wiki-patch-filter > button > b {
+  color: var(--aov-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 .wiki-patch-hero-meta {
   font: var(--wiki-type-meta);
@@ -582,8 +686,8 @@
   .wiki-updates-summary {
     column-gap: 12px;
   }
-  /* The drawn mark and the number stay; the name of the kind is left to screen readers. */
-  .wiki-updates-kind > span {
+  /* The mark and the number stay; the name of the kind is left to screen readers. */
+  .wiki-updates-kind > span:not(.wiki-change-mark) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -605,17 +709,28 @@
   .wiki-patch-subject {
     padding-block: 16px;
   }
+  .wiki-patch-hero {
+    padding: 14px 14px 16px 17px;
+  }
+  /* One row of chips that scrolls sideways to the screen's edges, so the heroes start right under it. */
+  .wiki-patch-filter {
+    flex-wrap: nowrap;
+    margin-inline: calc(var(--wiki-gutter) * -1);
+    padding-inline: var(--wiki-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .wiki-patch-filter > button {
+    flex: none;
+  }
   /* The portrait sits beside the name only; the changes take the whole width. */
   .wiki-patch-hero > .wiki-patch-hero-head {
-    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr) auto;
     gap: 12px;
   }
   .wiki-patch-hero-head .wiki-patch-subject-art {
     width: 40px;
     height: 40px;
-  }
-  .wiki-patch-hero-body {
-    padding-left: 0;
   }
 }
 

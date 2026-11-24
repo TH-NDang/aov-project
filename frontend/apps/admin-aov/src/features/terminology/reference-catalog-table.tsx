@@ -1,24 +1,10 @@
 import { Link } from "react-router"
-import {
-  ArrowUpRight,
-  BookOpenText,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-  Globe2,
-  Languages,
-  Layers3,
-  Search,
-  Sparkles,
-  UserRound,
-  Users,
-  X,
-} from "lucide-react"
+import { ArrowUpRight, ChevronDown, ChevronRight, ChevronUp, Languages, Search, X } from "lucide-react"
 import { useId, useMemo, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
-import { catalogIcons } from "@aov/ui/components/catalog-icons"
+import { AllEntityKindsIcon, entityKindIcons } from "@aov/ui/components/entity-kind-icons"
 import {
   resolveEntityRoute,
   foldEntitySearch,
@@ -34,18 +20,6 @@ import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 const kinds = entityKindLabels
 const fold = foldEntitySearch
-const kindIcons = {
-  hero: catalogIcons.heroes,
-  skill: Sparkles,
-  item: catalogIcons.items,
-  enchantment: catalogIcons.enchantments,
-  arcana: catalogIcons.arcana,
-  spell: catalogIcons.spells,
-  team: Users,
-  player: UserRound,
-  country: Globe2,
-  term: BookOpenText,
-}
 
 function AliasChips({ aliases }: { aliases: string[] }) {
   return (
@@ -173,7 +147,7 @@ export function ReferenceCatalogTable({
               className="grid max-w-full grid-cols-2 items-center gap-1.5 @xl/catalog:flex @xl/catalog:flex-wrap"
             >
               {kindOptions.map((key) => {
-                const Icon = key === "all" ? Layers3 : kindIcons[key]
+                const Icon = key === "all" ? AllEntityKindsIcon : entityKindIcons[key]
                 const label = key === "all" ? "Tất cả" : kinds[key]
                 return (
                   <Button

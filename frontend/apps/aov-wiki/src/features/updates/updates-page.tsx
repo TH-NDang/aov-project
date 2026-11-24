@@ -1,19 +1,19 @@
 import { localeText } from "@aov/ui/lib/locale-text"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
-import { changeKindIcon, changeKindIcons } from "@aov/ui/components/change-kind-icons"
+import { ChangeKindMark } from "../../components/change-tag"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
-import { patchChangeLabel } from "../../components/patch-changes-row"
+import { patchChangeLabel } from "../../lib/change-kinds"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText, type WikiPatch, useWikiText } from "../../context/wiki-context"
-import { CatalogHeading } from "../../layout/catalog-heading"
 import { changeSetKind } from "../../lib/wiki-change-format"
 import { heroCatalogQuery } from "../../lib/hero-api"
-import { patchChangesQuery, patchReleasesQuery, type PatchChangeRow, type PatchRelease } from "../../lib/updates-api"
+import { patchChangesQuery, patchReleasesQuery, type PatchRelease } from "../../lib/updates-api"
 import { ReleaseDate } from "./release-date"
+import { UpdatesShowcase, type HeroFace, type HeroRow } from "./updates-showcase"
 import "./updates.css"
 
 /** The order readers look for: who is new, who was remade, who got stronger, who got weaker, then the rest. */
@@ -24,14 +24,6 @@ const FACES = { wide: 8, compact: 6 }
 
 /** How many patches come into view at a time; each one reads its own summary. */
 const BATCH = 12
-
-interface HeroFace {
-  name: string
-  image?: string
-}
-
-/** A hero that is a form of another hero names its holder, whose picture stands in when the form has none listed. */
-type HeroRow = PatchChangeRow & { holderId?: string }
 
 function PatchRow({
   release,
@@ -87,16 +79,13 @@ function PatchRow({
             ) : rows.length ? (
               <>
                 <b>{text(`${rows.length} tướng`, rows.length === 1 ? "1 hero" : `${rows.length} heroes`)}</b>
-                {ordered.map(([kind, count]) => {
-                  const Art = changeKindIcon(kind) ?? changeKindIcons.UPDATED
-                  return (
-                    <span className="wiki-updates-kind" data-kind={kind} key={kind}>
-                      <Art size={16} />
-                      <span>{patchChangeLabel(kind, locale)}</span>
-                      <b>{count}</b>
-                    </span>
-                  )
-                })}
+                {ordered.map(([kind, count]) => (
+                  <span className="wiki-updates-kind" data-kind={kind} key={kind}>
+                    <ChangeKindMark kind={kind} size={18} />
+                    <span>{patchChangeLabel(kind, locale)}</span>
+                    <b>{count}</b>
+                  </span>
+                ))}
               </>
             ) : null}
           </span>
@@ -163,14 +152,7 @@ export function UpdatesPage() {
 
   return (
     <>
-      <CatalogHeading
-        title={t("Ghi chú cập nhật", "Patch notes")}
-        lead={wikiText(
-          locale,
-          "Những gì đã thay đổi trong từng phiên bản, theo ghi chú đã được đối chiếu với nguồn công bố.",
-          "What changed in each version, based on notes checked against the published source.",
-        )}
-      />
+      <UpdatesShowcase releases={ordered} variants={variants} faces={faces} />
       {releases.isPending ? (
         <div className="wiki-updates-skeleton" role="status">
           <span className="sr-only">{t("Đang tải…", "Loading…")}</span>

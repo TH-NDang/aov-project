@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import type { PageLayout } from "@aov/ui/hooks/use-page-layout"
-import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { SkinIcon } from "../../components/skin-icon"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { FilterArt, FilterSelect, SkinSearch, type FilterKind, type FilterOption } from "./skin-filters"
@@ -235,8 +234,8 @@ export function SkinToolbar({
 }
 
 /**
- * Under the compact bar: what the sheet's filters are set to, each a chip that clears it, with how much they leave,
- * and the version. The whole library needs no count here.
+ * Under the compact bar, once a filter is chosen: what the sheet's filters are set to, each a chip that clears it, with
+ * how much they leave. The whole library needs no count here.
  */
 export function SkinFilterStatus({
   filters,
@@ -262,36 +261,33 @@ export function SkinFilterStatus({
     const option = rarities.find((entry) => entry.code === rarity)
     chips.push({ key: "rarity", kind: "badge", option, value: rarity })
   }
+  // Nothing to say until a filter is chosen; the version is in the head of the page.
+  if (!hasFilters || !ready) return null
   return (
     <div className="wiki-skin-status">
-      {hasFilters && ready && (
-        <div className="wiki-skin-result">
-          {chips.map((chip) => {
-            const name = chip.option?.name ?? chip.value
-            return (
-              <button
-                key={chip.key}
-                type="button"
-                className="wiki-skin-chip"
-                aria-label={`${text("Bỏ lọc", "Clear the filter")}: ${name}`}
-                onClick={() => {
-                  onFiltersCleared()
-                  update(chip.key, "")
-                }}
-              >
-                <FilterArt kind={chip.kind} image={chip.option?.image} />
-                <span>{name}</span>
-                <SkinIcon name="close" size={14} />
-              </button>
-            )
-          })}
-          <span role="status" aria-live="polite">
-            {summary}
-          </span>
-        </div>
-      )}
-      <div className="wiki-skin-version">
-        <WikiVersionPicker />
+      <div className="wiki-skin-result">
+        {chips.map((chip) => {
+          const name = chip.option?.name ?? chip.value
+          return (
+            <button
+              key={chip.key}
+              type="button"
+              className="wiki-skin-chip"
+              aria-label={`${text("Bỏ lọc", "Clear the filter")}: ${name}`}
+              onClick={() => {
+                onFiltersCleared()
+                update(chip.key, "")
+              }}
+            >
+              <FilterArt kind={chip.kind} image={chip.option?.image} />
+              <span>{name}</span>
+              <SkinIcon name="close" size={14} />
+            </button>
+          )
+        })}
+        <span role="status" aria-live="polite">
+          {summary}
+        </span>
       </div>
     </div>
   )

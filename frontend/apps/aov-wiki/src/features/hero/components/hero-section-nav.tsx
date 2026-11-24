@@ -1,7 +1,4 @@
-import { useEffect, useRef, useState } from "react"
-import { catalogIcons } from "@aov/ui/components/catalog-icons"
-import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
-import { navArtIcons } from "@aov/ui/components/nav-art-icons"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { PublicDrawer, PublicDrawerContent } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../../components/wiki-icon"
@@ -11,17 +8,17 @@ import "./hero-section-nav.css"
 
 /** Every section a hero page can have, in the wide layout's order. Those missing from a given hero are left out. */
 const SECTIONS = [
-  { id: "wiki-hero-overview", Icon: navArtIcons.characterBook, vi: "Tổng quan", en: "Overview" },
-  { id: "wiki-hero-stats", Icon: gameplayIcons.table, vi: "Chỉ số", en: "Stats" },
-  { id: "wiki-hero-lore", Icon: navArtIcons.glossary, vi: "Cốt truyện", en: "Lore" },
-  { id: "wiki-version-changes", Icon: navArtIcons.releases, vi: "Thay đổi ở bản này", en: "This version's changes" },
-  { id: "wiki-kit-title", Icon: gameplayIcons.bolt, vi: "Bộ kỹ năng", en: "Abilities" },
-  { id: "wiki-hero-evaluation", Icon: gameplayIcons.crit, vi: "Đánh giá", en: "Assessment" },
-  { id: "wiki-hero-builds", Icon: catalogIcons.items, vi: "Build đề cử", en: "Recommended builds" },
-  { id: "wiki-hero-skins", Icon: catalogIcons.skins, vi: "Trang phục", en: "Skins" },
-  { id: "hero-videos", Icon: navArtIcons.videos, vi: "Video", en: "Videos" },
+  { id: "wiki-hero-overview", vi: "Tổng quan", en: "Overview" },
+  { id: "wiki-hero-stats", vi: "Chỉ số", en: "Stats" },
+  { id: "wiki-hero-lore", vi: "Cốt truyện", en: "Lore" },
   // Shorter than the section's own title, so the entry keeps to one line in the side column.
-  { id: "wiki-hero-history-title", Icon: gameplayIcons.cooldown, vi: "Lịch sử thay đổi", en: "Change history" },
+  { id: "wiki-version-changes", vi: "Thay đổi", en: "Changes" },
+  { id: "wiki-kit-title", vi: "Bộ kỹ năng", en: "Abilities" },
+  { id: "wiki-hero-evaluation", vi: "Đánh giá", en: "Assessment" },
+  { id: "wiki-hero-builds", vi: "Build đề cử", en: "Recommended builds" },
+  { id: "wiki-hero-skins", vi: "Trang phục", en: "Skins" },
+  { id: "hero-videos", vi: "Video", en: "Videos" },
+  { id: "wiki-hero-related-title", vi: "Tướng cùng vị trí", en: "Same lane" },
 ]
 
 /** Far enough below the sticky header that a section counts as being read once its heading settles under it. */
@@ -38,6 +35,9 @@ function goToSection(id: string) {
   target.focus({ preventScroll: true })
 }
 
+/** How long the page must be still before the tucked button comes back out. */
+const SETTLE_MS = 600
+
 function SectionLinks({
   sections,
   active,
@@ -48,10 +48,11 @@ function SectionLinks({
   onPick: (id: string) => void
 }) {
   const { locale } = useWikiContext()
+  const reached = sections.findIndex((section) => section.id === active)
   return (
     <ul className="wiki-hero-nav-list">
-      {sections.map(({ id, Icon, vi, en }) => (
-        <li key={id}>
+      {sections.map(({ id, vi, en }, position) => (
+        <li key={id} data-read={position < reached || undefined}>
           <a
             href={`#${id}`}
             aria-current={id === active ? "location" : undefined}
@@ -60,7 +61,6 @@ function SectionLinks({
               onPick(id)
             }}
           >
-            <Icon size={18} />
             {wikiText(locale, vi, en)}
           </a>
         </li>
@@ -69,8 +69,27 @@ function SectionLinks({
   )
 }
 
+/** True while the page scrolls, and for a moment after, so the floating button steps aside from what is read. */
+function useScrolling() {
+  const [scrolling, setScrolling] = useState(false)
+  useEffect(() => {
+    let timer = 0
+    const onScroll = () => {
+      setScrolling(true)
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => setScrolling(false), SETTLE_MS)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [])
+  return scrolling
+}
+
 /** The hero page's contents: a side column on wide screens, a floating button and bottom drawer below that. */
-export function HeroSectionNav() {
+export function HeroSectionNav({ lead }: { lead?: ReactNode }) {
   const { locale } = useWikiContext()
   const layout = usePageLayout()
   const title = wikiText(locale, "Trên trang này", "On this page")
@@ -79,6 +98,7 @@ export function HeroSectionNav() {
   const [present, setPresent] = useState<string[]>([])
   const [active, setActive] = useState<string>()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const scrolling = useScrolling()
 
   useEffect(() => {
     const page = rail.current?.parentElement
@@ -129,6 +149,8 @@ export function HeroSectionNav() {
   return (
     <>
       <nav ref={rail} className="wiki-hero-nav" aria-label={title} hidden={!worthShowing}>
+        {/* The hero whose page this is, and the way to another, stay in view with the column. */}
+        {lead && <div className="wiki-hero-nav-lead">{lead}</div>}
         <h2>{title}</h2>
         <SectionLinks sections={sections} active={active} onPick={goToSection} />
       </nav>
@@ -137,6 +159,7 @@ export function HeroSectionNav() {
           <button
             type="button"
             className="wiki-hero-nav-fab"
+            data-tucked={(scrolling && !drawerOpen) || undefined}
             aria-label={title}
             title={title}
             aria-expanded={drawerOpen}

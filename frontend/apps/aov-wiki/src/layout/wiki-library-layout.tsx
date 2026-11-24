@@ -20,7 +20,6 @@ export function WikiLibraryLayout() {
   const layout = usePageLayout()
   const { pathname } = useLocation()
   const isWarehouse = useMatch("/warehouse/*")
-  const isHeroList = useMatch("/hero")
   const isSkins = useMatch("/skins")
   const isUpdates = useMatch("/updates/*")
   const isTerms = useMatch("/terms/*")
@@ -43,13 +42,14 @@ export function WikiLibraryLayout() {
 
   return (
     <div className="wiki-library-shell">
-      {/* On phones the armory and the hero library open on a display of their pictures, under a clear bar. */}
+      {/* On phones the bar starts clear on every page of the library, over a catalog's scene or the page itself, and
+          frosts as the page scrolls. */}
       {/* On phones a mode's page keeps the buttons drawn for artwork, on a bar that is solid from the first pixel. */}
       {/* One mode or one update names itself in its own h1; the header then only says which section it belongs to. */}
       <WikiHeader
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
         solid={Boolean(isModeDetail)}
-        clear={layout === "compact" && Boolean(isWarehouse || isHeroList)}
+        clear={layout === "compact" && !isModeDetail}
         pageTitle={pageTitle}
         pageTitleIsHeading={!isModeDetail && !isPatchDetail}
         section={active}
@@ -77,11 +77,14 @@ export function HeroDetailLayout({
   backTo,
   children,
   style,
+  headerCentre,
 }: {
   meta: PageMeta | null
   backTo?: string
   children: ReactNode
   style?: CSSProperties
+  /** The phone header's middle, such as the hero once its name has scrolled away. */
+  headerCentre?: ReactNode
 }) {
   usePageHead(meta)
   const layout = usePageLayout()
@@ -93,7 +96,7 @@ export function HeroDetailLayout({
   // Wide screens keep the sections beside the hero, as on the list pages; the artwork then fills the page column.
   return (
     <div className="wiki-hero-detail-shell" style={style}>
-      <WikiHeader variant="hero" backTo={backTo} section="heroes" />
+      <WikiHeader variant="hero" backTo={backTo} section="heroes" centre={headerCentre} />
       {layout === "compact" ? (
         main
       ) : (

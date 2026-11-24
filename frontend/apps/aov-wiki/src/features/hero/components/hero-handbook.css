@@ -168,14 +168,20 @@
   display: none;
 }
 /* The way back takes the first line of the block; with its own height it keeps the name where the top padding put it. */
+/*
+ * The block lies over the artwork, which sits beneath it in the stage; only its own parts take a click, so the empty
+ * rest lets one through to the artwork's credit button.
+ */
 .wiki-hero-stage-info {
   display: grid;
   width: min(100%, var(--aov-page-max));
   margin-inline: auto;
   padding: 24px var(--aov-gutter) 28px;
+  pointer-events: none;
 }
 .wiki-hero-stage-info > * {
   max-width: 560px;
+  pointer-events: auto;
 }
 /* Roles, lanes, price and videos usually fit one line when given a little more room than the text. */
 .wiki-hero-stage-info > .wiki-hero-role-strip {
@@ -495,10 +501,6 @@ button.wiki-handbook-action svg:first-child {
 .wiki-handbook-compact > * {
   min-width: 0;
 }
-/* The line of changes belongs to the version picker above it, so it stands closer to it than a section would. */
-.wiki-handbook-compact > .wiki-version-changes {
-  margin-bottom: -12px;
-}
 /* On phones the overview is a card of its own between the changes and the abilities. */
 .wiki-handbook-compact > .wiki-handbook-profile {
   padding: 16px;
@@ -719,8 +721,7 @@ button.wiki-handbook-action svg:first-child {
 .wiki-version-changes:focus {
   outline: none;
 }
-section.wiki-version-changes,
-.wiki-version-changes-body {
+section.wiki-version-changes {
   display: grid;
   min-width: 0;
   gap: 12px;
@@ -733,6 +734,29 @@ section.wiki-version-changes,
 }
 .wiki-handbook .wiki-version-changes-head h2 {
   margin: 0;
+}
+/* On a phone the head is one line that opens the band: the title, the kind's word and a chevron. */
+.wiki-version-changes-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  color: var(--aov-text);
+  text-align: left;
+}
+.wiki-handbook .wiki-version-changes-toggle h2 {
+  font: var(--wiki-type-category);
+  min-width: 0;
+  flex: 1;
+}
+.wiki-version-changes-toggle > svg {
+  flex: none;
+  color: var(--aov-muted);
+  transition: transform 160ms ease-out;
+}
+.wiki-version-changes-toggle[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
 }
 .wiki-version-changes-head > .wiki-version-changes-kind {
   align-self: center;
@@ -770,41 +794,6 @@ section.wiki-version-changes,
 .wiki-version-links :is(a, button):hover {
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-/* The compact layout folds the band into one line that opens downward. */
-details.wiki-version-changes {
-  padding-block: 0;
-}
-.wiki-version-changes-line {
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  list-style: none;
-}
-.wiki-version-changes-line::-webkit-details-marker {
-  display: none;
-}
-.wiki-version-changes-line > strong {
-  font: var(--wiki-type-category);
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  color: var(--aov-text);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.wiki-version-changes-line > svg:last-child {
-  flex: none;
-  color: var(--aov-muted);
-  transition: transform 160ms ease-out;
-}
-.wiki-version-changes[open] > .wiki-version-changes-line > svg:last-child {
-  transform: rotate(180deg);
-}
-.wiki-version-changes-body {
-  padding-bottom: 16px;
 }
 @media (max-width: 899.98px) {
   .wiki-version-changes {
@@ -864,78 +853,15 @@ details.wiki-version-changes {
   }
 }
 
-/* Other versions that changed the hero: rows on the page, the version on the left, parted by thin rules. */
-.wiki-hero-history {
-  display: grid;
-  min-width: 0;
-}
-.wiki-hero-history-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.wiki-hero-history-entry {
-  display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: 4px 16px;
-  padding: 16px 0;
-}
-.wiki-hero-history-entry + .wiki-hero-history-entry {
-  border-top: 1px solid var(--aov-line);
-}
-.wiki-hero-history-day {
-  font: 600 0.9375rem/1.375rem var(--wiki-font-reading);
-  color: var(--aov-muted);
-  font-variant-numeric: tabular-nums;
-}
-.wiki-hero-history-body {
-  display: grid;
-  min-width: 0;
-  gap: 8px;
-}
-.wiki-hero-history-body > header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.wiki-hero-history-body h3 {
-  font: var(--wiki-type-entry);
-  margin: 0;
-  color: var(--aov-text);
-}
-.wiki-hero-history-body > p {
-  font: var(--wiki-type-body);
-  color: var(--aov-text-soft);
-}
-.wiki-hero-history > .wiki-hero-more {
-  margin-top: 4px;
-}
-@media (max-width: 899.98px) {
-  .wiki-hero-history-entry {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 14px 0;
-  }
-  /* The first link carries the hero's name, so the pair is set as two lines instead of wrapping by chance. */
-  .wiki-hero-history-body > .wiki-version-links {
-    flex-direction: column;
-    gap: 0;
-  }
-  .wiki-hero-history-day {
-    font: var(--wiki-type-meta);
-  }
-}
-
 #wiki-kit-title,
 #wiki-hero-skins,
 #hero-videos,
-#wiki-hero-history-title,
 #wiki-hero-overview,
 #wiki-hero-stats,
 #wiki-hero-lore {
   scroll-margin-top: calc(var(--wiki-header-height) + 12px);
 }
-:is(#wiki-kit-title, #wiki-hero-history-title, #wiki-hero-overview, #wiki-hero-stats, #wiki-hero-lore):focus {
+:is(#wiki-kit-title, #wiki-hero-overview, #wiki-hero-stats, #wiki-hero-lore):focus {
   outline: none;
 }
 

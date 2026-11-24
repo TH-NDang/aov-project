@@ -146,7 +146,17 @@ function LevelView({ label, table }: { label: string; table: LevelTable }) {
   )
 }
 
-function ChangeRow({ change, skill, marked }: { change: HeroChangeItem; skill?: PublicSkill; marked: boolean }) {
+function ChangeRow({
+  change,
+  skill,
+  marked,
+  kindMark,
+}: {
+  change: HeroChangeItem
+  skill?: PublicSkill
+  marked: boolean
+  kindMark?: (kind: string) => ReactNode
+}) {
   const { locale } = useWikiContext()
   const text = useWikiText()
   const [byLevel, setByLevel] = useState(false)
@@ -160,7 +170,14 @@ function ChangeRow({ change, skill, marked }: { change: HeroChangeItem; skill?: 
   const rankSkill = skill ?? (change.skillKey ? { skillKey: change.skillKey, kind: "ACTIVE" } : undefined)
   const read = valueKey && label ? readChangeValues(change, rankSkill, label, locale) : null
   const table = read?.view === "levels" || byLevel ? read?.table : undefined
-  const mark = marked && change.changeKind !== "OTHER" ? <ChangeKind kind={change.changeKind} /> : null
+  const mark =
+    marked && change.changeKind && change.changeKind !== "OTHER" ? (
+      kindMark ? (
+        kindMark(change.changeKind)
+      ) : (
+        <ChangeKind kind={change.changeKind} />
+      )
+    ) : null
 
   const values =
     read && label ? (
@@ -200,6 +217,7 @@ function ChangeRow({ change, skill, marked }: { change: HeroChangeItem; skill?: 
       {change.description && (
         <p>
           {markInSentence && mark}
+          {markInSentence && mark && " "}
           {change.description}
         </p>
       )}
@@ -309,6 +327,7 @@ export function ChangeList({
   skillAction,
   overallKind,
   layout,
+  kindMark,
 }: {
   changes: HeroChangeItem[]
   /** Supplies skill names and artwork; without it, skills fall back to their slot. */
@@ -319,6 +338,11 @@ export function ChangeList({
   overallKind?: string | null
   /** `ruled` parts one ability from the next with a thin rule, inside a band of its own. */
   layout?: "ruled"
+  /**
+   * Draws each change's own kind, on every change even when it matches the whole set's, for a page that rates each
+   * change apart (the hero page's word tags). Without it a change shows its kind only where the set is mixed.
+   */
+  kindMark?: (kind: string) => ReactNode
 }) {
   const { locale } = useWikiContext()
   if (!changes.length) return null
@@ -330,7 +354,7 @@ export function ChangeList({
   }
   const ordered = [...groups].sort(([a], [b]) => kitOrder(a) - kitOrder(b))
   const skills = hero?.content.skills?.skills ?? []
-  const marked = !overallKind || changes.some((change) => change.changeKind !== overallKind)
+  const marked = !!kindMark || !overallKind || changes.some((change) => change.changeKind !== overallKind)
 
   return (
     <ul className="wiki-change-groups" data-layout={layout}>
@@ -354,7 +378,7 @@ export function ChangeList({
             )}
             <ul className="wiki-change-list">
               {rows.map((change) => (
-                <ChangeRow key={change.id} change={change} skill={skill} marked={marked} />
+                <ChangeRow key={change.id} change={change} skill={skill} marked={marked} kindMark={kindMark} />
               ))}
             </ul>
           </li>

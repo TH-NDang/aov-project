@@ -1,17 +1,20 @@
 import type { ReactNode } from "react"
-import { catalogIcons } from "@aov/ui/components/catalog-icons"
-import { navArtIcons } from "@aov/ui/components/nav-art-icons"
+import { GameIcon, type GameIconName } from "@aov/ui/components/game-icons"
 
-const { heroes: hero, skins: skin, ...warehouseIcons } = catalogIcons
-const sectionIcons = {
-  hero,
-  skin,
-  ...warehouseIcons,
-  updates: navArtIcons.releases,
-  terms: navArtIcons.glossary,
-  mode: navArtIcons.gameModes,
-}
-type SectionIcon = keyof typeof sectionIcons
+/** The marks of the wiki's sections, from Game Icons as Admin draws them; every other name is a line drawing below. */
+const SECTION_ICONS = {
+  home: "family-house",
+  hero: "samurai-helmet",
+  skin: "robe",
+  items: "battle-gear",
+  enchantments: "winged-emblem",
+  arcana: "gem-pendant",
+  spells: "magic-swirl",
+  mode: "gamepad",
+  updates: "tied-scroll",
+  terms: "spell-book",
+} satisfies Record<string, GameIconName>
+type SectionIcon = keyof typeof SECTION_ICONS
 
 const PATHS = {
   sort: <path d="M6 4v15m-3-3 3 3 3-3M12 5h9m-9 6h6m-6 6h3" />,
@@ -155,7 +158,6 @@ const PATHS = {
   table: <path d="M3 5h18v14H3zM3 10h18M3 14.5h18M8 5v14M13.5 5v14" />,
   board: <path d="M4 5h5v5H4zM15 5h5v5h-5zM15 14h5v5h-5zM9 7.5h6M9 7.5l6 9" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
-  home: <path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4Z" />,
   more: (
     <>
       <circle cx="5" cy="12" r="1" />
@@ -188,7 +190,7 @@ const PATHS = {
 export type WikiIconName = keyof typeof PATHS | SectionIcon
 
 function isSectionIcon(name: WikiIconName): name is SectionIcon {
-  return name in sectionIcons
+  return name in SECTION_ICONS
 }
 
 export function WikiIcon({
@@ -203,10 +205,7 @@ export function WikiIcon({
   weight?: "regular" | "bold"
   className?: string
 }) {
-  if (isSectionIcon(name)) {
-    const Icon = sectionIcons[name]
-    return <Icon size={size} className={className} />
-  }
+  if (isSectionIcon(name)) return <GameIcon name={SECTION_ICONS[name]} size={size} className={className} />
   return (
     <svg
       className={className}

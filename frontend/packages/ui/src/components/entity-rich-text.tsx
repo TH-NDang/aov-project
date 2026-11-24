@@ -1,5 +1,6 @@
 import * as React from "react"
-import { ArrowUpRight, BookOpen, Swords, UserRound, Users, Globe2, X, Gem, Shield, Zap } from "lucide-react"
+import { ArrowUpRight, X } from "lucide-react"
+import { entityKindIcons } from "./entity-kind-icons"
 import {
   createEntityIndex,
   entityKindLabel,
@@ -90,18 +91,7 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
     }
   }, [entity.id, entity.kind, entity.iconAssetId, resolveIcon])
   const icon = safeEntityIconUrl(entity.icon) ?? resolved
-  const Fallback = {
-    hero: UserRound,
-    skill: Zap,
-    item: Swords,
-    enchantment: Shield,
-    arcana: Gem,
-    spell: Zap,
-    team: Users,
-    player: UserRound,
-    country: Globe2,
-    term: BookOpen,
-  }[entity.kind]
+  const Fallback = entityKindIcons[entity.kind]
   if (entity.kind === "country") {
     const flag = countryReferenceFlag(entity.id)
     if (flag)

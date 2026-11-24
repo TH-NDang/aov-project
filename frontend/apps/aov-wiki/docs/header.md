@@ -50,8 +50,9 @@ Một hàng cao 48px (`WikiHeaderCompact`):
 
 - Trái: trang chủ để trống (`home`); Liên hệ, Tài khoản, trang không tìm thấy và các trang danh sách có nút ngôi nhà về
   trang chủ; trang tướng có nút quay lại danh sách tướng, giữ nguyên bộ lọc đang dùng.
-- Giữa: chữ AOV WiKi (không có ảnh logo) ở trang chủ, Liên hệ, Tài khoản và trang không tìm thấy; các trang khác ghi
-  tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
+- Giữa: chữ AOV WiKi (không có ảnh logo) ở trang chủ, Liên hệ, Tài khoản và trang không tìm thấy; trang chi tiết tướng
+  để trống vì tên tướng đã lớn ngay trên ảnh bên dưới, rồi hiện nút ảnh, tên tướng và dấu đổi tướng khi tên đã cuộn
+  khuất (prop `centre`); các trang khác ghi tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
   trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
   trang bị", bốn phần là dãy tab dính ngay dưới header.
 - Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút quay lại và ô nhập bo tròn, và bên dưới header mở
@@ -61,8 +62,9 @@ Một hàng cao 48px (`WikiHeaderCompact`):
   của bố cục wide) mở tấm trượt từ phải, rộng tối đa 320px, liệt
   kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong
   `src/components/library-navigation.tsx`). Mục đang xem được đánh dấu; chọn một mục thì tấm đóng.
-- Nền: các trang danh sách có nền đặc. Trên điện thoại, kho trang bị (`clear`) để thanh trong suốt trên khung minh họa
-  đầu trang, rồi phủ mờ dần (nền tối trong mờ và blur) trong 100px cuộn đầu tiên. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt
+- Nền: trên wide các trang danh sách có nền đặc. Trên điện thoại, mọi trang thư viện trừ trang một chế độ (`clear`) để
+  thanh trong suốt, trên phần trưng bày hoặc trên chính trang, rồi phủ kính mờ dần (nền tối 58% và blur, vẫn thấy trang
+  bên dưới) trong 100px cuộn đầu tiên; thanh công cụ ghim ngay dưới (Tướng, Trang phục) dùng cùng lớp kính. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt
   đầu trong suốt rồi đặc dần trong 100px cuộn đầu tiên; ảnh mở đầu của trang chủ và trang tướng nằm ngay dưới header.
   Ở biến thể `hero` (trang tướng, trang một chế độ) mỗi nút có đĩa nền mờ riêng.
 - Nút cao 40px, vòng nền hiện khi rê chuột hoặc khi tấm của nút đang mở.

@@ -3,20 +3,12 @@
   --skin-gap: 12px;
   min-width: 0;
 }
-/* Holds its line while the count is still unknown, so the page does not move when it arrives. */
+/* How many skins and heroes the filters keep, quiet under the search; it holds its line while the count is unknown. */
 .wiki-skin-summary {
-  display: inline-block;
-  min-height: 1.5rem;
-}
-.wiki-skin-version {
-  display: flex;
-  min-width: 0;
-  flex: none;
-  align-items: center;
+  min-height: 1.25rem;
+  margin: -4px 0 12px;
   color: var(--aov-muted);
-}
-.wiki-skin-version:empty {
-  display: none;
+  font: var(--wiki-type-meta);
 }
 
 /* ---------- Search and filters ---------- */
@@ -36,7 +28,10 @@
   padding: 8px var(--wiki-gutter);
 }
 .wiki-skin-toolbar[data-stuck] {
-  background: var(--aov-bg);
+  /* The same glass as the bar above it, so the two read as one frosted band over the list. */
+  background: color-mix(in srgb, var(--aov-wiki-bar) 58%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 .wiki-skin-toolbar[data-stuck]::after {
   content: "";

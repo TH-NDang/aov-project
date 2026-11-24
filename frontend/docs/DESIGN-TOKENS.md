@@ -78,12 +78,40 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 
 ## Minh họa
 
-Hình vẽ dùng chung nằm trong bốn sprite ở `packages/ui/src/assets`, mỗi hình khung 64×64, cùng một bộ màu và viền tối để nhìn liền nhau:
+Mục điều hướng của Wiki, Admin và Stream, các danh mục trong bảng thuật ngữ Admin và loại trang hồ sơ dùng icon khối đơn
+sắc của Game Icons (game-icons.net, giấy phép CC BY 3.0), qua `GameIcon` và `gameIcon(name)` trong
+`packages/ui/src/components/game-icons.tsx`. File đó chỉ chép đúng các hình đang dùng, không cài cả bộ; thêm hình thì
+chép đường vẽ của nó từ cùng bộ theo tên trên game-icons.net. Mười mục của Wiki: Trang chủ `family-house`, Tướng
+`samurai-helmet`, Trang phục `robe`, Trang bị `battle-gear`, Phù hiệu `winged-emblem`, Bảng ngọc `gem-pendant`, Phụ trợ
+`magic-swirl`, Chế độ chơi `gamepad`, Ghi chú cập nhật `tied-scroll`, Thuật ngữ `spell-book`; chúng hiện ở sidebar, mục
+lục của điện thoại, bảng tìm kiếm và ô mục trên trang chủ qua `WikiIcon`. Admin (`NAV_ICONS` trong
+`apps/admin-aov/src/app/aov-nav-icon.tsx`) dùng cùng hình cho các mục trùng với Wiki, các mục riêng của Admin có hình
+riêng trong cùng bộ. Ba mục chính của Stream (`stream-shell.tsx`): Bảng tin `newspaper`, Giải đấu `trophy-cup`, Khám phá
+`compass`. Loại trang hồ sơ, ở danh bạ Stream và Admin: Hệ thống giải `laurels`, Tổ chức `castle`, Đội `meeple-group`,
+Tuyển thủ `swordman`, Ban huấn luyện `teacher`. Hình lấy màu chữ (`currentColor`). Chân trang Wiki, chân trang Stream và
+chân sidebar Admin ghi công Game Icons theo giấy phép; giữ các dòng đó khi còn dùng bộ này.
 
-- `nav-art.svg`: mục điều hướng và các nhóm nội dung, dùng qua `navArtIcons`.
-- `catalog-art.svg`: sáu danh mục Tướng, Trang phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, dùng qua `catalogIcons`.
-- `gameplay-art.svg`: chỉ số và thuật ngữ trong game, dùng qua `gameplayIcons`. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng; đừng vẽ thêm bản có màu. `termIcon(term)` chọn hình cho một thuật ngữ: hình đã chọn lưu dạng `glyph:<tên>` trong trường `icon`, không chọn thì theo mặc định của thuật ngữ đó.
-- `change-art.svg`: loại thay đổi của một phiên bản, dùng qua `changeKindIcons`. Hiển thị từ 16px trở lên, nhỏ hơn thì viền lấn mất hình.
+Vị trí, vai trò và độ khó của tướng dùng chung một bộ dấu trong `packages/ui/src/components/hero-marks.tsx` (`HeroMark`,
+`HeroLaneIcon`, `HeroRoleIcon`), khung 48×48, lấy màu chữ. Wiki, Admin và Stream đều vẽ bằng bộ này.
+
+Chỉ số và thuật ngữ trong game nằm trong sprite `packages/ui/src/assets/gameplay-art.svg`, dùng qua `gameplayIcons`.
+Mười lăm hình là Game Icons (khung 512×512), chọn theo từng thuật ngữ: sát thương và công vật lý `broadsword`, sát
+thương và công phép `fireball`, sát thương chuẩn `shield-impact`, giáp `shoulder-armor`, giáp phép `magic-shield`, hồi
+máu `healing`, lá chắn `energy-shield`, tốc chạy `wingfoot`, tốc đánh `spinning-blades`, chí mạng `explosion-rays`, làm
+chậm `sticky-boot`, choáng `stoned-skull`, giảm hồi chiêu `extra-time`, nội tại `spark-spirit`, thông số theo cấp chiêu
+`upgrade`. Các hình còn lại (`heart`, `crit-damage`, `flame`, `coin`, `mana`, `vamp`) do dự án tự vẽ trên khung 64×64.
+Tên symbol giữ nguyên, nên chỉ số của tướng, đánh giá tướng và hình đã chọn của thuật ngữ đổi theo. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng;
+đừng vẽ thêm bản có màu. `termIcon(term)` chọn hình cho một thuật ngữ: hình đã chọn lưu dạng `glyph:<tên>` trong trường
+`icon`, không chọn thì theo mặc định của thuật ngữ đó.
+
+Loại thay đổi của một phiên bản dùng chung `changeKindIcons` (`packages/ui/src/components/change-kind-icons.tsx`) ở Wiki
+và Admin: icon nét của Lucide, riêng "mới" là ngôi sao rơi `falling-star` của Game Icons. Tăng sức mạnh `TrendingUp`,
+giảm `TrendingDown`, điều chỉnh `SlidersVertical`, cân bằng `Scale`, làm lại `Hammer`, sửa lỗi `BugOff`, gỡ bỏ `Minus`;
+Admin thêm `PencilLine` cho chỉnh sửa và `Database` cho lần nhập dữ liệu. Wiki đặt dấu trong một vòng tròn nền nhạt cùng
+màu (`ChangeKindMark` trong `apps/aov-wiki/src/components/change-tag.tsx`): đỏ cho tăng, xanh lá cho giảm, cam cho làm
+lại, vàng cho mới, xanh dương cho điều chỉnh, đỏ cho gỡ bỏ. Icon lấy cỡ tròn số điểm ảnh để nét không nhòe. `ChangeTag`
+đặt dấu đó trước một chữ ngắn người chơi dùng (Buff, Nerf, Tweak, Fix, Rework, New), `ChangeTally` ghi nhiều loại kèm số
+lượng. Màu theo `patchChangeTone` trong `lib/change-kinds.ts`.
 
 Nhóm trang bị trong cửa hàng, khi nhóm chưa có ảnh tải lên, dùng icon nét của Lucide tô theo màu riêng của nhóm (token trạng thái), qua `ItemCategoryArtwork`.
 
