@@ -638,8 +638,9 @@ nền sáng gần như biến mất trên nền tối, và ngược lại.
 - Danh bạ (`TeamRef`, `TournamentRef`, dòng đội, các phần của giải) trả thêm `logoDarkUrl`. Công bố hồ sơ đội từ
   danh mục giữ nguyên `logoDarkUrl` đã có.
 - Admin: bảng sửa giải và bảng sửa đội có ô "Logo nền tối" ngay dưới ô logo, xem trước trên nền tối.
-- Stream: trang có cả hai ảnh, CSS ẩn ảnh không hợp giao diện (theo lựa chọn sáng/tối, hoặc theo hệ thống khi chưa
-  chọn), nên trang dựng sẵn và lúc đổi giao diện không cần script. Ảnh nào lỗi thì ảnh còn lại dùng cho cả hai.
+- Stream: ô ảnh của giải và nền ảnh của đội tối ở cả hai giao diện, nên ở đó luôn dùng bản nền tối, lỗi thì dùng bản
+  còn lại. Logo nằm thẳng trên nền trang (dòng trận) đổi theo giao diện: trang có cả hai ảnh, CSS ẩn ảnh không hợp (theo
+  lựa chọn sáng/tối, hoặc theo hệ thống khi chưa chọn), nên trang dựng sẵn và lúc đổi giao diện không cần script.
 - Nguồn: Liquipedia ghi `image`/`imagedark` trong infobox và đặt tên tệp `… lightmode`/`… darkmode`
   (`… allmode` là bản dùng chung). Tải ảnh và gắn vào dữ liệu thật cần người dùng đồng ý.
 
