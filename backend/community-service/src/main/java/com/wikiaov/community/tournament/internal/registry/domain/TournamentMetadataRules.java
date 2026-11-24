@@ -27,6 +27,10 @@ public final class TournamentMetadataRules {
             errors.add("logoUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
         }
 
+        if (!SourceUrls.valid(content.logoDarkUrl())) {
+            errors.add("logoDarkUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
+        }
+
         if (content.result() != null) {
             validateResult(content.result(), errors);
         }

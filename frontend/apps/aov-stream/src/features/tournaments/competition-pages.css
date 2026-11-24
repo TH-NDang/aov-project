@@ -124,8 +124,8 @@
   background: var(--hub-hover);
 }
 .tn-card > .tn-card-logo {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--hub-radius-sm);
 }
 .tn-card-body {
@@ -454,7 +454,7 @@
   background: var(--hub-surface);
 }
 .tn-team-card > h2 {
-  --stream-image-size: 40px;
+  --stream-image-size: 48px;
   --stream-image-radius: var(--hub-radius-sm);
   display: flex;
   align-items: center;

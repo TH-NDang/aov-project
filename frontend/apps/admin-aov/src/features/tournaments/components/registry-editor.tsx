@@ -66,6 +66,7 @@ function registryFields(kind: EditorKind): Field[] {
       { key: "endsOn", label: "Ngày kết thúc", type: "date" },
       { key: "sourceUrl", label: "Nguồn kiểm chứng", type: "url" },
       { key: "logoUrl", label: "Đường dẫn logo", type: "url" },
+      { key: "logoDarkUrl", label: "Đường dẫn logo nền tối", type: "url" },
       {
         key: "tier",
         label: "Phân hạng theo nguồn",
@@ -289,7 +290,19 @@ function RegistryForm({
             onBusyChange={setUploading}
           />
         )}
-        {fields.filter((field) => field.key !== "logoUrl" && !field.group).map(renderField)}
+        {kind === "tournaments" && (
+          <RegistryLogoField
+            kind={kind}
+            dark
+            value={values.logoDarkUrl ?? ""}
+            name={values.name ?? ""}
+            onChange={(url) => setValues((current) => ({ ...current, logoDarkUrl: url }))}
+            onBusyChange={setUploading}
+          />
+        )}
+        {fields
+          .filter((field) => field.key !== "logoUrl" && field.key !== "logoDarkUrl" && !field.group)
+          .map(renderField)}
         {(kind === "tournaments" || kind === "series") && (
           <>
             {kind === "tournaments" && (

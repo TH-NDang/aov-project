@@ -37,7 +37,7 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
   return (
     <section className="tn-draft" data-side={side.side}>
       <header className="tn-draft-head">
-        <StreamImage src={team?.logoUrl} name={team?.shortName || name} />
+        <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
         <div>
           <h2>{team ? <EntityPageLink kind="TEAM" id={side.teamId} name={name} /> : name}</h2>
           <span className="tn-side">

@@ -65,7 +65,7 @@ export function GameCard({
               data-won={winner === side.side || undefined}
               data-lost={(winner && winner !== side.side) || undefined}
             >
-              <StreamImage src={team?.logoUrl} name={name} />
+              <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={name} />
               <strong title={team?.name}>{unbroken(name)}</strong>
               {winner === side.side && (
                 <span className="tn-win">

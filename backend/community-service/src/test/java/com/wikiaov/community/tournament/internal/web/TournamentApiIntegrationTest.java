@@ -479,6 +479,10 @@ class TournamentApiIntegrationTest {
                 .content(json.writeValueAsString(Map.of("content",
                         new Team("unsafe-" + UUID.randomUUID(), "Unsafe", null, null, "javascript:alert(1)")))))
                 .andExpect(status().isBadRequest());
+        mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("content", new Team("unsafe-dark-" + UUID.randomUUID(),
+                        "Unsafe dark", null, null, null, List.of(), "javascript:alert(1)")))))
+                .andExpect(status().isBadRequest());
         mvc.perform(authorized(post(ADMIN + "/tournaments")).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(Map.of("content", new Tournament("unsafe-" + UUID.randomUUID(),
                         "Unsafe", "VN", 2026, null, null, "data:text/html,test", null)))))

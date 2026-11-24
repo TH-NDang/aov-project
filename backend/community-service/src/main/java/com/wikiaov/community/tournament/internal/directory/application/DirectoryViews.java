@@ -20,7 +20,8 @@ public final class DirectoryViews {
             UUID id,
             String name,
             String shortName,
-            String logoUrl
+            String logoUrl,
+            String logoDarkUrl
     ) {
     }
 
@@ -28,6 +29,7 @@ public final class DirectoryViews {
             UUID id,
             String name,
             String logoUrl,
+            String logoDarkUrl,
             TournamentTier tier,
             Integer year,
             LocalDate startsOn,
@@ -72,6 +74,7 @@ public final class DirectoryViews {
             String shortName,
             String country,
             String logoUrl,
+            String logoDarkUrl,
             long tournaments,
             long matches,
             long wins,
@@ -91,6 +94,7 @@ public final class DirectoryViews {
             UUID parentId,
             String name,
             String logoUrl,
+            String logoDarkUrl,
             CompetitionType competitionType,
             TournamentStatus status,
             TournamentTier tier,

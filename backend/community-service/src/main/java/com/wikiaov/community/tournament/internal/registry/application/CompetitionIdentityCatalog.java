@@ -57,7 +57,7 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
             var row = teams.get(id);
             var previous = row.content();
             teams.update(id, row.version(), new Team(previous.code(), details.name(), details.shortName(),
-                    details.country(), details.imageUrl(), previous.aliases()), actor);
+                    details.country(), details.imageUrl(), previous.aliases(), previous.logoDarkUrl()), actor);
         } else if (kind == Kind.PLAYER) {
             var row = players.get(id);
             var previous = row.content();

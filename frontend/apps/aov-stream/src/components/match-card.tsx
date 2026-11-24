@@ -5,6 +5,7 @@ import { useStreamLocale } from "./stream-locale"
 import { matchUnderway } from "../lib/competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "../lib/match-model"
 import { matchRound, matchSides } from "../lib/match-schedule"
+import { ThemedLogo } from "@/components/themed-logo"
 
 const when: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }
 
@@ -63,7 +64,7 @@ export function MatchCard({
     >
       {context ? (
         <span className="tn-match-meta" data-context="">
-          {tournament.logoUrl && <img src={tournament.logoUrl} alt="" loading="lazy" />}
+          <ThemedLogo src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
           <span>
             <span className="tn-match-competition">{tournament.name}</span>
             {round && <span className="tn-match-round">{round}</span>}
@@ -84,7 +85,7 @@ export function MatchCard({
           data-lost={team.lost || undefined}
           data-open={!team.known || undefined}
         >
-          <StreamImage src={team.logoUrl} name={team.name} />
+          <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
           <strong title={team.fullName}>{team.name}</strong>
           <b>{team.score ?? "–"}</b>
         </span>

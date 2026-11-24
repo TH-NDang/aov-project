@@ -113,7 +113,13 @@ export function PublicCompetitionPage() {
           {text("Tất cả giải đấu", "All tournaments")}
         </Link>
         <header className="tn-comp-head hub-art" style={hue(tournament.name)}>
-          <CompetitionLogo name={tournament.name} url={tournament.logoUrl} className="tn-logo-large" />
+          <CompetitionLogo
+            name={tournament.name}
+            url={tournament.logoUrl}
+            darkUrl={tournament.logoDarkUrl}
+            onLight
+            className="tn-logo-large"
+          />
           <div className="tn-comp-title">
             <span className="hub-kicker">
               {circuit ? (
@@ -156,7 +162,12 @@ export function PublicCompetitionPage() {
             <div className="tn-champion">
               <small>{text("Nhà vô địch", "Champion")}</small>
               <span className="tn-champion-team">
-                <StreamImage src={"logoUrl" in won.winner ? won.winner.logoUrl : undefined} name={won.winner.name} />
+                <StreamImage
+                  src={"logoUrl" in won.winner ? won.winner.logoUrl : undefined}
+                  darkSrc={"logoDarkUrl" in won.winner ? won.winner.logoDarkUrl : undefined}
+                  name={won.winner.name}
+                  logo
+                />
                 <strong>{won.winner.name}</strong>
               </span>
               {won.runnerUp && (
@@ -405,7 +416,7 @@ function StandingsTable({
                 </td>
                 <th scope="row">
                   <span className="tn-team">
-                    <StreamImage src={team?.logoUrl} name={team?.shortName || name} />
+                    <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
                     <EntityPageLink kind="TEAM" id={row.teamId} name={name} />
                   </span>
                 </th>
@@ -526,7 +537,7 @@ function Teams({ view }: { view: CompetitionView }) {
           return (
             <section className="tn-team-card" key={entrant.teamId}>
               <h2>
-                <StreamImage src={team?.logoUrl} name={team?.shortName || name} />
+                <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
                 <EntityPageLink kind="TEAM" id={entrant.teamId} name={name} />
                 {entrant.status === "WITHDRAWN" && <span className="cp-badge">{text("Đã rút lui", "Withdrawn")}</span>}
               </h2>

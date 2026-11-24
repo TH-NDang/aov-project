@@ -1,18 +1,41 @@
 import { useState } from "react"
 
-export function StreamImage({ src, name, className = "" }: { src?: string | null; name: string; className?: string }) {
-  const [failed, setFailed] = useState<string>()
+/**
+ * A picture on its plate, with a monogram while it is missing. The plate is dark in both themes, so a logo drawn for
+ * dark backgrounds (`darkSrc`) is preferred; when it fails to load the other version takes its place.
+ */
+export function StreamImage({
+  src,
+  darkSrc,
+  name,
+  logo = false,
+  className = "",
+}: {
+  src?: string | null
+  darkSrc?: string | null
+  name: string
+  /** A logo is drawn whole and inset from the plate's edge; a photo fills the plate. */
+  logo?: boolean
+  className?: string
+}) {
+  const [failed, setFailed] = useState<string[]>([])
   const [loaded, setLoaded] = useState<string>()
+  const shown = [darkSrc, src].find((url): url is string => !!url && !failed.includes(url))
   return (
-    <span className={`stream-image ${className}`} data-ready={loaded === src || undefined}>
-      {src && failed !== src ? (
+    <span
+      className={`stream-image ${className}`}
+      data-logo={logo || undefined}
+      data-ready={(!!shown && loaded === shown) || undefined}
+    >
+      {shown ? (
         <img
-          src={src}
+          key={shown}
+          src={shown}
           alt={name}
           loading="lazy"
           decoding="async"
-          onLoad={() => setLoaded(src)}
-          onError={() => setFailed(src)}
+          onLoad={() => setLoaded(shown)}
+          onError={() => setFailed((current) => [...current, shown])}
         />
       ) : (
         <span aria-label={name}>{name.slice(0, 2).toLocaleUpperCase("vi-VN") || "?"}</span>

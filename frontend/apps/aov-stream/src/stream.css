@@ -96,6 +96,21 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 }
+/* A logo with a dark-background version (ThemedLogo): hide the one that does not suit the theme. */
+:root[data-theme="light"] .logo-dark,
+:root[data-theme="dark"] .logo-light {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .logo-light {
+    display: none;
+  }
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .logo-dark {
+    display: none;
+  }
+}
 @media (max-width: 899.98px) {
   :root {
     --hub-topbar: 48px;
@@ -911,6 +926,11 @@ button:disabled {
 }
 .stream-image[data-ready] img {
   opacity: 1;
+}
+/* A logo keeps its whole shape, with a little room from the edge of its plate. */
+.stream-image[data-logo] img {
+  padding: 8%;
+  object-fit: contain;
 }
 .stream-image > span {
   color: var(--stream-image-ink, var(--hub-on-plate));

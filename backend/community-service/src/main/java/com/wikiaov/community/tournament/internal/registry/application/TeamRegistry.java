@@ -49,6 +49,7 @@ public class TeamRegistry {
         archives.lockWrites();
         validate(content);
         media.requireAvailable(content.logoUrl());
+        media.requireAvailable(content.logoDarkUrl());
 
         var row = repository.saveAndFlush(new TeamRecord(UUID.randomUUID(), content, actor));
         return TournamentViews.view(row, row.getContent());
@@ -58,6 +59,7 @@ public class TeamRegistry {
         archives.lockWrites();
         validate(content);
         media.requireAvailable(content.logoUrl());
+        media.requireAvailable(content.logoDarkUrl());
 
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         RegistryArchivePolicy.requireActive(row);
@@ -77,6 +79,10 @@ public class TeamRegistry {
         if (!SourceUrls.valid(content.logoUrl())) {
             throw TournamentErrors
                     .invalid("logoUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
+        }
+        if (!SourceUrls.valid(content.logoDarkUrl())) {
+            throw TournamentErrors
+                    .invalid("logoDarkUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
         }
         TournamentErrors.required(content.name(), "name");
         validateAliases(content);

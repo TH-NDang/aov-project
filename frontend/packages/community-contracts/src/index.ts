@@ -15,6 +15,8 @@ export type TeamContent = {
   shortName?: string
   country?: string
   logoUrl?: string
+  /** The logo drawn for a dark background; without it logoUrl serves both themes. */
+  logoDarkUrl?: string | null
   aliases?: string[]
 }
 export type CareerStatus = "ACTIVE" | "INACTIVE" | "RETIRED" | "UNKNOWN"
@@ -32,11 +34,18 @@ export type PlayerContent = {
   signatureHeroes?: string[]
 }
 export type RosterStatus = "ACTIVE" | "SUBSTITUTE" | "INACTIVE" | "UNKNOWN"
-export type DirectoryTeamRef = { id: string; name: string; shortName?: string | null; logoUrl?: string | null }
+export type DirectoryTeamRef = {
+  id: string
+  name: string
+  shortName?: string | null
+  logoUrl?: string | null
+  logoDarkUrl?: string | null
+}
 export type DirectoryTournamentRef = {
   id: string
   name: string
   logoUrl?: string | null
+  logoDarkUrl?: string | null
   tier?: TournamentTier
   year?: number | null
   startsOn?: string | null
@@ -57,6 +66,7 @@ export type TeamDirectoryEntry = {
   shortName?: string | null
   country?: string | null
   logoUrl?: string | null
+  logoDarkUrl?: string | null
   tournaments: number
   matches: number
   wins: number
@@ -165,6 +175,8 @@ export type TournamentContent = {
   sourceUrl?: string
   note?: string
   logoUrl?: string
+  /** The logo drawn for a dark background; without it logoUrl serves both themes. */
+  logoDarkUrl?: string | null
   tier?: TournamentTier
   competitionType?: CompetitionType
   venueMode?: VenueMode
@@ -187,6 +199,7 @@ export type TournamentPart = {
   parentId: string
   name: string
   logoUrl?: string | null
+  logoDarkUrl?: string | null
   competitionType?: CompetitionType
   status?: TournamentStatus
   tier?: TournamentTier
