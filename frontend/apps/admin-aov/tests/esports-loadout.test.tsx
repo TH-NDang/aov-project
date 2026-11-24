@@ -15,7 +15,6 @@ import {
   stepArcana,
 } from "../src/features/esports/model/loadout"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
-import { latency } from "./fixtures/latency"
 
 const stone = (code: string, name: string, color: string, tier = 3): Reference => ({
   id: code,
@@ -415,10 +414,13 @@ test("edits made before the previous one is saved do not undo each other", async
     let accept = true
     let show: (content: GameContent) => void = () => {}
     let queue: Promise<unknown> = Promise.resolve()
-    // The service: answers after a moment, one change at a time, each applied to what it holds.
+    // The service: answers once told to, one change at a time, each applied to what it holds.
+    let answer = () => {}
+    let held = Promise.resolve()
+    const hold = () => (held = new Promise((resolve) => (answer = resolve)))
     const send = (change: (content: GameContent) => GameContent) =>
       (queue = queue.then(async () => {
-        await latency(8)
+        await held
         if (!accept) return false
         server = change(server)
         show(server)
@@ -447,10 +449,12 @@ test("edits made before the previous one is saved do not undo each other", async
     await render(<Host />)
     assert.equal(listed().length, 3)
 
+    hold()
     await click('[aria-label="Bỏ Tỉ lệ chí mạng"]')
     assert.deepEqual(listed(), ["Bỏ Công vật lý · Xuyên giáp", "Bỏ Máu tối đa"], "the row leaves at once")
     assert.deepEqual(recorded(), ["r-ad", "r-crit", "p-hp"], "while the service has not answered yet")
     await click('[aria-label="Bỏ Công vật lý · Xuyên giáp"]')
+    answer()
     await waitFor(() => recorded().join() === "p-hp", "both removals are saved")
     assert.deepEqual(recorded(), ["p-hp"], "the second removal did not bring the first row back")
     assert.deepEqual(listed(), ["Bỏ Máu tối đa"])
@@ -458,8 +462,10 @@ test("edits made before the previous one is saved do not undo each other", async
 
     // A refused change is taken back, and the reason is told inside the panel.
     accept = false
+    hold()
     await click('[aria-label="Bỏ Máu tối đa"]')
     assert.deepEqual(listed(), [])
+    answer()
     await waitFor(() => listed().length === 1, "the refused removal is taken back")
     assert.deepEqual(listed(), ["Bỏ Máu tối đa"], "the panel returns to what is saved")
     await render(<Host error="Phiên bản đã đổi." />)
