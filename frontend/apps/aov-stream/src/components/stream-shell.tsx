@@ -6,6 +6,7 @@ import { useScrolled } from "@aov/ui/hooks/use-scrolled"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { StreamBrand } from "./stream-brand"
 import { StreamAppSwitcher } from "./stream-app-switcher"
+import { StreamFooter } from "./stream-footer"
 import { GameIcon, type GameIconName } from "@aov/ui/components/game-icons"
 import { StreamIcon } from "./stream-icon"
 import { useStreamLocale } from "./stream-locale"
@@ -13,7 +14,6 @@ import { CommunitySessionButton } from "./community-session"
 import { SignInDialog } from "./community-signin"
 
 export const WIKI_URL = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
-export const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "http://localhost:5175"
 
 /** The search of a page's own list, typed into the bar's field. */
 export type PageSearch = { value: string; onChange: (value: string) => void; placeholder: string; label: string }
@@ -191,29 +191,7 @@ export function StreamShell({
           )}
         </div>
       </main>
-      <footer className="hub-footer">
-        <StreamBrand />
-        <p>
-          <strong>AOV Stream</strong>{" "}
-          {text(
-            "· Quan sát trận đấu, khám phá cách chơi. Dữ liệu được biên tập từ nguồn đối chiếu.",
-            "· Watch matches, explore how the game is played. Data is compiled from reference sources.",
-          )}{" "}
-          {text("· Biểu tượng mục từ", "· Section icons from")}{" "}
-          <a href="https://game-icons.net" target="_blank" rel="noopener noreferrer">
-            Game Icons
-          </a>
-          ,{" "}
-          <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">
-            CC BY 3.0
-          </a>
-        </p>
-        <nav aria-label={text("Liên kết cuối trang", "Footer links")}>
-          <Link to="/credits">{text("Bản quyền và nguồn", "Rights and sources")}</Link>
-          <a href={WIKI_URL}>AOV WiKi</a>
-          <a href={`${ADMIN_URL}/tournaments`}>{text("Đóng góp dữ liệu", "Contribute data")}</a>
-        </nav>
-      </footer>
+      <StreamFooter />
       <SignInDialog />
     </div>
   )

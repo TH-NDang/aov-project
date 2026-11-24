@@ -1275,6 +1275,37 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void aPublishedCompetitionNamesItsPlayersByNicknameOnly() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true, Map.of("content",
+                Map.of("code", "nicknames-" + suffix, "name", "Nickname cup", "region", "VN"))).path("id").asText();
+        String team = send(post(ROOT + "/admin/teams"), "editor", true, Map.of("content",
+                Map.of("code", "nickname-team-" + suffix, "name", "Nickname team"))).path("id").asText();
+        String rival = send(post(ROOT + "/admin/teams"), "editor", true, Map.of("content",
+                Map.of("code", "nickname-rival-" + suffix, "name", "Rival team"))).path("id").asText();
+        String player = send(post(ROOT + "/admin/players"), "editor", true, Map.of("content",
+                Map.of("code", "nickname-" + suffix, "nickname", "Nick " + suffix, "fullName", "Private full name",
+                        "birthDate", "2002-03-04")))
+                .path("id").asText();
+        send(post(ROOT + "/admin/roster-memberships"), "editor", true, Map.of("content",
+                Map.of("tournamentId", id, "teamId", team, "playerId", player, "lane", "SUPPORT", "status", "ACTIVE")));
+        var plan = Map.of("sourceUrl", "https://example.com/rules",
+                "entrants", List.of(Map.of("teamId", team), Map.of("teamId", rival)),
+                "stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN", "bestOf", 5, "legs",
+                        1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+        var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", plan));
+
+        send(post(ROOT + "/admin/competitions/" + id + "/publish"), "publisher", true,
+                Map.of("version", saved.path("version").asLong()));
+
+        String body = mvc.perform(get(ROOT + "/competitions/" + id)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.players['" + player + "'].nickname").value("Nick " + suffix))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(body).doesNotContain("Private full name", "2002-03-04");
+    }
+
+    @Test
     void aTeamIsNamedByTheCompetitionThatStartedLast() throws Exception {
         String suffix = UUID.randomUUID().toString();
         var teams = List.of(team("Alpha " + suffix), team("Beta " + suffix));

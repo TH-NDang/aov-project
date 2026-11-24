@@ -5,7 +5,6 @@ import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { regionName } from "../../../components/community-ui"
 import { GoLink } from "../../../components/go-link"
-import { ImageRights } from "../../../components/image-rights"
 import { PlayerMark } from "../../../components/player-mark"
 import { RegionMark } from "../../../components/region-mark"
 import { Stage } from "../../../components/stage"
@@ -214,7 +213,6 @@ function PlayerBody({ profile }: { profile: PlayerProfile }) {
           "From each tournament's registered rosters, which do not confirm that the player played in each match.",
         )}
       </p>
-      <ImageRights />
     </>
   )
 }
