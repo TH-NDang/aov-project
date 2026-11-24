@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { ExternalLink } from "lucide-react"
@@ -10,6 +10,8 @@ import { ManagementToolbar } from "@/features/tournaments/components/management-
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { directoryApi, useDebounced, yearRange } from "./directory-api"
 import { pageKeys } from "../api/page-api"
+import { ProfileEditSheet } from "./entry-edit-sheet"
+import { EntryAction, EntryPicture } from "./entry-parts"
 import {
   CountryLabel,
   DirectoryBody,
@@ -118,6 +120,7 @@ function CompetitionPageSortSelect({
 /** Organizers: who runs what, and how to reach them. */
 export function OrganizationDirectory({ access }: { access: Access }) {
   const { filters, sort, pages, rows, totalTournaments } = useCompetitionPages("ORGANIZATION", access)
+  const [editing, setEditing] = useState<CommunityProfile | null>(null)
   return (
     <DirectoryShell
       section={directorySections[4]}
@@ -154,17 +157,19 @@ export function OrganizationDirectory({ access }: { access: Access }) {
             return (
               <li
                 key={page.id}
-                className="relative grid items-center gap-x-4 gap-y-2 px-4 py-3 transition hover:bg-muted/50 @3xl:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1.3fr)]"
+                className="relative grid items-center gap-x-4 gap-y-2 px-4 py-3 transition hover:bg-muted/50 @3xl:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1.3fr)_2rem]"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <Monogram
-                    url={page.content?.avatarUrl}
-                    label={`Logo ${name}`}
-                    text={initials(name).slice(0, 3)}
-                    size={44}
-                    className="shrink-0 rounded-lg"
-                  />
-                  <div className="min-w-0">
+                  <EntryPicture missing={!page.content?.avatarUrl} label="Thiếu logo">
+                    <Monogram
+                      url={page.content?.avatarUrl}
+                      label={`Logo ${name}`}
+                      text={initials(name).slice(0, 3)}
+                      size={44}
+                      className="shrink-0 rounded-lg"
+                    />
+                  </EntryPicture>
+                  <div className="min-w-0 flex-1 pr-8 @3xl:pr-0">
                     <h2 className="type-section-title truncate">
                       <Link to={`/pages/${page.id}`} className="after:absolute after:inset-0">
                         {name}
@@ -198,11 +203,17 @@ export function OrganizationDirectory({ access }: { access: Access }) {
                   <LatestTournament stats={stats} />
                   <ActiveOn page={page} />
                 </div>
+                {access.canWrite && (
+                  <div className="absolute top-3 right-3 @3xl:static">
+                    <EntryAction label={`Sửa hồ sơ ${name}`} onClick={() => setEditing(page)} />
+                  </div>
+                )}
               </li>
             )
           })}
         </ul>
       </DirectoryBody>
+      {editing && <ProfileEditSheet page={editing} actorKey={access.actorKey} onClose={() => setEditing(null)} />}
     </DirectoryShell>
   )
 }
@@ -210,6 +221,7 @@ export function OrganizationDirectory({ access }: { access: Access }) {
 /** Circuits: a brand that returns season after season, so the seasons and the latest one lead. */
 export function CircuitDirectory({ access }: { access: Access }) {
   const { filters, sort, pages, rows, totalTournaments } = useCompetitionPages("CIRCUIT", access)
+  const [editing, setEditing] = useState<CommunityProfile | null>(null)
   return (
     <DirectoryShell
       section={directorySections[5]}
@@ -248,13 +260,15 @@ export function CircuitDirectory({ access }: { access: Access }) {
                 className="relative flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-4 transition hover:border-primary/50"
               >
                 <div className="flex items-start gap-3">
-                  <Monogram
-                    url={page.content?.avatarUrl}
-                    label={`Logo ${name}`}
-                    text={initials(name).slice(0, 3)}
-                    size={64}
-                    className="shrink-0 rounded-lg"
-                  />
+                  <EntryPicture missing={!page.content?.avatarUrl} label="Thiếu logo">
+                    <Monogram
+                      url={page.content?.avatarUrl}
+                      label={`Logo ${name}`}
+                      text={initials(name).slice(0, 3)}
+                      size={64}
+                      className="shrink-0 rounded-lg"
+                    />
+                  </EntryPicture>
                   <div className="min-w-0 flex-1 space-y-1">
                     <h2 className="type-section-title line-clamp-2">
                       <Link to={`/pages/${page.id}`} className="after:absolute after:inset-0 after:rounded-lg">
@@ -268,6 +282,7 @@ export function CircuitDirectory({ access }: { access: Access }) {
                     <Tiers stats={stats} />
                   </div>
                   <PublishedMark published={page.published} />
+                  {access.canWrite && <EntryAction label={`Sửa hồ sơ ${name}`} onClick={() => setEditing(page)} />}
                 </div>
                 <div className="mt-auto min-w-0 space-y-1 border-t pt-2">
                   <p className="type-meta">Mùa gần nhất</p>
@@ -279,6 +294,7 @@ export function CircuitDirectory({ access }: { access: Access }) {
           })}
         </ul>
       </DirectoryBody>
+      {editing && <ProfileEditSheet page={editing} actorKey={access.actorKey} onClose={() => setEditing(null)} />}
     </DirectoryShell>
   )
 }

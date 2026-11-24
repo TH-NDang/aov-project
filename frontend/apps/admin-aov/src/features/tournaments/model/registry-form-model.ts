@@ -138,6 +138,8 @@ export function registryFormIssue(kind: RegistryKind, values: Record<string, str
     if (values[key]?.trim() && !/^https?:\/\//i.test(values[key].trim()))
       return "Link ảnh hoặc nguồn kiểm chứng cần bắt đầu bằng https:// hoặc http://."
   }
+  if (kind === "tournaments" && values.startsOn && values.endsOn && values.endsOn < values.startsOn)
+    return "Ngày kết thúc phải từ ngày bắt đầu trở đi."
   if (kind === "teams" || kind === "players") {
     const aliases = parseTeamAliases(values.aliases ?? "")
     if (aliases.length > 20 || aliases.some((alias) => alias.length > 100))

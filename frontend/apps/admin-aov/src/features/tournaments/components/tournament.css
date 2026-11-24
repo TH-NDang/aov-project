@@ -164,6 +164,18 @@
   color: var(--destructive);
   font-weight: 400;
 }
+.tournament-registry-form label.tournament-copy-part {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  border-radius: var(--aov-radius-control);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.tournament-registry-form label.tournament-copy-part:hover {
+  background: var(--muted);
+}
 .tournament-logo-field {
   display: flex;
   grid-column: 1 / -1;

@@ -174,6 +174,17 @@ export type PlayerMergeResult = {
   }
 }
 export type PickerContext = { tournamentId?: string; teamId?: string; playerId?: string; level?: TournamentLevel }
+/** Roster lines to add, change and take out in one write: all of them or none. */
+export type RosterBatch = {
+  create?: RosterMembershipContent[]
+  update?: { id: string; version: number; content: RosterMembershipContent }[]
+  remove?: { id: string; version: number }[]
+}
+export type RosterBatchResult = {
+  created: DocumentView<RosterMembershipContent>[]
+  updated: DocumentView<RosterMembershipContent>[]
+  removed: number
+}
 type RankedKind = "teams" | "players" | "tournaments"
 const searchParams = (values: Record<string, string | number | string[] | undefined>) => {
   const params = new URLSearchParams()
@@ -228,7 +239,7 @@ export function createTournamentApi(request: Request = communityRequest) {
     /** One page for a picker. Asks for no order of its own: the default puts what is recent and relevant first. */
     pick: <K extends RankedKind>(
       kind: K,
-      filters: PickerContext & { q?: string; page?: number },
+      filters: PickerContext & { q?: string; page?: number; size?: number },
       signal?: AbortSignal,
     ) =>
       request<PageSlice<DocumentView<TournamentRecords[K]>>>(
@@ -258,6 +269,12 @@ export function createTournamentApi(request: Request = communityRequest) {
         intoVersion: target.version,
       })
     },
+    rosterBatch: (batch: RosterBatch) =>
+      send<RosterBatchResult>("/admin/roster-memberships/batch", "POST", {
+        create: batch.create ?? [],
+        update: batch.update ?? [],
+        remove: batch.remove ?? [],
+      }),
     deletionImpact: (kind: RecordKind, id: string, signal?: AbortSignal) =>
       request<RecordDeletionImpact>(`/admin/${kind}/${id}/deletion-impact`, { signal }),
     remove: (kind: RecordKind, entry: { id: string; version: number }) =>

@@ -1,33 +1,25 @@
-import { Link, useNavigate } from "react-router"
+import { useState } from "react"
+import { useNavigate } from "react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { Trophy } from "lucide-react"
 import type { CareerStatus, Lane, PlayerDirectoryEntry } from "@aov/community-contracts"
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
-import { tournamentPath, type Access } from "@/features/esports/pages/esports-shell"
-import { HeroIcon, LaneIcon, Monogram, PlayerPhoto } from "@/features/esports/components/primitives"
-import { initials } from "@/features/esports/model/game-view"
+import type { Access } from "@/features/esports/pages/esports-shell"
+import { LaneIcon } from "@/features/esports/components/primitives"
 import { ManagementToolbar } from "@/features/tournaments/components/management-list"
 import { CAREER_STATUSES } from "@/features/tournaments/components/tournament-metadata"
 import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
-import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { pageKeys } from "../api/page-api"
-import { ProfileCountry } from "../components/profile-country"
-import {
-  directoryApi,
-  useDebounced,
-  useHeroPortraits,
-  useProfilesOf,
-  yearRange,
-  type PlayerSort,
-} from "./directory-api"
+import { MergePlayerSheet } from "../components/merge-player-sheet"
+import { directoryApi, useDebounced, useHeroPortraits, useProfilesOf, type PlayerSort } from "./directory-api"
 import {
   DirectoryBody,
   DirectoryFooter,
   DirectoryShell,
-  PublishedMark,
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
+import { RecordEditSheet } from "./entry-edit-sheet"
+import { PlayerRow } from "./player-row"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { NativeSelect } from "@/components/native-select"
 import { LANE_LABELS, LANE_ORDER } from "@/lib/lanes"
@@ -39,10 +31,6 @@ const SORTS: Record<PlayerSort, string> = {
   TITLES: "Nhiều chức vô địch",
   NAME: "Tên A–Z",
 }
-const age = (birthDate?: string | null) => {
-  const year = Number(birthDate?.slice(0, 4))
-  return year ? new Date().getFullYear() - year : null
-}
 
 /** Players compared side by side: position, team and record line up in columns, which cards would break apart. */
 export function PlayerDirectory({ access }: { access: Access }) {
@@ -53,6 +41,7 @@ export function PlayerDirectory({ access }: { access: Access }) {
   const status = filters.values.status as CareerStatus | ""
   const sort = (filters.values.sort || "RECENT") as PlayerSort
   const search = useDebounced(q)
+  const [open, setOpen] = useState<{ sheet: "edit" | "merge"; player: PlayerDirectoryEntry } | null>(null)
   const players = useInfiniteQuery({
     queryKey: pageKeys.directory.players(access.actorKey, search, { country, lane, status }, sort),
     initialPageParam: 0,
@@ -150,7 +139,12 @@ export function PlayerDirectory({ access }: { access: Access }) {
                 <th className="hidden px-3 py-2 text-right font-[inherit] @2xl:table-cell">Giải</th>
                 <th className="hidden px-3 py-2 text-right font-[inherit] @2xl:table-cell">Vô địch</th>
                 <th className="hidden px-3 py-2 font-[inherit] @4xl:table-cell">Giải gần nhất</th>
-                <th className="hidden px-4 py-2 font-[inherit] @4xl:table-cell">Trạng thái</th>
+                <th className="hidden px-3 py-2 font-[inherit] @4xl:table-cell">Trạng thái</th>
+                {access.canWrite && (
+                  <th className="w-20 py-2 font-[inherit]">
+                    <span className="sr-only">Thao tác</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -164,6 +158,7 @@ export function PlayerDirectory({ access }: { access: Access }) {
                     published={profile?.published}
                     portrait={portrait}
                     onOpen={profile ? () => navigate(`/pages/${profile.id}`) : undefined}
+                    onSheet={access.canWrite ? (sheet) => setOpen({ sheet, player }) : undefined}
                   />
                 )
               })}
@@ -172,126 +167,19 @@ export function PlayerDirectory({ access }: { access: Access }) {
         </div>
         <DirectoryFooter total={players.data?.pages[0]?.totalElements ?? 0} noun="tuyển thủ" query={players} />
       </DirectoryBody>
+      {open?.sheet === "edit" && (
+        <RecordEditSheet
+          kind="players"
+          id={open.player.id}
+          name={open.player.nickname}
+          pageId={profiles.get(open.player.id)?.id}
+          actorKey={access.actorKey}
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {open?.sheet === "merge" && (
+        <MergePlayerSheet playerId={open.player.id} name={open.player.nickname} onClose={() => setOpen(null)} />
+      )}
     </DirectoryShell>
-  )
-}
-
-function PlayerRow({
-  player,
-  pageId,
-  published,
-  portrait,
-  onOpen,
-}: {
-  player: PlayerDirectoryEntry
-  pageId?: string
-  published?: boolean
-  portrait: (name: string) => string | undefined
-  onOpen?: () => void
-}) {
-  const years = age(player.birthDate)
-  const latest = player.latestTournament
-  return (
-    <tr
-      className="border-b align-middle transition last:border-b-0 hover:bg-muted/50 data-[open]:cursor-pointer"
-      data-open={onOpen ? true : undefined}
-      onClick={onOpen}
-    >
-      <td className="px-4 py-2.5">
-        <div className="flex min-w-0 items-center gap-3">
-          <PlayerPhoto name={player.nickname} url={player.photoUrl ?? undefined} size={40} />
-          <div className="min-w-0">
-            <p className="type-section-title flex items-center gap-2">
-              {pageId ? (
-                <Link to={`/pages/${pageId}`} className="truncate" onClick={(event) => event.stopPropagation()}>
-                  {player.nickname}
-                </Link>
-              ) : (
-                <span className="truncate">{player.nickname}</span>
-              )}
-              <PublishedMark published={published} />
-            </p>
-            <p className="type-meta flex items-center gap-1.5">
-              <ProfileCountry country={player.country} />
-              <span className="max-w-48 truncate">{player.fullName || "Chưa có tên thật"}</span>
-              {years !== null && <span className="shrink-0">· {years} tuổi</span>}
-            </p>
-            {player.latestTeam && <p className="type-meta truncate @2xl:hidden">{player.latestTeam.name}</p>}
-            <p className="type-meta truncate @4xl:hidden">{activityLabel(player.lastActiveOn)}</p>
-          </div>
-        </div>
-      </td>
-      <td className="type-body px-3 py-2.5 whitespace-nowrap">
-        {player.lane ? (
-          <span className="inline-flex items-center gap-1.5">
-            <LaneIcon lane={player.lane} size={16} className="text-muted-foreground" />
-            {LANE_LABELS[player.lane].short}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">–</span>
-        )}
-      </td>
-      <td className="type-body hidden px-3 py-2.5 @2xl:table-cell">
-        {player.latestTeam ? (
-          <span className="flex min-w-0 items-center gap-2">
-            <Monogram
-              url={player.latestTeam.logoUrl}
-              darkUrl={player.latestTeam.logoDarkUrl}
-              label={`Logo ${player.latestTeam.name}`}
-              text={player.latestTeam.shortName || initials(player.latestTeam.name).slice(0, 3)}
-              size={24}
-              className="shrink-0 rounded"
-            />
-            <span className="max-w-40 truncate">{player.latestTeam.name}</span>
-          </span>
-        ) : (
-          <span className="text-muted-foreground">–</span>
-        )}
-      </td>
-      <td className="hidden px-3 py-2.5 @5xl:table-cell">
-        <span className="flex max-w-52 flex-wrap items-center gap-1">
-          {player.signatureHeroes.slice(0, 3).map((hero) => {
-            const iconUrl = portrait(hero)
-            // Only published heroes have a portrait; two letters would say less than the name.
-            return iconUrl ? (
-              <HeroIcon key={hero} hero={{ name: hero, iconUrl }} size={28} />
-            ) : (
-              <span key={hero} className="type-meta rounded bg-muted px-1.5 py-0.5 capitalize">
-                {hero}
-              </span>
-            )
-          })}
-        </span>
-      </td>
-      <td className="type-body esp-num hidden px-3 py-2.5 text-right tabular-nums @2xl:table-cell">
-        {player.tournaments}
-      </td>
-      <td className="type-body esp-num hidden px-3 py-2.5 text-right tabular-nums @2xl:table-cell">
-        {player.titles ? (
-          <span className="inline-flex items-center gap-1">
-            <Trophy size={14} className="text-[var(--esp-gold-text)]" aria-hidden="true" />
-            {player.titles}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">0</span>
-        )}
-      </td>
-      <td className="type-meta hidden max-w-56 px-3 py-2.5 @4xl:table-cell">
-        {latest && (
-          <Link
-            to={tournamentPath(latest.id)}
-            className="block truncate underline-offset-2 hover:text-foreground hover:underline"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {latest.name}
-            {!/\b20\d\d\b/.test(latest.name) && latest.year ? ` · ${yearRange(latest.year, latest.year)}` : ""}
-          </Link>
-        )}
-        <span className="block truncate">{activityLabel(player.lastActiveOn)}</span>
-      </td>
-      <td className="type-meta hidden px-4 py-2.5 whitespace-nowrap @4xl:table-cell">
-        {player.careerStatus === "UNKNOWN" ? "–" : CAREER_STATUSES[player.careerStatus]}
-      </td>
-    </tr>
   )
 }

@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Link } from "react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import type { TeamDirectoryEntry } from "@aov/community-contracts"
@@ -19,6 +20,8 @@ import {
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
+import { RecordEditSheet } from "./entry-edit-sheet"
+import { EntryAction, EntryPicture } from "./entry-parts"
 import { LocalMoney } from "@aov/ui/components/local-money"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { NativeSelect } from "@/components/native-select"
@@ -38,6 +41,7 @@ export function TeamDirectory({ access }: { access: Access }) {
   const { q, country } = filters.values
   const sort = (filters.values.sort || "RECENT") as TeamSort
   const search = useDebounced(q)
+  const [editing, setEditing] = useState<TeamDirectoryEntry | null>(null)
   const teams = useInfiniteQuery({
     queryKey: pageKeys.directory.teams(access.actorKey, search, country, sort),
     initialPageParam: 0,
@@ -101,30 +105,60 @@ export function TeamDirectory({ access }: { access: Access }) {
         <ul className="grid gap-3 p-3 @3xl:grid-cols-2 @3xl:p-4 @6xl:grid-cols-3">
           {rows.map((team) => {
             const profile = profiles.get(team.id)
-            return <TeamCard key={team.id} team={team} pageId={profile?.id} published={profile?.published} />
+            return (
+              <TeamCard
+                key={team.id}
+                team={team}
+                pageId={profile?.id}
+                published={profile?.published}
+                onEdit={access.canWrite ? () => setEditing(team) : undefined}
+              />
+            )
           })}
         </ul>
         <DirectoryFooter total={teams.data?.pages[0]?.totalElements ?? 0} noun="đội tuyển" query={teams} />
       </DirectoryBody>
+      {editing && (
+        <RecordEditSheet
+          kind="teams"
+          id={editing.id}
+          name={editing.name}
+          pageId={profiles.get(editing.id)?.id}
+          actorKey={access.actorKey}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </DirectoryShell>
   )
 }
 
-function TeamCard({ team, pageId, published }: { team: TeamDirectoryEntry; pageId?: string; published?: boolean }) {
+function TeamCard({
+  team,
+  pageId,
+  published,
+  onEdit,
+}: {
+  team: TeamDirectoryEntry
+  pageId?: string
+  published?: boolean
+  onEdit?: () => void
+}) {
   const rate = winRate(team.wins, team.losses)
   const starters = team.lineup.filter((member) => member.status !== "SUBSTITUTE").slice(0, 5)
   const bench = team.lineup.length - starters.length
   return (
     <li className="relative flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-4 transition hover:border-primary/50">
       <div className="flex items-start gap-3">
-        <Monogram
-          url={team.logoUrl}
-          darkUrl={team.logoDarkUrl}
-          label={`Logo ${team.name}`}
-          text={team.shortName || initials(team.name).slice(0, 3)}
-          size={56}
-          className="shrink-0 rounded-lg"
-        />
+        <EntryPicture missing={!team.logoUrl && !team.logoDarkUrl} label="Thiếu logo">
+          <Monogram
+            url={team.logoUrl}
+            darkUrl={team.logoDarkUrl}
+            label={`Logo ${team.name}`}
+            text={team.shortName || initials(team.name).slice(0, 3)}
+            size={56}
+            className="shrink-0 rounded-lg"
+          />
+        </EntryPicture>
         <div className="min-w-0 flex-1 space-y-1">
           <h2 className="type-section-title truncate">
             {pageId ? (
@@ -141,6 +175,7 @@ function TeamCard({ team, pageId, published }: { team: TeamDirectoryEntry; pageI
           </p>
         </div>
         <PublishedMark published={published} />
+        {onEdit && <EntryAction label={`Sửa hồ sơ đội ${team.name}`} onClick={onEdit} />}
       </div>
 
       <dl className="grid grid-cols-4 gap-2 border-y py-2">

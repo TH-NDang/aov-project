@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/compo
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { ClipboardCheck, Info, Save } from "lucide-react"
+import { CreateTournamentSheet } from "./create-tournament-sheet"
 import { RecordPicker } from "./record-picker"
 import { tournamentApi, tournamentError, tournamentKeys } from "../api/tournament-api"
 import { RegistryLogoField } from "./registry-logo"
@@ -48,11 +49,11 @@ type Field = {
 }
 
 function registryFields(kind: EditorKind): Field[] {
-  const common = [{ key: "code", label: "Mã", required: true, placeholder: "Ví dụ: aog-2026-s4" }]
+  const code = { key: "code", label: "Mã", required: true, placeholder: "Ví dụ: aog-2026-s4" }
   if (kind === "tournaments")
     return [
-      ...common,
       { key: "name", label: "Tên giải", required: true },
+      code,
       // Set for a qualifier, wildcard, weekly stop or show match: the list then shows it under that main event.
       { key: "parentTournamentId", label: "Thuộc giải chính", picker: "tournaments" },
       {
@@ -94,7 +95,7 @@ function registryFields(kind: EditorKind): Field[] {
       { key: "note", label: "Ghi chú", group: "extra" },
     ]
   return [
-    ...common,
+    code,
     {
       key: "tournamentId",
       label: "Giải đấu",
@@ -367,6 +368,7 @@ function RegistryForm({
   )
 }
 
+/** Edits a tournament or a match, and creates a match; a new tournament has a form of its own. */
 export function RegistryEditor({
   kind,
   entry,
@@ -384,6 +386,7 @@ export function RegistryEditor({
   defaults?: Record<string, string>
 }) {
   const [busy, setBusy] = useState(false)
+  if (kind === "tournaments" && !entry) return open ? <CreateTournamentSheet {...{ defaults, onClose }} /> : null
   return (
     <Sheet open={open} onOpenChange={(value) => !value && !busy && onClose()}>
       <SheetContent

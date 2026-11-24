@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Link } from "react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import {
@@ -16,6 +17,8 @@ import { PlatformIcon, platformOf } from "../components/platform-icon"
 import { ProfileRoleIcon } from "../components/profile-icons"
 import { directoryApi, useDebounced } from "./directory-api"
 import { pageKeys } from "../api/page-api"
+import { ProfileEditSheet } from "./entry-edit-sheet"
+import { EntryAction, EntryPicture } from "./entry-parts"
 import {
   CountryLabel,
   DirectoryBody,
@@ -111,6 +114,7 @@ const RoleLabels = ({ roles }: { roles?: PersonRole[] }) => (
 /** Coaches are looked up by where they work, so their latest team and how long they have been at it come first. */
 export function CoachDirectory({ access }: { access: Access }) {
   const { filters, role, sort, people, rows } = usePersonnel("COACHING", access)
+  const [editing, setEditing] = useState<CommunityProfile | null>(null)
   return (
     <DirectoryShell
       section={directorySections[2]}
@@ -139,53 +143,61 @@ export function CoachDirectory({ access }: { access: Access }) {
       >
         <ul className="divide-y">
           {rows.map((person) => {
+            const name = person.content?.name ?? person.code
             const stint = latestStint(person)
             return (
-              <li key={person.id}>
-                <Link
-                  to={`/pages/${person.id}`}
-                  className="grid items-center gap-x-4 gap-y-1 px-4 py-3 transition hover:bg-muted/50 @3xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.6fr)_auto]"
-                >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <PlayerPhoto
-                      name={person.content?.name ?? person.code}
-                      url={person.content?.avatarUrl ?? undefined}
-                      size={44}
-                    />
-                    <span className="min-w-0">
-                      <span className="type-section-title block truncate">{person.content?.name ?? person.code}</span>
-                      <span className="type-meta block">
-                        <CountryLabel country={person.content?.country} />
-                      </span>
+              <li
+                key={person.id}
+                className="relative grid items-center gap-x-4 gap-y-1 px-4 py-3 transition hover:bg-muted/50 @3xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.6fr)_6rem_2rem]"
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <EntryPicture missing={!person.content?.avatarUrl} label="Thiếu ảnh">
+                    <PlayerPhoto name={name} url={person.content?.avatarUrl ?? undefined} size={44} />
+                  </EntryPicture>
+                  <span className="min-w-0 pr-8 @3xl:pr-0">
+                    <Link
+                      to={`/pages/${person.id}`}
+                      className="type-section-title block truncate after:absolute after:inset-0"
+                    >
+                      {name}
+                    </Link>
+                    <span className="type-meta block">
+                      <CountryLabel country={person.content?.country} />
                     </span>
                   </span>
-                  <RoleLabels roles={person.content?.personRoles} />
-                  <span className="min-w-0">
-                    {stint ? (
-                      <>
-                        <span className="type-body block truncate">{stint.title}</span>
-                        <span className="type-meta block truncate">{stint.role}</span>
-                        {person.lastActiveOn && (
-                          <span className="type-meta block truncate">{activityLabel(person.lastActiveOn)}</span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="type-meta">Chưa có quá trình làm việc.</span>
-                    )}
+                </span>
+                <RoleLabels roles={person.content?.personRoles} />
+                <span className="min-w-0">
+                  {stint ? (
+                    <>
+                      <span className="type-body block truncate">{stint.title}</span>
+                      <span className="type-meta block truncate">{stint.role}</span>
+                      {person.lastActiveOn && (
+                        <span className="type-meta block truncate">{activityLabel(person.lastActiveOn)}</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="type-meta">Chưa có quá trình làm việc.</span>
+                  )}
+                </span>
+                <span className="flex items-center gap-2 @3xl:flex-col @3xl:items-end @3xl:gap-1">
+                  <span className="type-meta tabular-nums whitespace-nowrap">
+                    {person.content?.history.length ?? 0} giải
                   </span>
-                  <span className="flex items-center gap-2 @3xl:flex-col @3xl:items-end @3xl:gap-1">
-                    <span className="type-meta tabular-nums whitespace-nowrap">
-                      {person.content?.history.length ?? 0} giải
-                    </span>
-                    <PublishedMark published={person.published} />
-                  </span>
-                </Link>
+                  <PublishedMark published={person.published} />
+                </span>
+                {access.canWrite && (
+                  <div className="absolute top-3 right-3 @3xl:static">
+                    <EntryAction label={`Sửa hồ sơ ${name}`} onClick={() => setEditing(person)} />
+                  </div>
+                )}
               </li>
             )
           })}
         </ul>
         <DirectoryFooter total={people.data?.pages[0]?.totalElements ?? 0} noun="thành viên" query={people} />
       </DirectoryBody>
+      {editing && <ProfileEditSheet page={editing} actorKey={access.actorKey} onClose={() => setEditing(null)} />}
     </DirectoryShell>
   )
 }
@@ -193,6 +205,7 @@ export function CoachDirectory({ access }: { access: Access }) {
 /** Broadcast talent is booked by face and channel, so the photo and social links lead. */
 export function BroadcastDirectory({ access }: { access: Access }) {
   const { filters, role, sort, people, rows } = usePersonnel("BROADCAST", access)
+  const [editing, setEditing] = useState<CommunityProfile | null>(null)
   return (
     <DirectoryShell
       section={directorySections[3]}
@@ -228,7 +241,14 @@ export function BroadcastDirectory({ access }: { access: Access }) {
                 key={person.id}
                 className="relative flex min-w-0 flex-col items-center gap-2 rounded-lg border bg-background p-4 text-center transition hover:border-primary/50"
               >
-                <PlayerPhoto name={name} url={person.content?.avatarUrl ?? undefined} size={80} />
+                {access.canWrite && (
+                  <div className="absolute top-2 right-2">
+                    <EntryAction label={`Sửa hồ sơ ${name}`} onClick={() => setEditing(person)} />
+                  </div>
+                )}
+                <EntryPicture missing={!person.content?.avatarUrl} label="Thiếu ảnh">
+                  <PlayerPhoto name={name} url={person.content?.avatarUrl ?? undefined} size={80} />
+                </EntryPicture>
                 <h2 className="type-section-title max-w-full truncate">
                   <Link to={`/pages/${person.id}`} className="after:absolute after:inset-0 after:rounded-lg">
                     {name}
@@ -262,6 +282,7 @@ export function BroadcastDirectory({ access }: { access: Access }) {
         </ul>
         <DirectoryFooter total={people.data?.pages[0]?.totalElements ?? 0} noun="thành viên" query={people} />
       </DirectoryBody>
+      {editing && <ProfileEditSheet page={editing} actorKey={access.actorKey} onClose={() => setEditing(null)} />}
     </DirectoryShell>
   )
 }

@@ -1,4 +1,4 @@
-import type { TournamentPart } from "@aov/community-contracts"
+import type { TournamentContent, TournamentPart } from "@aov/community-contracts"
 import { calendarDaysBetween, currentTimeZone } from "@aov/ui/lib/time-zone"
 import { nameKey } from "@/features/esports/model/name-key"
 
@@ -101,3 +101,18 @@ export function partsOnLine(parts: readonly TournamentPart[], search = "", limit
     )
   return { shown: ranked.slice(0, limit), hidden: Math.max(0, ranked.length - limit) }
 }
+
+/** What a new part takes from its main event: the same region, year, tier and logos, with the event's name to extend. */
+export const partDefaults = (
+  mainEventId: string,
+  main: Pick<TournamentContent, "name" | "region" | "year" | "tier" | "logoUrl" | "logoDarkUrl">,
+): Record<string, string> => ({
+  parentTournamentId: mainEventId,
+  name: `${main.name} - `,
+  region: main.region,
+  competitionType: "QUALIFIER",
+  ...(main.year ? { year: String(main.year) } : {}),
+  ...(main.tier ? { tier: main.tier } : {}),
+  ...(main.logoUrl ? { logoUrl: main.logoUrl } : {}),
+  ...(main.logoDarkUrl ? { logoDarkUrl: main.logoDarkUrl } : {}),
+})
