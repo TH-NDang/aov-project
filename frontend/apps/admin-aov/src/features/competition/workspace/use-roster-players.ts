@@ -12,7 +12,7 @@ export function useRosterPlayers(tournamentId: string, actorKey: string, enabled
     queryFn: async ({ signal }) => {
       const players = new Map<string, PlayerContent>()
       for (let page = 0; page < 50; page++) {
-        const slice = await tournamentApi.pick("players", { tournamentId, page }, signal)
+        const slice = await tournamentApi.pick("players", { tournamentId, page, size: 200 }, signal)
         const own = slice.items.filter((row) => row.context === "TOURNAMENT")
         for (const row of own) players.set(row.id, row.content)
         if (!own.length || own.length < slice.items.length) break
