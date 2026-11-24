@@ -14,6 +14,10 @@ import "./features/community/components/community.css"
 import { PublicCompetitionPage } from "./features/tournaments/pages/competition-page"
 import { CompetitionDirectory } from "./features/tournaments/pages/competition-directory-page"
 import { MatchPage } from "./features/tournaments/pages/match-page"
+import { TeamPage } from "./features/tournaments/pages/team-page"
+import { PlayerPage } from "./features/tournaments/pages/player-page"
+import { PersonPage } from "./features/tournaments/pages/person-page"
+import { CreditsPage } from "./features/tournaments/pages/credits-page"
 import "./features/tournaments/tournaments.css"
 import "./features/tournaments/components/schedule.css"
 export default function App() {
@@ -24,6 +28,10 @@ export default function App() {
       <Route path="/competitions/:id" element={<PublicCompetitionPage />} />
       <Route path="/competitions/:id/matches/:matchKey" element={<MatchPage />} />
       <Route path="/matches/:seriesId" element={<MatchPage />} />
+      <Route path="/teams/:id" element={<TeamPage />} />
+      <Route path="/players/:id" element={<PlayerPage />} />
+      <Route path="/people/:id" element={<PersonPage />} />
+      <Route path="/credits" element={<CreditsPage />} />
       <Route path="/games" element={<GamesPage />} />
       <Route path="/games/:id" element={<GamePage />} />
       <Route path="/explore" element={<CommunityExplore />} />

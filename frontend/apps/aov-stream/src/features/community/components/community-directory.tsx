@@ -20,11 +20,14 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { RegionMark } from "../../../components/region-mark"
 import { StreamIcon } from "../../../components/stream-icon"
+import { ParticipantList } from "../../../components/participant-list"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { useFollowedIds, useFollowPage } from "../../../lib/community-queries"
+import { isParticipantKind } from "../../../lib/participant-model"
 import {
   Avatar,
   followersLabel,
@@ -54,9 +57,6 @@ function KindArt({ kind }: { kind: keyof typeof kindArt }) {
 
 /** Cards revealed at a time: whole rows at every column count the grid takes (one to four). */
 const STEP = 24
-/** Regions offered as chips, and how many pages a region needs to be one; the rest open from the last chip. */
-const TOP_REGIONS = 6
-const CHIP_PAGES = 5
 /**
  * The service cannot filter or count pages by country, so the regions are counted here from the whole directory, and
  * only once a reader asks for them or opens a link with a region. Past this many pages that stops being reasonable:
@@ -112,7 +112,6 @@ export function PageDirectory() {
   const region = params.get("region") || ""
   const following = useFollowedIds()
   const [counting, setCounting] = useState(false)
-  const section = useRef<HTMLElement>(null)
   const query = useInfiniteQuery({
     queryKey: communityKeys.pageDirectory(kind),
     initialPageParam: 0,
@@ -132,12 +131,6 @@ export function PageDirectory() {
   const profiles = query.data?.pages.flatMap((page) => page.items) ?? []
   const complete = !!query.data && !hasNextPage
   const regions = complete ? regionFacet(profiles, languageTag) : null
-  // The button that asked for the regions gives way to them; keyboard focus moves to the first region chip.
-  const regionsReady = !!regions
-  useEffect(() => {
-    if (!regionsReady || !counting || document.activeElement !== document.body) return
-    section.current?.querySelector<HTMLElement>("[data-regions] button")?.focus()
-  }, [regionsReady, counting])
   const narrowed = scanned && !!region
   const rows = narrowed ? profiles.filter((profile) => regionOf(profile) === region) : profiles
   const revealed = useRevealedRows(rows, `${kind}|${narrowed ? region : ""}`, STEP)
@@ -151,7 +144,7 @@ export function PageDirectory() {
   const count = narrowed ? (complete ? rows.length : null) : query.data ? total : null
   const kindRow = useChosenChipInView(kind ?? "")
 
-  function update(next: { kind?: string; region?: string }) {
+  function update(next: { kind?: string; region?: string; name?: string }) {
     setParams((current) => {
       const updated = new URLSearchParams(current)
       for (const [key, value] of Object.entries(next)) {
@@ -163,61 +156,41 @@ export function PageDirectory() {
   }
 
   return (
-    <section ref={section} aria-labelledby="page-directory">
-      <div className="tn-heading">
-        <h2 id="page-directory">
-          {text("Danh bạ trang", "Page directory")}{" "}
-          {count != null && (
-            <small>
-              {text(
-                `${count.toLocaleString(languageTag)} trang`,
-                `${count.toLocaleString(languageTag)} ${count === 1 ? "page" : "pages"}`,
-              )}
-            </small>
-          )}
-        </h2>
-      </div>
+    <section aria-labelledby="page-directory">
+      <h2 id="page-directory" className="sr-only">
+        {text("Danh bạ trang", "Page directory")}
+        {count != null && `: ${count.toLocaleString(languageTag)}`}
+      </h2>
       <div className="pg-filters">
         <div ref={kindRow} className="hub-pills" role="group" aria-label={text("Loại trang", "Page type")}>
-          <button type="button" aria-pressed={!kind} onClick={() => update({ kind: "" })}>
+          <button type="button" aria-pressed={!kind} onClick={() => update({ kind: "", name: "" })}>
             <StreamIcon name="grid" size={16} />
             {text("Tất cả", "All")}
           </button>
           {profileKinds.map((type) => (
-            <button key={type} type="button" aria-pressed={kind === type} onClick={() => update({ kind: type })}>
+            <button
+              key={type}
+              type="button"
+              aria-pressed={kind === type}
+              onClick={() => update({ kind: type, name: "" })}
+            >
               <KindArt kind={type} />
               {text(profileKindLabels[type], profileKindEnglish[type])}
             </button>
           ))}
         </div>
-        {scanned &&
-          !query.isError &&
-          (regions ? (
-            <RegionChips regions={regions} value={region} onChange={(value) => update({ region: value })} />
-          ) : region ? (
-            <div
-              className="hub-pills"
-              role="status"
-              aria-label={text("Đang đếm trang theo khu vực", "Counting pages by region")}
-            >
-              {Array.from({ length: 5 }, (_, index) => (
-                <span key={index} className="hub-skeleton pg-chip-skeleton" />
-              ))}
-            </div>
-          ) : (
-            query.data && (
-              <div className="hub-pills">
-                <button type="button" aria-disabled={counting || undefined} onClick={() => setCounting(true)}>
-                  <StreamIcon name="compass" size={16} />
-                  {counting
-                    ? text("Đang đếm trang theo khu vực…", "Counting pages by region…")
-                    : text("Lọc theo khu vực", "Filter by region")}
-                </button>
-              </div>
-            )
-          ))}
+        {scanned && !query.isError && query.data && (
+          <RegionMenu
+            regions={regions}
+            value={region}
+            onOpen={() => setCounting(true)}
+            onChange={(value) => update({ region: value })}
+          />
+        )}
       </div>
-      {query.isPending || (!rows.length && !complete && !query.isError) ? (
+      {isParticipantKind(kind) && !narrowed && <ParticipantList kind={kind} q={params.get("name")?.trim()} />}
+      {isParticipantKind(kind) && !narrowed && !rows.length ? null : query.isPending ||
+        (!rows.length && !complete && !query.isError) ? (
         <div className="cp-grid" role="status" aria-label={text("Đang tải danh bạ", "Loading the directory")}>
           {Array.from({ length: 12 }, (_, index) => (
             <div className="hub-skeleton cp-card-skeleton" key={index} />
@@ -275,80 +248,62 @@ export function PageDirectory() {
 }
 
 /**
- * The largest regions as chips with their page counts; the smaller ones, and the pages without a country, open from
- * the last chip. A chosen region that is not among the chips takes that chip's place.
+ * The regions behind one button, which shows the flag of the one in use. Opening it asks for the count, so the menu
+ * says so until the whole directory is in.
  */
-function RegionChips({
+function RegionMenu({
   regions,
   value,
+  onOpen,
   onChange,
 }: {
-  regions: Region[]
+  /** Null until every page is counted. */
+  regions: Region[] | null
   value: string
+  onOpen: () => void
   onChange: (value: string) => void
 }) {
   const { text, languageTag } = useStreamLocale()
-  const row = useChosenChipInView(value)
-  const recorded = regions.filter((entry) => entry.key !== UNRECORDED)
   // One region, or none, leaves nothing to choose between.
-  if (recorded.length < 2) return null
-  // A region with a handful of pages is not worth a chip of its own, unless that would leave too few chips.
-  const large = recorded.filter((entry) => entry.count >= CHIP_PAGES)
-  const top = (large.length >= 2 ? large : recorded).slice(0, TOP_REGIONS)
-  const rest = regions.filter((entry) => !top.includes(entry))
-  const other = rest.find((entry) => entry.key === value)
-  return (
-    <div
-      ref={row}
-      className="hub-pills"
-      role="group"
-      aria-label={text("Khu vực", "Region")}
-      data-regions=""
-      data-counts="plain"
+  if (regions && !value && regions.filter((entry) => entry.key !== UNRECORDED).length < 2) return null
+  const name = value && value !== UNRECORDED ? regionName(value, languageTag) : null
+  const choice = (key: string, label: string, count?: number) => (
+    <DropdownMenuItem
+      key={key}
+      className={key === value ? "hub-menu-item pg-region-current" : "hub-menu-item"}
+      onSelect={() => onChange(key)}
     >
-      <button type="button" aria-pressed={!value} onClick={() => onChange("")}>
-        {text("Mọi khu vực", "All regions")}
-      </button>
-      {top.map((entry) => (
-        <button key={entry.key} type="button" aria-pressed={value === entry.key} onClick={() => onChange(entry.key)}>
-          {entry.name} <small>{entry.count.toLocaleString(languageTag)}</small>
+      <RegionMark code={key && key !== UNRECORDED ? key : "GLOBAL"} size={20} />
+      {label}
+      {count != null && <small>{count.toLocaleString(languageTag)}</small>}
+    </DropdownMenuItem>
+  )
+  return (
+    <DropdownMenu onOpenChange={(open) => open && onOpen()}>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className="pg-region-button" data-active={value ? "" : undefined}>
+          <RegionMark code={name ? value : "GLOBAL"} size={18} />
+          <span>{!value ? text("Khu vực", "Region") : (name ?? text("Chưa ghi khu vực", "No region recorded"))}</span>
+          <StreamIcon name="chevronRight" size={12} />
         </button>
-      ))}
-      {rest.length > 0 && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button type="button" className="pg-region-more" aria-current={other ? "true" : undefined}>
-              {other ? (
-                <>
-                  {other.name} <small>{other.count.toLocaleString(languageTag)}</small>
-                </>
-              ) : (
-                text("Khu vực khác", "Other regions")
-              )}
-              <StreamIcon name="chevronRight" size={12} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            sideOffset={6}
-            collisionPadding={12}
-            className="hub-popover pg-region-menu"
-            drawerTitle={text("Khu vực khác", "Other regions")}
-          >
-            {rest.map((entry) => (
-              <DropdownMenuItem
-                key={entry.key}
-                className={entry.key === value ? "hub-menu-item pg-region-current" : "hub-menu-item"}
-                onSelect={() => onChange(entry.key)}
-              >
-                {entry.name}
-                <small>{entry.count.toLocaleString(languageTag)}</small>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        sideOffset={6}
+        collisionPadding={12}
+        className="hub-popover pg-region-menu"
+        drawerTitle={text("Khu vực", "Region")}
+      >
+        {choice("", text("Mọi khu vực", "All regions"))}
+        {regions ? (
+          regions.map((entry) => choice(entry.key, entry.name, entry.count))
+        ) : (
+          <p className="pg-region-wait" role="status">
+            {text("Đang đếm trang theo khu vực…", "Counting pages by region…")}
+          </p>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -392,7 +347,17 @@ export function ProfileCard({
             <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
           )}
         </strong>
-        {(what || where) && <span className="pg-card-meta">{[what, where].filter(Boolean).join(" · ")}</span>}
+        {(what || where) && (
+          <span className="pg-card-meta">
+            {what}
+            {what && where && " · "}
+            {where && (
+              <>
+                <RegionMark code={regionKey(profile.content?.country)} size={16} /> {where}
+              </>
+            )}
+          </span>
+        )}
         {community && profile.followers > 0 && (
           <span className="pg-card-meta">{followersLabel(profile.followers)}</span>
         )}

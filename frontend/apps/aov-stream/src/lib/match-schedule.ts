@@ -202,10 +202,12 @@ export function matchRound(entry: CompetitionMatch, locale = "vi-VN") {
 
 /** Everything a reader may type to find a match: both teams, the competition and who runs it. */
 export function matchSearchKey(entry: CompetitionMatch) {
-  const { tournament, plan, teams } = entry.competition.content
+  const { tournament, plan, teams, circuit } = entry.competition.content
   const names = matchSides(entry).flatMap((side) => {
     const team = side.teamId ? teams[side.teamId] : undefined
     return team ? [team.name, team.shortName, ...(team.aliases ?? [])] : []
   })
-  return foldSearchText([...names, tournament.name, plan.circuit, plan.organizer].filter(Boolean).join(" "))
+  return foldSearchText(
+    [...names, tournament.name, plan.circuit, circuit?.shortName, plan.organizer].filter(Boolean).join(" "),
+  )
 }

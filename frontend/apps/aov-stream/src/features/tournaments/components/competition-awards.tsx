@@ -1,7 +1,7 @@
 import { useState } from "react"
 import type { CompetitionView, TournamentAward } from "@aov/community-contracts"
 import { LocalMoney } from "@aov/ui/components/local-money"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink } from "../../../components/go-link"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"

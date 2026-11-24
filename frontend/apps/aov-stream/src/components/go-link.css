@@ -1,0 +1,43 @@
+/* A name that opens another page: an arrow after it at rest, the accent and an underline when pointed at. */
+.hub-go {
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  text-underline-offset: 3px;
+  transition: color 120ms;
+}
+.hub-go > svg {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--hub-accent-strong);
+  opacity: 0.8;
+  vertical-align: -1px;
+  transition: transform 120ms;
+}
+.hub-go:is(:hover, :focus-visible) {
+  color: var(--hub-accent-strong);
+  text-decoration-line: underline;
+}
+.hub-go:is(:hover, :focus-visible) > svg {
+  opacity: 1;
+  transform: translateX(2px);
+}
+/* Over a picture's dark stage the same link is a pill, so it reads as a button. */
+.hub-go[class~="hub-go-pill"] {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: var(--aov-radius-pill);
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 120ms;
+}
+.hub-go[class~="hub-go-pill"]:is(:hover, :focus-visible) {
+  border-color: rgb(255 255 255 / 45%);
+  background: rgb(255 255 255 / 16%);
+  color: #fff;
+}
+.hub-go[class~="hub-go-pill"] > svg {
+  color: inherit;
+}

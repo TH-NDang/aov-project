@@ -2,12 +2,14 @@ import type { ReactNode } from "react"
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamImage } from "../../../components/stream-image"
+import { RoundLabel } from "../../../components/round-label"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { ThemedLogo } from "../../../components/themed-logo"
 import { matchUnderway } from "../../../lib/competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "../../../lib/match-model"
 import { matchRound, matchSides, type MatchSide } from "../../../lib/match-schedule"
 import { unbroken } from "../../../lib/tournament-model"
+import { shortCompetitionName } from "../../../lib/season-name"
 import "./match-row.css"
 
 const clockTime: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" }
@@ -93,11 +95,11 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
   const round = matchRound(entry, languageTag)
   const meta: ReactNode[] = [
     status === "PENDING" && <em key="state">{text(...matchStateLabels.PENDING)}</em>,
-    round && <span key="round">{round}</span>,
+    round && <RoundLabel key="round" entry={entry} label={round} />,
     competition && (
-      <span key="competition" className="tn-fixture-event">
+      <span key="competition" className="tn-fixture-event" title={tournament.name}>
         <ThemedLogo src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
-        {tournament.name}
+        {shortCompetitionName(view)}
       </span>
     ),
   ]

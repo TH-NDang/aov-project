@@ -4,10 +4,11 @@
   min-width: 0;
   gap: 18px;
 }
-/* One row of controls: the quick switch first, the selects at the far end. */
+/* One row of controls: the quick switch first, the filters at the far end; those in use take the next line. */
 .tn-schedule-bar {
   display: flex;
   min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
@@ -17,19 +18,6 @@
 }
 .tn-schedule-bar > .tn-schedule-filter {
   margin-left: auto;
-}
-.tn-schedule-bar > .competition-filter-group {
-  min-width: 0;
-  flex: 0 1 auto;
-}
-.tn-schedule-bar .competition-select {
-  min-width: 0;
-  flex: 0 1 auto;
-}
-.tn-schedule-bar .competition-select > [data-slot="select-value"] {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 /* The sentence wraps in its own column, so the way out stays beside it instead of dropping to a line of its own. */
 .tn-schedule-note {
@@ -86,36 +74,30 @@
 .tn-day-title > span:not(.tn-live)::first-letter {
   text-transform: uppercase;
 }
-/* Filters of the competition directory, of a schedule and of the games. */
+/* Filters of the competition directory: the regions scroll beside the one button that holds the others. */
+.tn-filter-bar {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
 .competition-filters {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
-.competition-filters .competition-search {
-  flex: 999 1 210px;
-  width: auto;
+.competition-filters > .competition-regions {
   min-width: 0;
+  flex: 1 1 0;
 }
-.competition-filters > .competition-scope {
-  flex: none;
+.competition-filters > .competition-filter-menu {
+  height: 36px;
+  margin-left: auto;
+  border-radius: var(--aov-radius-pill);
 }
-/* The filters move below the search together, so no filter ends up alone on a line. */
-.competition-filter-group {
-  display: flex;
-  flex: 0 1 auto;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.competition-sheet-filters {
-  display: grid;
-  gap: 8px;
-}
-.competition-sheet-filters .competition-select {
-  width: 100%;
-  min-height: 44px;
+/* A search can leave nothing to choose between. */
+.tn-filter-bar:not(:has(button)) {
+  display: none;
 }
 .competition-select {
   width: auto;
@@ -124,19 +106,6 @@
   border-color: var(--hub-border);
   background: var(--hub-surface);
   color: var(--hub-text);
-  font-size: 13px;
-  font-weight: 600;
-}
-/* How many competitions the filters leave, beside the way to clear them. */
-.competition-result {
-  padding-left: 4px;
-  color: var(--hub-muted);
-  font-size: 13px;
-  white-space: nowrap;
-}
-.competition-clear {
-  padding: 8px;
-  color: var(--hub-accent-strong);
   font-size: 13px;
   font-weight: 600;
 }

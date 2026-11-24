@@ -1,0 +1,108 @@
+/* Every tournament's matches in one line that scrolls sideways, with the ways on at its end. */
+.tn-ribbon {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 14px;
+}
+.tn-ribbon-row {
+  display: flex;
+  gap: 20px;
+  /* Room for the focus ring and the hover border, which a scroll box would otherwise clip. */
+  margin: -4px;
+  padding: 4px 28px 8px 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  /* The last card fades out, so the line reads as going on. */
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+.tn-ribbon-day {
+  display: grid;
+  flex: none;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+}
+.tn-ribbon-day > h3 {
+  position: sticky;
+  left: 0;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  justify-self: start;
+  white-space: nowrap;
+}
+.tn-ribbon-day > h3 > b {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-ribbon-live {
+  color: var(--hub-red);
+  font-weight: 700;
+}
+.tn-ribbon-day > div {
+  display: grid;
+  grid-auto-columns: 248px;
+  grid-auto-flow: column;
+  gap: 10px;
+}
+.tn-ribbon-ways {
+  display: grid;
+  width: 132px;
+  grid-auto-rows: 1fr;
+  gap: 10px;
+  padding-top: 26px;
+  padding-bottom: 4px;
+}
+.tn-ribbon-ways > a {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-sm);
+  background: linear-gradient(160deg, var(--hub-accent-soft), transparent 75%), var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  transition: border-color 160ms;
+}
+.tn-ribbon-ways > a > svg {
+  color: var(--hub-accent-strong);
+}
+.tn-ribbon-ways > a:is(:hover, :focus-visible) {
+  border-color: var(--hub-accent);
+}
+@media (max-width: 899.98px) {
+  .tn-ribbon {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .tn-ribbon-row {
+    gap: 16px;
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding-inline: var(--hub-gutter);
+    scrollbar-width: none;
+  }
+  .tn-ribbon-day > div {
+    grid-auto-columns: 216px;
+  }
+  .tn-ribbon-ways {
+    width: auto;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    grid-auto-rows: 42px;
+    padding: 0;
+  }
+  .tn-ribbon-ways > a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+}

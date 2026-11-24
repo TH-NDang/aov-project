@@ -10,6 +10,7 @@
   --stream-image-size: 72px;
   --stream-image-radius: var(--hub-radius);
   --stream-image-initials: 20px;
+  position: relative;
   display: grid;
   justify-items: center;
   gap: 10px;
@@ -23,8 +24,14 @@
   text-align: center;
   text-wrap: balance;
 }
-.tn-wall a:hover {
-  color: var(--hub-accent-strong);
+/* The whole card opens the team. */
+.tn-wall a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.tn-wall > li:has(a:hover) {
+  background: var(--hub-hover);
 }
 @media (max-width: 899.98px) {
   .tn-wall {

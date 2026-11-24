@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
-import { Link } from "react-router"
 import type { CompetitionView } from "@aov/community-contracts"
 import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { LocalTime } from "@aov/ui/components/local-time"
+import { GoLink } from "../../../components/go-link"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { codeName, COMPETITION_TYPE_NAMES, VENUE_MODE_NAMES } from "../../../lib/competition-model"
@@ -21,10 +21,10 @@ export function CompetitionFacts({ view, wide = false }: { view: CompetitionView
     [
       text("Đơn vị tổ chức", "Organizer"),
       organizer ? (
-        <Link className="cp-organizer" to={`/pages/${organizer.code}`}>
+        <GoLink className="cp-organizer" to={`/pages/${organizer.code}`}>
           {organizer.logoUrl && <img src={organizer.logoUrl} alt="" />}
           {organizer.name}
-        </Link>
+        </GoLink>
       ) : (
         plan.organizer
       ),

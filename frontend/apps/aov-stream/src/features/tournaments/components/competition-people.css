@@ -1,16 +1,5 @@
 /* People a competition names: its broadcast crew, each team's staff and the MVP of a match or a game. */
 
-/* A person's picture: round, as on their own page. */
-.tn-face {
-  --stream-image-size: 28px;
-  --stream-image-radius: 50%;
-  display: inline-flex;
-  flex: none;
-}
-.tn-face[data-size="small"] {
-  --stream-image-size: 24px;
-}
-
 /* The crew by role: groups fill the width they get, one under another in a narrow card. */
 .tn-crew {
   display: grid;

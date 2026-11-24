@@ -403,9 +403,12 @@
   .tn-stack {
     gap: 28px;
   }
-  /* Under the pinned row of the app's tabs. */
+  /* Under the pinned row of the app's tabs; the wrapper pins, so the row inside it must not. */
   .tn-sticky-tabs {
-    top: 43px;
+    top: var(--hub-pinned);
+  }
+  .hub-shell[data-scrolled] .tn-sticky-tabs {
+    margin-bottom: 8px;
   }
   .tn-match-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

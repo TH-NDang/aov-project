@@ -1,17 +1,14 @@
-import { useMemo } from "react"
+import { useMemo, type ReactNode } from "react"
 import { useSearchParams } from "react-router"
 import type { CompetitionView } from "@aov/community-contracts"
-import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
-import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { competitionStatusLabels } from "../../../components/community-ui"
-import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import {
   COMPETITION_KIND_NAMES,
   COMPETITION_KINDS,
-  competitionRegionName,
   filterOptions,
   passesFilter,
   type CompetitionKind,
@@ -21,7 +18,9 @@ import { TIER_NAMES, type CompetitionStatus } from "../../../lib/competition-mod
 import { competitionMatches } from "../../../lib/match-model"
 import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts } from "../../../lib/match-schedule"
 import { useNow } from "../../../lib/use-now"
-import { FilterSelect, ScheduleScopePills, scheduleDayLabel, scheduleScope } from "./schedule-controls"
+import { FilterMenu, FilterTokens, type FilterGroup } from "./filter-menu"
+import { RegionChips } from "./region-chips"
+import { scheduleDayLabel, scheduleScope, SCOPES, type FilterOption } from "./schedule-controls"
 
 /** How far from now a day may be to stand on the strip of days. */
 const AROUND = 45 * 86_400_000
@@ -136,8 +135,6 @@ export function useDirectorySchedule(data: CompetitionView[] | undefined, filter
   const fixtures = scheduleParts(day ? narrowed.filter((entry) => scheduleDay(entry, timeZone) === day) : narrowed)
   const fixtureCount =
     (scope === "results" ? 0 : fixtures.upcoming.length) + (scope === "upcoming" ? 0 : fixtures.results.length)
-  const selects =
-    Number(filters.regions.length > 1) + Number(filters.years.length > 1) + Number(filters.tiers.length > 1)
   const filtered = region !== "all" || year !== "all" || tier !== "all" || kind !== "all" || !!needle
   const statusName = (competitionStatusLabels()[status as CompetitionStatus] ?? status).toLowerCase()
   const stageName =
@@ -160,7 +157,6 @@ export function useDirectorySchedule(data: CompetitionView[] | undefined, filter
     scope,
     fixtures,
     fixtureCount,
-    selects,
     filtered,
     linked,
     clearLinked,
@@ -172,7 +168,10 @@ export function useDirectorySchedule(data: CompetitionView[] | undefined, filter
 
 export type DirectoryScheduleState = ReturnType<typeof useDirectorySchedule>
 
-/** The search, the choice between upcoming matches and results, and the filters: in a sheet on phones. */
+/**
+ * The regions as chips and every other filter behind one button, with the filters in use under them. The search is
+ * the app's own, in the bar above.
+ */
 export function DirectoryFilters({
   filters,
   schedule,
@@ -181,141 +180,89 @@ export function DirectoryFilters({
   schedule: DirectoryScheduleState
 }) {
   const { text, languageTag } = useStreamLocale()
-  const layout = usePageLayout()
-  const { region, year, status, tier, kind, search, update, visible, active, filtered, clearFilters } = filters
+  const { region, year, status, tier, kind, update, visible, clearFilters } = filters
   const scheduled = schedule.schedule
-  const count = (value: number) => value.toLocaleString(languageTag)
-  // An option says how many competitions it would show; the one in use reads plainly, as the select's own label.
-  const options = (entries: [string, number][], name: (value: string) => string, current: string) =>
-    entries.map(([value, n]) => [value, value === current ? name(value) : `${name(value)} (${count(n)})`])
-  const regionFilter = (
-    <FilterSelect
-      label={text("Khu vực", "Region")}
-      value={region}
-      onChange={(value) => update("region", value)}
-      all={text("Mọi khu vực", "All regions")}
-      options={options(filters.regions, (value) => competitionRegionName(value, languageTag), region)}
-    />
-  )
-  const yearFilter = (
-    <FilterSelect
-      label={text("Năm", "Year")}
-      value={year}
-      onChange={(value) => update("year", value)}
-      all={text("Mọi năm", "All years")}
-      options={options(filters.years, (value) => value, year)}
-    />
-  )
-  const tierFilter = (
-    <FilterSelect
-      label={text("Hạng giải", "Tier")}
-      value={tier}
-      onChange={(value) => update("tier", value)}
-      all={text("Mọi hạng", "All tiers")}
-      options={options(filters.tiers, (value) => text(...(TIER_NAMES[value] ?? [value, value])), tier)}
-    />
-  )
-  const competitionFilters = (
-    <>
-      {regionFilter}
-      {yearFilter}
-      {tierFilter}
-      <FilterSelect
-        label={text("Loại giải", "Event type")}
-        value={kind}
-        onChange={(value) => update("kind", value)}
-        all={text("Mọi loại giải", "All event types")}
-        options={options(filters.kinds, (value) => text(...COMPETITION_KIND_NAMES[value as CompetitionKind]), kind)}
-      />
-      <FilterSelect
-        label={text("Trạng thái giải", "Tournament status")}
-        value={status}
-        onChange={(value) => update("status", value)}
-        all={text("Mọi trạng thái", "All statuses")}
-        options={options(
-          filters.statuses,
-          (value) => competitionStatusLabels()[value as CompetitionStatus] ?? value,
-          status,
-        )}
-      />
-    </>
-  )
-  const scheduleFilters = (
-    <>
-      {filters.regions.length > 1 && regionFilter}
-      {filters.years.length > 1 && yearFilter}
-      {filters.tiers.length > 1 && tierFilter}
-    </>
-  )
+  const tierName = (value: string) => text(...(TIER_NAMES[value] ?? [value, value]))
+  // An option says how many competitions it would show; over a list of matches that number would mislead.
+  const options = (
+    entries: [string, number][],
+    name: (value: string) => string,
+    mark?: (value: string) => ReactNode,
+  ): FilterOption[] =>
+    entries.map(([value, n]) => [
+      value,
+      name(value),
+      mark?.(value),
+      scheduled ? undefined : n.toLocaleString(languageTag),
+    ])
+  const groups: FilterGroup[] = [
+    ...(scheduled
+      ? [
+          {
+            key: "scope",
+            label: text("Trận đấu", "Matches"),
+            value: schedule.scope,
+            options: schedule.switchable
+              ? SCOPES.filter(([key]) => key !== "all").map(([key, name]): FilterOption => [key, text(...name)])
+              : [],
+          },
+        ]
+      : []),
+    { key: "year", label: text("Năm", "Year"), value: year, options: options(filters.years, (value) => value) },
+    {
+      key: "tier",
+      label: text("Hạng giải", "Tier"),
+      value: tier,
+      options: options(filters.tiers, tierName, (value) => (
+        <TierEmblem tier={value} size={18} label={tierName(value)} />
+      )),
+    },
+    {
+      key: "kind",
+      label: text("Loại giải", "Event type"),
+      value: kind,
+      options: options(filters.kinds, (value) => text(...COMPETITION_KIND_NAMES[value as CompetitionKind])),
+    },
+    ...(scheduled
+      ? []
+      : [
+          {
+            key: "status",
+            label: text("Trạng thái giải", "Tournament status"),
+            value: status,
+            options: options(
+              filters.statuses,
+              (value) => competitionStatusLabels()[value as CompetitionStatus] ?? value,
+            ),
+          },
+        ]),
+  ]
+  const shown = scheduled ? schedule.fixtureCount : visible.length
+  const total = shown.toLocaleString(languageTag)
   return (
-    <div className="competition-filters">
-      <label className="stream-search competition-search">
-        <StreamIcon name="search" size={16} />
-        <input
-          aria-label={
-            scheduled
-              ? text("Tìm trận đấu theo đội hoặc giải", "Search matches by team or tournament")
-              : text("Tìm giải đấu", "Search tournaments")
-          }
-          placeholder={
-            scheduled
-              ? text("Tìm đội, giải đấu…", "Search teams, tournaments…")
-              : text("Tìm giải đấu, hệ thống giải…", "Search tournaments, circuits…")
-          }
-          value={search}
-          onChange={(event) => update("q", event.target.value)}
+    <div className="tn-filter-bar">
+      <div className="competition-filters">
+        <RegionChips
+          regions={filters.regions}
+          value={region}
+          onChange={(value) => update("region", value)}
+          className="competition-regions"
+          counted={!scheduled}
         />
-      </label>
-      {scheduled && schedule.switchable && layout === "wide" && (
-        <ScheduleScopePills
-          value={schedule.scope}
-          onChange={(value) => update("scope", value)}
-          className="competition-scope"
+        <FilterMenu
+          title={scheduled ? text("Lọc trận đấu", "Filter matches") : text("Lọc giải đấu", "Filter tournaments")}
+          groups={groups}
+          result={
+            scheduled
+              ? text(`${total} trận`, `${total} ${shown === 1 ? "match" : "matches"}`)
+              : text(`${total} giải đấu`, `${total} ${shown === 1 ? "tournament" : "tournaments"}`)
+          }
+          onChange={update}
+          onReset={clearFilters}
+          className="competition-filter-menu"
         />
-      )}
-      {layout === "compact" ? (
-        (!scheduled || schedule.selects > 0) && (
-          <PublicFilterSheet
-            title={scheduled ? text("Lọc trận đấu", "Filter matches") : text("Lọc giải đấu", "Filter tournaments")}
-            triggerLabel={text("Lọc", "Filter")}
-            count={scheduled ? [region, year, tier].filter((value) => value !== "all").length : active}
-            resetLabel={text("Xóa lọc", "Clear filters")}
-            onReset={clearFilters}
-            resultLabel={
-              scheduled
-                ? text(
-                    `Xem ${schedule.fixtureCount.toLocaleString(languageTag)} trận`,
-                    `Show ${schedule.fixtureCount.toLocaleString(languageTag)} ${schedule.fixtureCount === 1 ? "match" : "matches"}`,
-                  )
-                : text(
-                    `Xem ${count(visible.length)} giải đấu`,
-                    `Show ${count(visible.length)} ${visible.length === 1 ? "tournament" : "tournaments"}`,
-                  )
-            }
-          >
-            <div className="competition-sheet-filters">{scheduled ? scheduleFilters : competitionFilters}</div>
-          </PublicFilterSheet>
-        )
-      ) : (
-        <div className="competition-filter-group">
-          {scheduled ? scheduleFilters : competitionFilters}
-          {(scheduled ? schedule.filtered : filtered) && (
-            <>
-              {!scheduled && (
-                <span className="competition-result">
-                  {text(
-                    `${count(visible.length)} giải`,
-                    `${count(visible.length)} ${visible.length === 1 ? "tournament" : "tournaments"}`,
-                  )}
-                </span>
-              )}
-              <button className="competition-clear" onClick={clearFilters}>
-                {text("Xóa bộ lọc", "Clear filters")}
-              </button>
-            </>
-          )}
-        </div>
-      )}
+      </div>
+      <FilterTokens groups={groups} onChange={update} onReset={clearFilters} />
     </div>
   )
 }

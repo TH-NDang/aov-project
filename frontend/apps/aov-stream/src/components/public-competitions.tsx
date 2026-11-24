@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from "react"
+import { useState } from "react"
 import { Link } from "react-router"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import type { CommunityProfile, CompetitionView } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
@@ -10,8 +10,6 @@ import { CompetitionCard } from "./competition-card"
 import { matchWinner } from "../lib/competition-model"
 import { MatchCard } from "./match-card"
 import { competitionMatches, type CompetitionMatch } from "../lib/match-model"
-import { communityApi } from "../lib/community-api"
-import { communityKeys } from "../lib/community-keys"
 import { competitionsFeedQuery, dayRange, profileCompetitionFilter } from "./community-ui"
 
 /**
@@ -81,30 +79,6 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
       />
     </section>
   )
-}
-
-/**
- * A team's or a player's name, linked to its page once that page is published. `children` replace the plain name
- * where the name is drawn in more than one form.
- */
-export function EntityPageLink({
-  kind,
-  id,
-  name,
-  children,
-}: {
-  kind: "TEAM" | "PLAYER"
-  id: string
-  name: string
-  children?: ReactNode
-}) {
-  const page = useQuery({
-    queryKey: communityKeys.entityPage(kind, id),
-    queryFn: () => communityApi.pageByEntity(kind, id),
-    retry: false,
-    staleTime: 60000,
-  })
-  return page.data ? <Link to={`/pages/${page.data.code}`}>{children ?? name}</Link> : <span>{children ?? name}</span>
 }
 
 /** The registry teams a page plays as in one competition: the team itself, or the squads that registered a player. */

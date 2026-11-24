@@ -1,7 +1,7 @@
 import { useState } from "react"
 import type { GameSide, Participant, PublishedGame, Selection } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink } from "../../../components/go-link"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"

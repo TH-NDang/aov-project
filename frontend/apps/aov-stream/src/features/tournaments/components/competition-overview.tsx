@@ -8,6 +8,7 @@ import type { CompetitionMatch } from "../../../lib/match-model"
 import { matchSides } from "../../../lib/match-schedule"
 import { useNow } from "../../../lib/use-now"
 import { Bracket } from "./bracket"
+import { CompetitionAbout } from "./competition-about"
 import { CompetitionAwards } from "./competition-awards"
 import { CompetitionFacts } from "./competition-facts"
 import { FinalRanking } from "./final-ranking"
@@ -137,6 +138,7 @@ export function CompetitionOverview({
           {showTable ? <CompetitionFacts view={view} wide /> : <TeamWall view={view} open={() => openTab("teams")} />}
         </div>
         <aside className="tn-overview-side">
+          <CompetitionAbout view={view} />
           {!showTable && <CompetitionFacts view={view} />}
           <FinalRanking view={view} />
           <CompetitionAwards view={view} preview={3} />

@@ -1,6 +1,5 @@
 import type { CompetitionView } from "@aov/community-contracts"
 import { competitionChampion } from "./champion-model.ts"
-import { competitionKinds } from "./competition-filters.ts"
 import { byRecency, bySoonest, competitionStatus } from "./competition-model.ts"
 import { daysUntil } from "./countdown.ts"
 
@@ -19,21 +18,6 @@ export function aheadCompetitions(views: CompetitionView[], now = Date.now()) {
   return views
     .filter((view) => rank(view) >= 0)
     .sort((a, b) => rank(a) - rank(b) || (rank(a) === 0 ? byRecency(a, b) : bySoonest(a, b)))
-}
-
-const TOP_TIERS = ["S", "A"]
-
-/**
- * The latest main events with a known champion, newest first. Events of the top tiers take the places; others only
- * fill those left over.
- */
-export function recentChampions(views: CompetitionView[], size: number) {
-  const won = views
-    .filter((view) => competitionKinds(view.content.tournament).includes("MAIN"))
-    .filter((view) => competitionStatus(view.content) === "FINISHED" && competitionChampion(view))
-    .sort(byRecency)
-  const top = won.filter((view) => TOP_TIERS.includes(view.content.tournament.tier ?? ""))
-  return (top.length >= size ? top : [...top, ...won.filter((view) => !top.includes(view))]).slice(0, size)
 }
 
 export type SeasonRow = {
@@ -63,6 +47,25 @@ export function seasonRows(views: CompetitionView[]): SeasonRow[] {
       { view, part: false },
       ...sorted.filter((item) => parentOf(item) === view.id).map((item) => ({ view: item, part: true })),
     ])
+}
+
+/** The seasons of a circuit with a known champion, newest first; the parts of a season crown none of their own. */
+export function circuitChampions(group: CircuitGroup) {
+  return group.rows
+    .filter((row) => !row.part && competitionStatus(row.view.content) === "FINISHED" && competitionChampion(row.view))
+    .map((row) => row.view)
+}
+
+/** The years a circuit spans, such as "2020–2026". */
+export function circuitYears(views: CompetitionView[]) {
+  const years = views.flatMap(({ content }) => {
+    const { year, startsOn } = content.tournament
+    const value = year ?? Number(startsOn?.slice(0, 4))
+    return value ? [value] : []
+  })
+  if (!years.length) return ""
+  const [first, last] = [Math.min(...years), Math.max(...years)]
+  return first === last ? String(first) : `${first}–${last}`
 }
 
 /** Competitions by circuit, the circuit with the newest season first; those outside any circuit close the list. */

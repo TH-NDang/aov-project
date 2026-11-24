@@ -1,10 +1,11 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router"
+import { RankBadge } from "@aov/ui/components/rank-badge"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionMatches, competitionMatchHref, type CompetitionMatch } from "../../../lib/match-model"
 import { matchSides } from "../../../lib/match-schedule"
-import { meetings, teamForm, teamRecord } from "../../../lib/standings-model"
+import { meetings, standingGroups, teamForm, teamRecord } from "../../../lib/standings-model"
 import { FormMarks } from "./form-marks"
 import "./match-compare.css"
 
@@ -15,7 +16,8 @@ const better = (a: number, b: number) => (a === b ? null : a > b ? "a" : "b")
 /** The place of a team in the table of the competition both teams stand in. */
 function places(entry: CompetitionMatch, a: string, b: string) {
   for (const table of entry.competition.content.standings) {
-    const [first, second] = [a, b].map((id) => table.rows.find((row) => row.teamId === id && row.played > 0))
+    const rows = standingGroups(entry.competition, table).flatMap((group) => group.rows)
+    const [first, second] = [a, b].map((id) => rows.find((row) => row.teamId === id && row.played > 0))
     if (first && second) return { a: first.rank, b: second.rank }
   }
   return null
@@ -38,7 +40,14 @@ export function MatchCompare({ entry }: { entry: CompetitionMatch }) {
   const met = meetings(others, a.teamId, b.teamId)
   const lines: Line[] = [
     ...(rank
-      ? [{ label: text("Thứ hạng", "Rank"), a: rank.a, b: rank.b, ahead: better(rank.b, rank.a) } satisfies Line]
+      ? [
+          {
+            label: text("Thứ hạng", "Rank"),
+            a: <RankBadge place={rank.a} />,
+            b: <RankBadge place={rank.b} />,
+            ahead: better(rank.b, rank.a),
+          } satisfies Line,
+        ]
       : []),
     {
       label: text("Trận thắng – thua", "Matches won – lost"),

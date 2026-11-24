@@ -18,6 +18,10 @@
   flex: none;
   object-fit: contain;
 }
+/* A logo on paper of its own keeps clear of the paper's edge. */
+:is(.tn-event-logo, .tn-coming-logo)[data-single] {
+  padding: 10px;
+}
 .tn-event-text {
   display: grid;
   min-width: 0;
@@ -186,10 +190,6 @@
   height: 88px;
   object-fit: contain;
 }
-/* A logo without a version for dark backgrounds may be dark itself: a pale rim keeps it readable on the stage. */
-:is(.tn-event-logo, .tn-coming-logo)[data-rim] {
-  filter: drop-shadow(0 0 1px rgb(255 255 255 / 75%)) drop-shadow(0 0 14px rgb(255 255 255 / 26%));
-}
 .tn-coming-text {
   display: grid;
   min-width: 0;
@@ -267,4 +267,15 @@
     font-size: 15px;
     line-height: 20px;
   }
+}
+/* What an event is at a glance: its state, its tier and where it is played. */
+.tn-event-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.tn-coming-text > b {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }

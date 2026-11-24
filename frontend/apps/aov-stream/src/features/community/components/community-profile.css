@@ -507,9 +507,11 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.pf-row-mark[data-mark="champion"] {
-  background: var(--hub-accent-soft);
-  color: var(--hub-accent-strong);
+/* The first three places are the medals every table of the app uses. */
+.pf-row-mark[data-mark="medal"] {
+  margin-top: 4px;
+  padding: 0;
+  background: none;
 }
 .pf-row-mark[data-mark="award"] {
   color: var(--hub-muted);

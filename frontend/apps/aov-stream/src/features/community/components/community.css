@@ -396,6 +396,16 @@
   background: var(--hub-plate);
   object-fit: contain;
 }
+.cp-avatar-logo {
+  display: inline-grid;
+  overflow: hidden;
+}
+.cp-avatar-logo > img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
 .cp-initial {
   display: flex;
   align-items: center;
@@ -1380,8 +1390,36 @@
     :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select) {
     font-size: 16px;
   }
+  /* Pinned under the app's row, and thinner with it; the height given up stays as a margin. */
+  .cp-tabs {
+    position: sticky;
+    z-index: 20;
+    top: var(--hub-pinned);
+    overscroll-behavior-x: contain;
+    background: var(--hub-bg);
+  }
   .cp-tabs button {
     height: 44px;
+    transition:
+      height 160ms,
+      background-color 160ms,
+      color 160ms;
+  }
+  .hub-shell[data-scrolled] .cp-tabs button {
+    height: 36px;
+    font-size: 13px;
+  }
+  .hub-shell[data-scrolled] .cp-tabs {
+    margin-bottom: 20px;
+  }
+  .hub-shell[data-scrolled] .cp-container > .cp-tabs {
+    margin-bottom: 8px;
+  }
+  /* Inside a wrapper that pins for it. */
+  .cp-tabs[data-flush],
+  .hub-shell[data-scrolled] .cp-tabs[data-flush] {
+    position: static;
+    margin-bottom: 0;
   }
   .cp-post {
     padding: 16px 0;

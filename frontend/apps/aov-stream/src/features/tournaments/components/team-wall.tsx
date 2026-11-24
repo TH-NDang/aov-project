@@ -1,5 +1,5 @@
 import type { CompetitionView } from "@aov/community-contracts"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink } from "../../../components/go-link"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { Section } from "./section"
@@ -24,7 +24,7 @@ export function TeamWall({ view, open }: { view: CompetitionView; open: () => vo
             <li key={entrant.teamId}>
               <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.shortName || team.name} />
               <span>
-                <EntityPageLink kind="TEAM" id={entrant.teamId} name={team.name} />
+                <EntityPageLink kind="TEAM" id={entrant.teamId} name={team.name} plain />
               </span>
             </li>
           )

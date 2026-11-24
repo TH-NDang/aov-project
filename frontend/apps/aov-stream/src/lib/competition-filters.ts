@@ -2,6 +2,7 @@ import type { CompetitionView, TournamentContent } from "@aov/community-contract
 import { isEnglishLocale, marketName } from "@aov/ui/lib/locale-text"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 import { competitionStatus } from "./competition-model.ts"
+import { shortCompetitionName } from "./season-name.ts"
 
 /** What the competition directory can be narrowed by; "all" (or an empty search) leaves a filter off. */
 export type DirectoryFilter = {
@@ -59,7 +60,17 @@ export function passesFilter(view: CompetitionView, filter: DirectoryFilter, exc
   if (!needle) return true
   const { tournament, plan, circuit, organizer } = view.content
   return foldSearchText(
-    [tournament.name, plan.circuit, plan.organizer, circuit?.name, organizer?.name].filter(Boolean).join(" "),
+    [
+      tournament.name,
+      shortCompetitionName(view),
+      plan.circuit,
+      plan.organizer,
+      circuit?.name,
+      circuit?.shortName,
+      organizer?.name,
+    ]
+      .filter(Boolean)
+      .join(" "),
   ).includes(needle)
 }
 

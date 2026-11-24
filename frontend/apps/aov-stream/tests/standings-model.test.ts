@@ -95,3 +95,30 @@ test("separate pairs are no groups", () => {
 test("a team without a match in the stage is left out of its table", () => {
   assert.deepEqual(groupsOf([{ key: "x", a: "a", b: "b" }], "abz"), [[null, "1a 2b"]])
 })
+
+const level = (teamId: string, rank: number, gameWins: number, gameLosses: number) =>
+  ({ ...row(teamId, rank), tied: rank === 1, points: rank === 1 ? 9 : 8, gameWins, gameLosses }) as CompetitionStanding
+const levelTable = {
+  stageCode: "RR",
+  complete: false,
+  rows: [level("a", 1, 30, 19), level("b", 1, 32, 19), level("c", 3, 28, 18)],
+}
+const placesOf = (tieBreakers: string[]) =>
+  standingGroups(competition(league, { stages: [stage("RR", { format: "ROUND_ROBIN", tieBreakers })] }), levelTable)
+    .flatMap((group) => group.rows)
+    .map(({ teamId, rank, tied }) => [teamId, rank, tied])
+
+test("teams level on points are told apart by their games where the plan records no rule", () => {
+  assert.deepEqual(placesOf([]), [
+    ["b", 1, false],
+    ["a", 2, false],
+    ["c", 3, false],
+  ])
+})
+
+test("teams a recorded rule leaves level stay level", () => {
+  assert.deepEqual(placesOf(["GAME_DIFF"]).slice(0, 2), [
+    ["a", 1, true],
+    ["b", 1, true],
+  ])
+})

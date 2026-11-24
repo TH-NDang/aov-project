@@ -24,3 +24,17 @@
     gap: 28px;
   }
 }
+/* From the list's own search to the search of everything. */
+.tn-search-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-search-all:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

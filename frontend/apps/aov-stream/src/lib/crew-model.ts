@@ -12,12 +12,12 @@ import type {
 /** The people a competition snapshot names, by page id; snapshots taken before ADR-032 have none. */
 export type People = Record<string, CompetitionPerson> | null | undefined
 
-/** Someone a competition names, as a reader meets them: `href` opens their page and is null while it is unpublished. */
-export type PersonEntry = { pageId: string; name: string; avatarUrl: string | null; href: string | null }
+/** Someone a competition names, as a reader meets them, and the page their name opens. */
+export type PersonEntry = { pageId: string; name: string; href: string }
 
 /**
- * A person of the snapshot's `people`, or null when the snapshot does not name them. A page that was not published
- * keeps the name it had and shows neither its picture nor a link.
+ * A person of the snapshot's `people`, or null when the snapshot does not name them. Their own page opens once it is
+ * published; until then the page drawn from the competitions that name them does.
  */
 export function personEntry(pageId: string, people: People): PersonEntry | null {
   const person = people?.[pageId]
@@ -27,8 +27,7 @@ export function personEntry(pageId: string, people: People): PersonEntry | null 
   return {
     pageId,
     name,
-    avatarUrl: linked ? person.avatarUrl || null : null,
-    href: linked ? `/pages/${encodeURIComponent(person.code!)}` : null,
+    href: linked ? `/pages/${encodeURIComponent(person.code!)}` : `/people/${encodeURIComponent(pageId)}`,
   }
 }
 

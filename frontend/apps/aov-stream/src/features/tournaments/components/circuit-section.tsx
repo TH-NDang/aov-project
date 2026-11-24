@@ -1,32 +1,38 @@
 import { useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { Link } from "react-router"
+import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { dayRange } from "../../../components/community-ui"
-import { CompetitionClock, CompetitionLogo, seasonName, StatusBadge } from "../../../components/competition-card"
+import { CompetitionClock, CompetitionLogo, StatusBadge } from "../../../components/competition-card"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionChampion, mostTitles } from "../../../lib/champion-model"
-import { competitionStatus } from "../../../lib/competition-model"
+import { codeName, competitionStatus, TIER_NAMES } from "../../../lib/competition-model"
 import type { CircuitGroup, SeasonRow } from "../../../lib/directory-model"
+import { seasonName } from "../../../lib/season-name"
 import "./circuit-section.css"
 
 /** Seasons a circuit shows before the rest fold away. */
 const PREVIEW = { wide: 6, compact: 4 }
 
 /** One season on a line: what it was, who won it and against whom; a season not over yet says where it stands. */
-function Season({ row, within }: { row: SeasonRow; within: string | null }) {
+export function Season({ row, within }: { row: SeasonRow; within: string | null }) {
   const { text } = useStreamLocale()
   const { view, part } = row
   const { tournament, plan } = view.content
   const won = competitionChampion(view)
   const status = competitionStatus(view.content)
+  const tier = codeName(TIER_NAMES, tournament.tier, text)
   return (
     <Link className="tn-season" to={`/competitions/${view.id}`} data-part={part || undefined}>
       <CompetitionLogo name={tournament.name} url={tournament.logoUrl} darkUrl={tournament.logoDarkUrl} />
       <span className="tn-season-name">
-        <strong title={tournament.name}>{seasonName(tournament.name, within)}</strong>
+        <strong title={tournament.name}>
+          {seasonName(tournament.name, within)}
+          {tier && <TierEmblem tier={tournament.tier} size={18} label={tier} />}
+        </strong>
         <span>{dayRange(tournament.startsOn, tournament.endsOn, text("Chờ lịch", "To be scheduled"))}</span>
       </span>
       {won ? (

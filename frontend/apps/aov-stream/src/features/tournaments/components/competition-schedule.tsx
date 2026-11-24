@@ -1,18 +1,13 @@
 import { useSearchParams } from "react-router"
-import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useUserTimeZone } from "@aov/ui/lib/time-zone"
+import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { stageName } from "../../../lib/match-labels"
 import type { CompetitionMatch } from "../../../lib/match-model"
 import { knownScheduleDay, matchSides, scheduleDay, scheduleParts } from "../../../lib/match-schedule"
 import { DayStrip } from "./day-strip"
-import {
-  FilterSelect,
-  ScheduleFilterSheet,
-  scheduleDayLabel,
-  scheduleScope,
-  ScheduleScopePills,
-} from "./schedule-controls"
+import { FilterMenu, FilterTokens, type FilterGroup } from "./filter-menu"
+import { scheduleDayLabel, scheduleScope, ScheduleScopePills, type FilterOption } from "./schedule-controls"
 import { ScheduleEmpty, ScheduleList, ScheduleNote } from "./schedule-list"
 
 const FILTER_KEYS = ["scope", "stage", "team", "date"]
@@ -62,39 +57,34 @@ function useScheduleFilters(entries: CompetitionMatch[]) {
  */
 export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }) {
   const { text, languageTag } = useStreamLocale()
-  const layout = usePageLayout()
   const filters = useScheduleFilters(entries)
   const { update, clear, stages, stage, teams, teamIds, team, day, switchable, scope, narrowed, shown } = filters
-  const selects = (
-    <>
-      {stages.length > 1 && (
-        <FilterSelect
-          label={text("Giai đoạn", "Stage")}
-          value={stage}
-          onChange={(value) => update("stage", value)}
-          all={text("Mọi giai đoạn", "All stages")}
-          options={stages.map((item) => [item.code, stageName(item.name)])}
-        />
-      )}
-      {teamIds.length > 2 && (
-        <FilterSelect
-          label={text("Đội", "Team")}
-          value={team}
-          onChange={(value) => update("team", value)}
-          all={text("Mọi đội", "All teams")}
-          options={teamIds.map((id) => [id, teams[id]!.name])}
-        />
-      )}
-    </>
-  )
-  const selectCount = Number(stages.length > 1) + Number(teamIds.length > 2)
+  const groups: FilterGroup[] = [
+    {
+      key: "stage",
+      label: text("Giai đoạn", "Stage"),
+      value: stage,
+      options: stages.map((item): FilterOption => [item.code, stageName(item.name)]),
+    },
+    {
+      key: "team",
+      label: text("Đội", "Team"),
+      value: team,
+      options:
+        teamIds.length > 2
+          ? teamIds.map((id): FilterOption => {
+              const { name, shortName, logoUrl, logoDarkUrl } = teams[id]!
+              return [id, name, <StreamImage src={logoUrl} darkSrc={logoDarkUrl} logo name={shortName || name} />]
+            })
+          : [],
+    },
+  ]
   const active = Number(stage !== "all") + Number(team !== "all")
   const total = (scope === "results" ? 0 : shown.upcoming.length) + (scope === "upcoming" ? 0 : shown.results.length)
-  // On a narrow screen the switch takes the row and the selects fold away; without the switch they fit as they are.
-  const folded = layout === "compact" && switchable
+  const counted = total.toLocaleString(languageTag)
   return (
     <div className="tn-schedule-view">
-      {(switchable || selectCount > 0) && (
+      {(switchable || stages.length > 1 || teamIds.length > 2) && (
         <div className="tn-schedule-bar">
           {switchable && (
             <ScheduleScopePills
@@ -103,21 +93,16 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
               className="tn-schedule-scope"
             />
           )}
-          {selectCount > 0 &&
-            (folded ? (
-              <ScheduleFilterSheet count={active} total={total} onReset={clear}>
-                {selects}
-              </ScheduleFilterSheet>
-            ) : (
-              <div className="competition-filter-group">
-                {selects}
-                {active > 0 && (
-                  <button type="button" className="competition-clear" onClick={clear}>
-                    {text("Xóa bộ lọc", "Clear filters")}
-                  </button>
-                )}
-              </div>
-            ))}
+          <FilterMenu
+            title={text("Lọc trận đấu", "Filter matches")}
+            groups={groups}
+            result={text(`${counted} trận`, `${counted} ${total === 1 ? "match" : "matches"}`)}
+            onChange={update}
+            onReset={clear}
+            className={switchable ? "tn-schedule-filter" : undefined}
+            align={switchable ? "end" : "start"}
+          />
+          <FilterTokens groups={groups} onChange={update} onReset={clear} />
         </div>
       )}
       <DayStrip entries={narrowed} value={day} onChange={(value) => update("date", value)} />
@@ -127,12 +112,7 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
         results={shown.results}
         scope={scope}
         listKey={`${stage}:${team}:${day}`}
-        empty={
-          <ScheduleEmpty
-            filtered={active > 0 || !!day || scope !== "all"}
-            onClear={(active > 0 && !folded) || day ? undefined : clear}
-          />
-        }
+        empty={<ScheduleEmpty filtered={active > 0 || !!day || scope !== "all"} onClear={day ? undefined : clear} />}
       />
     </div>
   )

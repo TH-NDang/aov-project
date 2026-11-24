@@ -1,17 +1,45 @@
 /* The page directory: filters, then one compact card per page. The cards also list pages to follow on the home feed. */
 .pg-filters {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 16px;
 }
-.pg-filters .hub-pills > .pg-chip-skeleton {
-  width: 104px;
-  height: 32px;
-  flex: none;
-  border-radius: var(--aov-radius-pill);
+.pg-filters > :first-child {
+  min-width: 0;
+  flex: 1;
 }
-.pg-filters .hub-pills > .pg-chip-skeleton:first-child {
-  width: 120px;
+.pg-region-button {
+  display: inline-flex;
+  height: 32px;
+  max-width: 50%;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pg-region-button > span:not([class]) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pg-region-button:is(:hover, [data-state="open"]) {
+  border-color: var(--hub-accent-border);
+  background: var(--hub-hover);
+}
+.pg-region-button[data-active] {
+  border-color: var(--hub-accent);
+}
+.pg-region-button > svg {
+  flex: none;
+  transform: rotate(90deg);
 }
 .pg-region-menu {
   min-width: 220px;
@@ -19,10 +47,8 @@
   padding: 6px;
   overflow-y: auto;
 }
-.pg-region-menu .hub-menu-item {
-  justify-content: space-between;
-}
 .pg-region-menu .hub-menu-item > small {
+  margin-left: auto;
   color: var(--hub-muted);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
@@ -31,8 +57,11 @@
   color: var(--hub-accent-strong);
   font-weight: 600;
 }
-.pg-region-more > svg {
-  transform: rotate(90deg);
+.pg-region-wait {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--hub-muted);
+  font-size: 13px;
 }
 
 /* A short list (a search, a small region) stretches its cards across the row instead of leaving empty columns. */

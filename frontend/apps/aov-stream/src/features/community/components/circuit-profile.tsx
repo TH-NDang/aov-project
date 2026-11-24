@@ -7,7 +7,8 @@ import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
-import { competitionsFeedQuery, formatDay, regionName } from "../../../components/community-ui"
+import { competitionsFeedQuery, formatDay, regionKey, regionName } from "../../../components/community-ui"
+import { RegionMark } from "../../../components/region-mark"
 import { ProfileHead } from "./profile-head"
 import { LiveBlock } from "./profile-home"
 import { ProfileOptions } from "./profile-options"
@@ -52,7 +53,12 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
         kicker={
           <>
             <Link to="/explore?kind=CIRCUIT">{text("Hệ thống giải", "Tournament circuit")}</Link>
-            {region && ` · ${region}`}
+            {region && (
+              <>
+                {" · "}
+                <RegionMark code={regionKey(content.country)} size={16} /> {region}
+              </>
+            )}
           </>
         }
         facts={[

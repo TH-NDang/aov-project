@@ -1,0 +1,207 @@
+/* The pages of a team and of a player: a head on a stage, then their squad, their matches and their competitions. */
+.pt-page {
+  display: grid;
+  min-width: 0;
+  gap: 28px;
+}
+.pt-head {
+  --stream-image-size: 112px;
+  --stream-image-radius: 20px;
+  --stage-light-left: 8%;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 28px 32px;
+}
+.pt-head-text {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.pt-head-text > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+}
+.pt-head-text > p > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pt-head-text > h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 40px;
+  overflow-wrap: anywhere;
+}
+.pt-head-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin: 4px 0 0;
+}
+.pt-head-facts > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.pt-head-facts dt {
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+.pt-head-facts dd {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.pt-head-team {
+  --stream-image-size: 22px;
+  --stream-image-radius: 5px;
+  gap: 8px;
+}
+.pt-part {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+.pt-seasons {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  list-style: none;
+}
+.pt-season {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 44px 40px minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  transition: background-color 120ms;
+}
+.pt-season[data-placeless] {
+  grid-template-columns: 40px minmax(0, 1fr) auto 16px;
+}
+.pt-season + .pt-season {
+  border-top: 1px solid var(--hub-border);
+}
+.pt-season:hover {
+  background: var(--hub-hover);
+}
+.pt-season > svg {
+  color: var(--hub-muted);
+}
+.pt-season-place {
+  color: var(--hub-muted);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+.pt-season-name {
+  display: grid;
+  min-width: 0;
+}
+/* The whole line opens the competition; what stands beside it keeps its own links above. */
+.pt-season-name > a {
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.pt-season-name > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.pt-season-name > small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.pt-season-more {
+  --stream-image-size: 28px;
+  --stream-image-radius: 6px;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 10px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.pt-season-more > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.pt-award {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-medal-gold) 16%, transparent);
+  color: var(--hub-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+@media (max-width: 899.98px) {
+  .pt-page {
+    gap: 24px;
+  }
+  .pt-head {
+    --stream-image-size: 72px;
+    --stream-image-radius: 14px;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 16px;
+  }
+  .pt-head-text > h1 {
+    font-size: 24px;
+    line-height: 30px;
+  }
+  .pt-head-facts dd {
+    font-size: 16px;
+  }
+  .pt-season {
+    grid-template-columns: 36px 36px minmax(0, 1fr) 14px;
+    gap: 4px 10px;
+    padding: 10px 12px;
+  }
+  .pt-season > svg {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .pt-season-more {
+    grid-column: 3;
+    justify-content: flex-start;
+  }
+  .pt-season[data-placeless] {
+    grid-template-columns: 36px minmax(0, 1fr) 14px;
+  }
+  .pt-season[data-placeless] > svg {
+    grid-column: 3;
+  }
+  .pt-season[data-placeless] > .pt-season-more {
+    grid-column: 2;
+  }
+}

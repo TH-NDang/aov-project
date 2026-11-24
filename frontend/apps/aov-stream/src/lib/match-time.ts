@@ -19,13 +19,17 @@ const NEAR = {
   "1": ["Ngày mai", "Tomorrow"],
 } as const
 
+/** The hour a match starts, for a list that already names the day. */
+export const matchClock = (at: number, timeZone: string, locale = "vi-VN") =>
+  formatInZone(at, timeZone, { hour: "2-digit", minute: "2-digit" }, locale)
+
 /**
  * When a match starts, in the fewest words that place it: the day by name when it is next to today, the weekday and
  * the date otherwise, and the year only when it is another one.
  */
 export function matchTimeText(at: number, timeZone: string, now: number, locale = "vi-VN") {
   const english = locale.startsWith("en")
-  const clock = formatInZone(at, timeZone, { hour: "2-digit", minute: "2-digit" }, locale)
+  const clock = matchClock(at, timeZone, locale)
   const near = NEAR[String(calendarDaysBetween(now, at, timeZone)) as keyof typeof NEAR]
   if (near) return `${clock} ${(english ? near[1] : near[0]).toLocaleLowerCase(locale)}`
   const year = (value: number) => formatInZone(value, timeZone, { year: "numeric" }, locale)

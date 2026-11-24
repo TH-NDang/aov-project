@@ -52,6 +52,34 @@ export function meetings(entries: CompetitionMatch[], one: string, other: string
   return decidedMatches(entries, one).filter((entry) => Object.values(teamsOf(entry)).includes(other))
 }
 
+/**
+ * Rows with the teams level on points told apart by their games: the difference, then the games won. Only for a stage
+ * whose plan records no rule for it; a recorded rule has already been applied, and teams it leaves level stay level.
+ */
+function settledByGames(rows: CompetitionStanding[]): CompetitionStanding[] {
+  const difference = (row: CompetitionStanding) => row.gameWins - row.gameLosses
+  const sorted = [...rows].sort((x, y) => x.rank - y.rank || difference(y) - difference(x) || y.gameWins - x.gameWins)
+  const level = (x: CompetitionStanding | undefined, y: CompetitionStanding | undefined) =>
+    !!x && !!y && x.rank === y.rank && difference(x) === difference(y) && x.gameWins === y.gameWins
+  let rank = 0
+  return sorted.map((row, index) => {
+    if (!level(row, sorted[index - 1])) rank = index + 1
+    return { ...row, rank, tied: level(row, sorted[index - 1]) || level(row, sorted[index + 1]) }
+  })
+}
+
+/** Whether level teams of a table had to be told apart by their games, for want of a recorded rule. */
+export function ordersByGames(view: CompetitionView, table: Table) {
+  const rules = view.content.plan.stages.find((stage) => stage.code === table.stageCode)?.tieBreakers ?? []
+  return !rules.length && table.rows.some((row) => row.tied && row.played > 0)
+}
+
+/** Whether every match of a table's stage has its result; a plan may still expect matches nobody entered. */
+export function allPlayed(view: CompetitionView, table: Table) {
+  const entries = competitionMatches([view]).filter((entry) => entry.match.stageCode === table.stageCode)
+  return entries.length > 0 && entries.every((entry) => matchWinner(entry) != null)
+}
+
 export type StandingGroup = {
   /** The letter of a group the plan names, or its number; null while the stage is one table. */
   name: string | null
@@ -70,7 +98,8 @@ function groupLetter(entries: CompetitionMatch[]) {
  * as one group, ranked on its own; pairs and lone teams make no groups, and then the table stays whole. A team
  * without a match in the stage is left out once others have one.
  */
-export function standingGroups(view: CompetitionView, table: Table): StandingGroup[] {
+export function standingGroups(view: CompetitionView, source: Table): StandingGroup[] {
+  const table = ordersByGames(view, source) ? { ...source, rows: settledByGames(source.rows) } : source
   const entries = competitionMatches([view]).filter((entry) => entry.match.stageCode === table.stageCode)
   const parent = new Map<string, string>()
   const root = (team: string): string => {
@@ -94,7 +123,7 @@ export function standingGroups(view: CompetitionView, table: Table): StandingGro
   return lists
     .map(([key, rows]) => ({
       letter: groupLetter(entries.filter((entry) => root(teamsOf(entry).a!) === key)),
-      rows: rows.map((row, index) => ({ ...row, rank: index + 1 })),
+      rows: rows.map((row, index) => ({ ...row, rank: index + 1, tied: false })),
     }))
     .sort((x, y) => (x.letter ?? "").localeCompare(y.letter ?? ""))
     .map(({ letter, rows }, index) => ({ name: letter ?? String(index + 1), rows }))

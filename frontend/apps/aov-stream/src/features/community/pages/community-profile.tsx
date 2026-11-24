@@ -12,6 +12,7 @@ import {
 } from "@aov/community-contracts"
 import { usePageLayout, type PageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamShell } from "../../../components/stream-shell"
+import { RegionMark } from "../../../components/region-mark"
 import { StreamIcon } from "../../../components/stream-icon"
 import { streamText, useStreamLocale } from "../../../components/stream-locale"
 import { CompetitionCard } from "../../../components/competition-card"
@@ -27,6 +28,7 @@ import {
   personRoleEnglish,
   profileCompetitionFilter,
   profileKindEnglish,
+  regionKey,
   regionName,
 } from "../../../components/community-ui"
 import { CircuitProfile } from "../components/circuit-profile"
@@ -238,7 +240,15 @@ function Profile({ profile }: { profile: CommunityProfile }) {
       <title>{`${content.name} — AOV Stream`}</title>
       <ProfileHead
         profile={profile}
-        kicker={region ? `${kind} · ${region}` : kind}
+        kicker={
+          region ? (
+            <>
+              {kind} · <RegionMark code={regionKey(content.country)} size={16} /> {region}
+            </>
+          ) : (
+            kind
+          )
+        }
         lines={
           individual ? (
             <ProfileTeams pageId={profile.id} />

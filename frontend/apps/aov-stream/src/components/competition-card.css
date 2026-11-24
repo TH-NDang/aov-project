@@ -9,15 +9,14 @@
   overflow: hidden;
   border-radius: var(--hub-radius-sm);
 }
+.tn-logo:not(:has(> b)) {
+  background: var(--hub-plate);
+}
 .tn-logo > img {
   width: 100%;
   height: 100%;
   padding: 8%;
   object-fit: contain;
-}
-/* A logo without a version for dark backgrounds may be dark itself: a pale rim keeps it readable on the tile. */
-.tn-logo > img[data-rim] {
-  filter: drop-shadow(0 0 1px rgb(255 255 255 / 80%)) drop-shadow(0 0 6px rgb(255 255 255 / 30%));
 }
 /* Without a logo, the monogram over the colour drawn from the name. */
 .tn-logo > b {
@@ -39,15 +38,6 @@
 }
 .tn-logo[data-size="head"] > b {
   font-size: 34px;
-}
-.tn-logo[data-light] {
-  background: rgb(255 255 255 / 96%);
-}
-.tn-logo[data-light] > img {
-  padding: 10%;
-}
-.tn-logo[data-light] > b {
-  color: var(--aov-stream-ink);
 }
 
 .tn-card-grid {
@@ -86,6 +76,10 @@
   -webkit-line-clamp: 2;
 }
 .tn-card-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
   color: var(--hub-muted);
   font-size: 13px;
   line-height: 18px;
