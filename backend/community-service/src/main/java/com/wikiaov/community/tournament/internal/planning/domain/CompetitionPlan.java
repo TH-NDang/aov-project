@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.planning.domain;
 import com.wikiaov.community.tournament.internal.domain.MatchTitle;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -176,6 +177,26 @@ public record CompetitionPlan(
     public boolean repeatPicksAllowed(String stageCode) {
         return stages.stream()
                 .anyMatch(stage -> stage.code().equals(stageCode) && stage.draftRule() == DraftRule.STANDARD);
+    }
+
+    /**
+     * The patch line of a stage in effect on {@code day}: a line holds from its release day until the next line of
+     * the stage. A day before the first dated line falls outside every line. A stage with a single undated line plays
+     * all of its games on that line.
+     */
+    public @Nullable PatchLine patchLineAt(String stageCode, LocalDate day) {
+        var stage = stages.stream().filter(candidate -> candidate.code().equals(stageCode)).findFirst().orElse(null);
+        if (stage == null || stage.patches().isEmpty()) {
+            return null;
+        }
+
+        if (stage.patches().size() == 1 && stage.patches().getFirst().releasedOn() == null) {
+            return stage.patches().getFirst();
+        }
+        return stage.patches().stream()
+                .filter(line -> line.releasedOn() != null && !line.releasedOn().isAfter(day))
+                .max(Comparator.comparing(PatchLine::releasedOn))
+                .orElse(null);
     }
 
     public static CompetitionPlan empty() {

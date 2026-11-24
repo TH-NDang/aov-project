@@ -96,7 +96,8 @@ public class WikiCatalogClient implements WikiCatalogSource {
     }
 
     private static Patch patch(Map<String, Object> patch) {
-        return new Patch(uuid(patch.get("id")), string(patch.get("code")), string(patch.get("title")),
+        return new Patch(uuid(patch.get("id")), uuid(patch.get("patchId")), string(patch.get("code")),
+                string(patch.get("title")),
                 uuid(patch.get("rulesetId")), number(patch.get("ordinal")));
     }
 

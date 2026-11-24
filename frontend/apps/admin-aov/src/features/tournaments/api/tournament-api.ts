@@ -33,6 +33,30 @@ export type RecordKind = keyof TournamentRecords
 type Request = <T>(path: string, init?: RequestInit) => Promise<T>
 type CatalogScope = Pick<GameContent, "region" | "locale" | "seasonId" | "patchVariantId" | "includeUnscoped">
 
+/**
+ * Where a game's season and patch come from (spec 04, patch ranges): the game itself (GAME), the patch line of its
+ * stage in effect on the day it was played (STAGE), or nothing (NONE). `patchId` is a Wiki patch, which the catalog
+ * resolves to the game's market.
+ */
+export type GamePatchScope = {
+  gameId: string
+  source: "GAME" | "STAGE" | "NONE"
+  seasonId?: string | null
+  patchId?: string | null
+  patchVariantId?: string | null
+  stageCode?: string | null
+  playedOn?: string | null
+  lineLabel?: string | null
+  lineName?: string | null
+  lineReleasedOn?: string | null
+}
+
+/** The scope the catalog of a game is read in: the line of its stage when the game names no patch of its own. */
+export function catalogScopeOf<T extends CatalogScope>(content: T, scope?: GamePatchScope): T {
+  if (scope?.source !== "STAGE" || content.seasonId || content.patchVariantId) return content
+  return { ...content, seasonId: scope.seasonId ?? null, patchVariantId: scope.patchId ?? null }
+}
+
 const all = ["community", "tournaments"] as const
 /**
  * Every cache key of the tournament records and their views. All of them start with `all`, so one invalidation after a
@@ -50,6 +74,9 @@ export const tournamentKeys = {
   one: (kind: RecordKind, actorKey: string, id: string | null) => [...all, kind, actorKey, "one", id] as const,
   /** The games of one series, or every game when no series is named. */
   seriesGames: (actorKey: string, seriesId?: string) => [...all, "games", actorKey, seriesId ?? "*"] as const,
+  /** The season and patch of each game of a tournament; under "games", so a saved game refreshes it. */
+  gamePatches: (actorKey: string, tournamentId: string) =>
+    [...all, "games", actorKey, "patches", tournamentId] as const,
   teamRosters: (actorKey: string, teamId: string, tournamentId: string) =>
     [...all, "roster-memberships", actorKey, teamId, tournamentId] as const,
   stats: (actorKey: string) => [...all, "tournament-stats", actorKey] as const,
@@ -246,6 +273,8 @@ export function createTournamentApi(request: Request = communityRequest) {
       request<PageSlice<LinkMention>>(withQuery("/admin/link-review", { kind, page, size: 50 }), { signal }),
     /** How many rows each kind has, those with none included. */
     linkReviewFacets: (signal?: AbortSignal) => request<LinkMentionCount[]>("/admin/link-review/facets", { signal }),
+    gamePatches: (tournamentId: string, signal?: AbortSignal) =>
+      request<GamePatchScope[]>(`/admin/tournaments/${encodeURIComponent(tournamentId)}/game-patches`, { signal }),
     catalog: (
       scope: Pick<GameContent, "region" | "locale" | "seasonId" | "patchVariantId" | "includeUnscoped">,
       signal?: AbortSignal,

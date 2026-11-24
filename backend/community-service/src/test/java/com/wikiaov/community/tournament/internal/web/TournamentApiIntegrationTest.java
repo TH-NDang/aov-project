@@ -1280,6 +1280,19 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void eachGameSaysWhereItsPatchComesFrom() throws Exception {
+        var fixture = fixture();
+        var game = create("games", fixture.game());
+
+        mvc.perform(authorized(get(ADMIN + "/tournaments/" + fixture.tournamentId() + "/game-patches")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].gameId").value(id(game).toString()))
+                .andExpect(jsonPath("$[0].source").value("NONE"));
+        mvc.perform(authorized(get(ADMIN + "/tournaments/" + fixture.tournamentId() + "/game-patches")
+                .param("page", "0"))).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void mediaRetirementProtectsTrashAndPreventsReusingDeletedImageUrls() throws Exception {
         UUID asset = UUID.randomUUID();
         String image = "https://images.example/assets/" + asset + "/" + UUID.randomUUID() + ".png";

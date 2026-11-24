@@ -34,7 +34,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
 import { initialGame } from "@/features/tournaments/model/tournament-model"
 import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
-import { useGameCatalog, useGames, useRecords, useRosters } from "../data/use-esports-data"
+import { useGameCatalog, useGamePatches, useGames, useRecords, useRosters } from "../data/use-esports-data"
 import { useTournamentView } from "../data/use-tournament-view"
 import { useSeriesVideo } from "../data/series-video"
 import { WikiReferences } from "./wiki-references"
@@ -356,7 +356,8 @@ function MatchViewer({
   const focusedEntry = games.find((entry) => entry.id === focused?.gameId)!
   const gameAt = focused ? chapterClock(focused, at) : 0
 
-  const catalog = useGameCatalog(focusedEntry?.content)
+  const patches = useGamePatches(series.content.tournamentId)
+  const catalog = useGameCatalog(focusedEntry?.content, patches.data?.get(focusedEntry?.id ?? ""))
   const items = catalog.data?.items ?? NO_ITEMS
   const lookups = useMemo(() => itemLookups(items), [items])
   const views = useMemo(

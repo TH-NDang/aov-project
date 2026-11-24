@@ -43,8 +43,10 @@ public interface WikiCatalogSource {
         }
     }
 
+    /** One market's release of a patch: {@code id} is the release (patch variant), {@code patchId} the patch. */
     record Patch(
             @Nullable UUID id,
+            @Nullable UUID patchId,
             @Nullable String code,
             @Nullable String title,
             @Nullable UUID rulesetId,

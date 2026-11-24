@@ -21,6 +21,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.games.application.GamePatchScopes.PatchScope;
 import com.wikiaov.community.tournament.internal.registry.application.PlayerMerge;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -103,6 +104,10 @@ public interface TournamentAdminApi {
 
     @Operation(operationId = "tournamentAdminApi_tournamentParts", summary = "List the parts of main events")
     List<TournamentPart> tournamentParts(UUID parentId, @Parameter(hidden = true) HttpServletRequest request);
+
+    @Operation(operationId = "tournamentAdminApi_gamePatches", summary = "List the season and patch of each game", description = "A game naming its own season or patch keeps it (GAME); otherwise the patch line of its "
+            + "stage in effect on the day it was played stands for it (STAGE), or none does (NONE).")
+    List<PatchScope> gamePatches(UUID id, @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "tournamentAdminApi_getTournament", summary = "Read a tournament")
     View<Tournament> getTournament(UUID id);

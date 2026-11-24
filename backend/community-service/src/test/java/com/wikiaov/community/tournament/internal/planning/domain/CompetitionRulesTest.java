@@ -119,6 +119,36 @@ class CompetitionRulesTest {
     }
 
     @Test
+    void aPatchLineHoldsFromItsReleaseDayUntilTheNextLineOfTheStage() {
+        var first = new PatchLine("Week 1", LocalDate.of(2026, 8, 13), null, null, null, null, null, null);
+        var second = new PatchLine("Week 2-4", LocalDate.of(2026, 8, 27), null, UUID.randomUUID(), null, null, null,
+                null);
+        var content = plan(entrants(2), ruled(null, List.of(second, first)), List.of());
+
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 13))).isEqualTo(first);
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 26))).isEqualTo(first);
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 27))).isEqualTo(second);
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 10, 1))).isEqualTo(second);
+    }
+
+    @Test
+    void aDayBeforeTheFirstLineOrAnUnknownStageHasNoPatchLine() {
+        var first = new PatchLine("Week 1", LocalDate.of(2026, 8, 13), null, null, null, null, null, null);
+        var content = plan(entrants(2), ruled(null, List.of(first)), List.of());
+
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 12))).isNull();
+        assertThat(content.patchLineAt("PLAYOFFS", LocalDate.of(2026, 8, 20))).isNull();
+    }
+
+    @Test
+    void aSingleUndatedLineCoversTheWholeStage() {
+        var only = new PatchLine("Playoffs", null, null, UUID.randomUUID(), null, null, null, null);
+        var content = plan(entrants(2), ruled(null, List.of(only)), List.of());
+
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2020, 1, 1))).isEqualTo(only);
+    }
+
+    @Test
     void bracketResolvesWinnerAndLoserSlotsWithoutInventingTeams() {
         var entries = entrants(6);
         var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", null, null, null,

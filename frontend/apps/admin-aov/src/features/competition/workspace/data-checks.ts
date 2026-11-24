@@ -9,6 +9,7 @@ import type {
   TeamContent,
 } from "@aov/community-contracts"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import type { GamePatchScope } from "@/features/tournaments/api/tournament-api"
 
 /**
  * A data fault Admin can see in one tournament, with what its fix needs (spec 04, the data check panel). Each kind is
@@ -37,9 +38,10 @@ export type DataIssue =
       rosterRows: DocumentView<RosterMembershipContent>[]
     }
   | { kind: "UNLINKED_MVP"; key: string; games: number }
+  | { kind: "GAMES_OUTSIDE_PATCH_RANGE"; key: string; games: number; firstLineOn?: string }
 
 export type DataCheckInput = {
-  plan: Pick<CompetitionPlan, "entrants">
+  plan: Pick<CompetitionPlan, "entrants"> & { stages?: Pick<CompetitionPlan["stages"][number], "patches">[] }
   staff: readonly StaffMember[]
   rosters: readonly DocumentView<RosterMembershipContent>[]
   series: readonly DocumentView<SeriesContent>[]
@@ -48,6 +50,8 @@ export type DataCheckInput = {
   teams: Record<string, TeamContent | undefined>
   /** Players by id, at least everyone on a roster of the tournament. */
   players: ReadonlyMap<string, PlayerContent> | undefined
+  /** Where each game's patch comes from, by game id (spec 04, patch ranges). */
+  patchScopes?: ReadonlyMap<string, GamePatchScope>
 }
 
 const TEAM_WORDS =
@@ -134,6 +138,20 @@ export function dataIssues(input: DataCheckInput): DataIssue[] {
     (game) => !game.content.mvpPlayerId && /(^|\n)MVP: \S/.test(game.content.note ?? ""),
   ).length
   if (unlinked) issues.push({ kind: "UNLINKED_MVP", key: "mvp", games: unlinked })
+  const lineDays = (input.plan.stages ?? [])
+    .flatMap((stage) => stage.patches ?? [])
+    .map((line) => line.releasedOn)
+    .filter((day): day is string => !!day)
+  if (lineDays.length && input.patchScopes) {
+    const outside = [...input.patchScopes.values()].filter((scope) => scope.source === "NONE").length
+    if (outside)
+      issues.push({
+        kind: "GAMES_OUTSIDE_PATCH_RANGE",
+        key: "patch-range",
+        games: outside,
+        firstLineOn: [...lineDays].sort()[0],
+      })
+  }
   return issues
 }
 

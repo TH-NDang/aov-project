@@ -13,6 +13,8 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { dataIssues, staffMovedTo, type DataIssue } from "./data-checks"
 import { Panel, type Workspace } from "./parts"
+import { useGamePatches } from "@/features/esports/data/use-esports-data"
+import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { useRosterPlayers } from "./use-roster-players"
 
 /**
@@ -23,6 +25,7 @@ export function DataChecksPanel({ ws, record }: { ws: Workspace; record?: Docume
   const client = useQueryClient()
   const staff = record?.content.staff ?? []
   const players = useRosterPlayers(ws.entry.id, ws.access.actorKey, ws.rosters.length > 0)
+  const patchScopes = useGamePatches(ws.entry.id)
   const unknownTeams = [...new Set(staff.map((line) => line.teamId))].filter((id) => !ws.teams[id])
   const extraTeams = useQueries({
     queries: unknownTeams.map((id) => ({
@@ -46,6 +49,7 @@ export function DataChecksPanel({ ws, record }: { ws: Workspace; record?: Docume
     games: ws.games,
     teams,
     players: players.data,
+    patchScopes: patchScopes.data,
   })
   const refresh = () => client.invalidateQueries({ queryKey: tournamentKeys.all })
   const fix = useMutation({
@@ -172,6 +176,19 @@ export function DataChecksPanel({ ws, record }: { ws: Workspace; record?: Docume
                       Mở đội hình
                     </Button>
                   )}
+                </>
+              )}
+              {issue.kind === "GAMES_OUTSIDE_PATCH_RANGE" && (
+                <>
+                  <IssueText
+                    title="Ván ngoài phạm vi patch"
+                    detail={`${issue.games} ván không thuộc dòng phiên bản nào${
+                      issue.firstLineOn ? ` (dòng đầu tiên từ ${formatCalendarDate(issue.firstLineOn)})` : ""
+                    }. Sửa các dòng phiên bản của giai đoạn, hoặc ghi patch riêng cho ván.`}
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => ws.go("format")}>
+                    Mở thể thức
+                  </Button>
                 </>
               )}
               {issue.kind === "UNLINKED_MVP" && (

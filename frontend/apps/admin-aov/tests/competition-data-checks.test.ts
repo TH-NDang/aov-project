@@ -133,3 +133,27 @@ test("moving a staff line keeps the others and drops it when the target team alr
   assert.deepEqual(staffMovedTo(staff, coach("boom-vn"), "bme"), [coach("bme"), staff[1]])
   assert.deepEqual(staffMovedTo([...staff, coach("bme")], coach("boom-vn"), "bme"), [staff[1], coach("bme")])
 })
+
+test("games no patch line covers are counted once the stages have dated lines", () => {
+  const plan = {
+    entrants: [entrant("bme"), entrant("fl")],
+    stages: [
+      {
+        patches: [
+          { label: "Playoffs", releasedOn: "2026-10-15" },
+          { label: "Week 1", releasedOn: "2026-08-13" },
+        ],
+      },
+    ],
+  } as DataCheckInput["plan"]
+  const patchScopes = new Map([
+    ["g1", { gameId: "g1", source: "STAGE" as const }],
+    ["g2", { gameId: "g2", source: "NONE" as const }],
+    ["g3", { gameId: "g3", source: "GAME" as const }],
+  ])
+
+  assert.deepEqual(dataIssues(input({ plan, patchScopes })), [
+    { kind: "GAMES_OUTSIDE_PATCH_RANGE", key: "patch-range", games: 1, firstLineOn: "2026-08-13" },
+  ])
+  assert.deepEqual(dataIssues(input({ patchScopes })), [])
+})

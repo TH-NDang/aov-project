@@ -101,7 +101,10 @@ public class WikiCatalog {
                 .orElseThrow(() -> TournamentErrors.invalid("Choose a known game market."));
     }
 
-    /** The season and patch the game names; with a season only, its latest patch. */
+    /**
+     * The season and patch the game names; with a season only, its latest patch. The patch may be named by the
+     * market's release or by the Wiki patch, as a stage's patch line names it; either resolves to the release.
+     */
     private ResolvedContext context(Key key) {
         var data = source.context(key.region(), key.locale());
         Season selectedSeason = null;
@@ -109,7 +112,7 @@ public class WikiCatalog {
         for (var season : data.seasons()) {
             for (var patch : season.patches()) {
                 boolean selected = key.patch() != null
-                        ? key.patch().equals(patch.id())
+                        ? key.patch().equals(patch.id()) || key.patch().equals(patch.patchId())
                         : key.season() != null && key.season().equals(season.id());
                 if (selected && (selectedPatch == null || patch.ordinal() > selectedPatch.ordinal())) {
                     selectedSeason = season;

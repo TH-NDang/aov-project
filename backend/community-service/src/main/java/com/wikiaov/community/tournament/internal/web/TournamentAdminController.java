@@ -24,6 +24,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.games.application.GamePatchScopes.PatchScope;
 import com.wikiaov.community.tournament.internal.registry.application.PlayerMerge;
 import com.wikiaov.community.tournament.internal.registry.application.TournamentAdministration;
 import jakarta.servlet.http.HttpServletRequest;
@@ -191,6 +192,13 @@ public class TournamentAdminController implements TournamentAdminApi {
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("parentId"));
         return administration.tournamentParts(parentId);
+    }
+
+    @Override
+    @GetMapping(path = ApiPaths.ADMIN + "/tournaments/{id}/game-patches", version = "1")
+    public List<PatchScope> gamePatches(@PathVariable UUID id, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return administration.gamePatches(id);
     }
 
     @Override

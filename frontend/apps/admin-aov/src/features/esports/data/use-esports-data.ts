@@ -1,7 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
 import type { GameContent } from "@aov/community-contracts"
 import { useSession } from "@/app/auth/auth-gate"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import {
+  catalogScopeOf,
+  tournamentApi,
+  tournamentKeys,
+  type GamePatchScope,
+} from "@/features/tournaments/api/tournament-api"
 
 /** Cache keys stay under the shared tournament prefix so registry editors refresh these views after saving. */
 function useActorKey() {
@@ -91,11 +96,25 @@ export function useGames(seriesId?: string, enabled = true) {
   })
 }
 
-export function useGameCatalog(content?: GameContent) {
+/** The season and patch of each game of a tournament, by game id. */
+export function useGamePatches(tournamentId?: string) {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: tournamentKeys.catalog(actorKey, content),
-    queryFn: ({ signal }) => tournamentApi.catalog(content!, signal),
+    queryKey: tournamentKeys.gamePatches(actorKey, tournamentId ?? ""),
+    queryFn: ({ signal }) => tournamentApi.gamePatches(tournamentId!, signal),
+    enabled: !!tournamentId,
+    staleTime: 30_000,
+    select: (rows) => new Map(rows.map((row) => [row.gameId, row])),
+  })
+}
+
+/** The catalog a game is recorded in: its own season and patch, or those of its stage on the day it was played. */
+export function useGameCatalog(content?: GameContent, scope?: GamePatchScope) {
+  const actorKey = useActorKey()
+  const scoped = content && catalogScopeOf(content, scope)
+  return useQuery({
+    queryKey: tournamentKeys.catalog(actorKey, scoped),
+    queryFn: ({ signal }) => tournamentApi.catalog(scoped!, signal),
     enabled: !!content,
     staleTime: 5 * 60_000,
     retry: 1,
