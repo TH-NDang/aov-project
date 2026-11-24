@@ -41,6 +41,8 @@ export type CompetitionStage = {
   rulesNote?: string | null
   /** Game updates used during the stage, in time order. Absent in plans saved before 23/11/2026. */
   patches?: StagePatch[]
+  /** The entrants that play this stage, such as one group; absent or empty when all of them do. */
+  teamIds?: string[]
 }
 export const DRAFT_RULES = ["GLOBAL", "STANDARD"] as const
 export type DraftRule = (typeof DRAFT_RULES)[number]
@@ -125,6 +127,20 @@ export type CompetitionSnapshot = {
   people?: Record<string, CompetitionPerson>
 }
 export type CompetitionView = { id: string; version: number; publishedAt?: string | null; content: CompetitionSnapshot }
+/** One entry of a plan's history, without the plan itself. */
+export type CompetitionRevision = {
+  id: string
+  action: "SAVE" | "MATERIALIZE" | "PUBLISH" | "WITHDRAW"
+  createdAt: string
+  entrants: number
+  stages: number
+  matches: number
+}
+/**
+ * How a bracket is drawn: the seeds it holds, whether the losing semifinalists play for third place, and the seed that
+ * seed one chose to meet in the AOG playoffs (a double elimination of six).
+ */
+export type BracketOptions = { teams?: number | null; thirdPlace?: boolean; opponent: number }
 export type CompetitionSummary = {
   id: string
   entrants: number

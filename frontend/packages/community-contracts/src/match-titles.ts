@@ -1,6 +1,12 @@
 /** What a match is in its stage. See spec 04, match titles. */
 export type MatchTitleKind =
   | "ROUND_ROBIN"
+  | "ROUND_OF"
+  | "QUARTERFINAL"
+  | "SEMIFINAL"
+  | "THIRD_PLACE"
+  | "FINAL"
+  | "UPPER_ROUND"
   | "UPPER_SEMIFINAL"
   | "UPPER_FINAL"
   | "LOWER_ROUND"
@@ -10,7 +16,7 @@ export type MatchTitleKind =
   | "EXTRA"
 /**
  * A match's title as a code and its numbers: `leg` and `round` for a round robin, `round` and `number` in the lower
- * bracket, `number` among the upper semifinals. Planned matches and the series they became carry the same title.
+ * and upper brackets, `number` among the matches of one round, and for `ROUND_OF` the teams left as its `round`. Planned matches and the series they became carry the same title.
  */
 export type MatchTitle = { kind: MatchTitleKind; leg?: number | null; round?: number | null; number?: number | null }
 /** Picks the Vietnamese or the English words; Stream's `text` and `localeText(locale)` from `@aov/ui` both fit. */
@@ -23,6 +29,18 @@ const WORDING: Record<MatchTitleKind, (title: MatchTitle) => readonly [vi: strin
   ROUND_ROBIN: ({ leg, round }) => {
     const rounds = [numbered("Vòng", round), numbered("Round", round)] as const
     return leg == null ? rounds : [`Lượt ${leg} · ${rounds[0]}`, `Leg ${leg} · ${rounds[1]}`]
+  },
+  ROUND_OF: ({ round, number }) => {
+    const rounds = [`${numbered("Vòng", round)} đội`, numbered("Round of", round)] as const
+    return number == null ? rounds : [`${rounds[0]} · ${number}`, `${rounds[1]} · ${number}`]
+  },
+  QUARTERFINAL: ({ number }) => [numbered("Tứ kết", number), numbered("Quarterfinal", number)],
+  SEMIFINAL: ({ number }) => [numbered("Bán kết", number), numbered("Semifinal", number)],
+  THIRD_PLACE: () => ["Tranh hạng ba", "Third place match"],
+  FINAL: () => ["Chung kết", "Final"],
+  UPPER_ROUND: ({ round, number }) => {
+    const rounds = [`${numbered("Vòng", round)} nhánh thắng`, numbered("Upper bracket round", round)] as const
+    return number == null ? rounds : [`${rounds[0]} · ${number}`, `${rounds[1]} · ${number}`]
   },
   UPPER_SEMIFINAL: ({ number }) => [
     numbered("Bán kết nhánh thắng", number),
