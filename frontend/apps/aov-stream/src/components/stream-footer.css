@@ -1,0 +1,74 @@
+/*
+ * The end of every page. Its rule and colour run edge to edge and its content keeps the page column. The margin above
+ * is the owl's: it sits on the rule, over the page.
+ */
+.hub-footer {
+  --hub-footer-side: max(var(--hub-gutter), calc((100% - var(--aov-page-max)) / 2 + var(--hub-gutter)));
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 38ch) minmax(0, 84ch);
+  justify-content: space-between;
+  align-items: start;
+  gap: 24px 64px;
+  margin-top: 40px;
+  padding: 24px var(--hub-footer-side);
+  border-top: 1px solid var(--hub-bar-line);
+  background: var(--hub-bar);
+  color: var(--hub-muted);
+}
+.hub-footer-top {
+  position: absolute;
+  right: var(--hub-footer-side);
+  bottom: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  /* The drawing reaches 4px below the line its talons hold. */
+  margin-bottom: -4px;
+  border-radius: var(--hub-radius-sm);
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.hub-footer-top > span {
+  padding-bottom: 16px;
+}
+.hub-footer-top:is(:hover, :focus-visible) {
+  color: var(--hub-text);
+}
+.hub-footer-about {
+  font-size: 13px;
+  line-height: 20px;
+}
+.hub-footer-about p {
+  margin: 6px 0 0;
+  text-wrap: pretty;
+}
+.hub-footer-rights {
+  font-size: 12px;
+  line-height: 18px;
+}
+.hub-footer-rights p {
+  margin: 0;
+  text-wrap: pretty;
+}
+.hub-footer-rights p + p {
+  margin-top: 6px;
+}
+.hub-footer-rights a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.hub-footer-rights a:hover {
+  color: var(--hub-text);
+}
+
+/* Compact: what the app is, then the rights below it. */
+@media (max-width: 899.98px) {
+  .hub-footer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding-block: 20px calc(20px + env(safe-area-inset-bottom));
+  }
+}

@@ -155,7 +155,7 @@ với tên `--aov-wiki-*` và được `wiki.css` gán vào các token chung.
 
 Bảng màu "Oải hương" lấy từ lông cú: đêm ngả tím, nhấn tím oải hương; vàng mắt cú và mặt kem chỉ còn trong logo, để
 Stream khác hẳn màu vàng của Wiki. Màu nằm trong `tokens.css` với tên `--aov-stream-*`. Trang theo chế độ sáng hoặc tối
-của người xem, riêng thanh trên và chân trang luôn màu đêm ngả tím.
+của người xem, thanh trên và chân trang cũng vậy.
 
 | Nội dung | Cách trình bày |
 |---|---|
@@ -174,7 +174,8 @@ của người xem, riêng thanh trên và chân trang luôn màu đêm ngả t�
 | Tab | `.cp-tabs`: chữ 14px; tab đang mở giữ màu chữ thường, đậm hơn và có vạch màu nhấn bên dưới; một hàng cuộn ngang |
 | Logo đội và giải | Nằm trên ô `--hub-plate` đổi theo giao diện, dùng bản logo vẽ cho nền đó |
 | Bộ lọc | Một nút `FilterMenu` mở bảng chip (bảng trượt trên điện thoại); mục đang chọn hiện thành chip gỡ được. Khu vực là hàng chip có cờ |
-| Bản quyền ảnh | Một dòng cuối trang giải, đội, tuyển thủ (`ImageRights`) và trang `/credits` từ chân trang |
+| Chân trang | `StreamFooter`: cú của logo đậu trên đường kẻ (`PerchedOwl`), bấm để về đầu trang và ngước nhìn khi được trỏ tới. Bên dưới chỉ có tên ứng dụng, một câu giới thiệu và phần bản quyền; không có mục chuyển trang, vì thanh trên luôn ở trong tầm tay. Compact: hai phần xếp dọc |
+| Bản quyền ảnh | Chân trang của mọi trang nói logo thuộc về ai, kèm đường tới `/credits`; trang có logo không cần dòng riêng |
 | Tuyển thủ, nhân sự | Không có ảnh: `PlayerMark` vẽ chữ cái đầu của tên trên màu sinh từ tên; tuyển thủ hình khiên, nhân sự hình tròn |
 | Liên kết qua lại | `GoLink`: tên mở trang khác có mũi tên nhỏ phía sau, đổi màu và gạch chân khi rê; trên sân khấu là một viên `hub-go-pill`; thẻ mở cả khối có mũi tên ở cuối |
 | Thứ hạng | `RankBadge`: ba hạng đầu là đồng xu trong vòng nguyệt quế, hạng 1 có vương miện; không dùng quầng sáng |

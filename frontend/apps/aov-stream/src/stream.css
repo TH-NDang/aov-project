@@ -225,23 +225,19 @@ button:disabled {
   color: #fff;
 }
 
-/* ---------- Shell: top bar, page column, footer ---------- */
+/* ---------- Shell: top bar, page column ---------- */
 .hub-shell {
   display: flex;
   flex-direction: column;
   min-height: 100svh;
-}
-.hub-topbar,
-.hub-footer {
-  border-color: var(--hub-bar-line);
-  background: var(--hub-bar);
-  color: var(--hub-text);
 }
 .hub-topbar {
   position: sticky;
   top: 0;
   z-index: 40;
   border-bottom: 1px solid var(--hub-bar-line);
+  background: var(--hub-bar);
+  color: var(--hub-text);
 }
 .hub-topbar-inner {
   display: flex;
@@ -445,53 +441,6 @@ button:disabled {
   gap: var(--hub-layout-gap);
 }
 
-/* The footer's rule and colour run edge to edge; its content keeps the page column. */
-.hub-footer {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: var(--hub-space-4) max(var(--hub-gutter), calc((100% - var(--aov-page-max)) / 2 + var(--hub-gutter)))
-    var(--hub-space-5);
-  border-top: 1px solid var(--hub-bar-line);
-  color: var(--hub-muted);
-  font-size: 12px;
-}
-.hub-footer .stream-brand > img {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--aov-radius-control);
-}
-.hub-footer p {
-  flex: 1 1 auto;
-  min-width: 0;
-  margin: 0;
-}
-/* The icon credit inside the footer line. */
-.hub-footer p a {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.hub-footer p a:hover {
-  color: var(--hub-text);
-}
-.hub-footer strong {
-  color: var(--hub-text-soft);
-}
-.hub-footer nav {
-  display: flex;
-  flex: none;
-  gap: 16px;
-}
-.hub-footer nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  white-space: nowrap;
-}
-.hub-footer nav a:hover {
-  color: var(--hub-text);
-}
-
 /* Wide layouts short of room for the side column and the full search field. */
 @media (max-width: 1099.98px) {
   .hub-content-split {
@@ -655,12 +604,6 @@ button:disabled {
   .stream-brand > img {
     width: 32px;
     height: 32px;
-  }
-  .hub-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 }
 /* ---------- Side column cards: a title with at most one link, then rows ---------- */

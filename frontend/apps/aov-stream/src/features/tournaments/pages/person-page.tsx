@@ -5,7 +5,6 @@ import { personRoleLabels, type PersonRole } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { personRoleEnglish } from "../../../components/community-ui"
 import { GoLink } from "../../../components/go-link"
-import { ImageRights } from "../../../components/image-rights"
 import { PlayerMark } from "../../../components/player-mark"
 import { Stage } from "../../../components/stage"
 import { StreamIcon } from "../../../components/stream-icon"
@@ -155,7 +154,6 @@ function PersonBody({ profile }: { profile: PersonProfile }) {
           </button>
         )}
       </Part>
-      <ImageRights />
     </>
   )
 }
