@@ -23,10 +23,12 @@ export type CareerStatus = "ACTIVE" | "INACTIVE" | "RETIRED" | "UNKNOWN"
 export type PlayerContent = {
   code: string
   nickname: string
-  fullName?: string
+  /** Admin only: published competitions and games carry no real name. */
+  fullName?: string | null
   country?: string
   photoUrl?: string
   aliases?: string[]
+  /** Admin only, like the real name. */
   birthDate?: string | null
   /** Usual position; a position in one tournament stays on its roster entry. */
   lane?: Lane | null

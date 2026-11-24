@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.domain;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -109,6 +110,25 @@ public final class TournamentContent {
 
         public Player(String code, String nickname, String fullName, String country) {
             this(code, nickname, fullName, country, null, List.of());
+        }
+
+        /**
+         * The players as a publication carries them. A nickname stands for the person there: the real name and the birth
+         * date stay in the registry, also when an older snapshot was stored with them.
+         */
+        public static Map<UUID, Player> published(Map<UUID, Player> players) {
+            if (players == null) {
+                return null;
+            }
+
+            var published = new LinkedHashMap<UUID, Player>();
+            players.forEach((id, player) -> published.put(id, player.withoutPrivateDetails()));
+            return published;
+        }
+
+        private Player withoutPrivateDetails() {
+            return new Player(code, nickname, null, country, photoUrl, aliases, null, lane, careerStatus,
+                    signatureHeroes);
         }
     }
 
@@ -739,5 +759,8 @@ public final class TournamentContent {
             Tournament tournament,
             ResolvedContext resolvedContext
     ) {
+        public PublishedGame {
+            players = Player.published(players);
+        }
     }
 }
