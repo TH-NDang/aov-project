@@ -53,3 +53,29 @@ export function linkWikiPatch(line: StagePatch, patch: WikiPatch | undefined): S
     name: line.name?.trim() ? line.name : (patch.title ?? null),
   }
 }
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Wiki patches a stage played between two days met: the one in force on the first day and those released until the
+ * last. Patches a line already names, by link or by day, are left out. Oldest first, the order of the lines.
+ */
+export function patchesPlayed(
+  patches: readonly WikiPatch[],
+  days: { first: string; last: string },
+  lines: readonly StagePatch[],
+): WikiPatch[] {
+  const dated = patches
+    .filter((patch) => DAY.test(patch.code) && patch.code <= days.last)
+    .sort((a, b) => a.code.localeCompare(b.code))
+  const before = dated.filter((patch) => patch.code <= days.first).at(-1)
+  return dated.filter(
+    (patch) =>
+      (patch === before || patch.code > days.first) &&
+      !lines.some((line) => line.patchId === patch.id || line.releasedOn === patch.code),
+  )
+}
+
+/** The lines with more of them, oldest update first; undated lines keep their place at the end. */
+export const withPatchLines = (lines: readonly StagePatch[], added: readonly StagePatch[]): StagePatch[] =>
+  [...lines, ...added].sort((a, b) => (a.releasedOn ?? "9999").localeCompare(b.releasedOn ?? "9999"))

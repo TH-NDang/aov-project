@@ -7,7 +7,7 @@ import {
   type SideSelection,
   type StagePatch,
 } from "@aov/community-contracts"
-import { Link2, Plus, Trash2 } from "lucide-react"
+import { CalendarDays, CopyPlus, Link2, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { confirmAction } from "@/components/confirm-dialog"
@@ -21,8 +21,10 @@ import {
   linkWikiPatch,
   patchLineIsEmpty,
   patchLineTitle,
+  patchesPlayed,
   sameDayWikiPatch,
   wikiPatchLabel,
+  withPatchLines,
 } from "./stage-rules"
 
 const MAX_PATCHES = 30
@@ -41,11 +43,17 @@ const blankLine = (): StagePatch => ({
 export function StageRulesFields({
   stage,
   region,
+  days,
+  others = [],
   disabled,
   onChange,
 }: {
   stage: CompetitionStage
   region: string
+  /** The days the stage's first and last matches are played, which the Wiki's patches are read for. */
+  days?: { first: string; last: string }
+  /** Stages whose updates can be copied. */
+  others?: CompetitionStage[]
   disabled: boolean
   onChange: (value: CompetitionStage) => void
 }) {
@@ -56,6 +64,9 @@ export function StageRulesFields({
   })
   const seasons = useQuery({ queryKey: wikiPatchKeys.seasons(), queryFn: wikiPatchApi.seasons, staleTime: 5 * 60_000 })
   const lines = stage.patches ?? []
+  const played = days && wikiPatches.data ? patchesPlayed(wikiPatches.data, days, lines) : []
+  const addLines = (added: StagePatch[]) =>
+    onChange({ ...stage, patches: withPatchLines(lines, added).slice(0, MAX_PATCHES) })
   const setLine = (index: number, line: StagePatch) =>
     onChange({ ...stage, patches: lines.map((row, at) => (at === index ? line : row)) })
   const removeLine = async (index: number) => {
@@ -138,14 +149,51 @@ export function StageRulesFields({
             onRemove={() => void removeLine(index)}
           />
         ))}
-        <Button
-          type="button"
-          variant="outline"
-          disabled={disabled || lines.length >= MAX_PATCHES}
-          onClick={() => onChange({ ...stage, patches: [...lines, blankLine()] })}
-        >
-          <Plus aria-hidden /> Thêm phiên bản
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={disabled || lines.length >= MAX_PATCHES}
+            onClick={() => onChange({ ...stage, patches: [...lines, blankLine()] })}
+          >
+            <Plus aria-hidden /> Thêm phiên bản
+          </Button>
+          {played.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={disabled}
+              title={played.map(wikiPatchLabel).join(", ")}
+              onClick={() => addLines(played.map((patch) => linkWikiPatch(blankLine(), patch)))}
+            >
+              <CalendarDays aria-hidden /> Thêm {played.length} patch theo ngày đấu
+            </Button>
+          )}
+          {others
+            .filter((other) => other.patches?.length)
+            .map((other) => (
+              <Button
+                key={other.code}
+                type="button"
+                variant="outline"
+                disabled={disabled}
+                onClick={() =>
+                  addLines(
+                    other.patches!.filter(
+                      (line) =>
+                        !lines.some(
+                          (own) =>
+                            (own.patchId && own.patchId === line.patchId) ||
+                            (own.releasedOn && own.releasedOn === line.releasedOn),
+                        ),
+                    ),
+                  )
+                }
+              >
+                <CopyPlus aria-hidden /> Chép từ {other.name}
+              </Button>
+            ))}
+        </div>
       </fieldset>
     </>
   )

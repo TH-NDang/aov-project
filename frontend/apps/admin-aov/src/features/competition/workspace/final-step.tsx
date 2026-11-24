@@ -9,7 +9,7 @@ import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tourn
 import { FinalTableEditButton } from "@/features/tournaments/components/tournament-final-table-editor"
 import { CompetitionStatistics } from "../competition-statistics"
 import { suggestedPlacements } from "./model"
-import { Chip, Notice, Panel, type Workspace } from "./parts"
+import { Chip, Panel, type Workspace } from "./parts"
 
 /** Final places, prizes and awards of the tournament, with a ranking read from the bracket to check them against. */
 export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: DocumentView<TournamentContent> }) {
@@ -63,7 +63,17 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                 const known = entry.content.players[id]
                 return known && { name: known.nickname, photoUrl: known.photoUrl }
               }}
-              action={ws.canEdit && <FinalTableEditButton tournament={tournament} />}
+              action={
+                ws.canEdit && (
+                  <FinalTableEditButton
+                    tournament={tournament}
+                    teamOfPlayer={(playerId) => {
+                      const row = ws.rosters.find((entry) => entry.content.playerId === playerId)
+                      return row && { id: row.content.teamId, name: ws.team(row.content.teamId).name }
+                    }}
+                  />
+                )
+              }
             />
           ) : (
             <p className="type-meta">Đang tải kết quả chung cuộc…</p>
@@ -116,9 +126,6 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
           )}
         </Panel>
       </div>
-      <Notice>
-        Gợi ý chỉ đọc từ nhánh đấu và bảng xếp hạng. Tiền thưởng và giải thưởng cá nhân nhập theo nguồn chính thức.
-      </Notice>
       <CompetitionStatistics
         tournamentId={entry.id}
         seriesIds={plan.matches.flatMap((match) => (match.seriesId ? [match.seriesId] : []))}

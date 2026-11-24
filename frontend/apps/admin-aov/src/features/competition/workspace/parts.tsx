@@ -13,7 +13,23 @@ import type {
 import { cn } from "@aov/ui/lib/utils"
 import { initials, type TeamView } from "@/features/esports/model/game-view"
 import type { Access } from "@/features/esports/pages/esports-shell"
+import type { CopyPart } from "../model/copy-setup"
 import type { WorkspaceStep } from "./model"
+
+/**
+ * The place inside a step a link opens: a team, a stage, a match by its series or its key in the plan, or a list of
+ * matches narrowed to what needs work. It travels in the address, so a link, a check or a reload opens the same place.
+ */
+export type WorkspaceFocus = {
+  team?: string
+  stage?: string
+  match?: string
+  key?: string
+  show?: string
+  /** What opens for writing at once: the roster of the team, the fields of the stage, the result of the match. */
+  open?: string
+}
+export const FOCUS_KEYS = ["team", "stage", "match", "key", "show", "open"] as const
 
 export type WorkspaceAction = "save" | "publish" | "withdraw" | "materialize"
 
@@ -27,6 +43,8 @@ export type Workspace = {
   /** The snapshot readers see now; absent while the competition is not published. */
   published?: CompetitionSnapshot | null
   change: <K extends keyof CompetitionPlan>(key: K, value: CompetitionPlan[K]) => void
+  /** Several fields as one step back, such as a stage taken out together with what names it. */
+  changeAll: (patch: Partial<CompetitionPlan>) => void
   /** True while the plan has edits that were not saved yet. */
   dirty: boolean
   busy: boolean
@@ -35,11 +53,16 @@ export type Workspace = {
   teams: Record<string, TeamContent>
   team: (id?: string | null) => TeamView
   /** Makes a team picked a moment ago readable before the plan is saved. */
-  rememberTeam: (id: string, name: string) => void
+  rememberTeam: (id: string, name: string, content?: TeamContent) => void
   series: DocumentView<SeriesContent>[]
   rosters: DocumentView<RosterMembershipContent>[]
+  /** False until the series and the rosters were read: an empty list then says nothing yet. */
+  loaded: boolean
   games?: DocumentView<GameContent>[]
-  go: (step: WorkspaceStep) => void
+  /** Opens a step, at the place the focus names. */
+  go: (step: WorkspaceStep, focus?: WorkspaceFocus) => void
+  focus: WorkspaceFocus
+  openCopy: (parts?: CopyPart[]) => void
   run: (action: WorkspaceAction) => void
 }
 

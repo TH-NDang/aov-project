@@ -29,6 +29,9 @@ import { BestOfField, SlotEditor } from "./plan-fields"
 import type { Workspace } from "./parts"
 import { NativeSelect } from "@/components/native-select"
 
+/** What the panel shows: the facts, or one of its forms. */
+export type MatchPanelMode = "view" | "result" | "video" | "plan"
+
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
@@ -42,8 +45,17 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
  * Everything about one planned match. It opens read-only: the score form and the schedule fields appear only after the
  * editor asks for them, and replacing or clearing a score that is already there is confirmed with both values shown.
  */
-export function MatchPanel({ ws, match }: { ws: Workspace; match: PlannedMatch }) {
-  const [mode, setMode] = useState<"view" | "result" | "video" | "plan">("view")
+export function MatchPanel({
+  ws,
+  match,
+  initialMode = "view",
+}: {
+  ws: Workspace
+  match: PlannedMatch
+  /** The form a quick action or a link asked for. */
+  initialMode?: MatchPanelMode
+}) {
+  const [mode, setMode] = useState<MatchPanelMode>(initialMode)
   const resolved = ws.resolved.get(match.key)
   const record = ws.series.find((row) => row.id === match.seriesId)
   const result = record?.content.result

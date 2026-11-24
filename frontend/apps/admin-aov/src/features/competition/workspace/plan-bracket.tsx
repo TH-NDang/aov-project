@@ -2,7 +2,16 @@ import type { PlannedMatch } from "@aov/community-contracts"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { cn } from "@aov/ui/lib/utils"
 import { TeamLogo } from "@/features/esports/components/primitives"
-import { BRACKET, hasScore, layoutBracket, matchLabel, slotText, type BracketNode } from "./model"
+import {
+  BRACKET,
+  hasScore,
+  isThirdPlace,
+  layoutBracket,
+  matchLabel,
+  slotText,
+  type BracketLane,
+  type BracketNode,
+} from "./model"
 import type { Workspace } from "./parts"
 
 const LANE_NAMES = { upper: "Nhánh thắng", lower: "Nhánh thua", final: "Chung kết" } as const
@@ -21,6 +30,11 @@ export function PlanBracket({
 }) {
   const layout = layoutBracket(matches)
   const { nodeWidth, nodeHeight, columnGap } = BRACKET
+  // A lone match for third place is no lower bracket.
+  const lower = layout.nodes.filter((node) => node.lane === "lower")
+  const onlyThirdPlace = lower.length === 1 && isThirdPlace(lower[0]!.match, matches)
+  const laneName = (lane: BracketLane) =>
+    onlyThirdPlace ? (lane === "lower" ? "Tranh hạng ba" : "") : LANE_NAMES[lane]
   const byKey = new Map(layout.nodes.map((node) => [node.match.key, node]))
   const lines = layout.nodes.flatMap((node) =>
     node.feeds.flatMap((key) => {
@@ -54,7 +68,7 @@ export function PlanBracket({
           </svg>
           {layout.lanes.map((lane) => (
             <p key={lane.lane} className="type-label absolute left-0 text-muted-foreground" style={{ top: lane.y }}>
-              {LANE_NAMES[lane.lane]}
+              {laneName(lane.lane)}
             </p>
           ))}
           {layout.nodes.map((node) => (

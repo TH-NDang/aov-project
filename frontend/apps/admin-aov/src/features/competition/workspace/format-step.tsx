@@ -1,48 +1,71 @@
-import { Fragment, useState } from "react"
-import { aogStages, type CompetitionStage } from "@aov/community-contracts"
-import { ArrowRight, GitBranch, ListOrdered, Pencil, Plus, Trash2 } from "lucide-react"
+import { Fragment, useState, type ReactNode } from "react"
+import type { CompetitionStage } from "@aov/community-contracts"
+import { ArrowRight, CalendarDays, CopyPlus, LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { cn } from "@aov/ui/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@aov/ui/components/dropdown-menu"
 import { confirmAction } from "@/components/confirm-dialog"
-import { FORMAT_NAMES, hostOf, isLeagueStage, stageProgress } from "./model"
+import { TeamLogo } from "@/features/esports/components/primitives"
+import { stageDays, stagesByDate } from "../model/schedule-model"
+import {
+  STAGE_TEMPLATES,
+  STAGE_TEMPLATE_LABELS,
+  duplicatedStage,
+  freeStageCode,
+  movedStage,
+  templateStages,
+  type StageTemplate,
+} from "../model/stage-templates"
+import { FORMAT_NAMES, hostOf, isLeagueStage } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { StageFields, TIE_BREAK_PRESETS } from "./plan-fields"
+import { StageCard } from "./stage-card"
 import { StageRulesView } from "./stage-rules-view"
+import { StageTeams } from "./stage-teams"
 
 /** One card per stage in playing order; a stage opens for editing only when asked. */
 export function FormatStep({ ws }: { ws: Workspace }) {
-  const { plan } = ws
+  const { plan, focus } = ws
   const region = (ws.entry.content.tournament.region || "VN").toUpperCase()
-  const [selected, setSelected] = useState(plan.stages[0]?.code ?? "")
-  const [editing, setEditing] = useState(false)
+  const [selected, setSelected] = useState(focus.stage ?? plan.stages[0]?.code ?? "")
+  const [editing, setEditing] = useState(focus.open === "stage")
   const stage = plan.stages.find((entry) => entry.code === selected) ?? plan.stages[0]
   const hasMatches = (code: string) => plan.matches.some((match) => match.stageCode === code)
+  const setStages = (stages: CompetitionStage[]) => ws.change("stages", stages)
   const update = (value: CompetitionStage) =>
-    ws.change(
-      "stages",
-      plan.stages.map((row) => (row.code === stage?.code ? value : row)),
-    )
-  const applyTemplate = async () => {
+    setStages(plan.stages.map((row) => (row.code === stage?.code ? value : row)))
+  const open = (code: string, edit = false) => {
+    setSelected(code)
+    setEditing(edit)
+  }
+  const applyTemplate = async (template: StageTemplate) => {
+    const stages = templateStages(template, plan.sourceUrl)
     if (plan.stages.length) {
       const confirmed = await confirmAction({
-        title: "Thay các giai đoạn bằng mẫu AOG?",
-        description: `${plan.stages.map((entry) => entry.name).join(", ")} → Vòng bảng, Playoffs. Thay đổi được ghi khi bạn lưu bản nháp.`,
+        title: "Thay các giai đoạn bằng mẫu?",
+        description: `${plan.stages.map((entry) => entry.name).join(", ")} → ${stages.map((entry) => entry.name).join(", ")}. Hoàn tác được trước khi lưu.`,
         confirmLabel: "Dùng mẫu",
       })
       if (!confirmed) return
     }
-    const stages = aogStages(plan.sourceUrl)
-    ws.change("stages", stages)
-    setSelected(stages[0]!.code)
+    setStages(stages)
+    open(stages[0]!.code)
   }
   const add = () => {
-    const code = `STAGE_${plan.stages.length + 1}`
-    ws.change("stages", [
-      ...plan.stages,
-      { ...aogStages(plan.sourceUrl)[0]!, code, name: "Giai đoạn mới", format: "CUSTOM", legs: 1, advance: 0 },
-    ])
-    setSelected(code)
-    setEditing(true)
+    const code = freeStageCode(plan)
+    setStages([...plan.stages, { ...templateStages("KNOCKOUT", plan.sourceUrl)[0]!, code, name: "Giai đoạn mới" }])
+    open(code, true)
+  }
+  const duplicate = () => {
+    if (!stage) return
+    const copy = duplicatedStage(plan, stage)
+    const at = plan.stages.findIndex((row) => row.code === stage.code)
+    setStages([...plan.stages.slice(0, at + 1), copy, ...plan.stages.slice(at + 1)])
+    open(copy.code, true)
   }
   const remove = async () => {
     if (!stage) return
@@ -52,12 +75,14 @@ export function FormatStep({ ws }: { ws: Workspace }) {
       confirmLabel: "Bỏ giai đoạn",
     })
     if (!confirmed) return
-    ws.change(
-      "stages",
-      plan.stages.filter((row) => row.code !== stage.code),
-    )
+    ws.changeAll({
+      stages: plan.stages.filter((row) => row.code !== stage.code),
+      venues: plan.venues.map((venue) => (venue.stageCode === stage.code ? { ...venue, stageCode: "" } : venue)),
+    })
     setEditing(false)
   }
+  const dated = stagesByDate(plan)
+  const outOfOrder = dated.some((row, index) => row.code !== plan.stages[index]?.code)
 
   return (
     <div className="space-y-4">
@@ -65,14 +90,37 @@ export function FormatStep({ ws }: { ws: Workspace }) {
         <h2 className="type-section-title">Các giai đoạn · {plan.stages.length}</h2>
         {ws.canEdit && (
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={plan.matches.length > 0}
-              onClick={() => void applyTemplate()}
-            >
-              Dùng mẫu AOG · 9 đội
-            </Button>
+            {outOfOrder && (
+              <Button
+                type="button"
+                variant="outline"
+                title={dated.map((row) => row.name).join(" → ")}
+                onClick={() => setStages(dated)}
+              >
+                <CalendarDays aria-hidden /> Xếp theo ngày đấu
+              </Button>
+            )}
+            {!plan.matches.length && (
+              <>
+                <Button type="button" variant="outline" onClick={() => ws.openCopy(["stages"])}>
+                  <CopyPlus aria-hidden /> Chép từ giải khác
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline">
+                      <LayoutTemplate aria-hidden /> Dùng mẫu
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {STAGE_TEMPLATES.map((template) => (
+                      <DropdownMenuItem key={template} onSelect={() => void applyTemplate(template)}>
+                        {STAGE_TEMPLATE_LABELS[template]}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
             <Button type="button" variant="outline" onClick={add}>
               <Plus aria-hidden /> Thêm giai đoạn
             </Button>
@@ -80,57 +128,25 @@ export function FormatStep({ ws }: { ws: Workspace }) {
         )}
       </div>
       <div className="flex flex-wrap items-stretch gap-3">
-        {plan.stages.map((entry, index) => {
-          const progress = stageProgress(entry.code, plan, ws.resolved)
-          const league = isLeagueStage(entry)
-          const active = entry.code === stage?.code
-          return (
-            <Fragment key={entry.code}>
-              {index > 0 && <ArrowRight className="size-5 shrink-0 self-center text-muted-foreground" aria-hidden />}
-              <button
-                type="button"
-                aria-pressed={active}
-                onClick={() => {
-                  setSelected(entry.code)
-                  setEditing(false)
-                }}
-                className={cn(
-                  "admin-panel min-w-64 flex-1 p-4 text-left transition-colors hover:border-foreground/40",
-                  active && "border-primary",
-                )}
-              >
-                <span className="flex items-center justify-between gap-2">
-                  <span className="type-label flex items-center gap-1.5 text-muted-foreground">
-                    {league ? (
-                      <ListOrdered className="size-4" aria-hidden />
-                    ) : (
-                      <GitBranch className="size-4" aria-hidden />
-                    )}
-                    Giai đoạn {index + 1}
-                  </span>
-                  <Chip
-                    tone={
-                      progress.total && progress.scored === progress.total ? "ok" : progress.total ? "warn" : "neutral"
-                    }
-                  >
-                    {progress.total ? `${progress.scored}/${progress.total} trận` : "Chưa có lịch"}
-                  </Chip>
-                </span>
-                <span className="type-section-title mt-1.5 block">{entry.name}</span>
-                <span className="mt-2.5 flex flex-wrap gap-1.5">
-                  <Chip>
-                    {FORMAT_NAMES[entry.format] ?? entry.format}
-                    {league && entry.legs > 1 ? ` ${entry.legs} lượt` : ""}
-                  </Chip>
-                  <Chip>BO{entry.bestOf}</Chip>
-                  {league && entry.advance > 0 && <Chip tone="gold">{entry.advance} đội đi tiếp</Chip>}
-                </span>
-              </button>
-            </Fragment>
-          )
-        })}
+        {plan.stages.map((entry, index) => (
+          <Fragment key={entry.code}>
+            {index > 0 && <ArrowRight className="size-5 shrink-0 self-center text-muted-foreground" aria-hidden />}
+            <StageCard
+              ws={ws}
+              stage={entry}
+              index={index}
+              active={entry.code === stage?.code}
+              onOpen={() => open(entry.code)}
+              onMove={
+                ws.canEdit && plan.stages.length > 1
+                  ? (offset) => setStages(movedStage(plan.stages, entry.code, offset))
+                  : undefined
+              }
+            />
+          </Fragment>
+        ))}
       </div>
-      {!plan.stages.length && <Notice>Chưa có giai đoạn. Dùng mẫu AOG hoặc thêm từng giai đoạn.</Notice>}
+      {!plan.stages.length && <Notice>Chưa có giai đoạn.</Notice>}
       {stage && (
         <Panel
           title={stage.name}
@@ -150,6 +166,9 @@ export function FormatStep({ ws }: { ws: Workspace }) {
                     <Trash2 aria-hidden /> Bỏ giai đoạn
                   </Button>
                 )}
+                <Button type="button" variant="ghost" onClick={duplicate}>
+                  <CopyPlus aria-hidden /> Nhân đôi
+                </Button>
                 <Button type="button" variant="outline" onClick={() => setEditing(!editing)}>
                   <Pencil aria-hidden /> {editing ? "Xong" : "Sửa giai đoạn"}
                 </Button>
@@ -158,9 +177,16 @@ export function FormatStep({ ws }: { ws: Workspace }) {
           }
         >
           {editing && ws.canEdit ? (
-            <div className="space-y-3 p-4">
-              <StageFields stage={stage} region={region} disabled={!ws.canEdit} onChange={update} />
-              <p className="type-meta">Thay đổi thể thức nằm trong bản nháp và được ghi khi bạn bấm Lưu bản nháp.</p>
+            <div className="space-y-5 p-4">
+              <StageFields
+                stage={stage}
+                region={region}
+                days={stageDays(plan, stage.code)}
+                others={plan.stages.filter((row) => row.code !== stage.code)}
+                disabled={!ws.canEdit}
+                onChange={update}
+              />
+              <StageTeams ws={ws} stage={stage} onChange={(teamIds) => update({ ...stage, teamIds })} />
             </div>
           ) : (
             <>
@@ -189,21 +215,30 @@ export function FormatStep({ ws }: { ws: Workspace }) {
                     "Chưa có"
                   )}
                 </Fact>
+                {!!stage.teamIds?.length && (
+                  <div className="sm:col-span-2 lg:col-span-4">
+                    <Fact label={`Đội của giai đoạn · ${stage.teamIds.length}`}>
+                      <span className="flex flex-wrap gap-2">
+                        {stage.teamIds.map((id) => (
+                          <Chip key={id} className="h-8 gap-2">
+                            <TeamLogo team={ws.team(id)} size={20} /> {ws.team(id).name}
+                          </Chip>
+                        ))}
+                      </span>
+                    </Fact>
+                  </div>
+                )}
               </dl>
               <StageRulesView stage={stage} region={region} />
             </>
           )}
         </Panel>
       )}
-      <Notice>
-        Mẫu là điểm bắt đầu biên tập. Đối chiếu điểm số, tiêu chí phụ và nhánh đấu với điều lệ chính thức trước khi công
-        bố.
-      </Notice>
     </div>
   )
 }
 
-function Fact({ label, children }: { label: string; children: React.ReactNode }) {
+function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
       <dt className="type-label text-muted-foreground">{label}</dt>

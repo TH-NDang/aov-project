@@ -16,41 +16,41 @@ export function BestOfField({
   label,
   value,
   disabled,
+  bare,
   onChange,
 }: {
   label: string
   value: number
   disabled?: boolean
+  /** In a table the column names the field, so the label is only read out. */
+  bare?: boolean
   onChange: (value: number) => void
 }) {
+  const select = (
+    <NativeSelect
+      aria-label={label}
+      className="w-full"
+      value={String(value)}
+      disabled={disabled}
+      onChange={(event) => onChange(Number(event.target.value))}
+    >
+      {bestOfOptions.map((option) => (
+        <option key={option.value} value={option.value}>
+          {bare ? `BO${option.value}` : option.label}
+        </option>
+      ))}
+    </NativeSelect>
+  )
+  if (bare) return select
   return (
     <label className="grid gap-2">
       <span className="type-label">{label}</span>
-      <NativeSelect
-        className="w-full"
-        value={String(value)}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-      >
-        {bestOfOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </NativeSelect>
+      {select}
     </label>
   )
 }
 
-export function SlotEditor({
-  label,
-  value,
-  teams,
-  entrants,
-  previous,
-  disabled,
-  onChange,
-}: {
+type SlotProps = {
   label: string
   value: CompetitionSlot
   teams: Record<string, TeamContent>
@@ -58,7 +58,19 @@ export function SlotEditor({
   previous: PlannedMatch[]
   disabled: boolean
   onChange: (value: CompetitionSlot) => void
-}) {
+}
+
+export function SlotEditor(props: SlotProps) {
+  return (
+    <label className="grid gap-2">
+      <span className="type-label">{props.label}</span>
+      <SlotSelect {...props} />
+    </label>
+  )
+}
+
+/** Who plays one side: a team, a seed, or the winner or loser of a match listed before. */
+export function SlotSelect({ label, value, teams, entrants, previous, disabled, onChange }: SlotProps) {
   const selected =
     value.type === "TEAM"
       ? `TEAM:${value.teamId}`
@@ -68,52 +80,50 @@ export function SlotEditor({
           ? "TBD"
           : `${value.type}:${value.matchKey}`
   return (
-    <label className="grid gap-2">
-      <span className="type-label">{label}</span>
-      <NativeSelect
-        className="w-full"
-        disabled={disabled}
-        value={selected}
-        onChange={(event) => {
-          const [type, id] = event.target.value.split(":")
-          onChange(
-            type === "TEAM"
-              ? { type, teamId: id }
-              : type === "SEED"
-                ? { type, seed: Number(id) }
-                : type === "WINNER" || type === "LOSER"
-                  ? { type, matchKey: id }
-                  : { type: "TBD" },
-          )
-        }}
-      >
-        <option value="TBD">Chưa xác định</option>
-        <optgroup label="Đội đã đăng ký">
-          {entrants.map((entry) => (
-            <option key={entry.teamId} value={`TEAM:${entry.teamId}`}>
-              {teams[entry.teamId]?.name}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="Hạt giống">
-          {Array.from({ length: Math.max(6, entrants.length) }, (_, index) => (
-            <option key={index} value={`SEED:${index + 1}`}>
-              Hạt giống {index + 1}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="Kết quả trận trước">
-          {previous.flatMap((match) => [
-            <option key={`${match.key}-W`} value={`WINNER:${match.key}`}>
-              Thắng {matchLabel(match)}
-            </option>,
-            <option key={`${match.key}-L`} value={`LOSER:${match.key}`}>
-              Thua {matchLabel(match)}
-            </option>,
-          ])}
-        </optgroup>
-      </NativeSelect>
-    </label>
+    <NativeSelect
+      aria-label={label}
+      className="w-full truncate"
+      disabled={disabled}
+      value={selected}
+      onChange={(event) => {
+        const [type, id] = event.target.value.split(":")
+        onChange(
+          type === "TEAM"
+            ? { type, teamId: id }
+            : type === "SEED"
+              ? { type, seed: Number(id) }
+              : type === "WINNER" || type === "LOSER"
+                ? { type, matchKey: id }
+                : { type: "TBD" },
+        )
+      }}
+    >
+      <option value="TBD">Chưa xác định</option>
+      <optgroup label="Đội đã đăng ký">
+        {entrants.map((entry) => (
+          <option key={entry.teamId} value={`TEAM:${entry.teamId}`}>
+            {teams[entry.teamId]?.name}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="Hạt giống">
+        {Array.from({ length: Math.max(6, entrants.length) }, (_, index) => (
+          <option key={index} value={`SEED:${index + 1}`}>
+            Hạt giống {index + 1}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="Kết quả trận trước">
+        {previous.flatMap((match) => [
+          <option key={`${match.key}-W`} value={`WINNER:${match.key}`}>
+            Thắng {matchLabel(match)}
+          </option>,
+          <option key={`${match.key}-L`} value={`LOSER:${match.key}`}>
+            Thua {matchLabel(match)}
+          </option>,
+        ])}
+      </optgroup>
+    </NativeSelect>
   )
 }
 
@@ -128,12 +138,16 @@ export const TIE_BREAK_PRESETS: Record<string, string> = {
 export function StageFields({
   stage,
   region,
+  days,
+  others,
   disabled,
   onChange,
 }: {
   stage: CompetitionStage
   /** The market whose Wiki patches the stage can link to. */
   region: string
+  days?: { first: string; last: string }
+  others?: CompetitionStage[]
   disabled: boolean
   onChange: (value: CompetitionStage) => void
 }) {
@@ -230,7 +244,14 @@ export function StageFields({
           />
         </div>
       </fieldset>
-      <StageRulesFields stage={stage} region={region} disabled={disabled} onChange={onChange} />
+      <StageRulesFields
+        stage={stage}
+        region={region}
+        days={days}
+        others={others}
+        disabled={disabled}
+        onChange={onChange}
+      />
     </div>
   )
 }
