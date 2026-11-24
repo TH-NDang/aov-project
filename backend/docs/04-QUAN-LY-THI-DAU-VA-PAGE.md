@@ -780,6 +780,12 @@ snapshot cũ hay trong yêu cầu được đọc rồi bỏ. Trang PLAYER và P
 do người đại diện đã xác minh tự chọn. Admin bỏ các ô ảnh đó; Stream vẽ huy hiệu từ tên. V026 gỡ các liên kết ảnh còn lại
 trong hồ sơ, snapshot và lịch sử kế hoạch; xóa tệp trong kho ảnh là việc riêng.
 
+## Họ tên thật và ngày sinh ở lại Admin (24/11/2026)
+
+Giải và ván đã công bố gọi tuyển thủ bằng biệt danh: `fullName` và `birthDate` luôn trống trong `players` của
+`GET /competitions`, `/competitions/{id}`, `/games` và `/games/{id}`, kể cả khi snapshot cũ đã lưu hai trường này. Hồ sơ tuyển
+thủ, danh bạ và tìm kiếm của Admin vẫn có đủ; cả hai chỉ dùng để biên tập và nhận ra hồ sơ trùng.
+
 ## Trang đội, tuyển thủ và nhân sự từ giải đã công bố (24/11/2026)
 
 `GET /competitions/participants` liệt kê đội, tuyển thủ hoặc nhân sự (ê-kíp phát sóng, ban huấn luyện) có trong các giải đã
