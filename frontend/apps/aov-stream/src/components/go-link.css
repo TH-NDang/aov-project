@@ -20,6 +20,16 @@
   opacity: 1;
   transform: translateX(2px);
 }
+/* Inside a sentence a line under the name tells it from the words around it, with no arrow before its comma. */
+.hub-go-prose {
+  color: var(--hub-text);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--hub-accent-strong) 70%, transparent);
+  text-decoration-thickness: 1px;
+}
+.hub-go-prose:is(:hover, :focus-visible) {
+  text-decoration-color: currentColor;
+}
 /* Over a picture's dark stage the same link is a pill, so it reads as a button. */
 .hub-go[class~="hub-go-pill"] {
   display: inline-flex;

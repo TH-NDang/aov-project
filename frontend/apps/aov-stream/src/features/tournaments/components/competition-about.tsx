@@ -1,7 +1,9 @@
 import { Link } from "react-router"
 import type { CompetitionView } from "@aov/community-contracts"
+import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { referenceKey } from "../../../lib/reference-model"
 import "./competition-about.css"
 
 /** What the circuit of a competition is, for a reader who meets it here first. Nothing shows without a text. */
@@ -12,7 +14,12 @@ export function CompetitionAbout({ view }: { view: CompetitionView }) {
   return (
     <section className="tn-side-card">
       <h2>{text("Giới thiệu", "About")}</h2>
-      <p className="tn-about">{circuit.introduction}</p>
+      <p className="tn-about">
+        <ReferenceText
+          text={circuit.introduction}
+          about={[referenceKey("circuit", circuit.id), referenceKey("competition", view.id)]}
+        />
+      </p>
       {circuit.published && (
         <Link className="tn-about-more" to={`/pages/${circuit.code}`}>
           {text(`Về ${circuit.shortName || circuit.name}`, `About ${circuit.shortName || circuit.name}`)}

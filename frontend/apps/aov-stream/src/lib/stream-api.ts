@@ -42,6 +42,13 @@ export const communityRequest = createApiRequest({
 export const communityGetAll = <T>(path: string, options?: { signal?: AbortSignal; size?: number }) =>
   readAllPages<T>((page, request) => communityRequest<PageSlice<T>>(page, request), path, options)
 
+/** wiki-service's public catalog, read without the reader's token so its answers stay cacheable. */
+export const wikiPublicRequest = createApiRequest({
+  root: WIKI_API_ROOT,
+  token: () => null,
+  describe: (status, problem) => problem.detail || `HTTP ${status}`,
+})
+
 /** wiki-service, for the shared user profile; every one of these requests is the reader's own. */
 export const wikiRequest = createApiRequest({
   root: WIKI_API_ROOT,

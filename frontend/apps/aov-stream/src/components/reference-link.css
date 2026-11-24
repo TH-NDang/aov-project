@@ -1,0 +1,12 @@
+/* The card of a name, beside it. */
+.hub-ref-popup {
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+  box-shadow: var(--hub-shadow-lg);
+  color: var(--hub-text);
+  padding: 0;
+}
