@@ -140,6 +140,32 @@ patch mới nhất của Wiki.
   khi ghi ván đọc theo patch đã suy ra. Bảng "Kiểm tra dữ liệu" báo các ván không thuộc phạm vi nào khi giải đã có
   dòng phiên bản.
 
+### Bảng đấu, mẫu nhánh, đội hình ghi cả đội và lịch sử kế hoạch (24/11/2026)
+
+Người dùng yêu cầu ngày 24/11/2026: Admin thao tác giải đấu nhanh hơn, thiếu thao tác thì bổ sung. Phần này ghi các
+thay đổi ở service; phần giao diện xem "Thao tác nhanh trong không gian giải".
+
+**Đội của giai đoạn.** Giai đoạn có thêm `teamIds`: các đội tham dự đá giai đoạn đó, ví dụ một bảng. Bỏ trống là mọi đội
+tham dự. `teamIds` chỉ được nêu đội trong `entrants`, mỗi đội một lần. Lịch vòng tròn và bảng xếp hạng của giai đoạn chỉ
+tính các đội này; giai đoạn đã lưu trước đây không có `teamIds` nên giữ nguyên.
+
+**Mẫu nhánh.** Xem trước lịch (`POST /admin/competitions/preview`) nhận thêm `teams` (số hạt giống) và `thirdPlace`:
+
+| Thể thức | Cách dựng |
+|---|---|
+| SINGLE_ELIMINATION | 2–64 hạt giống, mặc định là mọi đội của giai đoạn. Hạt giống 1 và 2 ở hai nửa khác nhau; số đội không tròn lũy thừa của 2 thì hạt giống cao vào thẳng vòng sau. `thirdPlace` thêm trận tranh hạng ba |
+| DOUBLE_ELIMINATION | 6 hạt giống (mặc định): mẫu playoffs AOG với `opponent`. 4, 8, 16, 32 hạt giống: nhánh thắng/thua chuẩn, đội thua nhánh thắng rơi xuống nửa đối diện để không gặp lại ngay |
+
+Số hạt giống không vượt quá số đội của giai đoạn.
+
+**Đội hình ghi cả đội.** `POST /admin/roster-memberships/batch` nhận `{create, update, remove}`, tối đa 500 dòng, ghi tất
+cả hoặc không ghi dòng nào. Thứ tự: bỏ, sửa, thêm. Thêm một tuyển thủ mà dòng của đội đó đang ở thùng rác thì dòng cũ
+được khôi phục với nội dung mới, thay vì báo trùng.
+
+**Lịch sử kế hoạch.** Mỗi lần lưu, mở nhập kết quả, công bố hay gỡ đều đã chụp một bản (`plan_revision`). Admin đọc danh
+sách các bản và nội dung kế hoạch của một bản để nạp lại vào bản nháp đang sửa; không có thao tác ghi đè trực tiếp từ
+lịch sử, nên khôi phục vẫn đi qua "Lưu bản nháp" và các kiểm tra của nó.
+
 ### Tên trận theo mã (18/11/2026)
 
 Người dùng chọn cách này ngày 18/11/2026 để tên trận do lịch tự động sinh ra hiển thị đúng ngôn ngữ người đọc. Trận
@@ -151,6 +177,12 @@ cho `title`. Đổi tên không bỏ `title`, xóa tên thì trận lại hiển
 | kind | Số | Tiếng Việt | Tiếng Anh |
 |---|---|---|---|
 | ROUND_ROBIN | `leg`, `round` | Lượt 1 · Vòng 2 | Leg 1 · Round 2 |
+| ROUND_OF | `round` (số đội còn lại), `number` | Vòng 16 đội · 3 | Round of 16 · 3 |
+| QUARTERFINAL | `number` | Tứ kết 2 | Quarterfinal 2 |
+| SEMIFINAL | `number` | Bán kết 1 | Semifinal 1 |
+| THIRD_PLACE | — | Tranh hạng ba | Third place match |
+| FINAL | — | Chung kết | Final |
+| UPPER_ROUND | `round`, `number` | Vòng 1 nhánh thắng · 4 | Upper bracket round 1 · 4 |
 | UPPER_SEMIFINAL | `number` | Bán kết nhánh thắng 1 | Upper bracket semifinal 1 |
 | UPPER_FINAL | — | Chung kết nhánh thắng | Upper bracket final |
 | LOWER_ROUND | `round`, `number` | Vòng 1 nhánh thua · 2 | Lower bracket round 1 · 2 |
@@ -159,7 +191,7 @@ cho `title`. Đổi tên không bỏ `title`, xóa tên thì trận lại hiển
 | GRAND_FINAL | — | Chung kết tổng | Grand final |
 | EXTRA | — | Trận bổ sung | Additional match |
 
-- Lịch tạo tự động (vòng tròn, mẫu playoffs AOG) chỉ có `title`, không có `label`. Trận Admin thêm thủ công có `title`
+- Lịch tạo tự động (vòng tròn, các mẫu nhánh) chỉ có `title`, không có `label`. Trận Admin thêm thủ công có `title`
   EXTRA.
 - `title` phải có `kind`; `leg`, `round`, `number` nếu có thì từ 1 đến 99. Sai trả 400 `TOURNAMENT_INVALID_CONTENT`, ở
   kế hoạch lẫn ở loạt trận.
@@ -863,7 +895,9 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Ngày sai dạng hoặc quá 60 ngày trả 400 INVALID_QUERY_PARAMETER |
 | GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp, theo thứ tự danh sách giải) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |
-| POST /admin/competitions/preview | {content,stageCode,opponent}; lịch xem trước, không ghi DB |
+| POST /admin/competitions/preview | {content,stageCode,opponent,teams?,thirdPlace?}; lịch xem trước, không ghi DB (xem "Mẫu nhánh") |
+| GET /admin/competitions/{id}/revisions?page=&size=, /admin/competitions/{id}/revisions/{revisionId} | Lịch sử kế hoạch mới nhất trước: [{id,action,createdAt,entrants,stages,matches}] / kế hoạch của một bản |
+| POST /admin/roster-memberships/batch | {create,update:[{id,version,content}],remove:[{id,version}]}, tối đa 500 dòng, ghi tất cả hoặc không dòng nào |
 | POST /admin/competitions/{id}/materialize, /publish, /withdraw | {version}; tạo trận thật / chụp snapshot / ẩn công khai |
 
 Lỗi page: PAGE_NOT_FOUND 404, PAGE_ACTION_FORBIDDEN 403, PAGE_CONFLICT 409, PAGE_INVALID_CONTENT 422.
