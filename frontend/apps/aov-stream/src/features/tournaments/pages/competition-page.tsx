@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { ImageRights } from "../../../components/image-rights"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -143,7 +142,6 @@ export function PublicCompetitionPage() {
             <CompetitionAwards view={view} preview={8} wide />
           </div>
         )}
-        <ImageRights />
       </div>
     </StreamShell>
   )

@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query"
 import type { Lane, RosterMembershipContent } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { regionName } from "../../../components/community-ui"
-import { ImageRights } from "../../../components/image-rights"
 import { MatchCard } from "../../../components/match-card"
 import { PlayerMark } from "../../../components/player-mark"
 import { EntityPageLink } from "../../../components/go-link"
@@ -158,7 +157,6 @@ function TeamContent({ id, profile }: { id: string; profile: TeamProfile }) {
           </button>
         )}
       </Part>
-      <ImageRights />
     </>
   )
 }

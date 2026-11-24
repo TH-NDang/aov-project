@@ -1,0 +1,16 @@
+/* The owl looks up when the reader points at what it offers. */
+.hub-owl {
+  display: block;
+  flex: none;
+}
+.hub-owl-gaze {
+  transition: transform 180ms ease-out;
+}
+:is(:hover, :focus-visible) > .hub-owl .hub-owl-gaze {
+  transform: translateY(-2.6px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-owl-gaze {
+    transition: none;
+  }
+}
