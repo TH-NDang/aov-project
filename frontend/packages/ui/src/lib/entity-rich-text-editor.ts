@@ -1,4 +1,5 @@
 import { entityKindLabels, referenceTranslation, validSkillReference, type EntityReference } from "./entity-rich-text"
+import { referenceKinds } from "@aov/ui/lib/reference-kinds"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 
 export type ReferenceSearchPage = { items: EntityReference[]; page: number; size: number; totalElements: number }
@@ -11,8 +12,11 @@ export type EntityReferenceSearch = (request: {
 
 export type TextSelection = { start: number; end: number }
 export type EditorSnapshot = TextSelection & { value: string }
-const tag =
-  /<\/?(?:b|i|muted|noauto|note|info|example|exampletable|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|skill|item|enchantment|arcana|spell|term|team|player|country):[a-zA-Z0-9._-]+)?)>/gi
+const tag = new RegExp(
+  "<\\/?(?:b|i|muted|noauto|note|info|example|exampletable|color(?:=#[\\da-f]{3,8})?" +
+    `|ref(?:=(?:${referenceKinds}):[a-zA-Z0-9._-]+)?)>`,
+  "gi",
+)
 
 export function safeSelection(value: string, selection: TextSelection) {
   const { start, end } = selection
@@ -164,9 +168,11 @@ export function referenceSearchGroup(query: string) {
   return { kind: group?.[1], needle }
 }
 
+const byName = new Intl.Collator("vi")
+
 export function createReferenceSearchIndex(entities: EntityReference[], locale: string, fallbackLocale: string) {
   return entities
-    .slice(0, 4000)
+    .slice(0, 10000)
     .flatMap((entity) => {
       if (entity.kind === "skill" && !validSkillReference(entity)) return []
       const translation = referenceTranslation(entity, locale, fallbackLocale)
@@ -175,11 +181,13 @@ export function createReferenceSearchIndex(entities: EntityReference[], locale: 
         {
           entity,
           translation,
-          search: [translation.name, ...translation.aliases, entity.id].map((text) => foldSearchText(text).trim()),
+          search: [translation.name, ...(translation.shortNames ?? []), ...translation.aliases, entity.id].map((text) =>
+            foldSearchText(text).trim(),
+          ),
         },
       ]
     })
-    .sort((a, b) => a.translation.name.localeCompare(b.translation.name))
+    .sort((a, b) => byName.compare(a.translation.name, b.translation.name))
 }
 
 export type ReferenceSearchIndex = ReturnType<typeof createReferenceSearchIndex>
@@ -189,6 +197,21 @@ export function searchReferenceChoices(index: ReferenceSearchIndex, query: strin
   return index.filter(
     (entry) => (!kind || entry.entity.kind === kind) && (!needle || entry.search.some((text) => text.includes(needle))),
   )
+}
+
+/** The closer match first: the whole name, its start, the start of one of its words, then anywhere inside it. */
+export function rankReferenceChoices(choices: ReferenceSearchIndex, query: string) {
+  const { needle } = referenceSearchGroup(query)
+  if (!needle) return choices
+  const distance = (text: string) => {
+    if (text === needle) return 0
+    if (text.startsWith(needle)) return 1
+    return text.includes(` ${needle}`) ? 2 : 3
+  }
+  return choices
+    .map((choice) => ({ choice, rank: Math.min(...choice.search.map(distance)) }))
+    .sort((a, b) => a.rank - b.rank)
+    .map(({ choice }) => choice)
 }
 
 export function referenceChoices(entities: EntityReference[], locale: string, fallbackLocale: string, query: string) {
