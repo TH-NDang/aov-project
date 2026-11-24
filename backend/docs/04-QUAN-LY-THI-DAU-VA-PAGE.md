@@ -479,7 +479,7 @@ giải lặp lại một giải nhiều lần. Người dùng yêu cầu bỏ c�
   nhóm đang diễn ra dù giải chính còn vài tháng nữa mới đấu.
 - `GET /admin/tournaments/facets?level=MAIN` đếm theo giải chính.
 - `GET /admin/tournaments/parts?parentId=` trả các phần chưa xóa của một giải chính; bỏ `parentId` thì trả mọi phần. Mỗi
-  dòng gồm `{id,parentId,name,logoUrl,competitionType,status,tier,region,startsOn,endsOn}`, xếp theo giải chính, rồi
+  dòng gồm `{id,parentId,name,logoUrl,logoDarkUrl,competitionType,status,tier,region,startsOn,endsOn}`, xếp theo giải chính, rồi
   ngày bắt đầu, rồi tên.
 - Ô chọn giải cho trận, đội hình và thành tích vẫn liệt kê cả các phần (`level=ALL`), vì trận và đội hình thuộc về
   từng phần. Ô chọn giải chính dùng `level=MAIN`.
@@ -626,6 +626,23 @@ Script `research/community-links/` (ADR-032), chạy tay, không phải migratio
    lần. Mỗi lần ghi vào sổ để hoàn tác.
 3. Chạy trên dữ liệu thật cần người dùng đồng ý riêng. Phần không khớp chắc chắn ở lại trong "Liên kết cần xem".
 
+## Logo theo giao diện sáng và tối (24/11/2026)
+
+Nhiều giải và đội có hai bản logo: một bản vẽ cho nền sáng, một bản cho nền tối (chữ trắng). Một ô logo không đủ: bản
+nền sáng gần như biến mất trên nền tối, và ngược lại.
+
+- Giải (`tournament`) và đội (`team`) có thêm `logoDarkUrl` bên cạnh `logoUrl`, không bắt buộc.
+  `logoUrl` là bản nền sáng hoặc bản dùng chung; thiếu `logoDarkUrl` thì `logoUrl` dùng cho cả hai giao diện.
+- Kiểm tra khi lưu giống `logoUrl`: địa chỉ HTTP(S) không kèm thông tin đăng nhập, ảnh trong kho phải còn dùng được.
+  Đếm ảnh đang dùng đọc toàn bộ nội dung bản ghi nên tính cả `logoDarkUrl`.
+- Danh bạ (`TeamRef`, `TournamentRef`, dòng đội, các phần của giải) trả thêm `logoDarkUrl`. Công bố hồ sơ đội từ
+  danh mục giữ nguyên `logoDarkUrl` đã có.
+- Admin: bảng sửa giải và bảng sửa đội có ô "Logo nền tối" ngay dưới ô logo, xem trước trên nền tối.
+- Stream: trang có cả hai ảnh, CSS ẩn ảnh không hợp giao diện (theo lựa chọn sáng/tối, hoặc theo hệ thống khi chưa
+  chọn), nên trang dựng sẵn và lúc đổi giao diện không cần script. Ảnh nào lỗi thì ảnh còn lại dùng cho cả hai.
+- Nguồn: Liquipedia ghi `image`/`imagedark` trong infobox và đặt tên tệp `… lightmode`/`… darkmode`
+  (`… allmode` là bản dùng chung). Tải ảnh và gắn vào dữ liệu thật cần người dùng đồng ý.
+
 ## Tuyển thủ trùng tên và gộp hồ sơ (20/11/2026)
 
 Lần nhập Liquipedia ngày 05/11 tạo một hồ sơ cho mỗi cách viết tên mà trang giải dùng: "Kiral" và "KiraL", "Anh Duy"
@@ -757,7 +774,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
 | GET /admin/tournaments/facets?level= | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách; `level=MAIN` đếm theo giải chính |
-| GET /admin/tournaments/parts?parentId= | Các phần chưa xóa của một giải chính, hoặc mọi phần khi bỏ `parentId`: [{id,parentId,name,logoUrl,competitionType,status,tier,region,startsOn,endsOn}] |
+| GET /admin/tournaments/parts?parentId= | Các phần chưa xóa của một giải chính, hoặc mọi phần khi bỏ `parentId`: [{id,parentId,name,logoUrl,logoDarkUrl,competitionType,status,tier,region,startsOn,endsOn}] |
 | GET /admin/teams?q=&sort=&tournamentId=&state=&page=&size= | sort RECENT (mặc định), NAME, UPDATED. Dòng có thêm `lastActiveOn`, `context` TOURNAMENT khi thuộc giải; hai trường này không có khi không áp dụng |
 | GET /admin/players?q=&sort=&teamId=&tournamentId=&state=&page=&size= | Như trên; `context` là TEAM_IN_TOURNAMENT, TEAM hoặc TOURNAMENT |
 | POST /admin/players?allowSameName= | Tạo tuyển thủ; 409 `TOURNAMENT_PLAYER_SAME_NAME` khi trùng tên cùng quốc gia (xem "Tuyển thủ trùng tên và gộp hồ sơ") |
