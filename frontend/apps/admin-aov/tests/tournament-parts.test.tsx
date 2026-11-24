@@ -142,12 +142,12 @@ test("lists ask for main events and the parts of an event are read on their own"
   await api.searchTournaments({ q: "wildcard" })
   assert.equal(new URL(seen[1], "http://localhost").searchParams.has("level"), false, "every tournament by default")
 
-  await api.tournamentFacets(undefined, "MAIN")
+  await api.tournamentFacets({ level: "MAIN", tier: "A", alsoRegions: [] })
   await api.tournamentFacets()
   await api.tournamentParts("cup")
   await api.tournamentParts()
   assert.deepEqual(seen.slice(2), [
-    "/admin/tournaments/facets?level=MAIN",
+    "/admin/tournaments/facets?level=MAIN&tier=A",
     "/admin/tournaments/facets",
     "/admin/tournaments/parts?parentId=cup",
     "/admin/tournaments/parts",

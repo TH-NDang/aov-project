@@ -134,6 +134,7 @@ export function CreateTournamentExtra({
       kind="tournaments"
       dark={dark}
       value={dark ? form.values.logoDarkUrl : form.values.logoUrl}
+      usual={dark ? form.values.logoUrl : undefined}
       name={form.values.name}
       onChange={(url) => onChange(dark ? "logoDarkUrl" : "logoUrl", url)}
       onBusyChange={onBusyChange}

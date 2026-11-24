@@ -21,6 +21,7 @@ import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tourna
 import { partDefaults, partLabel, type EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { competitionApi, competitionKeys } from "./competition-api"
 import { EventPartTabs } from "./workspace/event-parts"
+import { useStuck } from "@/lib/use-stuck"
 import { FinalStep } from "./workspace/final-step"
 import { FormatStep } from "./workspace/format-step"
 import {
@@ -104,6 +105,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     [params],
   )
   const stepNavigation = useRef<HTMLElement>(null)
+  const { edge: stepEdge, stuck: stepsStuck } = useStuck<HTMLDivElement>()
   useEffect(() => {
     const navigation = stepNavigation.current
     const active = navigation?.querySelector<HTMLElement>("[aria-current='step']")
@@ -111,7 +113,8 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     const left = active.getBoundingClientRect().left - navigation.getBoundingClientRect().left
     if (left < 0 || left + active.offsetWidth > navigation.clientWidth)
       navigation.scrollTo({ left: navigation.scrollLeft + left - 8, behavior: "smooth" })
-  }, [step])
+    // Stuck, the steps are narrower, so the open one has moved.
+  }, [step, stepsStuck])
 
   const draft = usePlanDraft(entry.content.plan)
   const { plan, change, changeAll, reset } = draft
@@ -374,9 +377,11 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         }}
       />
       <EventPartTabs family={family} currentId={entry.id} />
+      <div ref={stepEdge} aria-hidden="true" className="h-0" />
       <nav
         ref={stepNavigation}
-        className="sticky top-0 z-20 flex overflow-x-auto overflow-y-hidden border-b bg-background/95 backdrop-blur-sm"
+        data-stuck={stepsStuck || undefined}
+        className="group/steps sticky top-0 z-20 flex overflow-x-auto overflow-y-hidden overscroll-x-contain border-b bg-background/95 backdrop-blur-sm max-md:data-stuck:mb-4 [&::-webkit-scrollbar]:hidden"
         aria-label="Các bước của giải"
       >
         {WORKSPACE_STEPS.map((id, index) => {
@@ -392,13 +397,14 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
               aria-label={`Bước ${index + 1}: ${STEP_LABELS[id]}. ${state.detail}`}
               title={`Alt+${index + 1}`}
               className={cn(
-                "-mb-px flex min-w-44 flex-1 items-start gap-2.5 border-b-2 px-3 pt-2.5 pb-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                // On a phone a step is as wide as its words and the row scrolls; stuck, it keeps one line.
+                "-mb-px flex flex-none items-center gap-2 border-b-2 px-3 pt-2.5 pb-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none max-md:group-data-stuck/steps:py-1.5 md:min-w-44 md:flex-1 md:items-start md:gap-2.5",
                 active ? "border-primary" : "border-transparent hover:bg-muted/50",
               )}
             >
               <span
                 className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-full",
+                  "grid size-7 shrink-0 place-items-center rounded-full max-md:group-data-stuck/steps:size-6",
                   active
                     ? "bg-primary text-primary-foreground"
                     : state.tone === "ok"
@@ -414,7 +420,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                 <span className={cn("type-body block whitespace-nowrap", !active && "text-muted-foreground")}>
                   {STEP_LABELS[id]}
                 </span>
-                <span className="type-meta flex items-center gap-1 whitespace-nowrap">
+                <span className="type-meta flex items-center gap-1 whitespace-nowrap max-md:group-data-stuck/steps:hidden">
                   {state.tone === "ok" && <Check aria-hidden className="size-3 shrink-0 text-[var(--aov-success)]" />}
                   {state.tone === "todo" && (
                     <CircleAlert aria-hidden className="size-3 shrink-0 text-[var(--aov-warning)]" />

@@ -2,6 +2,8 @@ import { useState, type ReactNode } from "react"
 import type { Lane, TournamentContent } from "@aov/community-contracts"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
+import { TierEmblem } from "@aov/ui/components/tier-emblem"
+import { CalendarClock, CircleHelp, Flag, Megaphone, Radio } from "lucide-react"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { initials, type IconRef, type TeamView } from "../model/game-view"
 import type { SlotState } from "../model/timeline"
@@ -150,24 +152,25 @@ export function ItemSlot({
   )
 }
 
+/** A tournament's tier: its emblem, with its name beside it unless the place is `compact`. */
 export function TierBadge({ tier, compact }: { tier?: TournamentContent["tier"]; compact?: boolean }) {
   if (!tier || tier === "UNKNOWN") return null
   return (
-    <span
-      title={compact ? TIER_LABELS[tier] : undefined}
-      className={cn(
-        "inline-flex h-5 items-center rounded px-1.5 text-xs font-bold tracking-wide",
-        tier === "S"
-          ? "bg-[var(--esp-gold)] text-[var(--esp-ink)]"
-          : tier === "A"
-            ? "bg-[var(--esp-blue)] text-white"
-            : "bg-muted text-foreground",
-      )}
-    >
-      {compact ? tier : TIER_LABELS[tier]}
+    <span className="inline-flex items-center gap-1.5">
+      <TierEmblem tier={tier} label={TIER_LABELS[tier]} />
+      {!compact && <span className="type-label">{TIER_LABELS[tier]}</span>}
     </span>
   )
 }
+
+/** One icon per status, so a list is read without its words. */
+export const STATUS_ICONS = {
+  ONGOING: Radio,
+  UPCOMING: CalendarClock,
+  ANNOUNCED: Megaphone,
+  FINISHED: Flag,
+  UNKNOWN: CircleHelp,
+} satisfies Record<NonNullable<TournamentContent["status"]>, unknown>
 
 export function StatusPill({ status, onDark }: { status?: TournamentContent["status"]; onDark?: boolean }) {
   const value = status ?? "UNKNOWN"
@@ -178,13 +181,13 @@ export function StatusPill({ status, onDark }: { status?: TournamentContent["sta
         ? onDark
           ? "text-white/70"
           : "text-muted-foreground"
-        : "text-[var(--esp-gold)]"
+        : onDark
+          ? "text-[var(--esp-gold)]"
+          : "text-primary"
+  const Icon = STATUS_ICONS[value]
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", tone)}>
-      <span
-        className={cn("size-1.5 rounded-full bg-current", value === "ONGOING" && "esp-live-dot")}
-        aria-hidden="true"
-      />
+      <Icon className={cn("size-3.5 shrink-0", value === "ONGOING" && "esp-live-icon")} aria-hidden="true" />
       {STATUS_LABELS[value]}
     </span>
   )

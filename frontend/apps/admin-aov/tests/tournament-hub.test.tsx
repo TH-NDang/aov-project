@@ -49,7 +49,13 @@ beforeEach(() => {
       searched.push(`${filters.q}|${filters.sort}`)
       return onePage(rows)
     },
-    tournamentFacets: async () => ({ total: rows.length, statuses: {}, regions: [], years: [] }),
+    tournamentFacets: async () => ({
+      total: rows.length,
+      statuses: { UPCOMING: 1, FINISHED: 3 },
+      tiers: { A: 4 },
+      regions: { VN: 4 },
+      years: {},
+    }),
     tournamentParts: async () => [{ id: "part", parentId: "b", name: "Cup B - Wildcard" }],
     tournamentStats: async () => [],
     pick: async () => onePage([tournamentRow("main", "Main Cup")]),
@@ -179,6 +185,48 @@ test("a list opened at an address shows that search and order", async () => {
   await waitFor(() => router.state.location.search === "?q=cup&sort=STATUS", "The order is kept too")
 })
 
+test("the filters offer only what finds something, with how many", async () => {
+  await openHub("/tournaments?region=TH")
+  const options = (label: string) =>
+    [...document.querySelectorAll(`[aria-label="${label}"] option`)].map((option) => option.textContent)
+  await waitFor(() => options("Trạng thái giải đấu").length > 1, "The counts arrive")
+  assert.deepEqual(options("Trạng thái giải đấu"), ["Mọi trạng thái", "Sắp diễn ra (1)", "Đã kết thúc (3)"])
+  assert.deepEqual(options("Hạng giải"), ["Mọi hạng giải", "Hạng A (4)"])
+  assert.deepEqual(options("Khu vực giải đấu"), ["Mọi khu vực", "Thái Lan (0)", "Việt Nam (4)"])
+  assert.equal(
+    document.querySelector('[aria-label="Năm giải đấu"]'),
+    null,
+    "a filter with nothing to choose is left out",
+  )
+})
+
+test("the seasons of a circuit stand together and the older ones wait to be shown", async () => {
+  const seasons = ["2026", "2025", "2024", "2023", "2022"]
+  rows = [...rows, ...seasons.map((year) => tournamentRow(year, `Premier League ${year}`, { year: Number(year) }))]
+  competitionApi.summaries = async () =>
+    seasons.map((id) => ({ id, entrants: 8, matches: 4, circuit: "Premier League", circuitPageId: "pl" }))
+  await openHub()
+  const heading = [...document.querySelectorAll("h2")].find((item) => item.textContent === "Premier League")!
+  assert.match(heading.closest("tr")!.textContent ?? "", /5 mùa · 2022–2026/)
+  assert.equal(button("Mở giải Premier League 2024")?.querySelector("strong")?.textContent, "2024")
+  assert.equal(button("Mở giải Premier League 2023"), undefined, "older seasons are folded away")
+  await click(button("Xem thêm 2 mùa của Premier League"))
+  assert.ok(button("Mở giải Premier League 2022"))
+})
+
+test("what is on and coming up leads the list, and goes while the list is filtered", async () => {
+  rows[1] = tournamentRow("b", "Cup B", { status: "ONGOING", startsOn: "2020-01-01", endsOn: "2099-01-01" })
+  await openHub()
+  const shelf = () => document.querySelector('[aria-labelledby="active-tournaments"]')
+  assert.deepEqual(
+    [...(shelf()?.querySelectorAll("a") ?? [])].map((link) => link.textContent),
+    ["Cup B", "Cup A"],
+    "a tournament whose dates are over waits behind it to be set right",
+  )
+  await type(document.querySelector<HTMLInputElement>('[aria-label="Tìm giải đấu"]')!, "cup")
+  await waitFor(() => !shelf(), "A search shows its results only")
+})
+
 test("Shift ticks a range and the bar counts it", async () => {
   await openHub()
   await tick("Cup B")
@@ -199,7 +247,9 @@ test("the header box ticks every row on screen and clears them again", async () 
 test("other filters start with nothing ticked", async () => {
   await openHub()
   await tick("Cup B")
-  await click(button("Đã kết thúc"))
+  const status = document.querySelector<HTMLSelectElement>('[aria-label="Trạng thái giải đấu"]')!
+  await waitFor(() => status.querySelector('[value="FINISHED"]'), "The counts arrive")
+  await choose(status, "FINISHED")
   await waitFor(() => /status=FINISHED/.test(router.state.location.search), "The filter applies")
   assert.deepEqual(ticked(), [])
 })

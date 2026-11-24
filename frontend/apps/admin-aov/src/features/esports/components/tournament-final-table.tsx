@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 import type { TournamentContent } from "@aov/community-contracts"
 import { ExternalLink, Trophy } from "lucide-react"
+import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
+import { cn } from "@aov/ui/lib/utils"
 import { LocalMoney } from "@aov/ui/components/local-money"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
 import { awardGroups } from "../model/award-groups"
@@ -51,19 +53,28 @@ export function TournamentFinalTable({
               {placements.map((line, index) => {
                 const view = line.teamId ? team(line.teamId) : null
                 return (
-                  <TableRow key={`${line.place}-${line.teamName}-${index}`}>
-                    <TableCell className="type-body">{line.place}</TableCell>
+                  <TableRow
+                    key={`${line.place}-${line.teamName}-${index}`}
+                    className={cn(medalOf(line.place) && "esp-medal-row")}
+                    data-medal={medalOf(line.place) ?? undefined}
+                  >
+                    <TableCell className="type-body">
+                      <RankBadge place={line.place} size={32} />
+                    </TableCell>
                     <TableCell className="type-body">
                       <span className="flex min-w-0 items-center gap-2">
                         <ThemedLogoImg
                           url={view?.logoUrl}
                           darkUrl={view?.logoDarkUrl}
-                          className="size-6 shrink-0 rounded object-contain"
+                          className={cn(
+                            "shrink-0 rounded object-contain",
+                            medalOf(line.place) === "gold" ? "size-8" : "size-6",
+                          )}
                           fallback={
                             line.place === "1" && <Trophy className="size-4 shrink-0 text-primary" aria-hidden />
                           }
                         />
-                        <span className="truncate">{line.teamName}</span>
+                        <span className={cn("truncate", medalOf(line.place) && "font-semibold")}>{line.teamName}</span>
                       </span>
                     </TableCell>
                     {hasPrize && (

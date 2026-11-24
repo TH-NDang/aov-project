@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react"
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { useNavigate, useSearchParams } from "react-router"
@@ -8,7 +9,6 @@ import { Plus, Trash2, Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
-import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { CreateTournamentSheet } from "@/features/tournaments/components/create-tournament-sheet"
 import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
@@ -16,15 +16,27 @@ import { RegistryImportSheet } from "@/features/tournaments/components/registry-
 import { useTournamentStats } from "../data/use-esports-data"
 import { TournamentList } from "@/features/tournaments/components/tournament-list"
 import { TournamentBulkBar } from "@/features/tournaments/components/tournament-bulk-bar"
-import { TOURNAMENT_SORTS, TournamentToolbar } from "@/features/tournaments/components/tournament-toolbar"
+import { TournamentShelf } from "@/features/tournaments/components/tournament-shelf"
+import {
+  TOURNAMENT_LAYOUTS,
+  TournamentToolbar,
+  type TournamentLayout,
+} from "@/features/tournaments/components/tournament-toolbar"
 import type { TournamentRowActions } from "@/features/tournaments/components/tournament-row-menu"
 import { useRecordLifecycle } from "@/features/tournaments/components/use-record-lifecycle"
 import { useRowSelection } from "@/features/tournaments/components/use-row-selection"
 import { useTournamentChanges } from "@/features/tournaments/components/use-tournament-changes"
 import { useUrlSearch } from "@/features/tournaments/components/use-url-search"
 import { regionsNamedBy } from "@/features/tournaments/model/record-reason"
+import {
+  activeTournaments,
+  circuitGroups,
+  contradictedTournaments,
+  foldGroups,
+  type CircuitRef,
+} from "@/features/tournaments/model/tournament-groups"
 import { partDefaults, partsByMainEvent } from "@/features/tournaments/model/tournament-parts"
-import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/api/tournament-api"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import {
   ManagementEmpty,
   ManagementFooter,
@@ -34,13 +46,15 @@ import {
 import { STATUS_LABELS } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
 
-type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
 type TournamentStats = Omit<ContractStats, "tournamentId">
 type Entry = DocumentView<TournamentContent>
 /** The sheet open over the list. */
 type Dialog = { type: "create"; source?: Entry; partOf?: Entry } | { type: "edit"; entry: Entry } | { type: "import" }
 
-const STATUS_FILTERS: StatusFilter[] = ["all", "ONGOING", "UPCOMING", "FINISHED", "ANNOUNCED", "UNKNOWN"]
+/** Grouping needs every season at once; the registry holds a few hundred main events, and this is the largest page. */
+const WHOLE_LIST = 500
+/** Circuits drawn before the reader scrolls for more. */
+const CIRCUITS = 8
 
 export function TournamentHubPage() {
   return <AccessGate>{(access) => <Hub access={access} />}</AccessGate>
@@ -51,28 +65,35 @@ function Hub({ access }: { access: Access }) {
   const [params, setParams] = useSearchParams()
   const { search, setSearch, settled } = useUrlSearch()
   const [dialog, setDialog] = useState<Dialog | null>(null)
-  const status = (STATUS_FILTERS.find((value) => value === params.get("status")) ?? "all") as StatusFilter
+  const [openGroups, setOpenGroups] = useState<ReadonlySet<string>>(new Set())
+  const wanted = params.get("status") ?? ""
+  const status = wanted in STATUS_LABELS ? wanted : ""
   const tier = params.get("tier") ?? ""
   const region = params.get("region") ?? ""
   const year = params.get("year") ?? ""
-  const order =
-    (Object.keys(TOURNAMENT_SORTS) as TournamentSort[]).find((value) => value === params.get("sort")) ?? "RECENT"
+  const layout =
+    (Object.keys(TOURNAMENT_LAYOUTS) as TournamentLayout[]).find((value) => value === params.get("sort")) ?? "CIRCUIT"
+  const grouped = layout === "CIRCUIT"
+  const narrowed = {
+    q: settled,
+    status,
+    tier,
+    region,
+    year,
+    alsoRegions: regionsNamedBy(settled),
+    // Qualifiers, wildcards and other parts come with their main event instead of as rows of their own.
+    level: "MAIN" as const,
+  }
   const tournaments = useInfiniteQuery({
-    queryKey: tournamentKeys.hub(access.actorKey, settled, { status, tier, region, year }, order),
+    queryKey: tournamentKeys.hub(access.actorKey, settled, { status, tier, region, year }, layout),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       tournamentApi.searchTournaments(
         {
-          q: settled,
-          status: status === "all" ? "" : status,
-          tier,
-          region,
-          year,
-          alsoRegions: regionsNamedBy(settled),
-          sort: order,
-          // Qualifiers, wildcards and other parts come with their main event instead of as rows of their own.
-          level: "MAIN",
+          ...narrowed,
+          sort: grouped ? "RECENT" : layout,
           page: pageParam,
+          ...(grouped && { size: WHOLE_LIST }),
         },
         signal,
       ),
@@ -81,9 +102,10 @@ function Hub({ access }: { access: Access }) {
     placeholderData: keepPreviousData,
   })
   const facets = useQuery({
-    queryKey: tournamentKeys.hubFacets(access.actorKey),
-    queryFn: ({ signal }) => tournamentApi.tournamentFacets(signal, "MAIN"),
+    queryKey: tournamentKeys.hubFacets(access.actorKey, settled, { status, tier, region, year }),
+    queryFn: ({ signal }) => tournamentApi.tournamentFacets(narrowed, signal),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   })
   const parts = useQuery({
     queryKey: tournamentKeys.parts(access.actorKey, "every"),
@@ -113,9 +135,29 @@ function Hub({ access }: { access: Access }) {
     [plans.data],
   )
 
-  const visible = useMemo(() => tournaments.data?.pages.flatMap((page) => page.items) ?? [], [tournaments.data])
+  const circuits = useMemo(() => {
+    const result = new Map<string, CircuitRef>()
+    for (const { id, circuit, circuitPageId } of plans.data ?? [])
+      if (circuit) result.set(id, { id: circuitPageId || circuit, name: circuit })
+    return result
+  }, [plans.data])
+
+  const loaded = useMemo(() => tournaments.data?.pages.flatMap((page) => page.items) ?? [], [tournaments.data])
   const matching = tournaments.data?.pages[0]?.totalElements ?? 0
-  const filtered = !!search.trim() || status !== "all" || !!tier || !!region || !!year
+  const filtered = !!search.trim() || !!status || !!tier || !!region || !!year
+  const scope = [settled, status, tier, region, year, layout].join("|")
+  const groups = useMemo(
+    () => (grouped ? foldGroups(circuitGroups(loaded, circuits), (key) => filtered || openGroups.has(key)) : []),
+    [grouped, loaded, circuits, filtered, openGroups],
+  )
+  const revealed = useRevealedRows(groups, scope, CIRCUITS)
+  const visible = grouped ? revealed.rows.flatMap((group) => group.entries) : loaded
+  const toggleGroup = (key: string) =>
+    setOpenGroups((current) => {
+      const next = new Set(current)
+      if (!next.delete(key)) next.add(key)
+      return next
+    })
   const resetFilters = () => {
     setSearch("")
     setParams((current) => {
@@ -127,7 +169,7 @@ function Hub({ access }: { access: Access }) {
   const setFilter = (key: string, value: string) =>
     setParams((current) => {
       const next = new URLSearchParams(current)
-      if (value && value !== "all") next.set(key, value)
+      if (value) next.set(key, value)
       else next.delete(key)
       return next
     })
@@ -135,7 +177,7 @@ function Hub({ access }: { access: Access }) {
 
   const selection = useRowSelection(
     visible.map((entry) => entry.id),
-    [settled, status, tier, region, year].join("|"),
+    scope,
   )
   const selected = visible.filter((entry) => selection.ids.has(entry.id))
   const changes = useTournamentChanges({ parts: partsByEvent, onSettled: selection.settle })
@@ -178,38 +220,34 @@ function Hub({ access }: { access: Access }) {
         }
       />
 
-      <FilterTabs label="Trạng thái giải đấu">
-        {STATUS_FILTERS.map((value) => (
-          <FilterTab
-            key={value}
-            active={status === value}
-            count={facets.data && (value === "all" ? facets.data.total : (facets.data.statuses[value] ?? 0))}
-            onClick={() => setFilter("status", value)}
-          >
-            {value === "all" ? "Tất cả" : STATUS_LABELS[value]}
-          </FilterTab>
-        ))}
-      </FilterTabs>
+      {grouped && !filtered && (
+        <TournamentShelf
+          entries={[...activeTournaments(loaded), ...contradictedTournaments(loaded)]}
+          stats={counters.isSuccess && !plans.isPending ? stats : undefined}
+          href={tournamentPath}
+        />
+      )}
 
       {error ? (
         <LoadError error={error} onRetry={() => void Promise.all([tournaments.refetch(), counters.refetch()])} />
-      ) : tournaments.isPending ? (
+      ) : tournaments.isPending || (grouped && plans.isPending) ? (
         <ManagementLoading />
       ) : (
         <ManagementPanel>
           <TournamentToolbar
             search={search}
             onSearchChange={setSearch}
-            values={{ tier, region, year, sort: order }}
-            regions={facets.data?.regions ?? []}
-            years={(facets.data?.years ?? []).map(String)}
-            onFilter={(key, value) => setFilter(key, key === "sort" && value === "RECENT" ? "" : value)}
+            values={{ status, tier, region, year, sort: layout }}
+            facets={facets.data}
+            onFilter={(key, value) => setFilter(key, key === "sort" && value === "CIRCUIT" ? "" : value)}
             onReset={filtered ? resetFilters : undefined}
           />
           {lifecycle.failure && <div className="border-b p-3">{lifecycle.failure}</div>}
           {visible.length ? (
             <TournamentList
               entries={visible}
+              groups={grouped ? revealed.rows : undefined}
+              onToggleGroup={filtered ? undefined : toggleGroup}
               stats={counters.isSuccess && !plans.isPending ? stats : undefined}
               onOpen={open}
               parts={partsByEvent}
@@ -234,8 +272,8 @@ function Hub({ access }: { access: Access }) {
             count={matching}
             total={facets.data?.total ?? matching}
             noun="giải đấu"
-            rows={visible}
-            loader={tournaments}
+            rows={grouped ? loaded : visible}
+            loader={grouped && revealed.loader.hasNextPage ? revealed.loader : tournaments}
           />
         </ManagementPanel>
       )}

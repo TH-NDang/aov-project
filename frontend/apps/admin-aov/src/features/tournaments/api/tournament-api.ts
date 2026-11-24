@@ -95,9 +95,13 @@ export const tournamentKeys = {
     actorKey: string,
     search: string,
     filters: { status: string; tier: string; region: string; year: string },
-    sort: TournamentSort,
-  ) => [...all, "hub", actorKey, search, filters.status, filters.tier, filters.region, filters.year, sort] as const,
-  hubFacets: (actorKey: string) => [...all, "hub-facets", actorKey] as const,
+    layout: string,
+  ) => [...all, "hub", actorKey, search, filters.status, filters.tier, filters.region, filters.year, layout] as const,
+  hubFacets: (
+    actorKey: string,
+    search: string,
+    filters: { status: string; tier: string; region: string; year: string },
+  ) => [...all, "hub-facets", actorKey, search, filters.status, filters.tier, filters.region, filters.year] as const,
   /** The parts of one main event, or of every event with "every". */
   parts: (actorKey: string, mainEventId: string) => [...all, "parts", actorKey, mainEventId] as const,
   /** The parts of the tournament open in the registry editor, to tell whether it may become a part itself. */
@@ -225,8 +229,11 @@ export function createTournamentApi(request: Request = communityRequest) {
       throw new Error("Danh sách quá lớn. Hãy thu hẹp phạm vi trước khi tải lại.")
     },
     tournamentStats: (signal?: AbortSignal) => request<TournamentStats[]>("/admin/tournaments/stats", { signal }),
-    tournamentFacets: (signal?: AbortSignal, level?: TournamentLevel) =>
-      request<TournamentFacets>(withQuery("/admin/tournaments/facets", { level }), { signal }),
+    /** What each filter can still find beside the search and the other filters. */
+    tournamentFacets: (
+      filters: Pick<TournamentFilters, "q" | "level" | "status" | "tier" | "region" | "year" | "alsoRegions"> = {},
+      signal?: AbortSignal,
+    ) => request<TournamentFacets>(withQuery("/admin/tournaments/facets", filters), { signal }),
     /** The parts of one main event, or every part when none is named, each event's parts in playing order. */
     tournamentParts: (mainEventId?: string, signal?: AbortSignal) =>
       request<TournamentPart[]>(withQuery("/admin/tournaments/parts", { parentId: mainEventId }), { signal }),

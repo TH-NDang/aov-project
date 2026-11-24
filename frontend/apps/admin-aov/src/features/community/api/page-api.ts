@@ -53,8 +53,11 @@ export const pageKeys = {
       filters: { country: string; lane: string; status: string },
       sort: string,
     ) => [...directory, actorKey, "players", search, filters.country, filters.lane, filters.status, sort] as const,
+    playerFacets: (actorKey: string, search: string, filters: { country: string; lane: string; status: string }) =>
+      [...directory, actorKey, "player-facets", search, filters.country, filters.lane, filters.status] as const,
     teams: (actorKey: string, search: string, country: string, sort: string) =>
       [...directory, actorKey, "teams", search, country, sort] as const,
+    teamFacets: (actorKey: string, search: string) => [...directory, actorKey, "team-facets", search] as const,
   },
 }
 export const publicSite = import.meta.env?.VITE_STREAM_URL || "http://localhost:5174"

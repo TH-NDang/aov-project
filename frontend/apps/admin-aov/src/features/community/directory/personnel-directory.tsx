@@ -18,7 +18,7 @@ import { ProfileRoleIcon } from "../components/profile-icons"
 import { directoryApi, useDebounced } from "./directory-api"
 import { pageKeys } from "../api/page-api"
 import { ProfileEditSheet } from "./entry-edit-sheet"
-import { EntryAction, EntryPicture } from "./entry-parts"
+import { EntryAction } from "./entry-parts"
 import {
   CountryLabel,
   DirectoryBody,
@@ -151,9 +151,7 @@ export function CoachDirectory({ access }: { access: Access }) {
                 className="relative grid items-center gap-x-4 gap-y-1 px-4 py-3 transition hover:bg-muted/50 @3xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.6fr)_6rem_2rem]"
               >
                 <span className="flex min-w-0 items-center gap-3">
-                  <EntryPicture missing={!person.content?.avatarUrl} label="Thiếu ảnh">
-                    <PlayerPhoto name={name} url={person.content?.avatarUrl ?? undefined} size={44} />
-                  </EntryPicture>
+                  <PlayerPhoto name={name} size={44} />
                   <span className="min-w-0 pr-8 @3xl:pr-0">
                     <Link
                       to={`/pages/${person.id}`}
@@ -246,9 +244,7 @@ export function BroadcastDirectory({ access }: { access: Access }) {
                     <EntryAction label={`Sửa hồ sơ ${name}`} onClick={() => setEditing(person)} />
                   </div>
                 )}
-                <EntryPicture missing={!person.content?.avatarUrl} label="Thiếu ảnh">
-                  <PlayerPhoto name={name} url={person.content?.avatarUrl ?? undefined} size={80} />
-                </EntryPicture>
+                <PlayerPhoto name={name} size={80} />
                 <h2 className="type-section-title max-w-full truncate">
                   <Link to={`/pages/${person.id}`} className="after:absolute after:inset-0 after:rounded-lg">
                     {name}

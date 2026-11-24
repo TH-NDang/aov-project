@@ -49,7 +49,6 @@ export const RECORD_FIELDS: Record<RecordKind, RecordField[]> = {
       options: Object.entries(CAREER_STATUSES).map(([id, name]) => ({ id, name })),
     },
     { key: "signatureHeroes", label: "Tướng tủ", placeholder: "Capheny, Violet, Elsu" },
-    { key: "photoUrl", label: "Ảnh" },
   ],
 }
 
@@ -100,7 +99,6 @@ export function TeamRecordForm({
     return () => onBusyChange(false)
   }, [busy, onBusyChange])
   const set = (key: string, value: string) => setValues((current) => ({ ...current, [key]: value }))
-  const image = kind === "teams" ? "logoUrl" : "photoUrl"
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -113,21 +111,25 @@ export function TeamRecordForm({
   return (
     <form className="space-y-4 rounded-lg border bg-muted/30 p-3" onSubmit={submit}>
       <fieldset disabled={busy} className="grid gap-3 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <RegistryLogoField
-            kind={kind}
-            value={values[image] ?? ""}
-            name={(kind === "teams" ? values.name : values.nickname) ?? ""}
-            onChange={(url) => set(image, url)}
-            onBusyChange={setUploading}
-          />
-        </div>
+        {/* A player has no picture: the service keeps none. */}
+        {kind === "teams" && (
+          <div className="sm:col-span-2">
+            <RegistryLogoField
+              kind={kind}
+              value={values.logoUrl ?? ""}
+              name={values.name ?? ""}
+              onChange={(url) => set("logoUrl", url)}
+              onBusyChange={setUploading}
+            />
+          </div>
+        )}
         {kind === "teams" && (
           <div className="sm:col-span-2">
             <RegistryLogoField
               kind={kind}
               dark
               value={values.logoDarkUrl ?? ""}
+              usual={values.logoUrl}
               name={values.name ?? ""}
               onChange={(url) => set("logoDarkUrl", url)}
               onBusyChange={setUploading}
@@ -135,7 +137,7 @@ export function TeamRecordForm({
           </div>
         )}
         {fields
-          .filter((field) => field.key !== image && field.key !== "logoDarkUrl")
+          .filter((field) => field.key !== "logoUrl" && field.key !== "logoDarkUrl")
           .map((field) =>
             field.options ? (
               <label key={field.key} className="grid min-w-0 gap-2">

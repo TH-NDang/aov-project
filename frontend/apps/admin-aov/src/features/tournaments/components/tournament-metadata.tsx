@@ -3,11 +3,11 @@ import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 
 export const TOURNAMENT_TIERS = {
   UNKNOWN: "Chưa xác định",
-  S: "S-Tier",
-  A: "A-Tier",
-  B: "B-Tier",
-  C: "C-Tier",
-  D: "D-Tier",
+  S: "Hạng S",
+  A: "Hạng A",
+  B: "Hạng B",
+  C: "Hạng C",
+  D: "Hạng D",
 }
 export const COMPETITION_TYPES = {
   UNKNOWN: "Chưa xác định",

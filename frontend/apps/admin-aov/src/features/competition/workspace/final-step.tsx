@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
 import { ListOrdered, Wand2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
+import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { TournamentFinalTable } from "@/features/esports/components/tournament-final-table"
@@ -97,14 +99,22 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
               {suggested.map((line, index) => (
                 <li
                   key={index}
-                  className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 border-b px-4 py-2 last:border-b-0"
+                  className={cn(
+                    "grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 border-b px-4 py-2 last:border-b-0",
+                    medalOf(line.place) && "esp-medal-row",
+                  )}
+                  data-medal={medalOf(line.place) ?? undefined}
                 >
-                  <span className="type-body tabular-nums">{line.place}</span>
+                  <span className="type-body tabular-nums">
+                    <RankBadge place={line.place} size={32} />
+                  </span>
                   <span className="min-w-0">
                     {line.teamId ? (
                       <span className="flex items-center gap-2.5">
-                        <TeamLogo team={ws.team(line.teamId)} size={24} />
-                        <span className="type-body truncate">{line.teamName}</span>
+                        <TeamLogo team={ws.team(line.teamId)} size={medalOf(line.place) === "gold" ? 32 : 24} />
+                        <span className={cn("type-body truncate", medalOf(line.place) && "font-semibold")}>
+                          {line.teamName}
+                        </span>
                       </span>
                     ) : (
                       <Chip tone="warn">Chưa xác định</Chip>

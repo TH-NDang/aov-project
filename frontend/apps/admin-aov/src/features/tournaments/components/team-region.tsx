@@ -1,4 +1,5 @@
 import { Globe } from "lucide-react"
+import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 
 export const TEAM_REGIONS = [
   { id: "VN", name: "Việt Nam" },
@@ -35,17 +36,16 @@ export const TEAM_REGIONS = [
   { id: "GLOBAL", name: "Quốc tế" },
 ]
 
-const localFlags = new Set(["VN", "TH", "TW", "ID", "CN"])
-
 export function teamRegionName(code?: string) {
   return TEAM_REGIONS.find((region) => region.id === code)?.name || code || "Chưa xác định khu vực"
 }
 
 export function TeamRegionBadge({ code }: { code?: string }) {
+  const flag = code ? countryReferenceFlag(code) : null
   return (
     <span className="tournament-region-badge" title={teamRegionName(code)}>
-      {code && localFlags.has(code) ? (
-        <img src={`/images/flags/${code.toLowerCase()}.svg`} alt="" loading="lazy" />
+      {flag ? (
+        <img src={flag} alt="" loading="lazy" />
       ) : code && code !== "GLOBAL" ? (
         <span className="tournament-region-code" aria-hidden="true">
           {code}

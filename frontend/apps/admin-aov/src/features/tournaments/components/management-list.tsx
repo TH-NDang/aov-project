@@ -39,7 +39,7 @@ export function ManagementToolbar({
         />
       )}
       {/* The filters move below the search together, so the search keeps its width and no filter ends up alone. */}
-      <div className="contents @xl:grid @xl:flex-auto @xl:grid-flow-col @xl:items-center @xl:gap-2 [&>select]:w-full [&>select]:min-w-0 [&>select]:truncate @max-xl:[&>select:last-of-type:nth-of-type(odd)]:col-span-2">
+      <div className="contents @xl:grid @xl:flex-auto @xl:grid-flow-col @xl:items-center @xl:gap-2 [&>select]:w-full [&>select]:min-w-0 [&>select]:truncate @max-xl:[&>[data-filter]:last-of-type:nth-of-type(odd)]:col-span-2 @max-xl:[&>select:last-of-type:nth-of-type(odd)]:col-span-2">
         {children}
         {onReset && (
           <Button variant="ghost" size="sm" className="justify-self-start @max-xl:col-span-2" onClick={onReset}>

@@ -49,11 +49,11 @@ export function stageInfo(stage?: string | null): StageInfo {
 }
 
 export const TIER_LABELS: Record<NonNullable<TournamentContent["tier"]>, string> = {
-  S: "S-Tier",
-  A: "A-Tier",
-  B: "B-Tier",
-  C: "C-Tier",
-  D: "D-Tier",
+  S: "Hạng S",
+  A: "Hạng A",
+  B: "Hạng B",
+  C: "Hạng C",
+  D: "Hạng D",
   UNKNOWN: "Chưa xếp hạng",
 }
 

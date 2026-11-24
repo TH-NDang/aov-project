@@ -1,5 +1,6 @@
 import type { CompetitionStage } from "@aov/community-contracts"
 import { ListOrdered } from "lucide-react"
+import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
 import { cn } from "@aov/ui/lib/utils"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { stageProgress } from "../workspace/model"
@@ -42,6 +43,7 @@ export function StandingsPanel({ ws, stage }: { ws: Workspace; stage: Competitio
             const cut = stage.advance > 0 && index === stage.advance - 1
             const out = stage.advance > 0 && index >= stage.advance
             const diff = row.gameWins - row.gameLosses
+            const medal = row.played > 0 ? medalOf(row.rank) : null
             return (
               <tr
                 key={row.teamId}
@@ -49,16 +51,18 @@ export function StandingsPanel({ ws, stage }: { ws: Workspace; stage: Competitio
                   "type-body border-b last:border-b-0",
                   cut && "border-b-2 border-b-primary",
                   out && "text-muted-foreground",
+                  medal && "esp-medal-row",
                 )}
+                data-medal={medal ?? undefined}
               >
                 <td className="py-1.5 pr-2 pl-4 whitespace-nowrap tabular-nums">
-                  {row.rank}
-                  {row.tied ? "=" : ""}
+                  {medal ? <RankBadge place={row.rank} size={32} /> : row.rank}
                 </td>
                 <td className="w-full max-w-0 py-1.5">
                   <span className="flex min-w-0 items-center gap-2.5">
-                    <TeamLogo team={ws.team(row.teamId)} size={24} />
+                    <TeamLogo team={ws.team(row.teamId)} size={medal === "gold" ? 32 : 24} />
                     <span className={cn("truncate", !out && "font-semibold")}>{ws.team(row.teamId).name}</span>
+                    {row.tied && row.played > 0 && <span className="type-meta shrink-0">Đồng hạng</span>}
                   </span>
                 </td>
                 <td className="px-2 py-1.5 text-right whitespace-nowrap tabular-nums">

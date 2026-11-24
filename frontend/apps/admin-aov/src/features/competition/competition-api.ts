@@ -23,6 +23,16 @@ export const competitionKeys = {
     [...plans, "published", tournamentId, publishedAt] as const,
 }
 
+/** A plan as the tournament list needs it: its size, its circuit and whether readers see it. */
+export type PlanIndexEntry = {
+  id: string
+  entrants: number
+  matches: number
+  publishedAt?: string | null
+  circuit?: string | null
+  circuitPageId?: string | null
+}
+
 export const competitionApi = {
   inCircuit: (circuitPageId: string, page = 0) =>
     communityRequest<PageSlice<CompetitionSummary>>(
@@ -32,17 +42,8 @@ export const competitionApi = {
     communityRequest<PageSlice<CompetitionSummary>>(
       `/admin/competitions?${new URLSearchParams({ organizerPageId: organizationId, page: String(page), size: "12" })}`,
     ),
-  summaries: async () => {
-    const rows: { id: string; entrants: number; matches: number; publishedAt?: string | null }[] = []
-    for (let page = 0; page < 100; page++) {
-      const result = await communityRequest<PageSlice<(typeof rows)[number]>>(
-        `/admin/competitions?page=${page}&size=100`,
-      )
-      rows.push(...result.items)
-      if (!result.items.length || rows.length >= result.totalElements) return rows
-    }
-    throw new Error("Danh sách quá lớn. Hãy thu hẹp phạm vi.")
-  },
+  /** Every plan in short, in one answer: the list of all tournaments needs no plan document. */
+  summaries: () => communityRequest<PlanIndexEntry[]>("/admin/competitions/index"),
   read: (id: string) => communityRequest<CompetitionView>(`/admin/competitions/${id}`),
   /** The published copy, as the public site serves it. */
   readPublished: (id: string) => communityRequest<CompetitionView>(`/competitions/${id}`),

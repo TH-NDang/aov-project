@@ -1,12 +1,14 @@
 import { useState } from "react"
 import { Link } from "react-router"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { ArrowDownWideNarrow, MapPin } from "lucide-react"
 import type { TeamDirectoryEntry } from "@aov/community-contracts"
 import { type Access, tournamentPath } from "@/features/esports/pages/esports-shell"
 import { LaneIcon, Monogram } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
 import { ManagementToolbar } from "@/features/tournaments/components/management-list"
-import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
+import { FilterSelect } from "@/features/tournaments/components/filter-select"
+import { facetOptions } from "@/features/tournaments/model/facet-options"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { directoryApi, useDebounced, useProfilesOf, winRate, type TeamSort } from "./directory-api"
 import { pageKeys } from "../api/page-api"
@@ -17,6 +19,7 @@ import {
   DirectoryShell,
   Figure,
   PublishedMark,
+  countryName,
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
@@ -24,7 +27,6 @@ import { RecordEditSheet } from "./entry-edit-sheet"
 import { EntryAction, EntryPicture } from "./entry-parts"
 import { LocalMoney } from "@aov/ui/components/local-money"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
-import { NativeSelect } from "@/components/native-select"
 
 const section = directorySections[0]
 const SORTS: Record<TeamSort, string> = {
@@ -47,6 +49,12 @@ export function TeamDirectory({ access }: { access: Access }) {
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => directoryApi.teams({ q: search, country, sort, page: pageParam }, signal),
     getNextPageParam: nextPageOf,
+  })
+  const facets = useQuery({
+    queryKey: pageKeys.directory.teamFacets(access.actorKey, search),
+    queryFn: ({ signal }) => directoryApi.teamFacets(search, signal),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
   })
   const rows = teams.data?.pages.flatMap((page) => page.items) ?? []
   const profiles = useProfilesOf(
@@ -74,31 +82,21 @@ export function TeamDirectory({ access }: { access: Access }) {
             placeholder="Tên đội, tên viết tắt hoặc mã…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            <NativeSelect
-              aria-label="Khu vực đội tuyển"
+            <FilterSelect
+              icon={MapPin}
+              label="Khu vực đội tuyển"
+              every="Mọi khu vực"
               value={country}
-              onChange={(event) => filters.setFilter("country", event.target.value)}
-              className="max-w-full"
-            >
-              <option value="">Mọi khu vực</option>
-              {TEAM_REGIONS.map((region) => (
-                <option key={region.id} value={region.id}>
-                  {region.name}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              aria-label="Sắp xếp đội tuyển"
+              options={facetOptions(facets.data?.countries, country, countryName)}
+              onChange={(value) => filters.setFilter("country", value)}
+            />
+            <FilterSelect
+              icon={ArrowDownWideNarrow}
+              label="Sắp xếp đội tuyển"
               value={sort}
-              onChange={(event) => filters.setFilter("sort", event.target.value)}
-              className="max-w-full"
-            >
-              {Object.entries(SORTS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
+              options={Object.entries(SORTS)}
+              onChange={(value) => filters.setFilter("sort", value)}
+            />
           </ManagementToolbar>
         }
       >

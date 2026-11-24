@@ -8,8 +8,10 @@ import type {
   PageSlice,
   PersonRoleFilter,
   PlayerDirectoryEntry,
+  PlayerFacets,
   ProfileKind,
   TeamDirectoryEntry,
+  TeamFacets,
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
 import { normalize } from "@/lib/text"
@@ -43,6 +45,13 @@ export const directoryApi = {
       `/admin/players/directory?${query({ ...filters, size: DIRECTORY_PAGE_SIZE })}`,
       { signal },
     ),
+  /** What each filter can still find beside the search and the other filters. */
+  teamFacets: (q: string, signal?: AbortSignal) =>
+    communityRequest<TeamFacets>(`/admin/teams/directory/facets?${query({ q })}`, { signal }),
+  playerFacets: (
+    filters: { q: string; country: string; lane: Lane | ""; status: CareerStatus | "" },
+    signal?: AbortSignal,
+  ) => communityRequest<PlayerFacets>(`/admin/players/directory/facets?${query(filters)}`, { signal }),
   competitionPages: (signal?: AbortSignal) =>
     communityRequest<CompetitionPageEntry[]>("/admin/competitions/page-stats", { signal }),
   profiles: (

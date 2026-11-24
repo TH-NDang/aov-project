@@ -839,11 +839,22 @@
       opacity: 0.35;
     }
   }
-  .esp-live-dot {
+  /* The first three places of a table stand on a wash of their medal. */
+  .esp-medal-row {
+    --medal: var(--aov-medal-bronze);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--medal) 14%, transparent), transparent 70%);
+  }
+  .esp-medal-row[data-medal="silver"] {
+    --medal: var(--aov-medal-silver);
+  }
+  .esp-medal-row[data-medal="gold"] {
+    --medal: var(--aov-medal-gold);
+  }
+  .esp-live-icon {
     animation: esp-pulse 1.6s ease-in-out infinite;
   }
   @media (prefers-reduced-motion: reduce) {
-    .esp-live-dot {
+    .esp-live-icon {
       animation: none;
     }
     .esp-pill {

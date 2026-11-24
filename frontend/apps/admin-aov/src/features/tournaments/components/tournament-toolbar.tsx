@@ -1,45 +1,41 @@
-import { NativeSelect } from "@/components/native-select"
-import { TIER_LABELS, regionName } from "@/features/esports/model/labels"
+import { ArrowDownWideNarrow, CalendarRange, CircleDot, MapPin, Medal } from "lucide-react"
+import type { TournamentFacets } from "@aov/community-contracts"
+import { STATUS_LABELS, TIER_LABELS, regionName } from "@/features/esports/model/labels"
 import type { TournamentSort } from "../api/tournament-api"
+import { facetOptions } from "../model/facet-options"
+import { FilterSelect } from "./filter-select"
 import { ManagementToolbar } from "./management-list"
 
-export const TOURNAMENT_SORTS: Record<TournamentSort, string> = {
+/** How the list is laid out: the seasons of each circuit together, or one list in the server's order. */
+export type TournamentLayout = "CIRCUIT" | TournamentSort
+
+export const TOURNAMENT_LAYOUTS: Record<TournamentLayout, string> = {
+  CIRCUIT: "Theo hệ thống giải",
   RECENT: "Gần đây trước",
   STATUS: "Ưu tiên trạng thái",
   NAME: "Tên A–Z",
 }
 
-export type TournamentFilterKey = "tier" | "region" | "year" | "sort"
+export type TournamentFilterKey = "status" | "tier" | "region" | "year" | "sort"
 
 /** The search and filters of the tournament list; a filter without a value shows everything. */
 export function TournamentToolbar({
   search,
   onSearchChange,
   values,
-  regions,
-  years,
+  facets,
   onFilter,
   onReset,
 }: {
   search: string
   onSearchChange: (value: string) => void
   values: Record<TournamentFilterKey, string>
-  regions: string[]
-  years: string[]
+  /** What each filter can still find; missing while the counts are on their way. */
+  facets?: TournamentFacets
   onFilter: (key: TournamentFilterKey, value: string) => void
   onReset?: () => void
 }) {
-  const filters: { key: TournamentFilterKey; label: string; every?: string; options: [string, string][] }[] = [
-    { key: "tier", label: "Hạng giải", every: "Mọi hạng giải", options: Object.entries(TIER_LABELS) },
-    {
-      key: "region",
-      label: "Khu vực giải đấu",
-      every: "Mọi khu vực",
-      options: regions.map((value) => [value, regionName(value)]),
-    },
-    { key: "year", label: "Năm giải đấu", every: "Mọi năm", options: years.map((value) => [value, value]) },
-    { key: "sort", label: "Sắp xếp giải đấu", options: Object.entries(TOURNAMENT_SORTS) },
-  ]
+  const { status, tier, region, year, sort } = values
   return (
     <ManagementToolbar
       search={search}
@@ -48,22 +44,52 @@ export function TournamentToolbar({
       placeholder="Tên giải đấu, mã hoặc khu vực…"
       onReset={onReset}
     >
-      {filters.map(({ key, label, every, options }) => (
-        <NativeSelect
-          key={key}
-          aria-label={label}
-          value={values[key]}
-          onChange={(event) => onFilter(key, event.target.value)}
-          className="max-w-full"
-        >
-          {every && <option value="">{every}</option>}
-          {options.map(([value, text]) => (
-            <option key={value} value={value}>
-              {text}
-            </option>
-          ))}
-        </NativeSelect>
-      ))}
+      <FilterSelect
+        icon={CircleDot}
+        label="Trạng thái giải đấu"
+        every="Mọi trạng thái"
+        value={status}
+        options={facetOptions(
+          facets?.statuses,
+          status,
+          (value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] ?? value,
+          { order: Object.keys(STATUS_LABELS) },
+        )}
+        onChange={(value) => onFilter("status", value)}
+      />
+      <FilterSelect
+        icon={Medal}
+        label="Hạng giải"
+        every="Mọi hạng giải"
+        value={tier}
+        options={facetOptions(facets?.tiers, tier, (value) => TIER_LABELS[value as keyof typeof TIER_LABELS] ?? value, {
+          order: Object.keys(TIER_LABELS),
+        })}
+        onChange={(value) => onFilter("tier", value)}
+      />
+      <FilterSelect
+        icon={MapPin}
+        label="Khu vực giải đấu"
+        every="Mọi khu vực"
+        value={region}
+        options={facetOptions(facets?.regions, region, regionName)}
+        onChange={(value) => onFilter("region", value)}
+      />
+      <FilterSelect
+        icon={CalendarRange}
+        label="Năm giải đấu"
+        every="Mọi năm"
+        value={year}
+        options={facetOptions(facets?.years, year, (value) => value, { compare: (a, b) => Number(b) - Number(a) })}
+        onChange={(value) => onFilter("year", value)}
+      />
+      <FilterSelect
+        icon={ArrowDownWideNarrow}
+        label="Sắp xếp giải đấu"
+        value={sort}
+        options={Object.entries(TOURNAMENT_LAYOUTS)}
+        onChange={(value) => onFilter("sort", value)}
+      />
     </ManagementToolbar>
   )
 }

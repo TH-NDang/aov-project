@@ -217,18 +217,21 @@ function ProfileForm({
       }}
     >
       <fieldset disabled={busy} className="grid min-w-0 gap-5">
-        <ProfileImageField
-          label={individual ? "Ảnh chân dung" : "Logo"}
-          shape={individual ? "portrait" : "logo"}
-          subject={SUBJECTS[entry.kind]}
-          name={edited.name}
-          value={edited.avatarUrl ?? ""}
-          onChange={(avatarUrl) => set({ avatarUrl: avatarUrl || null })}
-          onBusyChange={(value) => {
-            setUploading(value)
-            guard.setBusy(value)
-          }}
-        />
+        {/* The page of one person has no pictures: the service keeps none. */}
+        {!individual && (
+          <ProfileImageField
+            label="Logo"
+            shape="logo"
+            subject={SUBJECTS[entry.kind]}
+            name={edited.name}
+            value={edited.avatarUrl ?? ""}
+            onChange={(avatarUrl) => set({ avatarUrl: avatarUrl || null })}
+            onBusyChange={(value) => {
+              setUploading(value)
+              guard.setBusy(value)
+            }}
+          />
+        )}
         <Field
           label="Tên hiển thị *"
           required

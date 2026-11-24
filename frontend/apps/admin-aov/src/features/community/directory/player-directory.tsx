@@ -1,13 +1,15 @@
 import { useState } from "react"
 import { useNavigate } from "react-router"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { Activity, ArrowDownWideNarrow, MapPin } from "lucide-react"
 import type { CareerStatus, Lane, PlayerDirectoryEntry } from "@aov/community-contracts"
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import type { Access } from "@/features/esports/pages/esports-shell"
 import { LaneIcon } from "@/features/esports/components/primitives"
 import { ManagementToolbar } from "@/features/tournaments/components/management-list"
 import { CAREER_STATUSES } from "@/features/tournaments/components/tournament-metadata"
-import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
+import { FilterSelect } from "@/features/tournaments/components/filter-select"
+import { facetOptions } from "@/features/tournaments/model/facet-options"
 import { pageKeys } from "../api/page-api"
 import { MergePlayerSheet } from "../components/merge-player-sheet"
 import { directoryApi, useDebounced, useHeroPortraits, useProfilesOf, type PlayerSort } from "./directory-api"
@@ -15,13 +17,13 @@ import {
   DirectoryBody,
   DirectoryFooter,
   DirectoryShell,
+  countryName,
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
 import { RecordEditSheet } from "./entry-edit-sheet"
 import { PlayerRow } from "./player-row"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
-import { NativeSelect } from "@/components/native-select"
 import { LANE_LABELS, LANE_ORDER } from "@/lib/lanes"
 
 const section = directorySections[1]
@@ -49,6 +51,12 @@ export function PlayerDirectory({ access }: { access: Access }) {
       directoryApi.players({ q: search, country, lane, status, sort, page: pageParam }, signal),
     getNextPageParam: nextPageOf,
   })
+  const facets = useQuery({
+    queryKey: pageKeys.directory.playerFacets(access.actorKey, search, { country, lane, status }),
+    queryFn: ({ signal }) => directoryApi.playerFacets({ q: search, country, lane, status }, signal),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  })
   const rows = players.data?.pages.flatMap((page) => page.items) ?? []
   const profiles = useProfilesOf(
     access.actorKey,
@@ -63,8 +71,13 @@ export function PlayerDirectory({ access }: { access: Access }) {
         <FilterTab active={!lane} onClick={() => filters.setFilter("lane", "")}>
           Mọi vị trí
         </FilterTab>
-        {LANE_ORDER.map((value) => (
-          <FilterTab key={value} active={lane === value} onClick={() => filters.setFilter("lane", value)}>
+        {LANE_ORDER.filter((value) => lane === value || !facets.data || facets.data.lanes[value]).map((value) => (
+          <FilterTab
+            key={value}
+            active={lane === value}
+            count={facets.data?.lanes[value]}
+            onClick={() => filters.setFilter("lane", value)}
+          >
             <LaneIcon lane={value} size={14} />
             {LANE_LABELS[value].short}
           </FilterTab>
@@ -87,44 +100,34 @@ export function PlayerDirectory({ access }: { access: Access }) {
             placeholder="Tên thi đấu, tên thật hoặc mã…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            <NativeSelect
-              aria-label="Quốc gia tuyển thủ"
+            <FilterSelect
+              icon={MapPin}
+              label="Quốc gia tuyển thủ"
+              every="Mọi quốc gia"
               value={country}
-              onChange={(event) => filters.setFilter("country", event.target.value)}
-              className="max-w-full"
-            >
-              <option value="">Mọi quốc gia</option>
-              {TEAM_REGIONS.map((region) => (
-                <option key={region.id} value={region.id}>
-                  {region.name}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              aria-label="Trạng thái thi đấu"
+              options={facetOptions(facets.data?.countries, country, countryName)}
+              onChange={(value) => filters.setFilter("country", value)}
+            />
+            <FilterSelect
+              icon={Activity}
+              label="Trạng thái thi đấu"
+              every="Mọi trạng thái"
               value={status}
-              onChange={(event) => filters.setFilter("status", event.target.value)}
-              className="max-w-full"
-            >
-              <option value="">Mọi trạng thái</option>
-              {Object.entries(CAREER_STATUSES).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              aria-label="Sắp xếp tuyển thủ"
+              options={facetOptions(
+                facets.data?.statuses,
+                status,
+                (value) => CAREER_STATUSES[value as CareerStatus] ?? value,
+                { order: Object.keys(CAREER_STATUSES) },
+              )}
+              onChange={(value) => filters.setFilter("status", value)}
+            />
+            <FilterSelect
+              icon={ArrowDownWideNarrow}
+              label="Sắp xếp tuyển thủ"
               value={sort}
-              onChange={(event) => filters.setFilter("sort", event.target.value)}
-              className="max-w-full"
-            >
-              {Object.entries(SORTS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
+              options={Object.entries(SORTS)}
+              onChange={(value) => filters.setFilter("sort", value)}
+            />
           </ManagementToolbar>
         }
       >
