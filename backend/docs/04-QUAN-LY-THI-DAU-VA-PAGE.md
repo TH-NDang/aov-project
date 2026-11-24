@@ -112,6 +112,34 @@ có không bị đổi.
 Admin hiện luật và phiên bản trong thẻ giai đoạn ở bước "Thể thức" và cho sửa trong phần sửa giai đoạn. Stream hiện
 chúng trong phần thể thức của trang giải.
 
+### Phạm vi patch của ván (24/11/2026)
+
+Người dùng chọn cách này ngày 24/11/2026: patch của giải đặt theo phạm vi ở giai đoạn, không ghi riêng từng ván. Trước
+đó ván chỉ có patch khi người ghi chọn tay (0/327 ván của AOG Mùa Đông 2026), nên ván không ghi patch được công bố theo
+patch mới nhất của Wiki.
+
+- **Phạm vi:** dòng phiên bản của giai đoạn có hiệu lực từ `releasedOn` tới trước dòng có ngày kế tiếp của cùng giai
+  đoạn. Giai đoạn chỉ có một dòng không ghi ngày thì dòng đó áp cho cả giai đoạn. Dòng không ngày trong giai đoạn có
+  nhiều dòng không tạo phạm vi.
+- **Ngày của ván:** `startedAt` của ván, thiếu thì lịch `scheduledAt` của trận, đổi sang ngày theo
+  `timezone` của kế hoạch giải. Giai đoạn của ván là `stage` của trận.
+- **Nguồn patch của ván** (`source`):
+  - `GAME`: ván tự ghi `seasonId` hoặc `patchVariantId`; đây là ngoại lệ (ví dụ trận đá bù) và luôn thắng.
+  - `STAGE`: dòng phiên bản của giai đoạn phủ ngày của ván; ván lấy `patchId` và `seasonId` của dòng.
+  - `NONE`: không dòng nào phủ, ví dụ giai đoạn chưa có dòng hoặc ván diễn ra trước dòng đầu tiên.
+- **Không ghi vào ván:** patch theo phạm vi được suy ra khi đọc và khi công bố. Sửa một dòng là mọi ván trong phạm vi đổi
+  theo; bản công bố của ván vẫn giữ ngữ cảnh đã đóng băng lúc công bố.
+- **Catalog:** catalog của Wiki nhận patch theo mã bản phát hành của thị trường (`patchVariantId`) hoặc theo mã patch
+  Wiki (`patchId`); mã patch được đổi sang bản phát hành của thị trường của ván.
+- **Công bố ván:** ván `STAGE` được công bố trong mùa và patch của dòng; ván `GAME` như trước; ván `NONE` theo
+  mùa hiện tại như trước.
+- **API:** `GET /admin/tournaments/{id}/game-patches` (`tournament:read`, không nhận tham số) trả mỗi ván
+  `{gameId, source, seasonId, patchId, patchVariantId, stageCode, playedOn, lineLabel, lineName, lineReleasedOn}`,
+  theo ngày thi đấu.
+- **Admin:** phần phiên bản của ván ghi rõ "Theo giai đoạn" với nhãn và tên dòng, và cho ghi đè patch riêng. Catalog
+  khi ghi ván đọc theo patch đã suy ra. Bảng "Kiểm tra dữ liệu" báo các ván không thuộc phạm vi nào khi giải đã có
+  dòng phiên bản.
+
 ### Tên trận theo mã (18/11/2026)
 
 Người dùng chọn cách này ngày 18/11/2026 để tên trận do lịch tự động sinh ra hiển thị đúng ngôn ngữ người đọc. Trận
@@ -786,6 +814,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
 | GET /admin/tournaments/facets?level= | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách; `level=MAIN` đếm theo giải chính |
+| GET /admin/tournaments/{id}/game-patches | Mùa và patch của từng ván: tự ghi (`GAME`), theo dòng phiên bản của giai đoạn (`STAGE`) hoặc không có (`NONE`) |
 | GET /admin/tournaments/parts?parentId= | Các phần chưa xóa của một giải chính, hoặc mọi phần khi bỏ `parentId`: [{id,parentId,name,logoUrl,logoDarkUrl,competitionType,status,tier,region,startsOn,endsOn}] |
 | GET /admin/teams?q=&sort=&tournamentId=&state=&page=&size= | sort RECENT (mặc định), NAME, UPDATED. Dòng có thêm `lastActiveOn`, `context` TOURNAMENT khi thuộc giải; hai trường này không có khi không áp dụng |
 | GET /admin/players?q=&sort=&teamId=&tournamentId=&state=&page=&size= | Như trên; `context` là TEAM_IN_TOURNAMENT, TEAM hoặc TOURNAMENT |
