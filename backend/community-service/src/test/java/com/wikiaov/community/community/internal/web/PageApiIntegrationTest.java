@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -366,6 +367,64 @@ class PageApiIntegrationTest {
                 .andExpect(jsonPath("$.references").value(1));
         mvc.perform(as(post(ROOT + "/admin/media-assets/" + asset + "/retire"), "editor", true))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void pagesOfOnePersonKeepNoPictures() throws Exception {
+        for (var kind : List.of("PLAYER", "PERSON")) {
+            assertThat(publishedPictures(kind)).as(kind).isEmpty();
+        }
+    }
+
+    /** The avatar and cover a page of {@code kind} shows once an editor who set both has published it. */
+    private List<String> publishedPictures(String kind) throws Exception {
+        var content = Map.of("name", "Pictured " + UUID.randomUUID(), "avatarUrl",
+                "https://img.example.test/player.png",
+                "coverUrl", "https://img.example.test/cover.png", "personRoles", List.of("CASTER"), "sources",
+                List.of(Map.of("label", "Official", "url", "https://example.com")));
+        var page = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", kind, "code", "pictured-" + UUID.randomUUID(), "content", content));
+        send(post(ROOT + "/admin/pages/" + page.path("id").asText() + "/publish"), "publisher", true,
+                Map.of("version", 0));
+
+        var shown = json.readTree(mvc.perform(get(ROOT + "/pages/" + page.path("id").asText()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("content");
+        return Stream.of("avatarUrl", "coverUrl").map(field -> shown.path(field).asText(""))
+                .filter(url -> !url.isEmpty()).toList();
+    }
+
+    @Test
+    void personnelOfPublishedCompetitionsAreListedWithWhatTheyDid() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        var coach = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PERSON", "code", "staff-" + suffix, "content",
+                        Map.of("name", "Coach " + suffix, "personRoles", List.of("COACH"))));
+        var a = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "staff-a-" + suffix, "name", "Alpha")));
+        var b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "staff-b-" + suffix, "name", "Beta")));
+        var tournament = send(post(ROOT + "/admin/tournaments"), "editor", true, Map.of("content",
+                Map.of("code", "staff-cup-" + suffix, "name", "Staff cup", "region", "VN", "staff",
+                        List.of(Map.of("teamId", a.path("id").asText(), "pageId", coach.path("id").asText(), "role",
+                                "COACH")))));
+        String id = tournament.path("id").asText();
+        var plan = Map.of("sourceUrl", "https://example.com/rules",
+                "entrants", List.of(Map.of("teamId", a.path("id").asText()), Map.of("teamId", b.path("id").asText())),
+                "stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN", "bestOf", 5, "legs",
+                        1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+        var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", plan));
+
+        send(post(ROOT + "/admin/competitions/" + id + "/publish"), "publisher", true,
+                Map.of("version", saved.path("version").asLong()));
+
+        mvc.perform(get(ROOT + "/competitions/participants").param("kind", "PERSON").param("q", suffix))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(coach.path("id").asText()))
+                .andExpect(jsonPath("$.items[0].roles[0]").value("COACH"))
+                .andExpect(jsonPath("$.items[0].team.name").value("Alpha"));
+        mvc.perform(get(ROOT + "/competitions").param("personPageId", coach.path("id").asText()))
+                .andExpect(jsonPath("$.totalElements").value(1)).andExpect(jsonPath("$.items[0].id").value(id));
     }
 
     @Test
@@ -1107,6 +1166,8 @@ class PageApiIntegrationTest {
         String suffix = UUID.randomUUID().toString();
         var circuitContent = new HashMap<String, Object>();
         circuitContent.put("name", "Original circuit");
+        circuitContent.put("shortName", "OC");
+        circuitContent.put("biography", "The first paragraph.\n\nThe second paragraph.");
         circuitContent.put("sources", List.of(Map.of("label", "Rules", "url", "https://example.com")));
         var circuit = send(post(ROOT + "/admin/pages"), "editor", true,
                 Map.of("kind", "CIRCUIT", "code", "circuit-" + suffix, "content", circuitContent));
@@ -1155,7 +1216,22 @@ class PageApiIntegrationTest {
                 Map.of("version", saved.path("version").asLong()));
         mvc.perform(get(ROOT + "/competitions").param("circuitPageId", circuitId))
                 .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.items[0].content.circuit.name").value("Original circuit"));
+                .andExpect(jsonPath("$.items[0].content.circuit.name").value("Original circuit"))
+                .andExpect(jsonPath("$.items[0].content.circuit.shortName").value("OC"))
+                .andExpect(jsonPath("$.items[0].content.circuit.introduction").value("The first paragraph."));
+        // A list carries the plan and the teams, not what only the page of the competition shows.
+        mvc.perform(get(ROOT + "/competitions").param("circuitPageId", circuitId).param("detail", "LIST"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].content.plan.entrants.length()").value(2))
+                .andExpect(jsonPath("$.items[0].content.teams.length()").value(2))
+                .andExpect(jsonPath("$.items[0].content.players").isEmpty())
+                .andExpect(jsonPath("$.items[0].content.series").isEmpty())
+                .andExpect(jsonPath("$.items[0].content.rosters").isEmpty());
+        mvc.perform(get(ROOT + "/competitions").param("detail", "NOPE")).andExpect(status().isBadRequest());
+        mvc.perform(as(get(ROOT + "/admin/competitions/index"), "editor", true)).andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '" + id + "')].circuit").value("Original circuit"))
+                .andExpect(jsonPath("$[?(@.id == '" + id + "')].entrants").value(2));
+        mvc.perform(as(get(ROOT + "/admin/competitions/index"), "fan", false)).andExpect(status().isForbidden());
         plan.remove("circuitPageId");
         send(put(ROOT + "/admin/competitions/" + id), "editor", true,
                 Map.of("version", published.path("version").asLong(), "content", plan));
@@ -1163,6 +1239,39 @@ class PageApiIntegrationTest {
                 .andExpect(jsonPath("$.totalElements").value(0));
         mvc.perform(get(ROOT + "/competitions").param("circuitPageId", circuitId))
                 .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void teamsOfPublishedCompetitionsAreListedAsParticipants() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        var tournament = send(post(ROOT + "/admin/tournaments"), "editor", true, Map.of("content",
+                Map.of("code", "participants-" + suffix, "name", "Participants cup", "region", "VN")));
+        String id = tournament.path("id").asText();
+        var a = send(post(ROOT + "/admin/teams"), "editor", true, Map.of("content",
+                Map.of("code", "participant-a-" + suffix, "name", "Alpha " + suffix, "country", "VN")));
+        var b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "participant-b-" + suffix, "name", "Beta " + suffix)));
+        var plan = Map.of("sourceUrl", "https://example.com/rules",
+                "entrants", List.of(Map.of("teamId", a.path("id").asText()), Map.of("teamId", b.path("id").asText())),
+                "stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN", "bestOf", 5, "legs",
+                        1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+        var list = get(ROOT + "/competitions/participants").param("kind", "TEAM").param("q", suffix);
+        var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", plan));
+        mvc.perform(list).andExpect(jsonPath("$.totalElements").value(0));
+
+        send(post(ROOT + "/admin/competitions/" + id + "/publish"), "publisher", true,
+                Map.of("version", saved.path("version").asLong()));
+
+        mvc.perform(list).andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.items[0].name").value("Alpha " + suffix))
+                .andExpect(jsonPath("$.items[0].country").value("VN"))
+                .andExpect(jsonPath("$.items[0].competitions").value(1))
+                .andExpect(jsonPath("$.items[0].competitionName").value("Participants cup"));
+        mvc.perform(get(ROOT + "/competitions/participants").param("kind", "TEAM").param("q", suffix)
+                .param("country", "VN")).andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get(ROOT + "/competitions/participants").param("kind", "PLAYER").param("q", suffix))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test

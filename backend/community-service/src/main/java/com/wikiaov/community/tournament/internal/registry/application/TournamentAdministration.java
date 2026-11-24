@@ -11,12 +11,13 @@ import com.wikiaov.community.tournament.internal.catalog.application.WikiCatalog
 import com.wikiaov.community.tournament.internal.directory.application.CompetitionDirectory;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
 import com.wikiaov.community.tournament.internal.directory.application.PlayerFilter;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentFilter;
-import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
@@ -89,8 +90,20 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
+    public TeamFacets teamFacets(String q) {
+        return directory.teamFacets(q);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
     public PageSlice<PlayerEntry> playerDirectory(PlayerFilter filter, Pageable page) {
         return directory.players(filter, page);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public PlayerFacets playerFacets(PlayerFilter filter) {
+        return directory.playerFacets(filter);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -174,8 +187,8 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public TournamentFacets tournamentFacets(TournamentLevel level) {
-        return directory.tournamentFacets(level);
+    public TournamentFacets tournamentFacets(TournamentFilter filter) {
+        return directory.tournamentFacets(filter);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")

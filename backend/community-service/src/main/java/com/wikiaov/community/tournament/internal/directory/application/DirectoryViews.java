@@ -104,12 +104,30 @@ public final class DirectoryViews {
     ) {
     }
 
-    /** What a list of tournaments can be narrowed by. */
+    /**
+     * What a list of tournaments can be narrowed by: how many tournaments each value would leave beside the search and
+     * the other filters. A value that would leave none is missing. {@code total} counts every tournament of the level.
+     */
     public record TournamentFacets(
             long total,
             Map<String, Long> statuses,
-            List<String> regions,
-            List<Integer> years
+            Map<String, Long> tiers,
+            Map<String, Long> regions,
+            Map<String, Long> years
+    ) {
+    }
+
+    /** What the team directory can be narrowed by, counted like {@link TournamentFacets}. */
+    public record TeamFacets(
+            Map<String, Long> countries
+    ) {
+    }
+
+    /** What the player directory can be narrowed by, counted like {@link TournamentFacets}. */
+    public record PlayerFacets(
+            Map<String, Long> countries,
+            Map<String, Long> lanes,
+            Map<String, Long> statuses
     ) {
     }
 

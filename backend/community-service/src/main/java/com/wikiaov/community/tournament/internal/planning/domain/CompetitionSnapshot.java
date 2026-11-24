@@ -29,4 +29,15 @@ public record CompetitionSnapshot(
     public CompetitionSnapshot {
         people = people == null ? Map.of() : Map.copyOf(people);
     }
+
+    /** The same snapshot with what the circuit's page says now; a circuit without a page stays as it is. */
+    public CompetitionSnapshot describedBy(Map<UUID, CompetitionCircuits.About> about) {
+        var current = circuit == null ? null : about.get(circuit.id());
+        if (current == null) {
+            return this;
+        }
+
+        return new CompetitionSnapshot(tournament, plan, teams, players, series, rosters, resolved, standings,
+                organizer, circuit.described(current), people);
+    }
 }

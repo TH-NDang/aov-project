@@ -12,7 +12,9 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Vie
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
 import com.wikiaov.community.tournament.internal.directory.application.PlayerFilter;
@@ -105,6 +107,22 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
+    @GetMapping(path = ApiPaths.ADMIN + "/teams/directory/facets", version = "1")
+    public TeamFacets teamFacets(@RequestParam(defaultValue = "") String q, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("q"));
+        return administration.teamFacets(q);
+    }
+
+    @Override
+    @GetMapping(path = ApiPaths.ADMIN + "/players/directory/facets", version = "1")
+    public PlayerFacets playerFacets(@RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "") String country, @RequestParam(defaultValue = "") String lane,
+            @RequestParam(defaultValue = "") String status, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("q", "country", "lane", "status"));
+        return administration.playerFacets(new PlayerFilter(q, country, lane, status, "RECENT"));
+    }
+
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/players/directory", version = "1")
     public PageSlice<PlayerEntry> playerDirectory(@RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "") String country, @RequestParam(defaultValue = "") String lane,
@@ -180,10 +198,15 @@ public class TournamentAdminController implements TournamentAdminApi {
 
     @Override
     @GetMapping(path = ApiPaths.ADMIN + "/tournaments/facets", version = "1")
-    public TournamentFacets tournamentFacets(@RequestParam(defaultValue = "ALL") TournamentLevel level,
+    public TournamentFacets tournamentFacets(@RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "") String alsoRegions, @RequestParam(defaultValue = "") String status,
+            @RequestParam(defaultValue = "") String tier, @RequestParam(defaultValue = "") String region,
+            @RequestParam(required = false) Integer year, @RequestParam(defaultValue = "ALL") TournamentLevel level,
             HttpServletRequest request) {
-        QueryParameters.requireOnly(request, Set.of("level"));
-        return administration.tournamentFacets(level);
+        QueryParameters.requireOnly(request,
+                Set.of("q", "alsoRegions", "status", "tier", "region", "year", "level"));
+        return administration.tournamentFacets(
+                new TournamentFilter(q, alsoRegions, status, tier, region, year, "RECENT", level, null, null));
     }
 
     @Override
