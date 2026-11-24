@@ -135,13 +135,13 @@ export function PlayerDirectory({ access }: { access: Access }) {
                 <th className="px-4 py-2 font-[inherit]">Tuyển thủ</th>
                 <th className="px-3 py-2 font-[inherit]">Vị trí</th>
                 <th className="hidden px-3 py-2 font-[inherit] @2xl:table-cell">Đội gần nhất</th>
-                <th className="hidden px-3 py-2 font-[inherit] @5xl:table-cell">Tướng tủ</th>
+                <th className="hidden px-3 py-2 font-[inherit] @6xl:table-cell">Tướng tủ</th>
                 <th className="hidden px-3 py-2 text-right font-[inherit] @2xl:table-cell">Giải</th>
                 <th className="hidden px-3 py-2 text-right font-[inherit] @2xl:table-cell">Vô địch</th>
                 <th className="hidden px-3 py-2 font-[inherit] @4xl:table-cell">Giải gần nhất</th>
                 <th className="hidden px-3 py-2 font-[inherit] @4xl:table-cell">Trạng thái</th>
                 {access.canWrite && (
-                  <th className="w-20 py-2 font-[inherit]">
+                  <th className="sticky right-0 w-20 bg-card py-2 font-[inherit]">
                     <span className="sr-only">Thao tác</span>
                   </th>
                 )}

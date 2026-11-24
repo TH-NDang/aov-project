@@ -95,8 +95,8 @@ export function PlayerRow({
           <span className="text-muted-foreground">–</span>
         )}
       </td>
-      <td className="hidden px-3 py-2.5 @5xl:table-cell">
-        <span className="flex max-w-52 flex-wrap items-center gap-1">
+      <td className="hidden px-3 py-2.5 @6xl:table-cell">
+        <span className="flex flex-nowrap items-center gap-1">
           {player.signatureHeroes.slice(0, 3).map((hero) => {
             const iconUrl = portrait(hero)
             // Only published heroes have a portrait; two letters would say less than the name.
@@ -123,7 +123,7 @@ export function PlayerRow({
           <span className="text-muted-foreground">0</span>
         )}
       </td>
-      <td className="type-meta hidden max-w-48 px-3 py-2.5 @4xl:table-cell">
+      <td className="type-meta hidden max-w-40 px-3 py-2.5 @4xl:table-cell">
         {latest && (
           <Link
             to={tournamentPath(latest.id)}
@@ -140,7 +140,7 @@ export function PlayerRow({
         {player.careerStatus === "UNKNOWN" ? "–" : CAREER_STATUSES[player.careerStatus]}
       </td>
       {onSheet && (
-        <td className="w-20 pr-2 text-right whitespace-nowrap">
+        <td className="sticky right-0 w-20 bg-card pr-2 text-right whitespace-nowrap">
           <EntryAction label={`Gộp hồ sơ ${player.nickname}`} icon={Merge} onClick={() => onSheet("merge")} />
           <EntryAction label={`Sửa hồ sơ ${player.nickname}`} onClick={() => onSheet("edit")} />
         </td>
