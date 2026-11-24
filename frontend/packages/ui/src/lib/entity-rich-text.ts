@@ -1,5 +1,16 @@
 import { isParagraphStyle, readExampleTable, type ParagraphStyle } from "./rich-text-blocks"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import { referenceKinds, type EntityKind } from "@aov/ui/lib/reference-kinds"
+import {
+  addressPattern,
+  nameRule,
+  nameStrength,
+  plainPunctuation,
+  trimAddress,
+  type NameForm,
+  type NameStrength,
+  type RecognizableName,
+} from "./reference-names"
 
 export const entityKindLabels = {
   hero: "Tướng",
@@ -8,12 +19,17 @@ export const entityKindLabels = {
   enchantment: "Phù hiệu",
   arcana: "Bảng ngọc",
   spell: "Phụ trợ",
+  mode: "Chế độ chơi",
+  circuit: "Hệ thống giải",
+  organization: "Tổ chức",
+  competition: "Giải đấu",
   team: "Đội tuyển",
   player: "Tuyển thủ",
+  person: "Nhân sự",
   country: "Quốc gia / khu vực",
   term: "Thuật ngữ",
-} as const
-export type EntityKind = keyof typeof entityKindLabels
+} as const satisfies Record<EntityKind, string>
+export type { EntityKind }
 const entityKindEnglish: Record<EntityKind, string> = {
   hero: "Hero",
   skill: "Ability",
@@ -21,8 +37,13 @@ const entityKindEnglish: Record<EntityKind, string> = {
   enchantment: "Enchantment",
   arcana: "Arcana",
   spell: "Talent",
+  mode: "Game mode",
+  circuit: "Tournament circuit",
+  organization: "Organization",
+  competition: "Tournament",
   team: "Team",
   player: "Player",
+  person: "Personnel",
   country: "Country / region",
   term: "Term",
 }
@@ -35,7 +56,8 @@ export function entityKindLabel(kind: string, locale = "vi-VN") {
 
 /**
  * What text may recognize by itself. Game text only names the game, where a number like "100%" must never become a team;
- * a message can name anything. A reference made on purpose with "@" works in both.
+ * running text (an introduction, a post, a message) can name anything, by the stricter rules of `reference-names`. A
+ * reference made on purpose with "@" works in both.
  */
 export type ReferenceScope = "game" | "all"
 const gameReferenceKinds: ReadonlySet<EntityKind> = new Set([
@@ -48,8 +70,27 @@ const gameReferenceKinds: ReadonlySet<EntityKind> = new Set([
   "term",
 ])
 
+const communityKinds: ReadonlySet<EntityKind> = new Set([
+  "circuit",
+  "organization",
+  "competition",
+  "team",
+  "player",
+  "person",
+])
+/** Running text recognizes these by the rules of `reference-names`; other kinds keep those of game text everywhere. */
+const namedKinds: ReadonlySet<EntityKind> = new Set([
+  ...communityKinds,
+  "hero",
+  "item",
+  "enchantment",
+  "arcana",
+  "spell",
+  "mode",
+])
+
 export function managedCommunityReference(kind: EntityKind) {
-  return kind === "team" || kind === "player" || kind === "country"
+  return communityKinds.has(kind) || kind === "country"
 }
 
 const termColors: Readonly<Record<string, readonly [string, string]>> = {
@@ -86,7 +127,14 @@ export function defaultEntityColor(
   return colors ? `light-dark(${colors[0]}, ${colors[1]})` : undefined
 }
 
-export type EntityTranslation = { locale: string; name: string; aliases: string[]; description: string }
+/** `shortNames` are abbreviations, which running text only takes in the capitals they are recorded in. */
+export type EntityTranslation = {
+  locale: string
+  name: string
+  aliases: string[]
+  description: string
+  shortNames?: string[]
+}
 export type SkillReferenceOwner = {
   id: string
   kind: "hero"
@@ -107,7 +155,9 @@ export type EntityReference = {
   /** Owner-qualified phrases resolved for this text only. */
   qualifiedSkillAliases?: string[]
   display?: { color?: string; underline?: boolean; showIcon?: boolean }
-  destinations?: { admin?: string; wiki?: string }
+  destinations?: { admin?: string; wiki?: string; stream?: string }
+  /** The teams a player or person was with: naming one of them in a paragraph tells their name from a common word. */
+  teamIds?: string[]
   heroId?: string
   skillKey?: string
   revisionId?: string
@@ -293,7 +343,8 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
     }
     const kind = entity.kind as EntityKind
     if (kind === "skill") throw new Error("Skill references are managed by the server and cannot be saved in settings")
-    if (managedCommunityReference(kind)) throw new Error("Managed references cannot be saved in Wiki settings")
+    if (managedCommunityReference(kind) || kind === "mode")
+      throw new Error("Managed references cannot be saved in Wiki settings")
     const key = `${kind}:${id}`
     if (seen.has(key)) throw new Error("Duplicate entity identity")
     seen.add(key)
@@ -339,10 +390,16 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
   }
 }
 
-export function resolveEntityRoute(entity: EntityReference, context: "admin" | "wiki", language?: string) {
+export function resolveEntityRoute(
+  entity: EntityReference,
+  context: "admin" | "wiki" | "stream",
+  language?: string,
+): string | undefined {
   if (entity.unresolved) return undefined
   if (context === "wiki" && managedCommunityReference(entity.kind)) return undefined
   const custom = safeLinkUrl(entity.destinations?.[context])
+  // Stream opens its own pages by path and the Wiki's, another site, by their whole address.
+  if (context === "stream") return custom
   if (entity.kind === "skill" && !validSkillReference(entity)) return undefined
   if (custom?.startsWith("/")) return custom
   if (!identifier.test(entity.id)) return undefined
@@ -371,9 +428,15 @@ export function resolveEntityRoute(entity: EntityReference, context: "admin" | "
 
 type Match = { entity: EntityReference; actualLocale: string }
 type Trie = { children: Map<string, Trie>; match?: Match | null; localSkill?: Match | null }
+/** A name running text can hold, as the characters it is looked for in. */
+type IndexedName = RecognizableName & { match: Match; characters: string[] }
+/** The names of running text by their first word, the longest first, and the short names among them. */
+type NameIndex = { byFirstWord: Map<string, IndexedName[]>; codes: Set<string> }
 export type EntityIndex = {
   root: Trie
   byId: Map<string, Match>
+  /** Only an index of running text has names. */
+  names?: NameIndex
   ownerSlots: Map<string, Match | null>
   bracketedSkills: Map<string, Match | null>
   accentInsensitive: boolean
@@ -384,6 +447,30 @@ const fold = (value: string, accentInsensitive: boolean) =>
   accentInsensitive ? foldSearchText(value) : value.normalize("NFC").toLowerCase()
 const skillMentionKey = (label: string, accentInsensitive: boolean) =>
   fold(label.trim().replace(/\s+/gu, " "), accentInsensitive)
+
+/** Names keep their accents: two players may differ in nothing else. */
+const foldName = (value: string) => plainPunctuation(value).toLowerCase()
+
+function addNames(index: NameIndex, match: Match, translation: EntityTranslation) {
+  const { entity } = match
+  const add = (label: string, form: NameForm) => {
+    const name = label.trim()
+    if (!name || name.length > 200) return
+    const rule = nameRule(entity.kind, name, form)
+    const folded = foldName(name)
+    const first = folded.match(/^[\p{L}\p{N}\p{M}_]+/u)?.[0]
+    if (rule === "never" || !first) return
+    const written = plainPunctuation(name)
+    const entry = { kind: entity.kind, written, rule, match, characters: Array.from(folded) }
+    const bucket = index.byFirstWord.get(first)
+    if (bucket) bucket.push(entry)
+    else index.byFirstWord.set(first, [entry])
+    if (rule === "code") index.codes.add(written)
+  }
+  add(translation.name, "name")
+  for (const name of translation.shortNames ?? []) add(name, "short")
+  for (const alias of translation.aliases) add(alias, "alias")
+}
 
 /** Only callers with a complete set of skills for the owner may enable slot mentions. */
 function skillSlotNames(entity: EntityReference) {
@@ -412,6 +499,8 @@ export function createEntityIndex(
   const ownerSlots = new Map<string, Match | null>()
   const bracketedSkills = new Map<string, Match | null>()
   const accentInsensitive = options.accentInsensitive === true
+  const running: NameIndex | undefined =
+    options.scope === "all" ? { byFirstWord: new Map(), codes: new Set() } : undefined
   let catalogEntries = 0
   let skillEntries = 0
   let communityEntries = 0
@@ -432,7 +521,7 @@ export function createEntityIndex(
     } else if (entry.kind === "country") {
       if (countryEntries++ >= 64) continue
     } else if (managedCommunityReference(entry.kind)) {
-      if (communityEntries++ >= 1000) continue
+      if (communityEntries++ >= 10000) continue
     } else if (catalogEntries++ >= 2000) continue
     const translations = entry.translations
       .slice(0, 30)
@@ -447,6 +536,9 @@ export function createEntityIndex(
       .map((translation) => ({
         ...translation,
         aliases: translation.aliases.filter((alias) => typeof alias === "string").slice(0, 20),
+        ...(Array.isArray(translation.shortNames)
+          ? { shortNames: translation.shortNames.filter((name) => typeof name === "string").slice(0, 20) }
+          : {}),
       }))
     const entity = { ...entry, translations }
     const translation =
@@ -469,6 +561,10 @@ export function createEntityIndex(
     }
     if ((options.scope ?? "game") === "game" && !gameReferenceKinds.has(entity.kind)) continue
     if (entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)) continue
+    if (running && namedKinds.has(entity.kind)) {
+      addNames(running, match, translation)
+      continue
+    }
     const slots = entity.kind === "skill" ? skillSlotNames(entity) : []
     const variants = entity.kind === "skill" && !entity.qualifiedSkillAliases ? skillVariantNames(entity) : []
     if (slots.length) {
@@ -507,7 +603,9 @@ export function createEntityIndex(
         node[property] = null
     }
   }
-  return { root, byId, ownerSlots, bracketedSkills, accentInsensitive }
+  for (const bucket of running?.byFirstWord.values() ?? [])
+    bucket.sort((a, b) => b.characters.length - a.characters.length)
+  return { root, byId, names: running, ownerSlots, bracketedSkills, accentInsensitive }
 }
 
 const secondsAfterNumber = /^(?:[.,]\d+)?\s*(?:gi[âa]y|s)(?![\p{L}\p{M}\p{N}_])/iu
@@ -517,18 +615,61 @@ function skillNumberCountsSeconds(label: string, after: string) {
   return /^chi[eê]u\s+\d+$/iu.test(label.normalize("NFC")) && secondsAfterNumber.test(after.normalize("NFC"))
 }
 
-export function parseRichText(
-  input: string,
-  index: EntityIndex,
-  options: {
-    autoRecognize?: boolean
-    firstOccurrenceOnly?: boolean
-    maxLength?: number
-    maxDepth?: number
-    maxReferences?: number
-    onOwnerFirstSkill?: (heroId: string, slot: number, variant?: number) => void
-  } = {},
-): RichTextNode[] {
+export type RichTextOptions = {
+  autoRecognize?: boolean
+  firstOccurrenceOnly?: boolean
+  maxLength?: number
+  maxDepth?: number
+  maxReferences?: number
+  onOwnerFirstSkill?: (heroId: string, slot: number, variant?: number) => void
+  /**
+   * `references` reads text people write by hand: references are its only markup, other tags stay as typed, and each
+   * paragraph (a blank line ends one) is recognized by itself.
+   */
+  markup?: "all" | "references"
+  /** Records, as `kind:id`, the text is about or stands on the page of: it names them, but never links them. */
+  exclude?: ReadonlySet<string>
+  /** The record, as `kind:id`, whose page an address opens. */
+  resolveAddress?: (address: string) => string | undefined
+}
+
+const richTextTokens = new RegExp(
+  `<color=#(?:[\\da-f]{3}|[\\da-f]{6}|[\\da-f]{8})>|<ref=(?:${referenceKinds}):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>` +
+    "|<(?:noauto|b|i|muted|note|info|example|exampletable)>" +
+    "|<\\/(?:color|ref|noauto|b|i|muted|note|info|example|exampletable)>",
+  "gi",
+)
+const referenceTokens = new RegExp(`<ref=(?:${referenceKinds}):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<\\/ref>`, "gi")
+
+export function parseRichText(input: string, index: EntityIndex, options: RichTextOptions = {}): RichTextNode[] {
+  if (options.markup !== "references") return parseParagraph(input, index, options)
+  const nodes: RichTextNode[] = []
+  let left = Math.max(0, Math.min(500, options.maxReferences ?? 500))
+  // The blank lines between paragraphs are kept as text, so the parts add up to the whole.
+  for (const part of input.split(/(\n[^\S\n]*(?:\n[^\S\n]*)+)/)) {
+    const parsed = parseParagraph(part, index, { ...options, maxReferences: left })
+    left -= parsed.filter((node) => node.type === "reference").length
+    nodes.push(...parsed)
+  }
+  return nodes
+}
+
+/** The teams a paragraph names, which tell the names of their players from common words. */
+function teamsNamed(source: string, index: EntityIndex, options: RichTextOptions) {
+  const nodes = parseParagraph(source, index, { markup: options.markup, resolveAddress: options.resolveAddress }, false)
+  const teams = new Set<string>()
+  const collect = (list: RichTextNode[]) => {
+    for (const node of list) {
+      if (node.type === "reference" && node.entity.kind === "team") teams.add(node.entity.id)
+      else if ("children" in node) collect(node.children)
+    }
+  }
+  collect(nodes)
+  for (const key of options.exclude ?? []) if (key.startsWith("team:")) teams.add(key.slice(5))
+  return teams
+}
+
+function parseParagraph(input: string, index: EntityIndex, options: RichTextOptions, people = true): RichTextNode[] {
   const limit = (value: number | undefined, maximum: number) =>
     Number.isFinite(value) ? Math.max(0, Math.min(maximum, Math.floor(value!))) : maximum
   const maxLength = limit(options.maxLength, 100000)
@@ -537,11 +678,8 @@ export function parseRichText(
   const maxReferences = limit(options.maxReferences, 500)
   let references = 0
   const recognized = new Set<string>()
-  const tokens = Array.from(
-    source.matchAll(
-      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|team|player|country|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i|muted|note|info|example|exampletable)>|<\/(?:color|ref|noauto|b|i|muted|note|info|example|exampletable)>/gi,
-    ),
-  )
+  const tokens = Array.from(source.matchAll(options.markup === "references" ? referenceTokens : richTextTokens))
+  let teams: Set<string> | undefined
   const pairs = new Map<number, number>()
   const stack: { index: number; kind: string }[] = []
   tokens.forEach((token, position) => {
@@ -561,6 +699,7 @@ export function parseRichText(
   }
   function recognize(text: string, enabled: boolean): RichTextNode[] {
     if (!enabled || references >= maxReferences) return text ? [{ type: "text", text }] : []
+    if (index.names) return recognizeAddresses(text)
     if (!index.bracketedSkills.size || !text.includes("<")) return recognizeAliases(text)
     const nodes: RichTextNode[] = []
     let cursor = 0
@@ -586,11 +725,33 @@ export function parseRichText(
     nodes.push(...recognizeAliases(text.slice(cursor)))
     return nodes
   }
+  /** The address of one of our pages reads as that page; nothing inside any other address is a name. */
+  function recognizeAddresses(text: string): RichTextNode[] {
+    const nodes: RichTextNode[] = []
+    let cursor = 0
+    for (const found of text.matchAll(addressPattern)) {
+      const address = trimAddress(found[0])
+      nodes.push(...recognizeAliases(text.slice(cursor, found.index)))
+      cursor = found.index + address.length
+      const key = options.resolveAddress?.(address)
+      const match = key ? index.byId.get(key) : undefined
+      const name = match && referenceTranslation(match.entity, match.actualLocale)?.name
+      if (!key || !match || !name || options.exclude?.has(key) || references >= maxReferences) append(nodes, address)
+      else if (options.firstOccurrenceOnly && recognized.has(key)) append(nodes, name)
+      else {
+        nodes.push({ type: "reference", ...match, label: name, manual: false })
+        recognized.add(key)
+        references++
+      }
+    }
+    nodes.push(...recognizeAliases(text.slice(cursor)))
+    return nodes
+  }
   function recognizeAliases(text: string): RichTextNode[] {
     if (!text || references >= maxReferences) return text ? [{ type: "text", text }] : []
     const chars: { char: string; start: number; end: number }[] = []
     for (const cluster of text.matchAll(/\P{M}\p{M}*|\p{M}+/gu)) {
-      for (const char of fold(cluster[0], index.accentInsensitive))
+      for (const char of index.names ? foldName(cluster[0]) : fold(cluster[0], index.accentInsensitive))
         chars.push({ char, start: cluster.index, end: cluster.index + cluster[0].length })
     }
     const nodes: RichTextNode[] = []
@@ -615,6 +776,15 @@ export function parseRichText(
         }
         if (match) best = { match, end }
       }
+      const named = index.names && nameAt(index.names, start)
+      if (named && (!best || named.end >= best.end)) {
+        if (!named.match || options.exclude?.has(`${named.match.entity.kind}:${named.match.entity.id}`)) {
+          // The longest name here leads nowhere, so nothing shorter inside it is taken for another name either.
+          start = named.end
+          continue
+        }
+        best = { match: named.match, end: named.end }
+      }
       if (!best) continue
       if (
         skillNumberCountsSeconds(
@@ -627,7 +797,11 @@ export function parseRichText(
         best = ownerFirstSkill(best.match.entity.id, best.end) ?? best
       }
       const key = `${best.match.entity.kind}:${best.match.entity.id}`
-      if (options.firstOccurrenceOnly && recognized.has(key)) continue
+      if (options.firstOccurrenceOnly && recognized.has(key)) {
+        // A name that stays plain the second time is still one name, so no shorter one is found inside it.
+        if (index.names) start = best.end
+        continue
+      }
       append(nodes, text.slice(cursor, chars[start]!.start))
       const end = chars[best.end]!.end
       nodes.push({ type: "reference", ...best.match, label: text.slice(chars[start]!.start, end), manual: false })
@@ -638,6 +812,60 @@ export function parseRichText(
     }
     append(nodes, text.slice(cursor))
     return nodes
+
+    /** The longest name of running text that starts here; without a match it names several records. */
+    function nameAt(names: NameIndex, start: number): { match: Match | null; end: number } | undefined {
+      if (joinsWords(start - 1, -1)) return
+      let wordEnd = start
+      while (chars[wordEnd] && word.test(chars[wordEnd]!.char)) wordEnd++
+      const bucket = names.byFirstWord.get(
+        chars
+          .slice(start, wordEnd)
+          .map(({ char }) => char)
+          .join(""),
+      )
+      const found = new Map<string, { match: Match; strength: NameStrength }>()
+      let length = 0
+      for (const name of bucket ?? []) {
+        if (found.size && name.characters.length < length) break
+        const end = start + name.characters.length - 1
+        if (!name.characters.every((char, at) => chars[start + at]?.char === char)) continue
+        if (word.test(chars[end + 1]?.char ?? " ") || joinsWords(end + 1, 1)) continue
+        const { entity } = name.match
+        if (!people && (entity.kind === "player" || entity.kind === "person")) continue
+        const from = chars[start]!.start
+        const to = chars[end]!.end
+        const strength = nameStrength(
+          name,
+          text.slice(from, to),
+          {
+            before: text.slice(Math.max(0, from - 120), from),
+            after: text.slice(to, to + 120),
+            afterReference: nodes.at(-1)?.type === "reference" && !text.slice(cursor, from).trim(),
+            isCode: (code) => names.codes.has(code),
+          },
+          () => {
+            teams ??= teamsNamed(source, index, options)
+            return !!entity.teamIds?.some((id) => teams!.has(id))
+          },
+        )
+        if (!strength) continue
+        length = name.characters.length
+        const key = `${entity.kind}:${entity.id}`
+        if (found.get(key)?.strength !== "introduced") found.set(key, { match: name.match, strength })
+      }
+      if (!found.size) return
+      // A word that says what the name is settles which of several records it names.
+      const introduced = [...found.values()].filter(({ strength }) => strength === "introduced")
+      const meant = introduced.length ? introduced : [...found.values()]
+      return { match: meant.length === 1 ? meant[0]!.match : null, end: start + length - 1 }
+    }
+
+    /** A dot or an at sign with a word on its other side belongs to a domain or an e-mail address. */
+    function joinsWords(at: number, step: 1 | -1) {
+      const sign = chars[at]?.char
+      return (sign === "." || sign === "@") && word.test(chars[at + step]?.char ?? " ")
+    }
 
     function ownerFirstSkill(heroId: string, end: number) {
       const afterOwner = chars[end]!.end
@@ -714,8 +942,12 @@ export function parseRichText(
       } else if (tag.startsWith("<ref=")) {
         const key = token[0].slice(5, -1).replace(/^[^:]+/, (kind) => kind.toLowerCase())
         const match = index.byId.get(key)
-        if (match && references < maxReferences) {
+        if (match ? options.exclude?.has(key) : options.markup === "references")
+          append(nodes, source.slice(contentStart, close.index))
+        else if (match && references < maxReferences) {
           nodes.push({ type: "reference", ...match, label: source.slice(contentStart, close.index), manual: true })
+          // In running text a name linked on purpose is linked already.
+          if (index.names) recognized.add(key)
           references++
         } else if (references < maxReferences && /^(?:team|player):/.test(key)) {
           const [kind, id] = key.split(":") as ["team" | "player", string]

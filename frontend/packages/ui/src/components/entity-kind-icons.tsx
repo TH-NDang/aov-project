@@ -12,8 +12,13 @@ export const entityKindIcons = {
   enchantment: gameIcon("winged-emblem"),
   arcana: gameIcon("gem-pendant"),
   spell: gameIcon("magic-swirl"),
+  mode: gameIcon("gamepad"),
+  circuit: gameIcon("laurels"),
+  organization: gameIcon("castle"),
+  competition: gameIcon("trophy-cup"),
   team: gameIcon("meeple-group"),
   player: gameIcon("swordman"),
+  person: gameIcon("teacher"),
   country: gameIcon("world"),
   term: gameIcon("spell-book"),
 } satisfies Record<EntityKind, ReturnType<typeof gameIcon>>
