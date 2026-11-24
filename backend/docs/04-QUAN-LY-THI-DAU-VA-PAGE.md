@@ -805,16 +805,16 @@ trả tuyển thủ và nhân sự. Mỗi mục là `{id,kind,name,shortName?,al
 - Mỗi bản ghi đứng một lần, theo tên trên trang đã công bố, nếu không thì theo giải mới nhất; tên cũ thành `aliases`.
   Người vừa thi đấu vừa bình luận chỉ đứng ở PLAYER.
 - Không có ảnh và họ tên thật. `aliases` của tuyển thủ bỏ mọi tên mà các từ đều nằm trong họ tên thật (có hoặc không dấu);
-  họ tên thật chỉ được đọc để loại các tên đó.
+  họ tên thật đọc từ hồ sơ tuyển thủ, vì giải đã công bố không mang theo, và chỉ để loại các tên đó.
 - Đội mang tên hoặc tên viết tắt của một hệ thống giải là suất giữ cho đại diện của hệ thống giải đó, không có trong danh
   sách. Tên viết tắt trùng biệt danh của ai đó thì bỏ khỏi danh sách vì không cho biết văn bản nói ai.
 - `GET /references/{kind}/{id}` trả thẻ xem trước: tên, logo, quốc gia, đoạn đầu giới thiệu (trang không phải của một
   người), số giải, ngày và hạng của giải, giải mới nhất cùng đội và vai trò. Không có mục đó thì 404
   `TOURNAMENT_RECORD_NOT_FOUND`.
-- Cả ba trả `Cache-Control: max-age=300, public` và `ETag`. Service giữ bản đọc gần nhất trong bộ nhớ và đọc lại khi công bố
-  hoặc thu hồi làm đổi dấu hiệu phiên bản (hai truy vấn nhỏ mỗi lần gọi). Đo trên bản sao dữ liệu thật ngày 24/11/2026 (201
-  giải, 917 đội, 3.188 người): `/references` 200 KB (52 KB nén), `/references/people` 672 KB (162 KB nén); lần đọc đầu
-  0,3 giây, các lần sau 25–45 ms, chưa đổi (304) 10 ms. Trình duyệt dựng chỉ mục trong 10–30 ms.
+- Cả ba trả `Cache-Control: max-age=300, public` và `ETag`. Service giữ bản đọc gần nhất trong bộ nhớ và đọc lại khi công
+  bố, thu hồi hoặc sửa hồ sơ có họ tên thật làm đổi dấu hiệu phiên bản (ba truy vấn nhỏ mỗi lần gọi). Đo trên bản sao dữ
+  liệu thật ngày 24/11/2026 (201 giải, 917 đội, 3.188 người): `/references` 200 KB (52 KB nén), `/references/people` 672 KB
+  (162 KB nén); lần đọc đầu 0,3 giây, các lần sau 25–45 ms, chưa đổi (304) 10 ms. Trình duyệt dựng chỉ mục trong 10–30 ms.
 
 ### Khi nào một tên thành liên kết
 
