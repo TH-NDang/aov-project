@@ -2,7 +2,7 @@ import { Link, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import type { LinkMention, LinkMentionKind } from "@aov/community-contracts"
 import { ArrowRight, Trophy } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
+import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { Tabs, TabsTrigger } from "@aov/ui/components/tabs"
@@ -20,6 +20,7 @@ import {
   mentionTarget,
   mentionsByTournament,
 } from "../model/link-review-model"
+import { ThemedAvatarImage } from "@/components/themed-logo-img"
 
 /**
  * Names still written as text where a record could be linked: MVPs, casters, award recipients and their teams. Each
@@ -137,7 +138,7 @@ function TournamentLogo({ id }: { id: string }) {
   })
   return (
     <Avatar className="size-8 shrink-0 rounded-lg border bg-background">
-      <AvatarImage src={tournament.data?.content.logoUrl || undefined} alt="" className="object-contain" />
+      <ThemedAvatarImage url={tournament.data?.content.logoUrl} darkUrl={tournament.data?.content.logoDarkUrl} />
       <AvatarFallback className="rounded-lg">
         <Trophy className="size-4" />
       </AvatarFallback>

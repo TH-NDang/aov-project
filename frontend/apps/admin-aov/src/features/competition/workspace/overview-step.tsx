@@ -1,7 +1,7 @@
 import { Link } from "react-router"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
 import { Building2, CalendarDays, Layers, ListChecks, Pencil, Trophy } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
+import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { Section } from "@/features/community/components/profile-form-primitives"
 import { youtubeVideoId } from "@/features/esports/model/vod"
@@ -16,6 +16,7 @@ import { DataChecksPanel } from "./data-checks-panel"
 import { EventPartsPanel } from "./event-parts"
 import { hasScore, type RecordingTotals, type WorkspaceCheck } from "./model"
 import { Panel, Progress, type Workspace } from "./parts"
+import { ThemedAvatarImage } from "@/components/themed-logo-img"
 
 /** The tournament's facts on the left; on the right what to do next and how much of the season is recorded. */
 export function OverviewStep({
@@ -80,7 +81,7 @@ export function OverviewStep({
           >
             <div className="flex items-start gap-3">
               <Avatar className="size-12 rounded-lg border bg-background">
-                <AvatarImage src={tournament.logoUrl || undefined} alt="" className="object-contain" />
+                <ThemedAvatarImage url={tournament.logoUrl} darkUrl={tournament.logoDarkUrl} />
                 <AvatarFallback className="rounded-lg">
                   <Trophy className="size-6" />
                 </AvatarFallback>

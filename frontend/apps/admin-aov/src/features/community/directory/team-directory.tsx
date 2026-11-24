@@ -119,6 +119,7 @@ function TeamCard({ team, pageId, published }: { team: TeamDirectoryEntry; pageI
       <div className="flex items-start gap-3">
         <Monogram
           url={team.logoUrl}
+          darkUrl={team.logoDarkUrl}
           label={`Logo ${team.name}`}
           text={team.shortName || initials(team.name).slice(0, 3)}
           size={56}

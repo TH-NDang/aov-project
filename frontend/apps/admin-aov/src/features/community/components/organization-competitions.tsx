@@ -6,6 +6,7 @@ import { competitionApi, competitionKeys } from "@/features/competition/competit
 import { Section } from "@/features/community/components/profile-form-primitives"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { ThemedLogoImg } from "@/components/themed-logo-img"
 
 export function OrganizationCompetitions({
   organizationId,
@@ -68,11 +69,12 @@ export function OrganizationCompetitions({
                 className="flex items-center gap-4 p-4 hover:bg-muted/50"
               >
                 <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
-                  {entry.tournament.logoUrl ? (
-                    <img src={entry.tournament.logoUrl} alt="" className="size-full object-contain" />
-                  ) : (
-                    <CalendarDays className="size-5 text-muted-foreground" />
-                  )}
+                  <ThemedLogoImg
+                    url={entry.tournament.logoUrl}
+                    darkUrl={entry.tournament.logoDarkUrl}
+                    className="size-full object-contain"
+                    fallback={<CalendarDays className="size-5 text-muted-foreground" />}
+                  />
                 </span>
                 <div className="min-w-0 flex-1 space-y-1">
                   <h3 className="type-section-title break-words">{entry.tournament.name}</h3>

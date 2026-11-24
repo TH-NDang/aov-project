@@ -5,6 +5,7 @@ import { LocalMoney } from "@aov/ui/components/local-money"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
 import type { TeamView } from "../model/game-view"
 import { PlayerPhoto, SectionTitle } from "./primitives"
+import { ThemedLogoImg } from "@/components/themed-logo-img"
 
 /**
  * Final standings, prizes and related links of a tournament. A linked team shows its logo and a linked recipient their
@@ -53,11 +54,14 @@ export function TournamentFinalTable({
                     <TableCell className="type-body">{line.place}</TableCell>
                     <TableCell className="type-body">
                       <span className="flex min-w-0 items-center gap-2">
-                        {view?.logoUrl ? (
-                          <img src={view.logoUrl} alt="" className="size-6 shrink-0 object-contain" />
-                        ) : (
-                          line.place === "1" && <Trophy className="size-4 shrink-0 text-primary" aria-hidden />
-                        )}
+                        <ThemedLogoImg
+                          url={view?.logoUrl}
+                          darkUrl={view?.logoDarkUrl}
+                          className="size-6 shrink-0 rounded object-contain"
+                          fallback={
+                            line.place === "1" && <Trophy className="size-4 shrink-0 text-primary" aria-hidden />
+                          }
+                        />
                         <span className="truncate">{line.teamName}</span>
                       </span>
                     </TableCell>

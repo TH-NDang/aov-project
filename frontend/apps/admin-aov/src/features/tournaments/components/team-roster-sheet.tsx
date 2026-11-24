@@ -141,7 +141,7 @@ export function TeamRosterSheet({
           onEscapeKeyDown={(event) => busy && event.preventDefault()}
         >
           <div className="tournament-roster-team-heading">
-            <RegistryLogo url={team.content.logoUrl} name={team.content.name} />
+            <RegistryLogo url={team.content.logoUrl} darkUrl={team.content.logoDarkUrl} name={team.content.name} />
             <div>
               <SheetTitle>{team.content.shortName || team.content.name}</SheetTitle>
               <TeamRegionBadge code={team.content.country} />
