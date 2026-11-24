@@ -55,6 +55,7 @@ import { Chip, teamViewOf, type Workspace as WorkspaceApi, type WorkspaceAction 
 import { PublishStep } from "./workspace/publish-step"
 import { ScheduleStep } from "./workspace/schedule-step"
 import { TeamsStep } from "./workspace/teams-step"
+import { useThemedLogo } from "@/lib/themed-logo"
 
 const STEP_ICONS: Record<WorkspaceStep, ComponentType<{ className?: string }>> = {
   overview: LayoutDashboard,
@@ -320,6 +321,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     },
   }
   const info = entry.content.tournament
+  const infoLogo = useThemedLogo(info.logoUrl, info.logoDarkUrl)
 
   return (
     <EsportsPage>
@@ -337,7 +339,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="size-14 rounded-lg border bg-background">
-            <AvatarImage src={info.logoUrl || undefined} alt="" className="object-contain" />
+            <AvatarImage src={infoLogo.url} alt="" className="object-contain" data-logo-plate={infoLogo.plate} />
             <AvatarFallback className="rounded-lg">
               <Trophy className="size-6" />
             </AvatarFallback>
@@ -494,4 +496,5 @@ const partDefaults = (mainEventId: string, main: CompetitionView["content"]["tou
   ...(main.year ? { year: String(main.year) } : {}),
   ...(main.tier ? { tier: main.tier } : {}),
   ...(main.logoUrl ? { logoUrl: main.logoUrl } : {}),
+  ...(main.logoDarkUrl ? { logoDarkUrl: main.logoDarkUrl } : {}),
 })

@@ -8,11 +8,27 @@ import { ApiError, errorMessage } from "@/lib/api/errors"
 import { RegistryLogoUploadError, uploadRegistryLogo } from "../model/team-logo-upload"
 import { OwnerNameHints, OwnerNameInput } from "../../media/components/owner-name-field"
 import { MediaUploadReferences, type UploadReferences } from "../../media/components/media-upload-references"
+import { useThemedLogo } from "@/lib/themed-logo"
 
 /** The same look as the shared text input, for the owner field that needs suggestions. */
 
-export function RegistryLogo({ url, name, portrait = false }: { url?: string; name: string; portrait?: boolean }) {
+export function RegistryLogo({
+  url,
+  darkUrl,
+  name,
+  portrait = false,
+  surface = "theme",
+}: {
+  url?: string
+  darkUrl?: string | null
+  name: string
+  portrait?: boolean
+  /** "dark" previews a logo on a dark background whatever the theme, as the dark logo field does. */
+  surface?: "theme" | "dark"
+}) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const logo = useThemedLogo(url, darkUrl, surface)
+  const shown = logo.url
   const initials = name
     .trim()
     .split(/\s+/)
@@ -21,16 +37,25 @@ export function RegistryLogo({ url, name, portrait = false }: { url?: string; na
     .map((part) => part[0])
     .join("")
     .toLocaleUpperCase()
-  const showImage = !!url && failedUrl !== url && /^https?:\/\//i.test(url)
+  const showImage = !!shown && failedUrl !== shown && /^https?:\/\//i.test(shown)
   return (
     <span
       className="tournament-registry-logo"
       data-portrait={portrait || undefined}
+      data-surface={surface === "dark" ? "dark" : undefined}
       role="img"
       aria-label={`${portrait ? "Ảnh" : "Logo"} ${name}`}
     >
       <span aria-hidden="true">{initials || "ĐT"}</span>
-      {showImage && <img src={url} alt="" loading="lazy" onError={() => setFailedUrl(url)} />}
+      {showImage && (
+        <img
+          src={shown}
+          alt=""
+          loading="lazy"
+          data-logo-plate={portrait ? undefined : logo.plate}
+          onError={() => setFailedUrl(shown)}
+        />
+      )}
     </span>
   )
 }
@@ -113,13 +138,13 @@ export function RegistryLogoField({
     <div className="tournament-logo-field">
       <span>{what.charAt(0).toUpperCase() + what.slice(1)}</span>
       <div className="tournament-logo-upload-row">
-        <span className={dark ? "rounded-md bg-(--aov-wiki-night) p-1" : "contents"}>
-          <RegistryLogo
-            url={value}
-            name={name || (kind === "teams" ? "Đội tuyển" : kind === "players" ? "Tuyển thủ" : "Giải đấu")}
-            portrait={kind === "players"}
-          />
-        </span>
+        <RegistryLogo
+          url={dark ? undefined : value}
+          darkUrl={dark ? value : undefined}
+          surface={dark ? "dark" : "theme"}
+          name={name || (kind === "teams" ? "Đội tuyển" : kind === "players" ? "Tuyển thủ" : "Giải đấu")}
+          portrait={kind === "players"}
+        />
         <div>
           <input
             ref={input}

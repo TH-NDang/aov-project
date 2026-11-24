@@ -78,7 +78,11 @@ export function TeamRecordSheet({
       >
         <SheetHeader>
           <div className="flex items-center gap-3">
-            <RegistryLogo url={team.data?.content.logoUrl} name={team.data?.content.name ?? name} />
+            <RegistryLogo
+              url={team.data?.content.logoUrl}
+              darkUrl={team.data?.content.logoDarkUrl}
+              name={team.data?.content.name ?? name}
+            />
             <div className="min-w-0">
               <SheetTitle className="truncate">{name}</SheetTitle>
               {team.data && <TeamRegionBadge code={team.data.content.country} />}

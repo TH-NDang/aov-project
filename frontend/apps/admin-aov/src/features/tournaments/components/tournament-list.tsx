@@ -63,7 +63,7 @@ export function TournamentList({
                 aria-label={`Mở giải ${content.name}`}
                 className="group flex w-full min-w-0 items-start gap-3 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <RegistryLogo url={content.logoUrl} name={content.name} />
+                <RegistryLogo url={content.logoUrl} darkUrl={content.logoDarkUrl} name={content.name} />
                 <span className="min-w-0 flex-1 space-y-1.5">
                   <span className="flex flex-wrap items-center gap-2">
                     <strong className="type-body">{content.name}</strong>

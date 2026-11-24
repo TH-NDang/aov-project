@@ -7,12 +7,14 @@ import { initials, type IconRef, type TeamView } from "../model/game-view"
 import type { SlotState } from "../model/timeline"
 import { VIDEO_MARK } from "../model/vod"
 import { LANE_LABELS } from "@/lib/lanes"
+import { useThemedLogo } from "@/lib/themed-logo"
 
 const safeImage = (url?: string | null) => (!!url && /^(https?:\/\/|\/)/i.test(url) ? url : null)
 
 /** Image with a monogram fallback; never shows a broken image icon. */
 export function Monogram({
   url,
+  darkUrl,
   label,
   text,
   size,
@@ -20,6 +22,8 @@ export function Monogram({
   portrait,
 }: {
   url?: string | null
+  /** A logo's version for dark backgrounds; the theme picks between the two (see useThemedLogo). */
+  darkUrl?: string | null
   label: string
   text: string
   size: number
@@ -28,7 +32,8 @@ export function Monogram({
 }) {
   const [failed, setFailed] = useState<string | null>(null)
   const [shown, setShown] = useState<string | null>(null)
-  const src = safeImage(url)
+  const logo = useThemedLogo(url, darkUrl)
+  const src = safeImage(logo.url)
   const usable = !!src && failed !== src
   return (
     <span
@@ -40,7 +45,16 @@ export function Monogram({
     >
       {/* Transparent logos must not show the monogram through them once loaded. */}
       {(!usable || shown !== src) && <span aria-hidden="true">{text}</span>}
-      {usable && <img src={src} alt="" loading="lazy" onLoad={() => setShown(src)} onError={() => setFailed(src)} />}
+      {usable && (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          data-logo-plate={portrait ? undefined : logo.plate}
+          onLoad={() => setShown(src)}
+          onError={() => setFailed(src)}
+        />
+      )}
     </span>
   )
 }
@@ -49,6 +63,7 @@ export function TeamLogo({ team, size = 32, className }: { team?: TeamView; size
   return (
     <Monogram
       url={team?.logoUrl}
+      darkUrl={team?.logoDarkUrl}
       label={`Logo ${team?.name ?? "chưa xác định"}`}
       text={team ? team.shortName.slice(0, 3) : "?"}
       size={size}
