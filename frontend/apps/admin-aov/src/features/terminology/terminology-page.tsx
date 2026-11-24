@@ -240,10 +240,11 @@ export function TerminologyPage() {
     setDraft({ ...settings, entities: [...settings.entities, next] })
     setSelected(`term:${id}`)
   }
+  const locked = saving || catalog.settings.isPending
   return (
     <main className="mx-auto w-full min-w-0 max-w-7xl space-y-4 p-4 md:px-6 md:py-5">
       <PageLeaveGuard dirty={!!draft || saving} ask={askLeave} />
-      <fieldset disabled={saving || catalog.settings.isPending} className="contents">
+      <fieldset disabled={locked} className="min-w-0">
         <header className="min-w-0 space-y-4">
           <PageHeader
             title="Thuật ngữ & tham chiếu"
@@ -310,6 +311,9 @@ export function TerminologyPage() {
             </ScrollableTabsList>
           </Tabs>
         </header>
+      </fieldset>
+      {/* Apart from the header: Chromium rebuilds a fieldset when its children change and loses the title with it. */}
+      <fieldset disabled={locked} className="min-w-0 space-y-4">
         {catalog.catalog.isError && (
           <p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm">
             Không tải đủ danh mục. Các mục chưa tải sẽ không được tự nhận diện.
