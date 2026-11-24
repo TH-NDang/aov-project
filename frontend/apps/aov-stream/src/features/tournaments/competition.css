@@ -16,7 +16,8 @@
 /* The filters move below the search together, so no filter ends up alone on a line. */
 .competition-filter-group {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
@@ -37,6 +38,13 @@
   color: var(--hub-text);
   font-size: 12px;
   font-weight: 600;
+}
+/* How many competitions the filters leave, beside the way to clear them. */
+.competition-result {
+  padding-left: 4px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  white-space: nowrap;
 }
 .competition-clear {
   padding: 8px;
