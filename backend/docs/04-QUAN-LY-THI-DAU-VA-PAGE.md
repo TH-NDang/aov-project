@@ -68,8 +68,9 @@ bản nháp với snapshot công khai và liệt kê "thay đổi chưa công b�
 vẫn chụp toàn bộ giải, không công bố riêng từng trận. Bảng xếp hạng chưa đủ trận giữ nhãn tạm tính.
 
 Từ 24/11/2026, bước "Tổng quan" có khối "Kiểm tra dữ liệu": các lỗi dữ liệu Admin tự nhận ra được trong giải, mỗi lỗi
-kèm cách sửa. Khối chỉ dùng dữ liệu không gian giải đã đọc và các API sẵn có; không thêm endpoint hay migration. Mỗi
-thao tác sửa đều hỏi xác nhận, nêu giá trị cũ → mới, và ghi thẳng vào bản ghi (không nằm trong bản nháp kế hoạch).
+kèm cách sửa hoặc đường tới đúng chỗ sửa. Khối chỉ dùng dữ liệu không gian giải đã đọc và các API sẵn có. Sửa bản ghi
+(đội hình, ban huấn luyện, giải) hỏi xác nhận, nêu giá trị cũ → mới, và ghi thẳng; sửa kế hoạch thì vào bản nháp và hoàn
+tác được.
 
 | Lỗi | Cách nhận ra | Cách sửa |
 |---|---|---|
@@ -77,10 +78,48 @@ thao tác sửa đều hỏi xác nhận, nêu giá trị cũ → mới, và ghi
 | Một người hai dòng trong một đội hình | Hai dòng đội hình của cùng đội ở giải, của hai hồ sơ khác nhau mà biệt danh hoặc tên khác trùng nhau | Bỏ một trong hai dòng vào thùng rác; gộp hồ sơ vẫn làm ở bảng sửa tuyển thủ |
 | Đội đá trận mà không có đội hình | Đội có loạt trận ở giải nhưng không có dòng đội hình | Khi đúng một đội có đội hình mà không đá trận nào mang cùng tên chính, chuyển các dòng đội hình đó sang đội đá trận |
 | MVP chưa liên kết | Ván của giải có ghi chú "MVP: …" mà chưa có `mvpPlayerId` | Mở màn "Liên kết cần xem" |
+| Tỷ số lệch với ván đã ghi | Mọi ván của trận đã có đội thắng, phân định được loạt và khác tỷ số của trận | Mở lịch, lọc đúng các trận đó |
+| Đã ghi đủ ván nhưng chưa có tỷ số | Như trên nhưng trận chưa có tỷ số | Mở bảng nhập kết quả, điền theo ván đã ghi |
+| Đội hình chính lệch vị trí | Đội có từ năm người thi đấu chính mà một vị trí trùng hoặc trống | Mở bảng đội hình của đội |
+| Một người thi đấu chính ở hai đội | Cùng hồ sơ là `ACTIVE` ở hai đội của giải | Mở đội hình từng đội |
+| Trận chưa nằm trong lịch | Loạt trận của giải không có trong `matches` | Thêm vào giai đoạn cùng mã, giữ đội, giờ, tỷ số (vào bản nháp) |
+| Giai đoạn chưa theo thứ tự ngày đấu | Trận đầu của giai đoạn sau đấu trước giai đoạn trước | Xếp lại theo ngày (vào bản nháp) |
+| Nhánh đấu chưa nối | Giai đoạn loại trực tiếp có từ ba trận mà không suất nào là thắng/thua, trong khi kết quả cho biết ai đi đâu | Mở lịch, nối nhánh theo kết quả |
+| Một đội hai trận cùng giờ | Hai trận cùng `scheduledAt` có chung một đội | Mở bảng xếp lịch ở trận đó |
+| Trận ngoài thời gian của giải | Ngày đấu (theo múi giờ của giải) trước `startsOn` hoặc sau `endsOn` | Nới thời gian của giải theo lịch |
+| Trạng thái giải lệch ngày | `status` trái với `startsOn`/`endsOn` | Đặt trạng thái theo ngày |
 
 Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhất hai đội, ít nhất một giai đoạn, tổ chức đã công bố
 nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
 cuộc). Mục nên bổ sung không chặn công bố.
+
+### Thao tác nhanh trong không gian giải (24/11/2026)
+
+Người dùng yêu cầu ngày 24/11/2026 để biên tập nhanh hơn và làm được mọi việc mà không rời màn hình. Nguyên tắc cũ giữ
+nguyên: chỉ đọc trước, ghi đè thì hỏi và nêu cũ → mới, công bố chủ động.
+
+**Cả bản nháp.** Đầu trang nêu số thay đổi chưa lưu, mở ra là danh sách theo bước. Hoàn tác/làm lại từng thao tác trong
+bản nháp (Ctrl+Z, Ctrl+Shift+Z), Ctrl+S lưu, Alt+1…6 mở bước; gõ chữ liền nhau trong một ô là một lần hoàn tác. "Lịch sử
+bản nháp" liệt kê các bản đã lưu và nạp lại một bản vào bản nháp: trận đã mở thành loạt trận thật từ đó tới nay được giữ,
+cùng giai đoạn và đội của chúng. "Chép thiết lập từ giải khác" chép thông tin, đội, đội hình, giai đoạn, ban huấn luyện và
+ê-kíp; đội và giai đoạn vào bản nháp, đội hình và nhân sự ghi ngay sau xác nhận. Không chép lịch, kết quả, phiên bản game,
+nguồn và ghi chú của đội hình, người đã rời.
+
+**Đường dẫn tới đúng chỗ.** Ngoài `step` và `match`, đường dẫn nhận `team`, `stage`, `key` (khóa trận trong kế hoạch),
+`show` (lọc trận hoặc đội còn thiếu) và `open` (mở sẵn chỗ ghi: `roster`, `record`, `stage`, `result`, `results`,
+`times`). Mục kiểm tra, việc nên làm và điều kiện công bố đều dẫn thẳng bằng các tham số này.
+
+| Bước | Thao tác thêm |
+|---|---|
+| Đội & đội hình | Thêm nhiều đội bằng danh sách tên, tạo đội tại chỗ, chép từ giải khác, đổi thứ tự. Đội hình sửa cả bảng: vị trí và trạng thái một lần bấm, thêm nhiều người, chép từ giải khác, dán danh sách, tạo hồ sơ, cảnh báo trùng/thiếu vị trí, ghi một lần. Các đội chưa có đội hình chép từ giải gần nhất trong một lần xác nhận |
+| Thể thức | Đổi thứ tự giai đoạn, xếp theo ngày đấu, nhân đôi, năm mẫu, chọn đội của từng giai đoạn |
+| Lịch & kết quả | Lọc theo việc còn thiếu (chưa có tỷ số, giờ, video; thiếu ván; tỷ số lệch ván; lệch suất; chưa công bố). "Nhập kết quả": bảng tỷ số và video của nhiều trận, gõ số là sang ô kế, dán nhiều dòng, điền theo ván đã ghi, hỏi một lần khi ghi đè. "Xếp lịch": bảng giờ, vòng, cặp đấu, BO, thứ tự; dời giờ, xếp giờ lần lượt, đánh số vòng, chuyển giai đoạn, thêm/bỏ trận. Nối nhánh theo kết quả. Hạt giống lấy xen kẽ từ các bảng |
+| Chung cuộc | Giải thưởng gom theo tên giải, thêm người nhận cùng giải, điền đội theo đội hình của giải; trận tranh hạng ba cho hạng 3 và 4 |
+| Công bố | Đếm ván đủ dữ liệu, mục còn thiếu nhiều nhất, xuất bản mọi ván đủ dữ liệu của giải trong một lần, báo từng ván bị từ chối |
+
+Nối nhánh theo kết quả đọc trận trước đó của mỗi đội trong giai đoạn: đội thắng đi tiếp bằng suất `WINNER`, đội thua bằng
+`LOSER`. Chỉ nối khi trận trước có tỷ số và chưa suất nào dùng kết quả đó, nên cặp đấu và tỷ số không đổi; các trận của
+giai đoạn được xếp lại để suất chỉ trỏ tới trận đứng trước.
 
 ### Luật và phiên bản của giai đoạn (23/11/2026)
 
