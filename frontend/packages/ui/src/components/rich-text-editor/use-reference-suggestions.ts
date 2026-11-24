@@ -23,6 +23,7 @@ export function useReferenceSuggestions({
   locale,
   fallbackLocale,
   searchReferences,
+  ranked,
 }: {
   value: string
   caret: TextSelection
@@ -32,6 +33,7 @@ export function useReferenceSuggestions({
   locale: string
   fallbackLocale: string
   searchReferences?: EntityReferenceSearch
+  ranked?: boolean
 }) {
   const [dismissed, setDismissed] = React.useState(false)
   const [picker, setPicker] = React.useState(false)
@@ -47,7 +49,15 @@ export function useReferenceSuggestions({
   const open = (!!mention || picker) && !composing && !disabled
   React.useEffect(() => setVisibleRows(batchSize), [open, searchQuery])
   const remote = useReferenceSearch(searchReferences, searchQuery, locale, open)
-  const options = useReferenceOptions({ open, searchIndex, query: searchQuery, remote, locale, fallbackLocale })
+  const options = useReferenceOptions({
+    open,
+    searchIndex,
+    query: searchQuery,
+    remote,
+    locale,
+    fallbackLocale,
+    ranked,
+  })
   const rendered = Math.min(options.length, Math.max(visibleRows, active + 1))
   const visible = open && (picker || !!mention?.explicit || options.length > 0)
   const close = () => {

@@ -1,0 +1,90 @@
+/* What a name in a text opens, at a glance. */
+.hub-ref-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 14px 14px 16px;
+  color: var(--hub-text);
+  text-decoration: none;
+}
+.hub-ref-card:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+}
+.hub-ref-card > svg {
+  color: var(--hub-accent-strong);
+  opacity: 0.8;
+  transition: transform 120ms;
+}
+.hub-ref-card:is(:hover, :focus-visible) > svg {
+  opacity: 1;
+  transform: translateX(2px);
+}
+.hub-ref-mark {
+  --stream-image-size: 48px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+}
+.hub-ref-art {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-raised);
+  color: var(--hub-muted);
+  object-fit: cover;
+  place-items: center;
+}
+.hub-ref-words {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.hub-ref-kind {
+  color: var(--hub-accent-strong);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.hub-ref-words > b {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.hub-ref-words > b > abbr {
+  margin-left: 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.hub-ref-line {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 18px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  line-height: 18px;
+}
+.hub-ref-line > img,
+.hub-ref-line > span {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+/* The line's place while it is read. */
+.hub-ref-wait {
+  display: block;
+  width: 70%;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-raised);
+}

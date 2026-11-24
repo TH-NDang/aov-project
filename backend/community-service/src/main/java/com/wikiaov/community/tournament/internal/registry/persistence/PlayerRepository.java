@@ -31,4 +31,30 @@ public interface PlayerRepository extends JpaRepository<PlayerRecord, UUID> {
          LIMIT 5
         """, nativeQuery = true)
     List<PlayerRecord> findSameName(String country, String name);
+
+    /** The real name an editor recorded for a player. */
+    interface RealName {
+        UUID getId();
+
+        String getRealName();
+    }
+
+    /**
+     * Native: takes one field of the documents. Players in the trash are among them, because a publication may still
+     * name one.
+     */
+    @Query(value = """
+        SELECT id AS id, content->>'fullName' AS "realName"
+          FROM tournament.player
+         WHERE content->>'fullName' <> ''
+        """, nativeQuery = true)
+    List<RealName> realNames();
+
+    /** Changes whenever {@link #realNames} may have, and holds nothing of a name. Native: hashes the rows together. */
+    @Query(value = """
+        SELECT coalesce(md5(string_agg(concat(id, version), ',' ORDER BY id)), '')
+          FROM tournament.player
+         WHERE content->>'fullName' <> ''
+        """, nativeQuery = true)
+    String realNamesRevision();
 }

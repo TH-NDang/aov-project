@@ -10,10 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
+import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { refreshPostLists } from "../../../lib/community-keys"
+import { focusesFoldedLink } from "../../../lib/folded-text"
 import { useCommunitySession } from "../../../lib/stream-auth"
 import { useFollowPage } from "../../../lib/community-queries"
 import { useSignedInAction } from "../../../components/community-signin"
@@ -196,8 +198,14 @@ export function PostCard({
       </header>
       {post.title && <h3 className="cp-post-title">{post.title}</h3>}
       {post.body && (
-        <p className="cp-prose cp-post-body" data-folded={(long && !unfolded) || undefined}>
-          {post.body}
+        <p
+          className="cp-prose cp-post-body"
+          data-folded={(long && !unfolded) || undefined}
+          onFocus={(event) => {
+            if (long && focusesFoldedLink(event)) setUnfolded(true)
+          }}
+        >
+          <ReferenceText text={post.body} />
         </p>
       )}
       {long && (

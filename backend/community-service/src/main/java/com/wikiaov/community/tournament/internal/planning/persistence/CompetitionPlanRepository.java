@@ -66,28 +66,44 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
     }
 
     /**
-     * Who takes part in published competitions: {@code collection} is the part of a snapshot to read, teams, players or
-     * people. Each stands once, as the newest competition names it, those seen last first. The rows of the page are
-     * chosen before their team and roles are looked up, which reads the whole snapshot of each. Native: unfolds the maps
-     * of the jsonb published snapshots.
+     * The participants a search finds, each as the newest competition names it; a competition without a start date
+     * counts as the oldest. A snapshot holds its dates as [year, month, day], which do not sort as text, so the date
+     * function of V013 reads them. A snapshot is large, so each is opened only once, for its date and its members.
+     * Native: unfolds the maps of the jsonb published snapshots.
      */
-    @Query(value = """
-        WITH seen AS (
-          SELECT e.key AS id, e.value AS content, p.id AS competition,
-                 coalesce(p.published_snapshot #>> '{tournament,startsOn}', '') AS starts,
+    String PARTICIPANTS = """
+        WITH competition AS MATERIALIZED (
+          SELECT p.id, p.published_snapshot #> '{tournament,startsOn}' AS starts,
+                 p.published_snapshot -> :collection AS members
+            FROM tournament.competition_plan p
+           WHERE p.published_at IS NOT NULL
+        ), seen AS (
+          SELECT e.key AS id, e.value AS content, c.id AS competition,
+                 tournament.document_date(c.starts) AS starts_on,
                  count(*) OVER (PARTITION BY e.key) AS competitions,
                  row_number() OVER (PARTITION BY e.key
-                   ORDER BY coalesce(p.published_snapshot #>> '{tournament,startsOn}', '') DESC, p.id) AS newest
-            FROM tournament.competition_plan p
-            CROSS JOIN LATERAL jsonb_each(p.published_snapshot -> :collection) e
-           WHERE p.published_at IS NOT NULL
-        ), chosen AS (
+                   ORDER BY tournament.document_date(c.starts) DESC NULLS LAST, c.id) AS newest
+            FROM competition c
+            CROSS JOIN LATERAL jsonb_each(c.members) e
+        ), participant AS (
           SELECT s.*, lower(coalesce(s.content->>'name', s.content->>'nickname')) AS label
             FROM seen s
            WHERE s.newest = 1 AND (:country = '' OR s.content->>'country' = :country)
              AND lower(concat_ws(' ', s.content->>'name', s.content->>'shortName', s.content->>'nickname',
                                  s.content->>'aliases')) LIKE lower(concat('%', :query, '%'))
-           ORDER BY s.starts DESC, s.competitions DESC, label, s.id
+        )
+        """;
+
+    /**
+     * Who takes part in published competitions: {@code collection} is the part of a snapshot to read, teams, players or
+     * people. Each stands once, as the newest competition names it, those seen last first. The rows of the page are
+     * chosen before their team and roles are looked up, which reads the whole snapshot of each. Native: unfolds the maps
+     * of the jsonb published snapshots.
+     */
+    @Query(value = PARTICIPANTS + """
+        , chosen AS (
+          SELECT * FROM participant
+           ORDER BY starts_on DESC NULLS LAST, competitions DESC, label, id
            LIMIT :size OFFSET :start
         )
         SELECT CAST(s.id AS uuid) AS id, CAST(s.content AS text) AS content, s.competitions AS competitions,
@@ -111,23 +127,12 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
                            jsonb_array_elements(coalesce(match.value -> 'broadcast', '[]')) l) line
              WHERE line.value->>'pageId' = s.id
           ) done ON :collection = 'people'
-         ORDER BY s.starts DESC, s.competitions DESC, s.label, s.id
+         ORDER BY s.starts_on DESC NULLS LAST, s.competitions DESC, s.label, s.id
         """, nativeQuery = true)
     List<ParticipantRow> participants(String collection, String query, String country, int size, long start);
 
     /** How many {@link #participants} finds in all. Native: unfolds the maps of the jsonb published snapshots. */
-    @Query(value = """
-        SELECT count(*) FROM (
-          SELECT DISTINCT ON (e.key) e.key AS id, e.value AS content
-            FROM tournament.competition_plan p
-            CROSS JOIN LATERAL jsonb_each(p.published_snapshot -> :collection) e
-           WHERE p.published_at IS NOT NULL
-           ORDER BY e.key, coalesce(p.published_snapshot #>> '{tournament,startsOn}', '') DESC, p.id
-        ) s
-         WHERE (:country = '' OR s.content->>'country' = :country)
-           AND lower(concat_ws(' ', s.content->>'name', s.content->>'shortName', s.content->>'nickname',
-                               s.content->>'aliases')) LIKE lower(concat('%', :query, '%'))
-        """, nativeQuery = true)
+    @Query(value = PARTICIPANTS + "SELECT count(*) FROM participant", nativeQuery = true)
     long countParticipants(String collection, String query, String country);
 
     /** Native for the jsonb counts. A tournament in the trash takes its plan with it. */

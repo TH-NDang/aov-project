@@ -1,4 +1,4 @@
-import type { EntityKind } from "./entity-rich-text"
+import { referenceKinds, type EntityKind } from "@aov/ui/lib/reference-kinds"
 import type { EditorSnapshot, TextSelection } from "./entity-rich-text-editor"
 import { exampleTablePattern, readExampleTable, type ParagraphStyle } from "@aov/ui/lib/rich-text-blocks"
 
@@ -18,8 +18,7 @@ export type ReferenceInputNode =
       children: ReferenceInputNode[]
     }
 
-const reference =
-  /<ref=(hero|skill|item|enchantment|arcana|spell|team|player|country|term):([a-zA-Z0-9][a-zA-Z0-9._-]{0,127})>([^<>]+)<\/ref>/g
+const reference = new RegExp(`<ref=(${referenceKinds}):([a-zA-Z0-9][a-zA-Z0-9._-]{0,127})>([^<>]+)<\\/ref>`, "g")
 const skillId = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}\.[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 const formatting =
@@ -61,9 +60,16 @@ export function referenceInputParts(value: string): ReferenceInputPart[] {
   return parts
 }
 
-/** Only complete supported formatting is projected; malformed source remains visible and inert. */
-export function referenceInputNodes(value: string): ReferenceInputNode[] {
+/**
+ * Only complete supported formatting is projected; malformed source remains visible and inert. Without `formatted` the
+ * text has references and nothing else.
+ */
+export function referenceInputNodes(value: string, formatted = true): ReferenceInputNode[] {
   const source = value.slice(0, 100000)
+  if (!formatted) {
+    const parts: ReferenceInputNode[] = splitReferences(source, { references: 0 })
+    return value.length > 100000 ? [...parts, { type: "text", text: value.slice(100000) }] : parts
+  }
   const tokens = [...source.matchAll(formatting)]
   const pairs = new Map<number, number>()
   const stack: { index: number; tag: string; valid: boolean }[] = []

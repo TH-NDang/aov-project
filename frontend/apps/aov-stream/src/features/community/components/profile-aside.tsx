@@ -8,10 +8,12 @@ import {
 } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
+import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
+import { pageReferenceKey } from "../../../lib/reference-model"
 import {
   Avatar,
   followersLabel,
@@ -43,7 +45,11 @@ export function ProfileAside({ profile, channels = true }: { profile: CommunityP
     <aside className="pf-side" aria-label={text("Giới thiệu và nguồn thông tin", "Introduction and sources")}>
       <section className="tn-side-card pf-about">
         <h2>{text("Thông tin chung", "General information")}</h2>
-        {content.biography && <p className="pf-bio">{content.biography}</p>}
+        {content.biography && (
+          <p className="pf-bio">
+            <ReferenceText text={content.biography} about={[pageReferenceKey(profile)]} />
+          </p>
+        )}
         <dl className="tn-facts" data-variant="about">
           {content.shortName && (
             <div>

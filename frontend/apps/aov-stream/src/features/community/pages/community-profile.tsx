@@ -18,6 +18,7 @@ import { streamText, useStreamLocale } from "../../../components/stream-locale"
 import { CompetitionCard } from "../../../components/competition-card"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
+import { pageReferenceKey } from "../../../lib/reference-model"
 import { useCommunitySession } from "../../../lib/stream-auth"
 import { CommunityFeed } from "../components/community-feed"
 import { useFollowPage } from "../../../lib/community-queries"
@@ -323,7 +324,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           {tab === "teams" && <OrganizationTeams query={ownedTeams} />}
           {tab === "history" && (
             <section aria-label={individual ? text("Sự nghiệp", "Career") : text("Lịch sử", "History")}>
-              <HistoryRows items={history} links={links} />
+              <HistoryRows items={history} links={links} about={pageReferenceKey(profile)} />
             </section>
           )}
           {tab === "competitions" &&
@@ -441,7 +442,7 @@ function ProfileHome({
               </button>
             )}
           </div>
-          <HistoryRows items={history.slice(0, PREVIEW)} links={links} />
+          <HistoryRows items={history.slice(0, PREVIEW)} links={links} about={pageReferenceKey(profile)} />
         </section>
       )}
       {!organization && achievements.length > 0 && (

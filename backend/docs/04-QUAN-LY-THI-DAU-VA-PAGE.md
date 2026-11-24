@@ -794,6 +794,74 @@ sự kèm vai trò và đội, `id` là trang PERSON hoặc PLAYER của họ. K
 tìm kiếm; `/teams/{id}`, `/players/{id}` và `/people/{id}` dựng trang từ `GET /competitions` lọc theo `teamId`,
 `playerId`, `personPageId`, và chuyển sang hồ sơ khi hồ sơ được công bố.
 
+## Tham chiếu trong văn bản (24/11/2026)
+
+Giới thiệu, lịch sử, bài viết và bình luận là chữ thuần. Khi hiển thị, Stream tự nhận ra tên đầy đủ, tên viết tắt, tên gọi
+khác và địa chỉ trang của hệ thống giải, tổ chức, giải, đội, tuyển thủ, nhân sự và nội dung Wiki (tướng, trang bị, phù hiệu,
+ngọc, phụ trợ, chế độ chơi), rồi biến thành liên kết có thẻ xem trước. Không lưu liên kết vào dữ liệu: sửa tên hay thu hồi
+trang là văn bản cũ đổi theo. Nhận diện nằm ở bộ phân tích dùng chung (ADR-011), Admin và Wiki không đổi cách nhận diện.
+
+### Danh sách công khai
+
+`GET /references` trả hệ thống giải và tổ chức đã công bố, giải đã công bố và đội của các giải đó; `GET /references/people`
+trả tuyển thủ và nhân sự. Mỗi mục là `{id,kind,name,shortName?,aliases?,path,circuitId?,teamIds?}`, trường rỗng thì bỏ.
+
+- `path` là địa chỉ trong Stream: trang đã công bố nếu có (`/pages/{code}`), nếu không thì trang dựng từ giải
+  (`/teams|players|people|competitions/{id}`). `id` của đội và tuyển thủ là danh tính thi đấu, của nhân sự là trang của họ.
+- Mỗi bản ghi đứng một lần, theo tên trên trang đã công bố, nếu không thì theo giải mới nhất; tên cũ thành `aliases`.
+  Người vừa thi đấu vừa bình luận chỉ đứng ở PLAYER.
+- Không có ảnh và họ tên thật. `aliases` của tuyển thủ bỏ mọi tên mà các từ đều nằm trong họ tên thật (có hoặc không dấu);
+  họ tên thật đọc từ hồ sơ tuyển thủ, vì giải đã công bố không mang theo, và chỉ để loại các tên đó.
+- Đội mang tên hoặc tên viết tắt của một hệ thống giải là suất giữ cho đại diện của hệ thống giải đó, không có trong danh
+  sách. Tên viết tắt trùng biệt danh của ai đó thì bỏ khỏi danh sách vì không cho biết văn bản nói ai.
+- `GET /references/{kind}/{id}` trả thẻ xem trước: tên, logo, quốc gia, đoạn đầu giới thiệu (trang không phải của một
+  người), số giải, ngày và hạng của giải, giải mới nhất cùng đội và vai trò. Không có mục đó thì 404
+  `TOURNAMENT_RECORD_NOT_FOUND`.
+- Cả ba trả `Cache-Control: max-age=300, public` và `ETag`. Service giữ bản đọc gần nhất trong bộ nhớ và đọc lại khi công
+  bố, thu hồi hoặc sửa hồ sơ có họ tên thật làm đổi dấu hiệu phiên bản (ba truy vấn nhỏ mỗi lần gọi). Đo trên bản sao dữ
+  liệu thật ngày 24/11/2026 (201 giải, 917 đội, 3.188 người): `/references` 200 KB (52 KB nén), `/references/people` 672 KB
+  (162 KB nén); lần đọc đầu 0,3 giây, các lần sau 25–45 ms, chưa đổi (304) 10 ms. Trình duyệt dựng chỉ mục trong 10–30 ms.
+
+### Khi nào một tên thành liên kết
+
+Liên kết sai tệ hơn thiếu liên kết, nên tên càng ngắn và càng giống chữ thường ngày thì càng cần bằng chứng:
+
+1. Tên dài nhất thắng. "RoV Pro League 2026 Summer" là giải, không phải hệ thống giải cộng chữ. Tên của mùa cũng nhận dạng
+   theo tên viết tắt của hệ thống giải: "AIC 2026" là giải năm 2026, "AIC" đứng riêng là hệ thống giải.
+2. Tên phải đứng trọn từ; chữ có dấu cũng là chữ. Dấu phải đúng ("Bâng" khác "Bang"); cách mã hóa dấu, dấu nháy và gạch nối
+   khác kiểu thì không sao.
+3. Chữ hoa: tên hệ thống giải, tổ chức, giải và nội dung game từ ba từ trở lên nhận mọi kiểu hoa thường; tên hai từ và tên
+   đội phải như bản ghi hoặc viết hoa toàn bộ; tên gọi khác của đội phải viết hoa đầu mỗi từ.
+4. Tên viết tắt phải viết hoa như bản ghi, từ ba ký tự, không nằm trong câu viết hoa toàn bộ và không là từ viết hoa quen
+   dùng (MVP, KDA, TOP…).
+5. Tên dùng chung cho hai bản ghi thì để chữ thường. Một từ chỉ loại đứng ngay trước ("đội", "tuyển thủ", "tướng", "phù
+   hiệu"…) quyết định khi tên trùng giữa các loại.
+6. Tên đội một từ giống chữ thường ("Friends"), tên đội toàn từ thông dụng ("First Blood"), tên địa danh ("Hà Nội") và nội
+   dung game hai từ ("Sân nhà") chỉ nhận khi có từ chỉ loại đứng trước.
+7. Tên người chỉ nhận khi có từ chỉ người đứng ngay trước, hoặc khi cùng đoạn có đội của họ (trang của đội thì luôn có).
+   Biệt danh là từ thông dụng ("Top", "Nam") vẫn cần từ chỉ người; biệt danh nằm trong một tên dài hơn ("Việt Nam") thì không
+   nhận.
+8. Tên của chính game ("Liên Quân Mobile", "AOV", "RoV") không mở tổ chức lấy nó làm tên viết tắt.
+9. Mỗi đoạn (cách nhau một dòng trống) chỉ liên kết lần đầu, dù nhắc bằng tên nào. Trang không liên kết tới chính nó; phần
+   giới thiệu không liên kết tới chính thứ nó giới thiệu.
+10. Không nhận gì bên trong liên kết có sẵn, địa chỉ web hay email. Địa chỉ một trang của Stream hoặc Wiki hiển thị thành tên
+    trang đó; địa chỉ khác giữ nguyên chữ.
+11. Thuật ngữ Wiki không nhận trong văn bản của Stream: "giáp" hay "choáng" trong một bài viết là chữ.
+
+Quy tắc viết trong `packages/ui/src/lib/reference-names.ts`, danh sách từ trong `reference-words.ts`, mỗi quy tắc một test.
+
+### Hiển thị và nhập
+
+- `ReferenceText` của Stream là một nơi duy nhất cho giới thiệu, lịch sử, bài viết, bình luận và trò chuyện sau này. Chỉ đọc
+  danh sách người khi văn bản có thể nhắc tới người.
+- Đoạn trích bị cắt còn hai dòng trên thẻ hệ thống giải không có liên kết, vì phần bị cắt vẫn nhận tiêu điểm bàn phím. Văn bản
+  thu gọn được (giới thiệu dài trên điện thoại, bài viết dài) tự mở ra khi tiêu điểm tới liên kết trong phần đang ẩn.
+- Trong câu, tên có gạch chân màu nhấn và không có mũi tên của `GoLink`, vì mũi tên sẽ chen giữa tên và dấu câu. Rê chuột hiện
+  thẻ (logo, loại, một dòng); chạm lần đầu hiện thẻ ngay cạnh tên, chạm tiếp mở trang. Người không có ảnh.
+- Nhắc tên có chủ ý lưu là `<ref=kind:id>tên</ref>` trong chữ thuần; `kind` thêm `circuit`, `organization`, `competition`,
+  `person`, `mode`. Mục không còn công bố thì đọc như chữ. Ô nhập `MentionInput` (gõ @) dựng trên `EntityReferenceInput`, đã có
+  test nhưng chưa gắn vào màn hình nào: bài viết, bình luận và trò chuyện công khai chưa được mở trong đợt này.
+
 ## Tuyển thủ trùng tên và gộp hồ sơ (20/11/2026)
 
 Lần nhập Liquipedia ngày 05/11 tạo một hồ sơ cho mỗi cách viết tên mà trang giải dùng: "Kiral" và "KiraL", "Anh Duy"
@@ -974,6 +1042,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /competitions?teamId=&playerId=&personPageId=&organizerPageId=&detail=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức. `detail=LIST` để trống `series`, `rosters`, `players`, `people` cho trang danh sách; mặc định FULL |
 | GET /competitions/participants?kind=&q=&country=&page=&size= | Đội (`kind=TEAM`), tuyển thủ (`PLAYER`) hoặc nhân sự (`PERSON`) của các giải đã công bố: [{id,kind,name,shortName,country,imageUrl,imageDarkUrl,competitions,competitionId,competitionName,team,roles}] |
 | GET /competitions/{id} | Snapshot giải |
+| GET /references, /references/people | {items:[{id,kind,name,shortName?,aliases?,path,circuitId?,teamIds?}]}: mọi tên văn bản có thể nhắc, không phân trang (xem "Tham chiếu trong văn bản") |
+| GET /references/{kind}/{id} | Thẻ xem trước. `kind`: CIRCUIT, ORGANIZATION, COMPETITION, TEAM, PLAYER, PERSON |
 | GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Ngày sai dạng hoặc quá 60 ngày trả 400 INVALID_QUERY_PARAMETER |
 | GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp, theo thứ tự danh sách giải) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |

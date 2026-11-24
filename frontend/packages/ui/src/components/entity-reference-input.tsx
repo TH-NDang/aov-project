@@ -6,6 +6,7 @@ import {
   createEntityIndex,
   entityKindLabels,
   referenceTranslation,
+  type EntityIndex,
   type EntityReference,
 } from "../lib/entity-rich-text"
 import type { EditorSnapshot, TextSelection } from "../lib/entity-rich-text-editor"
@@ -51,6 +52,10 @@ export interface EntityReferenceInputProps extends Omit<
   resolveIcon?: EntityIconResolver
   disabled?: boolean
   autoRecognize?: boolean
+  /** Recognizes names with this index instead of one of game text made from `entities`. */
+  index?: EntityIndex
+  /** Reads the tags of rich text; text people write by hand has references only. */
+  formatting?: boolean
   required?: boolean
   maxLength?: number
   onChange(snapshot: EditorSnapshot): boolean | void
@@ -90,6 +95,8 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
       resolveIcon,
       disabled = false,
       autoRecognize = true,
+      index,
+      formatting = true,
       required = false,
       maxLength = 100000,
       onChange,
@@ -112,8 +119,8 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     }, [])
     const highlightKey = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
     const recognitionIndex = React.useMemo(
-      () => createEntityIndex(entities, locale, fallbackLocale),
-      [entities, locale, fallbackLocale],
+      () => index ?? createEntityIndex(entities, locale, fallbackLocale),
+      [index, entities, locale, fallbackLocale],
     )
     const clearHighlights = React.useRef(() => {})
     const [recognitionRevision, refreshRecognition] = React.useReducer((revision: number) => revision + 1, 0)
@@ -170,151 +177,154 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
       const next = getReferenceInputSelection(element.current)
       notifySelection(next)
     }, [inside, notifySelection])
-    const paint = React.useCallback((text: string, selection?: TextSelection) => {
-      const root = element.current
-      if (!root || composing.current) return
-      const next: Host[] = []
-      const document = root.ownerDocument
-      const isTail = (node: Element) => node.tagName === "BR" && node.hasAttribute("data-input-tail")
-      const ensureTail = (container: HTMLElement): boolean => {
-        let changed = false
-        for (const child of container.children)
-          if (child.hasAttribute("data-format-open")) changed = ensureTail(child as HTMLElement) || changed
-        const children = [...container.childNodes].filter((node) =>
-          node.nodeType === 3 ? !!node.nodeValue : node.nodeType !== 1 || !isTail(node as Element),
-        )
-        const last = children.at(-1)
-        const required =
-          (container === root && !text) ||
-          (container !== root && !children.length) ||
-          (last?.nodeType === 3 && last.nodeValue?.endsWith("\n"))
-        const existing = [...container.children].filter(isTail)
-        const keep = required && existing.length === 1 && container.lastChild === existing[0]
-        if (keep) return changed
-        for (const tail of existing) tail.remove()
-        changed = existing.length > 0 || changed
-        if (required) {
-          const tail = document.createElement("br")
-          tail.setAttribute("data-input-tail", "")
-          tail.setAttribute("aria-hidden", "true")
-          container.append(tail)
-          changed = true
+    const paint = React.useCallback(
+      (text: string, selection?: TextSelection) => {
+        const root = element.current
+        if (!root || composing.current) return
+        const next: Host[] = []
+        const document = root.ownerDocument
+        const isTail = (node: Element) => node.tagName === "BR" && node.hasAttribute("data-input-tail")
+        const ensureTail = (container: HTMLElement): boolean => {
+          let changed = false
+          for (const child of container.children)
+            if (child.hasAttribute("data-format-open")) changed = ensureTail(child as HTMLElement) || changed
+          const children = [...container.childNodes].filter((node) =>
+            node.nodeType === 3 ? !!node.nodeValue : node.nodeType !== 1 || !isTail(node as Element),
+          )
+          const last = children.at(-1)
+          const required =
+            (container === root && !text) ||
+            (container !== root && !children.length) ||
+            (last?.nodeType === 3 && last.nodeValue?.endsWith("\n"))
+          const existing = [...container.children].filter(isTail)
+          const keep = required && existing.length === 1 && container.lastChild === existing[0]
+          if (keep) return changed
+          for (const tail of existing) tail.remove()
+          changed = existing.length > 0 || changed
+          if (required) {
+            const tail = document.createElement("br")
+            tail.setAttribute("data-input-tail", "")
+            tail.setAttribute("aria-hidden", "true")
+            container.append(tail)
+            changed = true
+          }
+          return changed
         }
-        return changed
-      }
-      const nodes = referenceInputNodes(text)
-      const expected: ReferencePart[] = []
-      const formats: Extract<ReferenceInputNode, { type: "format" }>[] = []
-      const collect = (parts: ReferenceInputNode[]) => {
-        for (const part of parts) {
-          if (part.type === "reference" || part.type === "exampleTable") expected.push(part)
-          if (part.type === "format") {
-            formats.push(part)
-            collect(part.children)
+        const nodes = referenceInputNodes(text, formatting)
+        const expected: ReferencePart[] = []
+        const formats: Extract<ReferenceInputNode, { type: "format" }>[] = []
+        const collect = (parts: ReferenceInputNode[]) => {
+          for (const part of parts) {
+            if (part.type === "reference" || part.type === "exampleTable") expected.push(part)
+            if (part.type === "format") {
+              formats.push(part)
+              collect(part.children)
+            }
           }
         }
-      }
-      collect(nodes)
-      const atoms = [...root.querySelectorAll<HTMLElement>("[data-reference-token]")]
-      const actualFormats = [...root.querySelectorAll<HTMLElement>("[data-format-open]")]
-      const registered = new Map(hostRegistry.current.map((host) => [host.element, host]))
-      const normalized = (container: HTMLElement): boolean =>
-        [...container.childNodes].every((node) => {
-          if (node.nodeType === 3) return true
-          if (node.nodeType !== 1) return false
-          const child = node as HTMLElement
-          if (isTail(child) || registered.has(child) || child.hasAttribute("data-decoration")) return true
-          return child.hasAttribute("data-format-open") && normalized(child)
-        })
-      const snapshot = normalized(root) ? readReferenceInputSnapshot(root) : undefined
-      if (
-        snapshot?.value === text &&
-        atoms.length === expected.length &&
-        atoms.every((atom, index) => atom.getAttribute("data-reference-token") === expected[index]!.token) &&
-        actualFormats.length === formats.length &&
-        actualFormats.every(
-          (format, index) =>
-            format.getAttribute("data-format-open") === formats[index]!.open &&
-            format.getAttribute("data-format-close") === formats[index]!.close,
-        )
-      ) {
-        const retained = atoms.map((atom) => registered.get(atom as HTMLSpanElement)!)
+        collect(nodes)
+        const atoms = [...root.querySelectorAll<HTMLElement>("[data-reference-token]")]
+        const actualFormats = [...root.querySelectorAll<HTMLElement>("[data-format-open]")]
+        const registered = new Map(hostRegistry.current.map((host) => [host.element, host]))
+        const normalized = (container: HTMLElement): boolean =>
+          [...container.childNodes].every((node) => {
+            if (node.nodeType === 3) return true
+            if (node.nodeType !== 1) return false
+            const child = node as HTMLElement
+            if (isTail(child) || registered.has(child) || child.hasAttribute("data-decoration")) return true
+            return child.hasAttribute("data-format-open") && normalized(child)
+          })
+        const snapshot = normalized(root) ? readReferenceInputSnapshot(root) : undefined
         if (
-          retained.length !== hostRegistry.current.length ||
-          retained.some((host, index) => host !== hostRegistry.current[index])
+          snapshot?.value === text &&
+          atoms.length === expected.length &&
+          atoms.every((atom, index) => atom.getAttribute("data-reference-token") === expected[index]!.token) &&
+          actualFormats.length === formats.length &&
+          actualFormats.every(
+            (format, index) =>
+              format.getAttribute("data-format-open") === formats[index]!.open &&
+              format.getAttribute("data-format-close") === formats[index]!.close,
+          )
         ) {
-          hostRegistry.current = retained
-          setHosts(retained)
+          const retained = atoms.map((atom) => registered.get(atom as HTMLSpanElement)!)
+          if (
+            retained.length !== hostRegistry.current.length ||
+            retained.some((host, index) => host !== hostRegistry.current[index])
+          ) {
+            hostRegistry.current = retained
+            setHosts(retained)
+          }
+          painted.current = text
+          if (root.getAttribute("data-empty") !== String(!text)) root.setAttribute("data-empty", String(!text))
+          const tailChanged = ensureTail(root)
+          if (selection && (tailChanged || !sameSelection(selection, snapshot) || selectionTouchesReference(root)))
+            setReferenceInputSelection(root, selection.start, selection.end)
+          return
         }
-        painted.current = text
-        if (root.getAttribute("data-empty") !== String(!text)) root.setAttribute("data-empty", String(!text))
-        const tailChanged = ensureTail(root)
-        if (selection && (tailChanged || !sameSelection(selection, snapshot) || selectionTouchesReference(root)))
-          setReferenceInputSelection(root, selection.start, selection.end)
-        return
-      }
-      const reusable = new Map<string, Host[]>()
-      for (const host of hostRegistry.current) {
-        const group = reusable.get(host.part.token) ?? []
-        group.push(host)
-        reusable.set(host.part.token, group)
-      }
-      const build = (parts: ReferenceInputNode[]): Node[] =>
-        parts.flatMap((part): Node[] => {
-          if (part.type === "text") return [document.createTextNode(part.text)]
-          if (part.type === "format") {
-            const format = document.createElement(part.tag === "b" ? "strong" : part.tag === "i" ? "em" : "span")
-            format.setAttribute("data-format-open", part.open)
-            format.setAttribute("data-format-close", part.close)
-            if (part.tag === "b") format.className = "font-bold"
-            if (part.tag === "i") format.className = "italic"
-            if (part.tag === "muted") format.className = "text-muted-foreground"
-            if (part.tag === "noauto") {
-              format.className = "rounded-sm bg-muted/70 outline outline-1 outline-dashed outline-border"
-              format.title = "Đoạn này bỏ qua tự nhận diện. Bôi đen và bấm Bỏ qua để bật lại."
-            }
-            if (isParagraphStyle(part.tag)) {
-              format.className = paragraphStyles[part.tag].classes
-              if (part.tag !== "note") {
-                format.setAttribute("data-heading", paragraphStyles[part.tag].label)
-                format.className +=
-                  " before:block before:text-xs before:font-semibold before:content-[attr(data-heading)]"
+        const reusable = new Map<string, Host[]>()
+        for (const host of hostRegistry.current) {
+          const group = reusable.get(host.part.token) ?? []
+          group.push(host)
+          reusable.set(host.part.token, group)
+        }
+        const build = (parts: ReferenceInputNode[]): Node[] =>
+          parts.flatMap((part): Node[] => {
+            if (part.type === "text") return [document.createTextNode(part.text)]
+            if (part.type === "format") {
+              const format = document.createElement(part.tag === "b" ? "strong" : part.tag === "i" ? "em" : "span")
+              format.setAttribute("data-format-open", part.open)
+              format.setAttribute("data-format-close", part.close)
+              if (part.tag === "b") format.className = "font-bold"
+              if (part.tag === "i") format.className = "italic"
+              if (part.tag === "muted") format.className = "text-muted-foreground"
+              if (part.tag === "noauto") {
+                format.className = "rounded-sm bg-muted/70 outline outline-1 outline-dashed outline-border"
+                format.title = "Đoạn này bỏ qua tự nhận diện. Bôi đen và bấm Bỏ qua để bật lại."
               }
+              if (isParagraphStyle(part.tag)) {
+                format.className = paragraphStyles[part.tag].classes
+                if (part.tag !== "note") {
+                  format.setAttribute("data-heading", paragraphStyles[part.tag].label)
+                  format.className +=
+                    " before:block before:text-xs before:font-semibold before:content-[attr(data-heading)]"
+                }
+              }
+              if (part.color) format.style.color = part.color
+              format.append(...build(part.children))
+              if (!format.childNodes.length) format.append(document.createTextNode(""))
+              return [format]
             }
-            if (part.color) format.style.color = part.color
-            format.append(...build(part.children))
-            if (!format.childNodes.length) format.append(document.createTextNode(""))
-            return [format]
-          }
-          const retained = reusable.get(part.token)?.shift()
-          const host = retained?.element ?? document.createElement("span")
-          if (!retained) {
-            host.contentEditable = "false"
-            host.setAttribute("contenteditable", "false")
-            host.setAttribute("data-reference-token", part.token)
-            if (part.type === "reference") {
-              host.setAttribute("data-reference-kind", part.kind)
-              host.setAttribute("data-reference-id", part.id)
+            const retained = reusable.get(part.token)?.shift()
+            const host = retained?.element ?? document.createElement("span")
+            if (!retained) {
+              host.contentEditable = "false"
+              host.setAttribute("contenteditable", "false")
+              host.setAttribute("data-reference-token", part.token)
+              if (part.type === "reference") {
+                host.setAttribute("data-reference-kind", part.kind)
+                host.setAttribute("data-reference-id", part.id)
+              }
+              host.setAttribute("draggable", "false")
+              host.className =
+                part.type === "exampleTable"
+                  ? "my-1 block max-w-full"
+                  : "mx-0.5 inline-flex max-w-full select-all items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 align-baseline text-sm"
             }
-            host.setAttribute("draggable", "false")
-            host.className =
-              part.type === "exampleTable"
-                ? "my-1 block max-w-full"
-                : "mx-0.5 inline-flex max-w-full select-all items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 align-baseline text-sm"
-          }
-          next.push(retained ?? { element: host, part })
-          return [document.createTextNode(""), host, document.createTextNode("")]
-        })
-      const fragments = build(nodes)
-      if (!fragments.length) fragments.push(document.createTextNode(""))
-      root.replaceChildren(...fragments)
-      ensureTail(root)
-      root.setAttribute("data-empty", String(!text))
-      painted.current = text
-      hostRegistry.current = next
-      setHosts(next)
-      if (selection) setReferenceInputSelection(root, selection.start, selection.end)
-    }, [])
+            next.push(retained ?? { element: host, part })
+            return [document.createTextNode(""), host, document.createTextNode("")]
+          })
+        const fragments = build(nodes)
+        if (!fragments.length) fragments.push(document.createTextNode(""))
+        root.replaceChildren(...fragments)
+        ensureTail(root)
+        root.setAttribute("data-empty", String(!text))
+        painted.current = text
+        hostRegistry.current = next
+        setHosts(next)
+        if (selection) setReferenceInputSelection(root, selection.start, selection.end)
+      },
+      [formatting],
+    )
     React.useLayoutEffect(() => {
       if (composing.current || !element.current || painted.current === value) return
       paint(value, inside() ? getReferenceInputSelection(element.current) : undefined)

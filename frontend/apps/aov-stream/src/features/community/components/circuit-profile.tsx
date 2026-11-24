@@ -7,7 +7,10 @@ import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
+import { focusesFoldedLink } from "../../../lib/folded-text"
+import { pageReferenceKey } from "../../../lib/reference-model"
 import { competitionsFeedQuery, formatDay, regionKey, regionName } from "../../../components/community-ui"
+import { ReferenceText } from "../../../components/reference-text"
 import { RegionMark } from "../../../components/region-mark"
 import { ProfileHead } from "./profile-head"
 import { LiveBlock } from "./profile-home"
@@ -88,13 +91,13 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
       )}
       {tab === "history" ? (
         <section aria-label={text("Lịch sử hệ thống giải", "Tournament circuit history")}>
-          <HistoryRows items={history} />
+          <HistoryRows items={history} about={pageReferenceKey(profile)} />
         </section>
       ) : (
         <div className="tn-overview">
           <div className="tn-overview-main">
             {profile.live && <LiveBlock live={profile.live} name={content.name} />}
-            {content.biography && <CircuitIntro text={content.biography} />}
+            {content.biography && <CircuitIntro text={content.biography} about={pageReferenceKey(profile)} />}
             <CompetitionList profile={profile} title={text("Các mùa giải", "Seasons")} />
           </div>
           <aside className="tn-overview-side" aria-label={text("Thông tin tham khảo", "Reference information")}>
@@ -113,15 +116,21 @@ const INTRO_FOLD = 240
  * The circuit's introduction. On a compact layout a long one folds to a few lines, so the seasons a reader comes for
  * stay close to the top of the page.
  */
-function CircuitIntro({ text }: { text: string }) {
+function CircuitIntro({ text, about }: { text: string; about: string }) {
   // `text` is the introduction here, so the wording picker goes by `ui`.
   const { text: ui } = useStreamLocale()
   const [open, setOpen] = useState(false)
   const foldable = usePageLayout() === "compact" && text.length > INTRO_FOLD
   return (
     <div className="pf-intro">
-      <p className="pf-bio" data-folded={(foldable && !open) || undefined}>
-        {text}
+      <p
+        className="pf-bio"
+        data-folded={(foldable && !open) || undefined}
+        onFocus={(event) => {
+          if (foldable && focusesFoldedLink(event)) setOpen(true)
+        }}
+      >
+        <ReferenceText text={text} about={[about]} />
       </p>
       {foldable && (
         <button type="button" className="tn-more pf-intro-more" aria-expanded={open} onClick={() => setOpen(!open)}>

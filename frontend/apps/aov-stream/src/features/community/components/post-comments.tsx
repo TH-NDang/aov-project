@@ -3,6 +3,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import type { CommunityPost, PageRole } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { useSignedInAction } from "../../../components/community-signin"
@@ -97,7 +98,9 @@ export function PostComments({
               {comment.asPage && <span>{text("Đại diện trang", "Page representative")}</span>}
               <TimeAgo value={comment.createdAt} />
             </p>
-            <p className="cp-prose">{comment.body}</p>
+            <p className="cp-prose">
+              <ReferenceText text={comment.body} />
+            </p>
             <div className="cp-comment-tools">
               <button className="cp-text-button" onClick={() => onReport(comment.id)}>
                 {text("Báo cáo", "Report")}

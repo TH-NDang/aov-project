@@ -6,6 +6,7 @@ import {
   type EntityReference,
 } from "../../lib/entity-rich-text"
 import {
+  rankReferenceChoices,
   referenceSearchGroup,
   searchReferenceChoices,
   type EntityReferenceSearch,
@@ -114,6 +115,7 @@ export function useReferenceOptions({
   remote,
   locale,
   fallbackLocale,
+  ranked = false,
 }: {
   open: boolean
   searchIndex: Parameters<typeof searchReferenceChoices>[0]
@@ -121,10 +123,13 @@ export function useReferenceOptions({
   remote: ReferenceSearch
   locale: string
   fallbackLocale: string
+  /** The closest matches first; otherwise by name, as an editor browses a catalog. */
+  ranked?: boolean
 }) {
   return React.useMemo(() => {
     if (!open) return []
-    const local = searchReferenceChoices(searchIndex, query)
+    const found = searchReferenceChoices(searchIndex, query)
+    const local = ranked ? rankReferenceChoices(found, query) : found
     const group = referenceSearchGroup(query).kind
     const choices = new Map(
       local.map(({ entity, translation }) => [`${entity.kind}:${entity.id}`, { entity, translation }]),
@@ -142,5 +147,5 @@ export function useReferenceOptions({
       if (translation?.name.trim()) choices.set(`${entity.kind}:${entity.id}`, { entity, translation })
     }
     return [...choices.values()]
-  }, [open, searchIndex, locale, fallbackLocale, query, remote.items])
+  }, [open, searchIndex, locale, fallbackLocale, query, remote.items, ranked])
 }

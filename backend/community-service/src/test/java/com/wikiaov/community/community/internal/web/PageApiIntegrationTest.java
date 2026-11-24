@@ -1306,6 +1306,164 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void aTeamIsNamedByTheCompetitionThatStartedLast() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        var teams = List.of(team("Alpha " + suffix), team("Beta " + suffix));
+
+        publish(tournament("August cup", Map.of("startsOn", "2026-08-29")), teams);
+        publish(tournament("December cup", Map.of("startsOn", "2026-12-03")), teams);
+
+        participants("TEAM", suffix).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.items[0].competitions").value(2))
+                .andExpect(jsonPath("$.items[0].competitionName").value("December cup"))
+                .andExpect(jsonPath("$.items[1].competitionName").value("December cup"));
+    }
+
+    @Test
+    void aPlayerCarriesTheTeamOfTheCompetitionThatStartedLast() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String former = team("Former team");
+        String current = team("Current team");
+        String player = send(post(ROOT + "/admin/players"), "editor", true, Map.of("content",
+                Map.of("code", "player-" + suffix, "nickname", "Jungler " + suffix))).path("id").asString();
+        String september = tournament("September cup", Map.of("startsOn", "2026-09-05"));
+        String october = tournament("October cup", Map.of("startsOn", "2026-10-01"));
+        for (var line : List.of(Map.of("tournamentId", september, "teamId", former, "playerId", player),
+                Map.of("tournamentId", october, "teamId", current, "playerId", player))) {
+            send(post(ROOT + "/admin/roster-memberships"), "editor", true, Map.of("content", line));
+        }
+
+        publish(september, List.of(former, current));
+        publish(october, List.of(former, current));
+
+        participants("PLAYER", suffix).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].competitionName").value("October cup"))
+                .andExpect(jsonPath("$.items[0].team.name").value("Current team"));
+    }
+
+    @Test
+    void aPersonCarriesTheTeamAndTheRoleOfTheCompetitionThatStartedLast() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String former = team("Former team");
+        String current = team("Current team");
+        String person = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PERSON", "code", "moving-staff-" + suffix, "content",
+                        Map.of("name", "Staff " + suffix, "personRoles", List.of("COACH"))))
+                .path("id").asString();
+
+        publish(tournament("August cup", Map.of("startsOn", "2026-08-29", "staff",
+                List.of(Map.of("teamId", former, "pageId", person, "role", "COACH")))), List.of(former, current));
+        publish(tournament("December cup", Map.of("startsOn", "2026-12-03", "staff",
+                List.of(Map.of("teamId", current, "pageId", person, "role", "TEAM_ANALYST")))),
+                List.of(former, current));
+
+        participants("PERSON", suffix).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].competitionName").value("December cup"))
+                .andExpect(jsonPath("$.items[0].team.name").value("Current team"))
+                .andExpect(jsonPath("$.items[0].roles.length()").value(1))
+                .andExpect(jsonPath("$.items[0].roles[0]").value("TEAM_ANALYST"));
+    }
+
+    @Test
+    void participantsOfTheCompetitionThatStartedLastAreListedFirst() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+
+        publish(tournament("August cup", Map.of("startsOn", "2026-08-29")),
+                List.of(team("Alpha " + suffix), team("Beta " + suffix)));
+        publish(tournament("December cup", Map.of("startsOn", "2026-12-03")),
+                List.of(team("Yankee " + suffix), team("Zulu " + suffix)));
+
+        participants("TEAM", suffix).andExpect(jsonPath("$.items[0].name").value("Yankee " + suffix))
+                .andExpect(jsonPath("$.items[1].name").value("Zulu " + suffix))
+                .andExpect(jsonPath("$.items[2].name").value("Alpha " + suffix))
+                .andExpect(jsonPath("$.items[3].name").value("Beta " + suffix));
+    }
+
+    @Test
+    void aStartDateStoredAsTextTakesItsPlaceAmongTheOthers() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String rival = team("Rival");
+        String october = tournament("October cup", Map.of("startsOn", "2026-10-01"));
+        publish(tournament("August cup", Map.of("startsOn", "2026-08-29")), List.of(team("August " + suffix), rival));
+        publish(october, List.of(team("October " + suffix), rival));
+        publish(tournament("December cup", Map.of("startsOn", "2026-12-03")),
+                List.of(team("December " + suffix), rival));
+
+        jdbc.update("""
+                UPDATE tournament.competition_plan
+                   SET published_snapshot = jsonb_set(published_snapshot, '{tournament,startsOn}', '"2026-10-01"')
+                 WHERE id = ?
+                """, UUID.fromString(october));
+
+        participants("TEAM", suffix).andExpect(jsonPath("$.items[0].name").value("December " + suffix))
+                .andExpect(jsonPath("$.items[1].name").value("October " + suffix))
+                .andExpect(jsonPath("$.items[2].name").value("August " + suffix));
+    }
+
+    @Test
+    void aCompetitionWithoutAStartDateCountsAsTheOldest() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        var teams = List.of(team("Alpha " + suffix), team("Beta " + suffix));
+
+        publish(tournament("Dated cup", Map.of("startsOn", "2026-08-29")), teams);
+        publish(tournament("Undated cup", Map.of()), teams);
+
+        participants("TEAM", suffix).andExpect(jsonPath("$.items[0].competitions").value(2))
+                .andExpect(jsonPath("$.items[0].competitionName").value("Dated cup"));
+    }
+
+    @Test
+    void theCountOfParticipantsReadsTheNamesOfTheCompetitionThatStartedLast() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String renamed = team("Wanted " + suffix);
+        String kept = team("Wanted " + suffix + " kept");
+        publish(tournament("August cup", Map.of("startsOn", "2026-08-29")), List.of(renamed, kept));
+        var saved = send(get(ROOT + "/admin/teams/" + renamed), "editor", true, null);
+        send(put(ROOT + "/admin/teams/" + renamed), "editor", true, Map.of("version", saved.path("version").asLong(),
+                "content", Map.of("code", saved.path("content").path("code").asString(), "name", "Renamed " + suffix)));
+
+        publish(tournament("December cup", Map.of("startsOn", "2026-12-03")), List.of(renamed, kept));
+
+        mvc.perform(get(ROOT + "/competitions/participants").param("kind", "TEAM").param("q", "Wanted " + suffix)
+                .param("size", "1")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].name").value("Wanted " + suffix + " kept"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    private String team(String name) throws Exception {
+        return send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "team-" + UUID.randomUUID(), "name", name))).path("id").asString();
+    }
+
+    private String tournament(String name, Map<String, Object> fields) throws Exception {
+        var content = new HashMap<>(fields);
+        content.put("code", "tournament-" + UUID.randomUUID());
+        content.put("name", name);
+        content.put("region", "VN");
+
+        return send(post(ROOT + "/admin/tournaments"), "editor", true, Map.of("content", content)).path("id")
+                .asString();
+    }
+
+    /** Publishes the competition of {@code tournament} between {@code teams}. */
+    private void publish(String tournament, List<String> teams) throws Exception {
+        var plan = Map.of("sourceUrl", "https://example.com/rules",
+                "entrants", teams.stream().map(team -> Map.of("teamId", team)).toList(),
+                "stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN", "bestOf", 5, "legs",
+                        1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+        var saved = send(put(ROOT + "/admin/competitions/" + tournament), "editor", true,
+                Map.of("version", 0, "content", plan));
+
+        send(post(ROOT + "/admin/competitions/" + tournament + "/publish"), "publisher", true,
+                Map.of("version", saved.path("version").asLong()));
+    }
+
+    private ResultActions participants(String kind, String query) throws Exception {
+        return mvc.perform(get(ROOT + "/competitions/participants").param("kind", kind).param("q", query))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void circuitPagesAllowEditorialContentAndSuggestionsButRejectCommunityActions() throws Exception {
         String code = "circuit-info-" + UUID.randomUUID();
         var content = Map.of("name", "Circuit information", "biography", "An editorial competition circuit.",

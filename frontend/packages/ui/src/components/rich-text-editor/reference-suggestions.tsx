@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
-import { entityKindLabels, type EntityReference, type EntityTranslation } from "../../lib/entity-rich-text"
+import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
+import { entityKindLabel, type EntityReference, type EntityTranslation } from "../../lib/entity-rich-text"
 import type { EntityReferenceInputHandle } from "../entity-reference-input"
 import { EntityReferenceArtwork, skillReferenceContext, type EntityIconResolver } from "../entity-rich-text"
 import { Button } from "../button"
@@ -64,6 +65,7 @@ export function ReferenceOptionRow({
   locale,
   fallbackLocale,
   resolveIcon,
+  detail,
   onChoose,
 }: {
   id: string
@@ -75,6 +77,8 @@ export function ReferenceOptionRow({
   locale: string
   fallbackLocale: string
   resolveIcon?: EntityIconResolver
+  /** The words under the name, in place of its kind and language. */
+  detail?: string
   onChoose: (index: number) => void
 }) {
   const skill = skillReferenceContext(entity, locale, fallbackLocale)
@@ -108,8 +112,12 @@ export function ReferenceOptionRow({
         )}
         <span className="block break-words font-medium">{translation.name}</span>
         <span className="text-xs text-muted-foreground">
-          {entityKindLabels[entity.kind]} · {translation.locale}
-          {translation.locale !== locale ? " (dự phòng)" : ""}
+          {detail ?? (
+            <>
+              {entityKindLabel(entity.kind)} · {translation.locale}
+              {translation.locale !== locale ? " (dự phòng)" : ""}
+            </>
+          )}
         </span>
       </span>
       <span className="ml-auto text-xs text-muted-foreground" aria-hidden="true">
@@ -172,6 +180,7 @@ export function ReferenceSuggestions({
   onClose: () => void
   children: React.ReactNode
 }) {
+  const text = useLocaleText()
   const list = React.useRef<HTMLDivElement>(null)
   const search = React.useRef<HTMLInputElement>(null)
   // The chosen row stays in view while the arrow keys move through the list.
@@ -195,7 +204,7 @@ export function ReferenceSuggestions({
           <PopoverPrimitive.Content
             ref={ref}
             data-slot="entity-reference-suggestions"
-            aria-label={`Chèn tham chiếu ${label}`}
+            aria-label={text(`Chèn tham chiếu ${label}`, `Insert a reference: ${label}`)}
             align="start"
             sideOffset={6}
             collisionPadding={8}
@@ -211,7 +220,11 @@ export function ReferenceSuggestions({
             style={{ maxHeight: "min(24rem, var(--radix-popover-content-available-height))" }}
           >
             {searching && (
-              <div role="group" aria-label="Nhóm tham chiếu" className="flex shrink-0 gap-1 overflow-x-auto">
+              <div
+                role="group"
+                aria-label={text("Nhóm tham chiếu", "Reference groups")}
+                className="flex shrink-0 gap-1 overflow-x-auto"
+              >
                 {kinds.map(([kind, name]) => (
                   <Button
                     key={kind}
@@ -229,7 +242,7 @@ export function ReferenceSuggestions({
             {searching && (
               <input
                 ref={search}
-                aria-label={`Tìm tham chiếu ${label}`}
+                aria-label={text(`Tìm tham chiếu ${label}`, `Find references: ${label}`)}
                 className="w-full shrink-0 rounded border bg-background p-2 text-sm"
                 value={query}
                 onChange={(e) => onQueryChange(e.target.value)}
@@ -238,16 +251,19 @@ export function ReferenceSuggestions({
             )}
             <p className="shrink-0 px-1 text-xs text-muted-foreground" role="status">
               {count
-                ? `${count} kết quả · ↑↓ chọn · Enter chèn`
+                ? text(
+                    `${count} kết quả · ↑↓ chọn · Enter chèn`,
+                    `${count} ${count === 1 ? "result" : "results"} · ↑↓ choose · Enter insert`,
+                  )
                 : loading
-                  ? "Đang tìm tham chiếu…"
-                  : "Không có tham chiếu phù hợp"}
+                  ? text("Đang tìm tham chiếu…", "Looking for references…")
+                  : text("Không có tham chiếu phù hợp", "No matching reference")}
             </p>
             <div
               role="listbox"
               ref={list}
               id={`${id}-options`}
-              aria-label={`Gợi ý tham chiếu ${label}`}
+              aria-label={text(`Gợi ý tham chiếu ${label}`, `Suggested references: ${label}`)}
               className="min-h-0 max-h-64 overflow-y-auto overscroll-contain"
               aria-busy={loading}
               onScroll={(event) => {
@@ -261,19 +277,19 @@ export function ReferenceSuggestions({
             </div>
             {count > 0 && loading && (
               <p role="status" className="px-1 text-xs text-muted-foreground">
-                Đang tải thêm tham chiếu…
+                {text("Đang tải thêm tham chiếu…", "Loading more references…")}
               </p>
             )}
             {error && (
               <div className="flex items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
-                <span>Chưa tải được tham chiếu.</span>
+                <span>{text("Chưa tải được tham chiếu.", "References could not be loaded.")}</span>
                 <Button type="button" size="sm" variant="ghost" onClick={onRetry}>
-                  Thử lại
+                  {text("Thử lại", "Try again")}
                 </Button>
               </div>
             )}
             <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={onClose}>
-              Đóng gợi ý
+              {text("Đóng gợi ý", "Close suggestions")}
             </Button>
           </PopoverPrimitive.Content>
         </PopoverPrimitive.Portal>

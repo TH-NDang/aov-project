@@ -1,4 +1,3 @@
-import type { ReactNode } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CompetitionView, ProfileAchievement, ProfileHistory, ProfileMember } from "@aov/community-contracts"
@@ -7,6 +6,7 @@ import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
+import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionQuery } from "../../../lib/tournament-api"
@@ -176,22 +176,29 @@ export function distinctHistory(items: ProfileHistory[]) {
   return steps
 }
 
+/** Words of a step that open a page the step records, or that link what they name when it records none. */
+function StepWords({ to, words, about }: { to: string | null | undefined; words: string; about?: string }) {
+  return to ? <Link to={to}>{words}</Link> : <ReferenceText text={words} about={about ? [about] : undefined} />
+}
+
 /**
  * A step's competition, read by its id, opens it once the read shows it is published; until then, or when it is not,
- * the words open `fallback` or nothing. The read is the one the competition's own page makes, so opening it is quick.
+ * the words open `fallback` or what they name. The read is the one the competition's own page makes, so opening it is
+ * quick.
  */
 function PublishedCompetitionLink({
   id,
   fallback,
-  children,
+  words,
+  about,
 }: {
   id: string
   fallback: string | null
-  children: ReactNode
+  words: string
+  about?: string
 }) {
   const competition = useQuery({ ...competitionQuery(id), retry: false, retryOnMount: false })
-  const to = competition.data ? `/competitions/${id}` : fallback
-  return to ? <Link to={to}>{children}</Link> : <>{children}</>
+  return <StepWords to={competition.data ? `/competitions/${id}` : fallback} words={words} about={about} />
 }
 
 /** History rows shown at first and added each time the reader reaches the end of the list. */
@@ -200,9 +207,18 @@ const HISTORY_STEP = 20
 /**
  * Career steps and milestones as rows, revealed as the reader scrolls. A step names a competition, which opens it when
  * it is published here, and often a team after " · ", which opens the page the step relates to. A step that records
- * its competition's id is matched by that id only; one that does not is matched by name or dates.
+ * its competition's id is matched by that id only; one that does not is matched by name or dates. Words that open
+ * nothing so link the records they name; `about` is the page the steps belong to, which they never link.
  */
-export function HistoryRows({ items, links }: { items: ProfileHistory[]; links?: CompetitionLinks }) {
+export function HistoryRows({
+  items,
+  links,
+  about,
+}: {
+  items: ProfileHistory[]
+  links?: CompetitionLinks
+  about?: string
+}) {
   const { text } = useStreamLocale()
   const revealed = useRevealedRows(items, String(items.length), HISTORY_STEP)
   return (
@@ -216,28 +232,37 @@ export function HistoryRows({ items, links }: { items: ProfileHistory[]; links?:
           const known = item.tournamentId && links?.name(item.tournamentId) ? item.tournamentId : undefined
           const competition = item.tournamentId ? known : links?.find(event, item.startsOn, item.endsOn)
           const eventFallback = !party && !item.role ? related : null
-          const linked = (to: string | null | undefined, words: ReactNode) =>
-            to ? <Link to={to}>{words}</Link> : words
           const dates = item.startsOn || item.endsOn ? dayRange(item.startsOn, item.endsOn) : null
           return (
             <li key={index}>
               <div className="pf-row-text">
                 <strong>
                   {item.tournamentId && !known ? (
-                    <PublishedCompetitionLink id={item.tournamentId} fallback={eventFallback}>
-                      {event}
-                    </PublishedCompetitionLink>
+                    <PublishedCompetitionLink
+                      id={item.tournamentId}
+                      fallback={eventFallback}
+                      words={event}
+                      about={about}
+                    />
                   ) : (
-                    linked(competition ? `/competitions/${competition}` : eventFallback, event)
+                    <StepWords
+                      to={competition ? `/competitions/${competition}` : eventFallback}
+                      words={event}
+                      about={about}
+                    />
                   )}
                   {party && (
                     <>
                       <i> · </i>
-                      {linked(related, party)}
+                      <StepWords to={related} words={party} about={about} />
                     </>
                   )}
                 </strong>
-                {item.role && <span>{party ? item.role : linked(related, item.role)}</span>}
+                {item.role && (
+                  <span>
+                    <StepWords to={party ? null : related} words={item.role} about={about} />
+                  </span>
+                )}
               </div>
               {dates && <span className="pf-row-date">{dates}</span>}
               {item.sourceUrl && <SourceLink url={item.sourceUrl} />}
