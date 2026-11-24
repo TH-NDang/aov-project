@@ -113,7 +113,7 @@ nguồn và ghi chú của đội hình, người đã rời.
 |---|---|
 | Đội & đội hình | Thêm nhiều đội bằng danh sách tên, tạo đội tại chỗ, chép từ giải khác, đổi thứ tự. Đội hình sửa cả bảng: vị trí và trạng thái một lần bấm, thêm nhiều người, chép từ giải khác, dán danh sách, tạo hồ sơ, cảnh báo trùng/thiếu vị trí, ghi một lần. Các đội chưa có đội hình chép từ giải gần nhất trong một lần xác nhận |
 | Thể thức | Đổi thứ tự giai đoạn, xếp theo ngày đấu, nhân đôi, năm mẫu, chọn đội của từng giai đoạn |
-| Lịch & kết quả | Lọc theo việc còn thiếu (chưa có tỷ số, giờ, video; thiếu ván; tỷ số lệch ván; lệch suất; chưa công bố). "Nhập kết quả": bảng tỷ số và video của nhiều trận, gõ số là sang ô kế, dán nhiều dòng, điền theo ván đã ghi, hỏi một lần khi ghi đè. "Xếp lịch": bảng giờ, vòng, cặp đấu, BO, thứ tự; dời giờ, xếp giờ lần lượt, đánh số vòng, chuyển giai đoạn, thêm/bỏ trận. Nối nhánh theo kết quả. Hạt giống lấy xen kẽ từ các bảng |
+| Lịch & kết quả | Lọc theo việc còn thiếu (chưa có tỷ số, giờ, video; thiếu ván; ván thiếu tuyển thủ; tỷ số lệch ván; lệch suất; chưa công bố). "Nhập kết quả": bảng tỷ số và video của nhiều trận, gõ số là sang ô kế, dán nhiều dòng, điền theo ván đã ghi, hỏi một lần khi ghi đè. "Xếp lịch": bảng giờ, vòng, cặp đấu, BO, thứ tự; dời giờ, xếp giờ lần lượt, đánh số vòng, chuyển giai đoạn, thêm/bỏ trận. Nối nhánh theo kết quả. Hạt giống lấy xen kẽ từ các bảng |
 | Chung cuộc | Giải thưởng gom theo tên giải, thêm người nhận cùng giải, điền đội theo đội hình của giải; trận tranh hạng ba cho hạng 3 và 4 |
 | Công bố | Đếm ván đủ dữ liệu, mục còn thiếu nhiều nhất, xuất bản mọi ván đủ dữ liệu của giải trong một lần, báo từng ván bị từ chối |
 
@@ -695,6 +695,14 @@ trong bản ghi và giải không ở thùng rác. `GET /admin/link-review/facet
 Mỗi dòng: {`kind`, `recordId`, `tournamentId`, `tournamentName`, `seriesId`, `gameNumber`, `label`, `text`}. `recordId` là
 ván, trận hoặc giải cần mở để sửa; `label` là tên trận hoặc tên giải thưởng. Xếp theo giải bắt đầu gần nhất, rồi tên giải,
 rồi `recordId`.
+
+Từ 24/11/2026 màn này liên kết ngay tại dòng. Dòng chỉ hiện tên được ghi (toàn văn ở chú giải khi rê chuột) và đề xuất
+bản ghi khớp tên, không phân biệt dấu và hoa thường: tuyển thủ trong đội hình hai đội trước, rồi người từng ở hai đội,
+rồi người ngoài (kèm quốc gia). Một lần bấm là liên kết, hoàn tác được trong 8 giây; "Chọn khác…" mở ô chọn. "Liên kết
+gợi ý chắc chắn" làm nhiều dòng sau một xác nhận, chỉ với dòng có đúng một người khớp chính xác trong đội hình của trận;
+người ngoài đội hình không bao giờ được liên kết hàng loạt. Dòng có nhiều bình luận viên liên kết đủ mọi người một lần,
+vì dòng rời danh sách khi trận có `broadcast`. Liên kết ghi đúng như màn sửa của từng loại: ghi chú giữ nguyên, giải
+thưởng lấy tên của bản ghi; chỗ vừa được người khác liên kết thì không ghi đè.
 
 ### Admin
 
