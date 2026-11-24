@@ -67,7 +67,7 @@ là hàng thứ hai dính ở đầu màn hình. Trang nằm trong cột `--aov-
 |---|---|---|
 | Đầu trang | Hàng thương hiệu cao 48px (cú, chữ AOV Stream, nút tìm kiếm, chuông khi đã đăng nhập, "⋯" dưới 768px hoặc tài khoản) cuộn đi khi đọc; hàng tab bên dưới dính lại, cuộn ngang, dưới 420px bỏ icon. Bấm tìm kiếm thì nút quay lại và ô nhập thay hàng thương hiệu | Một thanh cao 56px: cú và menu chuyển ứng dụng, ba mục, ô tìm kiếm, chuông thông báo và tài khoản. Dưới 1100px ô tìm thu thành nút, bấm thì ô nhập chiếm cả thanh |
 | Bảng tin | Dải Trận đấu cuộn ngang → chip lọc bảng tin → bài viết, tải thêm khi cuộn | Dải Trận đấu → bảng tin bên trái, cột phụ 320px bên phải: Giải đang và sắp diễn ra; Tham gia cộng đồng khi chưa đăng nhập, Đang theo dõi và Gợi ý theo dõi khi đã đăng nhập. Dưới 1100px cột phụ ẩn vì chỉ chứa lối tắt đã có ở chỗ khác |
-| Giải đấu | Tiêu đề và nút Tra cứu ván đấu → tab Các giải đấu, Lịch & kết quả → Đang diễn ra (sân khấu của giải, các trận đang và sắp đấu bên dưới) → Sắp diễn ra → Nhà vô địch gần đây, cuộn ngang → ô tìm và nút Lọc → các hệ thống giải, mỗi mùa một hàng với nhà vô địch. Ở tab Lịch & kết quả: ô tìm và nút Lọc → chip Tất cả, Lịch đấu, Kết quả → dải ngày cuộn ngang → các trận theo ngày | Như compact; giải đang diễn ra có các trận ở nửa phải sân khấu, nhóm ô lọc cùng hàng với ô tìm (chip cạnh ô tìm ở tab lịch). Mỗi hệ thống giải một danh sách, mùa mới nhất trước, vòng loại và giải phụ nằm dưới giải chính, mùa cũ gấp lại. Khi đang lọc, phần mở đầu ẩn đi |
+| Giải đấu | Đang diễn ra (sân khấu của giải, các trận đang và sắp đấu bên dưới) → dải trận cuộn ngang theo ngày (đang đấu, sắp tới, vừa xong; bỏ các trận đã có trên sân khấu) với hai lối Toàn bộ lịch, Ván đấu bên dưới → Sắp diễn ra → một hàng: chip khu vực có cờ và nút Lọc → các hệ thống giải, mỗi hệ thống một thẻ. Không có tiêu đề và tab; ô tìm là ô của thanh trên. Toàn bộ lịch (`?tab=schedule`): quay lại Giải đấu → chip khu vực và nút Lọc → dải ngày cuộn ngang → các trận theo ngày | Như compact; hai lối nằm cuối dải trận, giải đang diễn ra có các trận ở nửa phải sân khấu. Khi đang lọc, các hệ thống giải thành danh sách mùa và phần mở đầu chỉ còn dải trận của các giải khớp; khi đang tìm thì ẩn cả dải trận |
 | Một giải | Quay lại Tất cả giải đấu → sân khấu của giải (logo, hệ thống giải, tên, trạng thái, ngày, số đội, giải thưởng, nhà vô địch hoặc tiến độ, các giai đoạn ở chân) → tab Tổng quan, Lịch & kết quả, BXH & nhánh đấu, Đội tham dự, Thể thức & thông tin, cuộn ngang và ghim dưới thanh trên → Tổng quan: trận đang và sắp đấu, kết quả mới nhất, nhánh đấu (cuộn ngang, mở ở vòng đang đấu), bảng xếp hạng, thông tin, xếp hạng chung cuộc, giải thưởng | Như compact; nhánh đấu chiếm cả bề ngang, từ 1080px xếp hạng chung cuộc và giải thưởng nằm ở cột phải 340px (cột trống thì nhường chỗ cho nội dung) |
 
 ## Admin
@@ -172,7 +172,13 @@ của người xem, riêng thanh trên và chân trang luôn màu đêm ngả t�
 | Màu nhấn | Giao diện sáng: xanh tím đậm của lông cú. Giao diện tối: tím oải hương. Liên kết, chip và tab đang chọn theo màu này |
 | Chip | `.hub-pills`: một hàng cuộn ngang, chip đang chọn tô đặc màu nhấn |
 | Tab | `.cp-tabs`: chữ 14px; tab đang mở giữ màu chữ thường, đậm hơn và có vạch màu nhấn bên dưới; một hàng cuộn ngang |
-| Logo đội và giải | Nằm trên ô `--hub-plate`, để logo vẽ cho nền tối vẫn thấy ở giao diện sáng |
+| Logo đội và giải | Nằm trên ô `--hub-plate` đổi theo giao diện, dùng bản logo vẽ cho nền đó |
+| Bộ lọc | Một nút `FilterMenu` mở bảng chip (bảng trượt trên điện thoại); mục đang chọn hiện thành chip gỡ được. Khu vực là hàng chip có cờ |
+| Bản quyền ảnh | Một dòng cuối trang giải, đội, tuyển thủ (`ImageRights`) và trang `/credits` từ chân trang |
+| Tuyển thủ, nhân sự | Không có ảnh: `PlayerMark` vẽ chữ cái đầu của tên trên màu sinh từ tên; tuyển thủ hình khiên, nhân sự hình tròn |
+| Liên kết qua lại | `GoLink`: tên mở trang khác có mũi tên nhỏ phía sau, đổi màu và gạch chân khi rê; trên sân khấu là một viên `hub-go-pill`; thẻ mở cả khối có mũi tên ở cuối |
+| Thứ hạng | `RankBadge`: ba hạng đầu là đồng xu trong vòng nguyệt quế, hạng 1 có vương miện; không dùng quầng sáng |
+| Tìm kiếm | Mỗi màn hình một ô, ở thanh trên. Trang có danh sách riêng truyền `search` cho `StreamShell` để ô đó lọc danh sách |
 | Trang trong danh bạ | Thẻ gọn: logo hoặc ảnh, tên tối đa ba dòng, nút theo dõi; không dùng ảnh bìa |
 | Trạng thái trống và lỗi | `.hub-state`: cú 48px, một câu, bước tiếp theo |
 
