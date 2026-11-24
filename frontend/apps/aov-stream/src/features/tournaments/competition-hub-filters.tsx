@@ -8,22 +8,51 @@ import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { competitionStatusLabels } from "../../components/community-ui"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
-import { competitionStatus, type CompetitionStatus } from "../../lib/competition-model"
+import {
+  COMPETITION_KIND_NAMES,
+  COMPETITION_KINDS,
+  competitionRegionName,
+  filterOptions,
+  passesFilter,
+  type CompetitionKind,
+  type DirectoryFilter,
+} from "../../lib/competition-filters"
+import { TIER_NAMES, type CompetitionStatus } from "../../lib/competition-model"
 import { competitionMatches } from "../../lib/match-model"
 import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts } from "../../lib/match-schedule"
 import { FilterSelect, ScheduleScopePills, scheduleDayLabel, scheduleScope } from "./competition-schedule"
+
+const TIER_ORDER = ["S", "A", "B", "C", "D"]
+const STATUS_ORDER: CompetitionStatus[] = ["ONGOING", "UPCOMING", "ANNOUNCED", "FINISHED"]
 
 /** The directory's tab and filters, kept in the address, and the competitions that pass them. */
 export function useDirectoryFilters(items: CompetitionView[]) {
   const [params, setParams] = useSearchParams()
   const tab = params.get("tab") === "schedule" ? "schedule" : "competitions"
-  const region = params.get("region") || "all"
-  const year = params.get("year") || "all"
-  const status = params.get("status") || "all"
-  const search = params.get("q") || ""
-  const regions = [...new Set(items.map((entry) => entry.content.tournament.region).filter(Boolean))].sort()
-  const years = [...new Set(items.map((entry) => entry.content.tournament.year).filter((value) => value != null))].sort(
-    (a, b) => b - a,
+  const filter: DirectoryFilter = {
+    region: params.get("region") || "all",
+    year: params.get("year") || "all",
+    status: params.get("status") || "all",
+    tier: params.get("tier") || "all",
+    kind: params.get("kind") || "all",
+    search: params.get("q") || "",
+  }
+  const { region, year, status, tier, kind, search } = filter
+  // Each list counts what its options would show with the other filters as they are; the busiest region comes first.
+  const regions = filterOptions(items, filter, "region", (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const years = filterOptions(items, filter, "year", (a, b) => Number(b[0]) - Number(a[0]))
+  const statuses = filterOptions(
+    items,
+    filter,
+    "status",
+    (a, b) => STATUS_ORDER.indexOf(a[0] as CompetitionStatus) - STATUS_ORDER.indexOf(b[0] as CompetitionStatus),
+  )
+  const tiers = filterOptions(items, filter, "tier", (a, b) => TIER_ORDER.indexOf(a[0]) - TIER_ORDER.indexOf(b[0]))
+  const kinds = filterOptions(
+    items,
+    filter,
+    "kind",
+    (a, b) => COMPETITION_KINDS.indexOf(a[0] as CompetitionKind) - COMPETITION_KINDS.indexOf(b[0] as CompetitionKind),
   )
   const update = (key: string, value: string) =>
     setParams(
@@ -35,28 +64,29 @@ export function useDirectoryFilters(items: CompetitionView[]) {
       },
       { replace: key === "q" },
     )
-  const visible = items.filter(
-    ({ content: { tournament, plan } }) =>
-      (region === "all" || region === tournament.region) &&
-      (year === "all" || year === String(tournament.year)) &&
-      (status === "all" || status === competitionStatus({ tournament, plan })) &&
-      (!search.trim() ||
-        foldSearchText(`${tournament.name} ${plan.circuit} ${plan.organizer}`).includes(foldSearchText(search.trim()))),
-  )
-  const filtered = region !== "all" || year !== "all" || status !== "all" || !!search.trim()
+  const visible = items.filter((view) => passesFilter(view, filter))
+  const active = [region, year, status, tier, kind].filter((value) => value !== "all").length
+  const filtered = active > 0 || !!search.trim()
   const clearFilters = () => setParams(tab === "schedule" ? { tab: "schedule" } : {})
   return {
     params,
     setParams,
     tab,
+    filter,
     region,
     year,
     status,
+    tier,
+    kind,
     search,
     regions,
     years,
+    statuses,
+    tiers,
+    kinds,
     update,
     visible,
+    active,
     filtered,
     clearFilters,
   }
@@ -71,7 +101,7 @@ export type DirectoryFilterState = ReturnType<typeof useDirectoryFilters>
 export function useDirectorySchedule(data: CompetitionView[] | undefined, filters: DirectoryFilterState) {
   const { text, languageTag } = useStreamLocale()
   const items = data || []
-  const { params, setParams, tab, region, year, status, search } = filters
+  const { params, setParams, tab, filter, region, year, tier, kind, status, search } = filters
   const timeZone = useUserTimeZone()
   const schedule = tab === "schedule"
   const matches = useMemo(
@@ -87,11 +117,8 @@ export function useDirectorySchedule(data: CompetitionView[] | undefined, filter
   const needle = foldSearchText(search.trim())
   const narrowed = matches
     .filter(({ entry, key }) => {
-      const { tournament } = entry.competition.content
       return (
-        (region === "all" || region === tournament.region) &&
-        (year === "all" || year === String(tournament.year)) &&
-        (status === "all" || status === competitionStatus(entry.competition.content)) &&
+        passesFilter(entry.competition, { ...filter, search: "" }) &&
         (!stage || entry.match.stageCode === stage) &&
         (!needle || key.includes(needle))
       )
@@ -101,8 +128,9 @@ export function useDirectorySchedule(data: CompetitionView[] | undefined, filter
   const fixtures = scheduleParts(day ? narrowed.filter((entry) => scheduleDay(entry, timeZone) === day) : narrowed)
   const fixtureCount =
     (scope === "results" ? 0 : fixtures.upcoming.length) + (scope === "upcoming" ? 0 : fixtures.results.length)
-  const selects = Number(filters.regions.length > 1) + Number(filters.years.length > 1)
-  const filtered = region !== "all" || year !== "all" || !!needle
+  const selects =
+    Number(filters.regions.length > 1) + Number(filters.years.length > 1) + Number(filters.tiers.length > 1)
+  const filtered = region !== "all" || year !== "all" || tier !== "all" || kind !== "all" || !!needle
   const statusName = (competitionStatusLabels()[status as CompetitionStatus] ?? status).toLowerCase()
   const stageName =
     items.flatMap((entry) => entry.content.plan.stages).find((item) => item.code === stage)?.name ?? stage
@@ -117,7 +145,7 @@ export function useDirectorySchedule(data: CompetitionView[] | undefined, filter
       for (const key of ["status", "stage", "date"]) next.delete(key)
       return next
     })
-  const listKey = [region, year, status, stage, day, needle].join("|")
+  const listKey = [region, year, tier, kind, status, stage, day, needle].join("|")
   return { schedule, switchable, scope, fixtures, fixtureCount, selects, filtered, linked, clearLinked, listKey }
 }
 
@@ -133,15 +161,19 @@ export function DirectoryFilters({
 }) {
   const { text, languageTag } = useStreamLocale()
   const layout = usePageLayout()
-  const { region, year, status, search, regions, years, update, visible, filtered, clearFilters } = filters
+  const { region, year, status, tier, kind, search, update, visible, active, filtered, clearFilters } = filters
   const scheduled = schedule.schedule
+  const count = (value: number) => value.toLocaleString(languageTag)
+  // An option says how many competitions it would show; the one in use reads plainly, as the select's own label.
+  const options = (entries: [string, number][], name: (value: string) => string, current: string) =>
+    entries.map(([value, n]) => [value, value === current ? name(value) : `${name(value)} (${count(n)})`])
   const regionFilter = (
     <FilterSelect
       label={text("Khu vực", "Region")}
       value={region}
       onChange={(value) => update("region", value)}
       all={text("Mọi khu vực", "All regions")}
-      options={regions.map((value) => [value, value])}
+      options={options(filters.regions, (value) => competitionRegionName(value, languageTag), region)}
     />
   )
   const yearFilter = (
@@ -150,26 +182,48 @@ export function DirectoryFilters({
       value={year}
       onChange={(value) => update("year", value)}
       all={text("Mọi năm", "All years")}
-      options={years.map((value) => [String(value), String(value)])}
+      options={options(filters.years, (value) => value, year)}
+    />
+  )
+  const tierFilter = (
+    <FilterSelect
+      label={text("Hạng giải", "Tier")}
+      value={tier}
+      onChange={(value) => update("tier", value)}
+      all={text("Mọi hạng", "All tiers")}
+      options={options(filters.tiers, (value) => text(...(TIER_NAMES[value] ?? [value, value])), tier)}
     />
   )
   const competitionFilters = (
     <>
       {regionFilter}
       {yearFilter}
+      {tierFilter}
+      <FilterSelect
+        label={text("Loại giải", "Event type")}
+        value={kind}
+        onChange={(value) => update("kind", value)}
+        all={text("Mọi loại giải", "All event types")}
+        options={options(filters.kinds, (value) => text(...COMPETITION_KIND_NAMES[value as CompetitionKind]), kind)}
+      />
       <FilterSelect
         label={text("Trạng thái giải", "Tournament status")}
         value={status}
         onChange={(value) => update("status", value)}
         all={text("Mọi trạng thái", "All statuses")}
-        options={Object.entries(competitionStatusLabels())}
+        options={options(
+          filters.statuses,
+          (value) => competitionStatusLabels()[value as CompetitionStatus] ?? value,
+          status,
+        )}
       />
     </>
   )
   const scheduleFilters = (
     <>
-      {regions.length > 1 && regionFilter}
-      {years.length > 1 && yearFilter}
+      {filters.regions.length > 1 && regionFilter}
+      {filters.years.length > 1 && yearFilter}
+      {filters.tiers.length > 1 && tierFilter}
     </>
   )
   return (
@@ -203,7 +257,7 @@ export function DirectoryFilters({
           <PublicFilterSheet
             title={scheduled ? text("Lọc trận đấu", "Filter matches") : text("Lọc giải đấu", "Filter tournaments")}
             triggerLabel={text("Lọc", "Filter")}
-            count={[region, year, ...(scheduled ? [] : [status])].filter((value) => value !== "all").length}
+            count={scheduled ? [region, year, tier].filter((value) => value !== "all").length : active}
             resetLabel={text("Xóa lọc", "Clear filters")}
             onReset={clearFilters}
             resultLabel={
@@ -213,8 +267,8 @@ export function DirectoryFilters({
                     `Show ${schedule.fixtureCount.toLocaleString(languageTag)} ${schedule.fixtureCount === 1 ? "match" : "matches"}`,
                   )
                 : text(
-                    `Xem ${visible.length} giải đấu`,
-                    `Show ${visible.length} ${visible.length === 1 ? "tournament" : "tournaments"}`,
+                    `Xem ${count(visible.length)} giải đấu`,
+                    `Show ${count(visible.length)} ${visible.length === 1 ? "tournament" : "tournaments"}`,
                   )
             }
           >
@@ -225,9 +279,19 @@ export function DirectoryFilters({
         <div className="competition-filter-group">
           {scheduled ? scheduleFilters : competitionFilters}
           {(scheduled ? schedule.filtered : filtered) && (
-            <button className="competition-clear" onClick={clearFilters}>
-              {text("Xóa bộ lọc", "Clear filters")}
-            </button>
+            <>
+              {!scheduled && (
+                <span className="competition-result">
+                  {text(
+                    `${count(visible.length)} giải`,
+                    `${count(visible.length)} ${visible.length === 1 ? "tournament" : "tournaments"}`,
+                  )}
+                </span>
+              )}
+              <button className="competition-clear" onClick={clearFilters}>
+                {text("Xóa bộ lọc", "Clear filters")}
+              </button>
+            </>
           )}
         </div>
       )}
