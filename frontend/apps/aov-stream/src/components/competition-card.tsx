@@ -1,15 +1,18 @@
 import type { CSSProperties } from "react"
 import { Link } from "react-router"
 import type { CompetitionView } from "@aov/community-contracts"
+import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import { StreamIcon } from "./stream-icon"
 import { StreamImage } from "./stream-image"
 import { useStreamLocale } from "./stream-locale"
+import { ThemedLogo } from "./themed-logo"
 import { competitionStatusLabels, dayRange, hueOf } from "./community-ui"
 import { competitionChampion } from "../lib/champion-model"
-import { competitionStatus, type CompetitionStatus } from "../lib/competition-model"
+import { codeName, competitionStatus, TIER_NAMES, type CompetitionStatus } from "../lib/competition-model"
 import { daysUntil } from "../lib/countdown"
 import { competitionProgress } from "../lib/stage-phases"
 import { useNow } from "../lib/use-now"
+import { seasonName } from "../lib/season-name"
 import "./competition-card.css"
 
 const monogram = (name: string) =>
@@ -40,45 +43,31 @@ export function StatusBadge({
 }
 
 /**
- * A competition's mark on a tile; one without artwork gets its initials on a colour taken from its name. The tile is
- * dark in both themes, so the logo drawn for dark backgrounds comes first, unless the tile is white.
+ * A competition's mark on the plate every logo stands on, in the version for the theme; one without artwork gets its
+ * initials on a colour taken from its name.
  */
 export function CompetitionLogo({
   name,
   url,
   darkUrl,
-  onLight = false,
   size,
 }: {
   name: string
   url?: string | null
   darkUrl?: string | null
-  /** The tile is white, as at the head of a competition page, so the light version comes first. */
-  onLight?: boolean
   size?: "card" | "head"
 }) {
-  const shown = onLight ? url || darkUrl : darkUrl || url
+  if (url || darkUrl)
+    return (
+      <span className="tn-logo" data-size={size}>
+        <ThemedLogo src={url} darkSrc={darkUrl} />
+      </span>
+    )
   return (
-    <span
-      className="tn-logo hub-art"
-      data-size={size}
-      data-light={onLight || undefined}
-      style={{ "--hub-hue": hueOf(name) } as CSSProperties}
-    >
-      {shown ? (
-        <img src={shown} alt="" loading="lazy" data-rim={(!onLight && !darkUrl) || undefined} />
-      ) : (
-        <b>{monogram(name)}</b>
-      )}
+    <span className="tn-logo hub-art" data-size={size} style={{ "--hub-hue": hueOf(name) } as CSSProperties}>
+      <b>{monogram(name)}</b>
     </span>
   )
-}
-
-/** A season's name without the circuit it belongs to, for lists already grouped under that circuit. */
-export function seasonName(name: string, circuit?: string | null) {
-  if (!circuit || !name.toLowerCase().startsWith(circuit.toLowerCase())) return name
-  const rest = name.slice(circuit.length).replace(/^[\s\-–—:·]+/, "")
-  return rest || name
 }
 
 /** How far a competition is, in a few words: in how many days it starts, or how many of its matches are played. */
@@ -106,12 +95,14 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
   const { tournament } = entry.content
   const status = competitionStatus(entry.content)
   const won = competitionChampion(entry)
+  const tier = codeName(TIER_NAMES, tournament.tier, text)
   return (
     <Link className="tn-card" to={`/competitions/${entry.id}`}>
       <CompetitionLogo name={tournament.name} url={tournament.logoUrl} darkUrl={tournament.logoDarkUrl} size="card" />
       <span className="tn-card-body">
         <strong title={tournament.name}>{seasonName(tournament.name, within)}</strong>
         <span className="tn-card-meta">
+          {tier && <TierEmblem tier={tournament.tier} size={18} label={tier} />}
           {dayRange(tournament.startsOn, tournament.endsOn, text("Chờ lịch", "To be scheduled"))}
         </span>
         {won ? (

@@ -24,10 +24,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class CompetitionPlanning {
@@ -66,6 +69,7 @@ public class CompetitionPlanning {
     public record PublishedFilter(
             @Nullable UUID teamId,
             @Nullable UUID playerId,
+            @Nullable UUID personPageId,
             @Nullable UUID organizerPageId,
             @Nullable UUID circuitPageId
     ) {
@@ -78,6 +82,25 @@ public class CompetitionPlanning {
             Instant publishedAt,
             Tournament tournament
     ) {
+    }
+
+    /** A plan as the list of every tournament needs it: its size, its circuit and whether readers see it. */
+    public record IndexEntry(
+            UUID id,
+            int entrants,
+            int matches,
+            @Nullable Instant publishedAt,
+            @Nullable String circuit,
+            @Nullable UUID circuitPageId
+    ) {
+    }
+
+    /** How much of a published competition a list carries. */
+    public enum Detail {
+        /** Everything, as the competition's own page reads it. */
+        FULL,
+        /** Without series, rosters, players and people. */
+        LIST
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -96,14 +119,23 @@ public class CompetitionPlanning {
     private final CompetitionInputs inputs;
     private final SeriesRegistry series;
     private final RegistryArchivePolicy archives;
+    private final JsonMapper json;
 
     public CompetitionPlanning(CompetitionPlanRepository plans, PlanRevisionRepository revisions,
-            CompetitionInputs inputs, SeriesRegistry series, RegistryArchivePolicy archives) {
+            CompetitionInputs inputs, SeriesRegistry series, RegistryArchivePolicy archives, JsonMapper json) {
         this.plans = plans;
         this.revisions = revisions;
         this.inputs = inputs;
         this.series = series;
         this.archives = archives;
+        this.json = json;
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public List<IndexEntry> index() {
+        return plans.index().stream().map(row -> new IndexEntry(row.getId(), row.getEntrants(), row.getMatches(),
+                row.getPublishedAt(), row.getCircuit(), row.getCircuitPageId())).toList();
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -117,15 +149,38 @@ public class CompetitionPlanning {
     public View published(UUID id) {
         var row = plans.findById(id).filter(value -> value.getPublishedAt() != null)
                 .orElseThrow(TournamentErrors::missing);
-        return new View(id, 0, row.getPublishedAt(), row.getPublishedSnapshot());
+        return new View(id, 0, row.getPublishedAt(),
+                inputs.described(List.of(row.getPublishedSnapshot())).getFirst());
     }
 
     @Transactional(readOnly = true)
-    public PageSlice<View> published(PublishedFilter filter, int page, int size) {
-        return PageSlice.from(plans
-                .published(text(filter.teamId()), text(filter.playerId()), text(filter.organizerPageId()),
-                        text(filter.circuitPageId()), PageRequest.of(page, size))
-                .map(row -> new View(row.getId(), 0, row.getPublishedAt(), row.getPublishedSnapshot())));
+    public PageSlice<View> published(PublishedFilter filter, Detail detail, int page, int size) {
+        var team = text(filter.teamId());
+        var player = text(filter.playerId());
+        var person = text(filter.personPageId());
+        var organizer = text(filter.organizerPageId());
+        var circuit = text(filter.circuitPageId());
+        var slice = PageRequest.of(page, size);
+
+        if (detail == Detail.LIST) {
+            return PageSlice.from(described(plans.listed(team, player, person, organizer, circuit, slice)
+                    .map(row -> new View(row.getId(), 0, row.getPublishedAt(),
+                            json.readValue(row.getSnapshot(), CompetitionSnapshot.class)))));
+        }
+
+        return PageSlice.from(described(plans.published(team, player, person, organizer, circuit, slice)
+                .map(row -> new View(row.getId(), 0, row.getPublishedAt(), row.getPublishedSnapshot()))));
+    }
+
+    private Page<View> described(Page<View> views) {
+        var contents = inputs.described(views.getContent().stream().map(View::content).toList());
+        var described = new ArrayList<View>(contents.size());
+        for (int i = 0; i < contents.size(); i++) {
+            var view = views.getContent().get(i);
+            described.add(new View(view.id(), view.version(), view.publishedAt(), contents.get(i)));
+        }
+
+        return new PageImpl<>(described, views.getPageable(), views.getTotalElements());
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")

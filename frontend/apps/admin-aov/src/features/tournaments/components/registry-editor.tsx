@@ -296,6 +296,7 @@ function RegistryForm({
             kind={kind}
             dark
             value={values.logoDarkUrl ?? ""}
+            usual={values.logoUrl}
             name={values.name ?? ""}
             onChange={(url) => setValues((current) => ({ ...current, logoDarkUrl: url }))}
             onBusyChange={setUploading}

@@ -1,4 +1,3 @@
-import { Link } from "react-router"
 import {
   broadcastRoles,
   personRoleLabels,
@@ -9,10 +8,10 @@ import {
   type StaffMember,
 } from "@aov/community-contracts"
 import { StreamIcon } from "../../../components/stream-icon"
-import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { personRoleEnglish } from "../../../components/community-ui"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink, GoLink } from "../../../components/go-link"
+import { PlayerMark } from "../../../components/player-mark"
 import {
   crewGroups,
   teamStaff,
@@ -31,18 +30,14 @@ const CREW_GROUP_ENGLISH: Record<BroadcastRole, readonly [one: string, many: str
   GUEST_ANALYST: ["Guest analyst", "Guest analysts"],
 }
 
-/** A person's picture, or the first letters of their name; the name beside it says who it is. */
-function PersonFace({ person, size }: { person: PersonEntry; size?: "small" }) {
-  return (
-    <span className="tn-face" data-size={size} aria-hidden="true">
-      <StreamImage src={person.avatarUrl} name={person.name} />
-    </span>
-  )
+/** A person's mark; the name beside it says who it is. */
+function PersonFace({ person, size = 28 }: { person: PersonEntry; size?: number }) {
+  return <PlayerMark name={person.name} size={size} round />
 }
 
-/** A person's name, which opens their page once it is published. */
+/** A person's name, which opens their page. */
 function PersonName({ person }: { person: PersonEntry }) {
-  return person.href ? <Link to={person.href}>{person.name}</Link> : <span>{person.name}</span>
+  return <GoLink to={person.href}>{person.name}</GoLink>
 }
 
 /** A crew by role: each role once, then its people with their picture. */
@@ -119,7 +114,7 @@ export function TeamStaff({ staff, teamId, people }: { staff?: StaffMember[] | n
       <ul>
         {rows.map((row) => (
           <li key={`${row.pageId}:${row.role}`}>
-            <PersonFace person={row} size="small" />
+            <PersonFace person={row} size={24} />
             <PersonName person={row} />
             <small>{row.title || text(personRoleLabels[row.role], personRoleEnglish[row.role])}</small>
           </li>

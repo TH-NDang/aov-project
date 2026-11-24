@@ -10,6 +10,7 @@ import { EsportsPage, LoadError, type Access } from "@/features/esports/pages/es
 import { ManagementEmpty, ManagementLoading, ManagementPanel } from "@/features/tournaments/components/management-list"
 import { CreateProfileSheet } from "../components/create-profile-sheet"
 import { ProfileCountry } from "../components/profile-country"
+import { teamRegionName } from "@/features/tournaments/components/team-region"
 import { findProfileCountry } from "../model/profile-country-options"
 import { profileKindIcons, profileRoleIcons } from "../components/profile-icons"
 import { directoryApi } from "./directory-api"
@@ -187,6 +188,9 @@ export function DirectoryBody({
     </ManagementPanel>
   )
 }
+
+/** The name a country filter calls a code by. */
+export const countryName = (code: string) => findProfileCountry(code)?.name ?? teamRegionName(code)
 
 /** Flag and name; profile pages may hold a code or a written name, and a value may list several places. */
 export function CountryLabel({ country }: { country?: string | null }) {

@@ -1,0 +1,152 @@
+/* The one button that opens a list's filters, its panel, and the filters in use. */
+.tn-filter-button {
+  display: inline-flex;
+  min-height: var(--hub-control-height);
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-filter-button:is(:hover, [data-state="open"]) {
+  border-color: var(--hub-accent-border);
+  background: var(--hub-hover);
+}
+.tn-filter-button[data-active] {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent-strong);
+}
+.tn-filter-button > b {
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding-inline: 4px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.tn-filter-panel {
+  width: min(440px, calc(100vw - 32px));
+  max-height: min(70vh, 600px);
+  padding: 0;
+  overflow-y: auto;
+}
+.tn-filter-panel > .tn-filter-groups {
+  padding: 16px;
+}
+.tn-filter-groups {
+  --stream-image-size: 20px;
+  --stream-image-radius: 4px;
+  display: grid;
+  gap: 18px;
+}
+.tn-filter-groups > section {
+  display: grid;
+  gap: 8px;
+}
+.tn-filter-groups h3 {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.tn-filter-groups section > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tn-filter-groups button,
+.tn-filter-tokens > button {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color 120ms,
+    background-color 120ms;
+}
+.tn-filter-groups button:hover,
+.tn-filter-tokens > button:hover {
+  border-color: var(--hub-accent-border);
+  background: var(--hub-hover);
+}
+.tn-filter-groups button[aria-pressed="true"] {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+.tn-filter-groups button > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-filter-groups button[aria-pressed="true"] > small {
+  color: inherit;
+}
+.tn-filter-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--hub-border);
+  background: var(--aov-popover);
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+.tn-filter-foot > button {
+  min-height: 32px;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.tn-filter-foot > button:disabled {
+  opacity: 0.45;
+}
+.tn-filter-tokens {
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tn-filter-tokens > button {
+  flex: none;
+  border-color: var(--hub-accent-border);
+  background: var(--hub-accent-soft);
+  color: var(--hub-text);
+}
+.tn-filter-tokens > button > svg {
+  color: var(--hub-muted);
+}
+.tn-filter-tokens > [data-clear] {
+  border-color: transparent;
+  background: none;
+  color: var(--hub-accent-strong);
+}
+@media (max-width: 899.98px) {
+  .tn-filter-groups button {
+    min-height: 40px;
+    padding: 0 14px;
+  }
+}

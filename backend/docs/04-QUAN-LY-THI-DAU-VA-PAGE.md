@@ -28,7 +28,8 @@ không tạo đội giả. Materialize tạo loạt trận thật cho cặp đã
 vòng sau, chặn mở trận/công bố và yêu cầu biên tập viên kiểm tra, không tự sửa kết quả đã nhập.
 
 Xếp hạng theo điểm thắng/thua rồi áp dụng lần lượt HEAD_TO_HEAD, GAME_DIFF, GAME_WINS đã cấu hình.
-Đối đầu chỉ áp dụng khi đủ các lượt giữa nhóm đang bằng điểm. Vẫn bằng nhau thì cùng hạng; không
+Đối đầu chỉ áp dụng khi đủ các lượt giữa nhóm đang bằng điểm. Giai đoạn không ghi luật phân hạng thì Stream xếp đội bằng
+điểm theo hiệu số ván rồi số ván thắng và ghi rõ dưới bảng; suất đi tiếp không dựa vào thứ tự đó. Vẫn bằng nhau thì cùng hạng; không
 dùng tên hay UUID phân thắng thua. Chỉ xác nhận suất đi tiếp khi đủ toàn bộ cặp/lượt và cả nhóm đồng
 hạng nằm trong số suất cho phép. Bảng chưa đủ trận luôn có nhãn tạm tính.
 
@@ -262,6 +263,9 @@ URL hoặc cấp quyền đại diện. Chỉ CIRCUIT nhận trường này; bac
 công bố khi công bố hệ thống giải. Tham chiếu trong nháp/công bố chặn xóa nháp tổ chức. Public đọc tổ chức
 qua API công khai và dẫn tới trang tổ chức; nếu tổ chức được thu hồi thì hiển thị trạng thái chưa công bố.
 Thay đổi lựa chọn trong nháp không đổi tham chiếu công khai cho đến lần công bố tiếp theo.
+
+Câu trả lời công khai của giải đọc lại `shortName` và `introduction` (đoạn đầu của giới thiệu) từ hồ sơ hệ thống giải đang
+công bố, nên sửa hồ sơ không cần công bố lại từng mùa. Các trường còn lại của `circuit` giữ như lúc công bố giải.
 
 Kế hoạch mùa giải thêm `circuitPageId` tùy chọn, chỉ nhận hồ sơ CIRCUIT. Backend lấy tên từ hồ sơ thay vì tin
 chuỗi `circuit` gửi lên; snapshot thêm `circuit {id,code,name,logoUrl,published}`. Bản nháp dùng hồ sơ nháp,
@@ -587,7 +591,11 @@ giải lặp lại một giải nhiều lần. Người dùng yêu cầu bỏ c�
 - Thứ tự RECENT với `MAIN` xếp giải chính theo thành viên gần hôm nay nhất trong giải chính và các phần chưa xóa của nó:
   nhóm trước, rồi khoảng cách trong nhóm, đúng quy tắc của "Ưu tiên gần đây". Vòng loại đang diễn ra đưa giải chính lên
   nhóm đang diễn ra dù giải chính còn vài tháng nữa mới đấu.
-- `GET /admin/tournaments/facets?level=MAIN` đếm theo giải chính.
+- `GET /admin/tournaments/facets` nhận cùng `level`, từ khóa và bộ lọc với danh sách. Mỗi bộ lọc đếm theo từ khóa và các
+  bộ lọc khác, không theo chính nó; giá trị không còn giải nào thì không có mặt, nên Admin không đưa ra lựa chọn rỗng.
+  `total` đếm mọi giải của `level`.
+- Danh sách Admin mặc định gom các mùa theo hệ thống giải của kế hoạch; giải đứng một mình trong hệ thống của nó và giải
+  chưa có hệ thống nằm chung ở cuối. Giải đang, sắp diễn ra và giải có trạng thái trái ngày đứng thành thẻ ở đầu trang.
 - `GET /admin/tournaments/parts?parentId=` trả các phần chưa xóa của một giải chính; bỏ `parentId` thì trả mọi phần. Mỗi
   dòng gồm `{id,parentId,name,logoUrl,logoDarkUrl,competitionType,status,tier,region,startsOn,endsOn}`, xếp theo giải chính, rồi
   ngày bắt đầu, rồi tên.
@@ -751,16 +759,34 @@ nền sáng gần như biến mất trên nền tối, và ngược lại.
 
 - Giải (`tournament`) và đội (`team`) có thêm `logoDarkUrl` bên cạnh `logoUrl`, không bắt buộc.
   `logoUrl` là bản nền sáng hoặc bản dùng chung; thiếu `logoDarkUrl` thì `logoUrl` dùng cho cả hai giao diện.
+  Logo đọc tốt trên cả hai nền ghi cùng một địa chỉ vào hai ô: khi đó nó đứng thẳng trên nền tối, không cần ô nhạt.
 - Kiểm tra khi lưu giống `logoUrl`: địa chỉ HTTP(S) không kèm thông tin đăng nhập, ảnh trong kho phải còn dùng được.
   Đếm ảnh đang dùng đọc toàn bộ nội dung bản ghi nên tính cả `logoDarkUrl`.
 - Danh bạ (`TeamRef`, `TournamentRef`, dòng đội, các phần của giải) trả thêm `logoDarkUrl`. Công bố hồ sơ đội từ
   danh mục giữ nguyên `logoDarkUrl` đã có.
-- Admin: bảng sửa giải và bảng sửa đội có ô "Logo nền tối" ngay dưới ô logo, xem trước trên nền tối.
-- Stream: ô ảnh của giải và nền ảnh của đội tối ở cả hai giao diện, nên ở đó luôn dùng bản nền tối, lỗi thì dùng bản
-  còn lại. Logo nằm thẳng trên nền trang (dòng trận) đổi theo giao diện: trang có cả hai ảnh, CSS ẩn ảnh không hợp (theo
-  lựa chọn sáng/tối, hoặc theo hệ thống khi chưa chọn), nên trang dựng sẵn và lúc đổi giao diện không cần script.
+- Admin: bảng sửa giải và bảng sửa đội có ô "Logo nền tối" ngay dưới ô logo, xem trước trên nền tối, và nút "Dùng chung
+  logo nền sáng".
+- Stream: mọi logo của giải và đội đổi theo giao diện, cùng quy tắc với Admin: nền sáng dùng `logoUrl`, nền tối dùng
+  `logoDarkUrl`, thiếu bản nào hoặc ảnh lỗi thì dùng bản còn lại trên ô màu của bản đó. Ô đặt logo cũng đổi theo giao diện. Trên sân khấu
+  (tối ở cả hai giao diện) luôn dùng bản nền tối. Trang có cả hai ảnh, CSS ẩn ảnh không hợp (theo lựa chọn sáng/tối,
+  hoặc theo hệ thống khi chưa chọn), nên trang dựng sẵn và lúc đổi giao diện không cần script.
 - Nguồn: Liquipedia ghi `image`/`imagedark` trong infobox và đặt tên tệp `… lightmode`/`… darkmode`
   (`… allmode` là bản dùng chung). Tải ảnh và gắn vào dữ liệu thật cần người dùng đồng ý.
+
+## Người không có ảnh (24/11/2026)
+
+Máy chủ không giữ và không trả ảnh của tuyển thủ và nhân sự. `photoUrl` của tuyển thủ và `avatarUrl` của người trong
+snapshot cũ hay trong yêu cầu được đọc rồi bỏ. Trang PLAYER và PERSON không có ảnh đại diện và ảnh bìa, trừ phần trình bày
+do người đại diện đã xác minh tự chọn. Admin bỏ các ô ảnh đó; Stream vẽ huy hiệu từ tên. V026 gỡ các liên kết ảnh còn lại
+trong hồ sơ, snapshot và lịch sử kế hoạch; xóa tệp trong kho ảnh là việc riêng.
+
+## Trang đội, tuyển thủ và nhân sự từ giải đã công bố (24/11/2026)
+
+`GET /competitions/participants` liệt kê đội, tuyển thủ hoặc nhân sự (ê-kíp phát sóng, ban huấn luyện) có trong các giải đã
+công bố, mỗi mục một lần, theo tên ở giải mới nhất, kèm số giải và giải đó. Tuyển thủ kèm đội trong danh sách đăng ký; nhân
+sự kèm vai trò và đội, `id` là trang PERSON hoặc PLAYER của họ. Không có ảnh và họ tên thật. Stream dùng nó cho Khám phá và
+tìm kiếm; `/teams/{id}`, `/players/{id}` và `/people/{id}` dựng trang từ `GET /competitions` lọc theo `teamId`,
+`playerId`, `personPageId`, và chuyển sang hồ sơ khi hồ sơ được công bố.
 
 ## Tuyển thủ trùng tên và gộp hồ sơ (20/11/2026)
 
@@ -892,7 +918,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /pages?kind=&q=&organizationId=&page=&size= | Chỉ bản công bố; tìm theo tên công bố. `organizationId` chỉ giữ hồ sơ đội có tổ chức chủ quản đó |
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
-| GET /admin/tournaments/facets?level= | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách; `level=MAIN` đếm theo giải chính |
+| GET /admin/tournaments/facets?q=&alsoRegions=&status=&tier=&region=&year=&level= | {total,statuses,tiers,regions,years}: số giải mỗi giá trị lọc còn lại theo từ khóa và các bộ lọc khác; `level=MAIN` đếm theo giải chính |
 | GET /admin/tournaments/{id}/game-patches | Mùa và patch của từng ván: tự ghi (`GAME`), theo dòng phiên bản của giai đoạn (`STAGE`) hoặc không có (`NONE`) |
 | GET /admin/tournaments/parts?parentId= | Các phần chưa xóa của một giải chính, hoặc mọi phần khi bỏ `parentId`: [{id,parentId,name,logoUrl,logoDarkUrl,competitionType,status,tier,region,startsOn,endsOn}] |
 | GET /admin/teams?q=&sort=&tournamentId=&state=&page=&size= | sort RECENT (mặc định), NAME, UPDATED. Dòng có thêm `lastActiveOn`, `context` TOURNAMENT khi thuộc giải; hai trường này không có khi không áp dụng |
@@ -905,6 +931,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /admin/link-review?kind=&page=&size=, /admin/link-review/facets | Chỗ còn chữ chưa có liên kết / số đếm theo `kind` (xem "Liên kết cần xem") |
 | GET /admin/teams/directory?q=&country=&sort=&page=&size= | Danh bạ đội: số giải, trận, thắng-thua, chức vô địch, tiền thưởng, giải gần nhất, `lastActiveOn` và đội hình gần nhất có trên hồ sơ. sort: RECENT, TOURNAMENTS, TITLES, PRIZE, NAME |
 | GET /admin/players/directory?q=&country=&lane=&status=&sort=&page=&size= | Danh bạ tuyển thủ: vị trí, đội và giải của dòng đội hình gần nhất, `lastActiveOn`, số giải, chức vô địch, tướng tủ. sort: RECENT, TOURNAMENTS, TITLES, NAME |
+| GET /admin/teams/directory/facets?q=, /admin/players/directory/facets?q=&country=&lane=&status= | {countries} / {countries,lanes,statuses}: số hồ sơ mỗi giá trị lọc còn lại |
+| GET /admin/competitions/index | [{id,entrants,matches,publishedAt,circuit,circuitPageId}] của mọi kế hoạch, đếm trong cơ sở dữ liệu, không tải nội dung kế hoạch |
 | GET /admin/competitions/page-stats | [{pageId,tournaments,firstYear,lastYear,tiers,latestTournament}] theo trang tổ chức và hệ thống giải |
 | GET /admin/pages, /admin/pages/{id} | Bản nháp. Danh sách nhận thêm country, entityIds (tối đa 100 định danh), organizationId (như danh sách công khai, theo bản nháp) và sort: RECENT (mới sửa), NAME, ACTIVITY (nhiều mục lịch sử nhất), ACTIVE (theo "Ưu tiên gần đây", dòng có thêm `lastActiveOn`). relatedPageId đưa hồ sơ có lịch sử gắn với trang đó lên trước, dòng có `related`; chỉ dùng với ACTIVE |
 | POST /admin/pages | {kind,code,entityId?,content} |
@@ -937,7 +965,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /admin/community-reports; POST /admin/community-reports/{id}/resolve | Hàng chờ; {resolution,hide} |
 | GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng, mỗi dòng {id,pageId,kind,parameters,message?,createdAt,read} (xem "Nội dung thông báo"); đánh dấu đọc |
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
-| GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
+| GET /competitions?teamId=&playerId=&personPageId=&organizerPageId=&detail=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức. `detail=LIST` để trống `series`, `rosters`, `players`, `people` cho trang danh sách; mặc định FULL |
+| GET /competitions/participants?kind=&q=&country=&page=&size= | Đội (`kind=TEAM`), tuyển thủ (`PLAYER`) hoặc nhân sự (`PERSON`) của các giải đã công bố: [{id,kind,name,shortName,country,imageUrl,imageDarkUrl,competitions,competitionId,competitionName,team,roles}] |
 | GET /competitions/{id} | Snapshot giải |
 | GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Ngày sai dạng hoặc quá 60 ngày trả 400 INVALID_QUERY_PARAMETER |
 | GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp, theo thứ tự danh sách giải) / kế hoạch cùng dữ liệu giải quyết |

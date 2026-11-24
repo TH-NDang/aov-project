@@ -107,7 +107,7 @@ public class DirectoryListings {
         """;
 
     /** A list of main events only also finds a main event by the names of its parts, which it leaves out. */
-    private static final String TOURNAMENT_FILTER = """
+    private static final String TOURNAMENT_SEARCH = """
         t.deleted_at IS NULL
         AND (NOT :mainEventsOnly OR t.parent_id IS NULL)
         AND (strpos(t.search_names, tournament.search_key(:wanted)) > 0
@@ -115,15 +115,21 @@ public class DirectoryListings {
              OR (:mainEventsOnly AND EXISTS (SELECT 1 FROM tournament.tournament part
                                               WHERE part.parent_id = t.id AND part.deleted_at IS NULL
                                                 AND strpos(part.search_names, tournament.search_key(:wanted)) > 0)))
+        """;
+
+    private static final String TOURNAMENT_FILTER = TOURNAMENT_SEARCH + """
         AND (:status = '' OR t.status = :status)
         AND (:tier = '' OR coalesce(t.content->>'tier', 'UNKNOWN') = :tier)
         AND (:region = '' OR t.content->>'region' = :region)
         AND (:year = '' OR t.season_year = CAST(NULLIF(:year, '') AS int))
         """;
 
-    private static final String PLAYER_FILTER = """
+    private static final String PLAYER_SEARCH = """
         p.deleted_at IS NULL
         AND p.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
+        """;
+
+    private static final String PLAYER_FILTER = PLAYER_SEARCH + """
         AND (:country = '' OR p.content->>'country' = :country)
         AND (:lane = '' OR coalesce(p.content->>'lane', l.lane) = :lane)
         AND (:status = '' OR coalesce(p.content->>'careerStatus', 'UNKNOWN') = :status)
@@ -355,17 +361,76 @@ public class DirectoryListings {
          ORDER BY t.parent_id, t.starts_on NULLS LAST, lower(t.name), t.id
         """;
 
+    /** Each facet counts what the search and every other filter leave, so a value shown always finds something. */
     private static final String TOURNAMENT_FACETS = """
-        WITH listed AS (
-            SELECT status, content->>'region' AS region, season_year
-              FROM tournament.tournament
-             WHERE deleted_at IS NULL AND (NOT :mainEventsOnly OR parent_id IS NULL)
+        WITH found AS (
+            SELECT t.status, coalesce(t.content->>'tier', 'UNKNOWN') AS tier, t.content->>'region' AS region,
+                   CAST(t.season_year AS text) AS year
+              FROM tournament.tournament t
+             WHERE
+        """ + TOURNAMENT_SEARCH + """
+        ),
+        judged AS (
+            SELECT found.*,
+                   (:status = '' OR status = :status) AS by_status,
+                   (:tier = '' OR tier = :tier) AS by_tier,
+                   (:region = '' OR region = :region) AS by_region,
+                   (:year = '' OR year = :year) AS by_year
+              FROM found
         )
-        SELECT 'STATUS' AS facet, status AS value, count(*) AS rows FROM listed GROUP BY status
+        SELECT 'TOTAL' AS facet, '' AS value, count(*) AS rows
+          FROM tournament.tournament t
+         WHERE t.deleted_at IS NULL AND (NOT :mainEventsOnly OR t.parent_id IS NULL)
         UNION ALL
-        SELECT 'REGION', region, count(*) FROM listed WHERE region IS NOT NULL GROUP BY region
+        SELECT 'STATUS', status, count(*) FROM judged WHERE by_tier AND by_region AND by_year GROUP BY status
         UNION ALL
-        SELECT 'YEAR', CAST(season_year AS text), count(*) FROM listed WHERE season_year IS NOT NULL GROUP BY season_year
+        SELECT 'TIER', tier, count(*) FROM judged WHERE by_status AND by_region AND by_year GROUP BY tier
+        UNION ALL
+        SELECT 'REGION', region, count(*) FROM judged
+         WHERE by_status AND by_tier AND by_year AND region IS NOT NULL GROUP BY region
+        UNION ALL
+        SELECT 'YEAR', year, count(*) FROM judged
+         WHERE by_status AND by_tier AND by_region AND year IS NOT NULL GROUP BY year
+        """;
+
+    private static final String TEAM_FACETS = """
+        SELECT 'COUNTRY' AS facet, t.content->>'country' AS value, count(*) AS rows
+          FROM tournament.team t
+         WHERE t.deleted_at IS NULL
+           AND t.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
+           AND coalesce(t.content->>'country', '') <> ''
+         GROUP BY t.content->>'country'
+        """;
+
+    private static final String PLAYER_FACETS = "WITH " + PLAYER_LINES + """
+        ,
+        lanes AS (
+            SELECT DISTINCT ON (player_id) player_id, lane
+              FROM lines
+             WHERE lane IS NOT NULL
+             ORDER BY player_id, active_on DESC NULLS LAST, tournament_id
+        ),
+        found AS (
+            SELECT coalesce(p.content->>'country', '') AS country, coalesce(p.content->>'lane', l.lane, '') AS lane,
+                   coalesce(p.content->>'careerStatus', 'UNKNOWN') AS status
+              FROM tournament.player p
+              LEFT JOIN lanes l ON l.player_id = p.id
+             WHERE
+        """ + PLAYER_SEARCH + """
+        ),
+        judged AS (
+            SELECT found.*,
+                   (:country = '' OR country = :country) AS by_country,
+                   (:lane = '' OR lane = :lane) AS by_lane,
+                   (:status = '' OR status = :status) AS by_status
+              FROM found
+        )
+        SELECT 'COUNTRY' AS facet, country AS value, count(*) AS rows FROM judged
+         WHERE by_lane AND by_status AND country <> '' GROUP BY country
+        UNION ALL
+        SELECT 'LANE', lane, count(*) FROM judged WHERE by_country AND by_status AND lane <> '' GROUP BY lane
+        UNION ALL
+        SELECT 'STATUS', status, count(*) FROM judged WHERE by_country AND by_lane GROUP BY status
         """;
 
     private static final String LINEUPS = "WITH " + DAYS + """
@@ -470,10 +535,29 @@ public class DirectoryListings {
         return values(query).stream().map(DirectoryListings::uuid).toList();
     }
 
-    /** What a list of tournaments can be narrowed by: its statuses with their counts, its regions and years. */
-    public List<FacetRow> tournamentFacets(boolean mainEventsOnly) {
-        var query = bind(entities.createNativeQuery(TOURNAMENT_FACETS), Map.of("mainEventsOnly", mainEventsOnly));
-        return rows(query).stream().map(row -> new FacetRow(text(row[0]), text(row[1]), count(row[2]))).toList();
+    /**
+     * What a list of tournaments can be narrowed by: the values of each filter with how many tournaments the search and
+     * the other filters leave of them, and the total of the level under TOTAL.
+     */
+    public List<FacetRow> tournamentFacets(String wanted, String alsoRegions, String status, String tier,
+            String region, String year, boolean mainEventsOnly) {
+        return facets(TOURNAMENT_FACETS, Map.of("wanted", wanted, "alsoRegions", alsoRegions, "status", status, "tier",
+                tier, "region", region, "year", year, "mainEventsOnly", mainEventsOnly));
+    }
+
+    /** The countries of the teams a search finds. */
+    public List<FacetRow> teamFacets(String query) {
+        return facets(TEAM_FACETS, Map.of("query", query));
+    }
+
+    /** The countries, lanes and career statuses of the players the search and the other filters leave. */
+    public List<FacetRow> playerFacets(String query, String country, String lane, String status) {
+        return facets(PLAYER_FACETS, Map.of("query", query, "country", country, "lane", lane, "status", status));
+    }
+
+    private List<FacetRow> facets(String sql, Map<String, Object> parameters) {
+        return rows(bind(entities.createNativeQuery(sql), parameters)).stream()
+                .map(row -> new FacetRow(text(row[0]), text(row[1]), count(row[2]))).toList();
     }
 
     /** Roster lines of the given teams in every tournament; callers keep the tournament they want to show. */

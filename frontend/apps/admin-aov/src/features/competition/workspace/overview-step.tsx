@@ -4,6 +4,7 @@ import { Building2, CalendarDays, Layers, ListChecks, Pencil, Trophy } from "luc
 import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { Section } from "@/features/community/components/profile-form-primitives"
+import { TierBadge } from "@/features/esports/components/primitives"
 import { youtubeVideoId } from "@/features/esports/model/vod"
 import { tournamentPath } from "@/features/esports/pages/esports-shell"
 import { TeamRegionBadge } from "@/features/tournaments/components/team-region"
@@ -90,9 +91,7 @@ export function OverviewStep({
                 <p className="type-section-title">{tournament.name}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-3">
                   <TeamRegionBadge code={tournament.region} />
-                  {tournament.tier && tournament.tier !== "UNKNOWN" && (
-                    <span className="type-label rounded-md bg-muted px-2 py-1">{tournament.tier}-Tier</span>
-                  )}
+                  <TierBadge tier={tournament.tier} />
                 </div>
               </div>
             </div>

@@ -77,19 +77,24 @@ public class PageRecord {
     }
 
     public PageContent getContent() {
-        return content;
+        return shown(content);
     }
 
     public void setContent(PageContent value) {
-        this.content = value;
+        this.content = shown(value);
     }
 
     public PageContent getPublishedContent() {
-        return publishedContent;
+        return shown(publishedContent);
     }
 
     public void setPublishedContent(PageContent value) {
-        this.publishedContent = value;
+        this.publishedContent = shown(value);
+    }
+
+    /** One person's page has no pictures but those its verified representative chooses, which are its presentation. */
+    private PageContent shown(PageContent value) {
+        return value == null || kind == null || !kind.individual() ? value : value.withoutPictures();
     }
 
     public PageContent.Presentation getPresentation() {

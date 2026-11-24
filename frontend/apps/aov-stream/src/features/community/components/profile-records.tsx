@@ -6,6 +6,7 @@ import { achievementRank, type AchievementRank } from "@aov/community-contracts/
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
+import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionQuery } from "../../../lib/tournament-api"
@@ -106,8 +107,8 @@ function PlacementMark({ ranks }: { ranks: AchievementRank[] }) {
   const mark = achievementMark(ranks)
   if (mark.kind === "champion")
     return (
-      <span className="pf-row-mark" data-mark="champion">
-        <StreamIcon name="trophy" size={15} />
+      <span className="pf-row-mark" data-mark="medal" aria-hidden="true">
+        <RankBadge place="1" size={30} />
       </span>
     )
   if (mark.kind === "award")
@@ -117,8 +118,8 @@ function PlacementMark({ ranks }: { ranks: AchievementRank[] }) {
       </span>
     )
   return (
-    <span className="pf-row-mark" aria-hidden="true">
-      {mark.text}
+    <span className="pf-row-mark" data-mark={medalOf(mark.text) ? "medal" : undefined} aria-hidden="true">
+      <RankBadge place={mark.text} size={30} />
     </span>
   )
 }

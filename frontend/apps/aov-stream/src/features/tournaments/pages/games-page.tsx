@@ -71,46 +71,35 @@ export function GamesPage() {
     )
   }
   return (
-    <StreamShell>
+    <StreamShell
+      search={{
+        value: q,
+        onChange: (value) => filter("q", value),
+        label: text("Tìm ván đấu theo đội hoặc vòng đấu", "Search games by team or round"),
+        placeholder: text("Tìm đội, vòng đấu…", "Search teams, rounds…"),
+      }}
+    >
       <title>{text("Tra cứu ván đấu — AOV Stream", "Game lookup — AOV Stream")}</title>
       <div className="tn-games">
-        <Link className="cp-back" data-flush="" to="/competitions">
-          <StreamIcon name="back" size={16} />
-          {text("Giải đấu", "Tournaments")}
-        </Link>
-        <header className="tn-page-head" data-lead="kept">
-          <div>
-            <h1>{text("Tra cứu ván đấu", "Game lookup")}</h1>
-            <p>
-              {total == null
-                ? text(
-                    "Cấm chọn và đội hình của từng ván đã công bố.",
-                    "Bans, picks and lineups of every published game.",
-                  )
-                : [
-                    text(
-                      `${total.toLocaleString(languageTag)} ván đã xuất bản`,
-                      `${total.toLocaleString(languageTag)} published ${total === 1 ? "game" : "games"}`,
-                    ),
-                    !seriesId && only,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-            </p>
-          </div>
-        </header>
+        <h1 className="sr-only">{text("Tra cứu ván đấu", "Game lookup")}</h1>
         <div className="tn-games-bar">
-          <div className="tn-games-search">
-            <label className="stream-search">
-              <StreamIcon name="search" size={16} />
-              <input
-                aria-label={text("Tìm ván đấu theo đội hoặc vòng đấu", "Search games by team or round")}
-                placeholder={text("Tìm đội, vòng đấu…", "Search teams, rounds…")}
-                value={q}
-                onChange={(event) => filter("q", event.target.value)}
-              />
-            </label>
-          </div>
+          <Link className="cp-back" data-flush="" to="/competitions">
+            <StreamIcon name="back" size={16} />
+            {text("Giải đấu", "Tournaments")}
+          </Link>
+          {!!total && (
+            <span className="tn-games-count">
+              {[
+                text(
+                  `${total.toLocaleString(languageTag)} ván`,
+                  `${total.toLocaleString(languageTag)} ${total === 1 ? "game" : "games"}`,
+                ),
+                !seriesId && only,
+              ]
+                .filter(Boolean)
+                .join(", ")}
+            </span>
+          )}
           {competitions.length > 1 && (
             <FilterSelect
               label={text("Giải đấu", "Tournament")}

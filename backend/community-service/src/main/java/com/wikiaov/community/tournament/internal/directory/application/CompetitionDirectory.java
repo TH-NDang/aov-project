@@ -8,7 +8,9 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Ran
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.LineupMember;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamRef;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
@@ -175,17 +177,36 @@ public class CompetitionDirectory {
         }).toList();
     }
 
-    public TournamentFacets tournamentFacets(TournamentLevel level) {
-        var rows = directory.tournamentFacets(level.mainEventsOnly());
-        var statuses = rows.stream().filter(row -> row.facet().equals("STATUS"))
-                .collect(Collectors.toMap(FacetRow::value, FacetRow::rows));
-        var regions = rows.stream().filter(row -> row.facet().equals("REGION")).map(FacetRow::value).sorted()
-                .toList();
-        var years = rows.stream().filter(row -> row.facet().equals("YEAR"))
-                .map(row -> Integer.valueOf(row.value())).sorted(Comparator.reverseOrder()).toList();
+    public TournamentFacets tournamentFacets(TournamentFilter filter) {
+        requireEnum("status", filter.status(), TournamentStatus.class);
+        requireEnum("tier", filter.tier(), TournamentTier.class);
 
-        return new TournamentFacets(statuses.values().stream().mapToLong(Long::longValue).sum(), statuses, regions,
-                years);
+        var rows = directory.tournamentFacets(filter.q(), filter.alsoRegions(), filter.status(), filter.tier(),
+                filter.region(), filter.year() == null ? "" : filter.year().toString(),
+                filter.level().mainEventsOnly());
+
+        return new TournamentFacets(counts(rows, "TOTAL").getOrDefault("", 0L), counts(rows, "STATUS"),
+                counts(rows, "TIER"), counts(rows, "REGION"), counts(rows, "YEAR"));
+    }
+
+    public TeamFacets teamFacets(String q) {
+        var rows = directory.teamFacets(ReferenceLabels.literalSearch(q));
+        return new TeamFacets(counts(rows, "COUNTRY"));
+    }
+
+    public PlayerFacets playerFacets(PlayerFilter filter) {
+        requireEnum("lane", filter.lane(), Lane.class);
+        requireEnum("status", filter.status(), CareerStatus.class);
+
+        var rows = directory.playerFacets(ReferenceLabels.literalSearch(filter.q()), filter.country(), filter.lane(),
+                filter.status());
+
+        return new PlayerFacets(counts(rows, "COUNTRY"), counts(rows, "LANE"), counts(rows, "STATUS"));
+    }
+
+    private static Map<String, Long> counts(List<FacetRow> rows, String facet) {
+        return rows.stream().filter(row -> row.facet().equals(facet))
+                .collect(Collectors.toMap(FacetRow::value, FacetRow::rows));
     }
 
     public List<CompetitionPageEntry> competitionPages() {

@@ -63,12 +63,9 @@
   /* The soft round fill of the bar's search and buttons. */
   --hub-bar-fill: color-mix(in srgb, var(--aov-text) 6%, transparent);
   --hub-bar-fill-hover: color-mix(in srgb, var(--aov-text) 10%, transparent);
-  /*
-   * The tile behind a team logo. Most logos are drawn for dark backgrounds (white or pale marks), so on a light page
-   * the tile is a mid indigo on which both pale and dark marks stay visible.
-   */
-  --hub-plate: light-dark(var(--aov-stream-feather), var(--aov-stream-indigo));
-  --hub-on-plate: light-dark(var(--aov-stream-cream), var(--aov-stream-text-muted));
+  /* The tile behind a logo or a picture follows the theme, so a logo stands on what its version is drawn for. */
+  --hub-plate: light-dark(color-mix(in srgb, var(--aov-stream-ink) 6%, #fff), var(--aov-stream-indigo));
+  --hub-on-plate: light-dark(var(--aov-stream-feather), var(--aov-stream-text-muted));
   --brand-wiki-ink: var(--aov-text);
   --brand-wiki-accent: var(--aov-accent);
   --brand-wiki-tint: var(--aov-accent-soft);
@@ -96,20 +93,46 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 }
-/* A logo with a dark-background version (ThemedLogo): hide the one that does not suit the theme. */
-:root[data-theme="light"] .logo-dark,
-:root[data-theme="dark"] .logo-light {
-  display: none;
+/*
+ * Logos (ThemedLogo), by the rule Admin follows too (its lib/logo-choice.ts): each is shown in the version drawn for
+ * what it stands on, the light one on a light page, the dark one on a dark page and on a stage, which sets these
+ * variables for itself. A logo that only exists for the other background brings that background along, so dark ink
+ * never sinks into a dark surface nor white ink into a light one. The paper is a step off white, so it does not glare
+ * on a dark page.
+ */
+:root {
+  --hub-logo-light: inline-block;
+  --hub-logo-dark: none;
+  --hub-logo-paper: transparent;
+  --hub-logo-night: var(--aov-stream-indigo);
+}
+:root[data-theme="dark"] {
+  --hub-logo-light: none;
+  --hub-logo-dark: inline-block;
+  --hub-logo-paper: color-mix(in srgb, var(--aov-stream-mist) 84%, var(--aov-stream-indigo));
+  --hub-logo-night: transparent;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .logo-light {
-    display: none;
+  :root:not([data-theme]) {
+    --hub-logo-light: none;
+    --hub-logo-dark: inline-block;
+    --hub-logo-paper: color-mix(in srgb, var(--aov-stream-mist) 84%, var(--aov-stream-indigo));
+    --hub-logo-night: transparent;
   }
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) .logo-dark {
-    display: none;
-  }
+.logo-light {
+  display: var(--hub-logo-light);
+}
+.logo-dark {
+  display: var(--hub-logo-dark);
+}
+.logo-only,
+.logo-dark-only {
+  border-radius: 12%;
+  background: var(--hub-logo-paper);
+}
+.logo-dark-only {
+  background: var(--hub-logo-night);
 }
 @media (max-width: 899.98px) {
   :root {
@@ -567,10 +590,23 @@ button:disabled {
     font-size: 13px;
   }
 }
-/* Compact: the brand row scrolls away and the tab row under it stays pinned. */
+/*
+ * Compact: the brand row scrolls away and the tab row under it stays pinned, thinner once the page is scrolled. What
+ * the row gives up comes back as a margin, so the page under it never moves.
+ */
 @media (max-width: 899.98px) {
+  .hub-shell {
+    --hub-tabs: 42px;
+    /* Where the tabs of a page pin: under the row and its line. */
+    --hub-pinned: 43px;
+  }
+  .hub-shell[data-scrolled] {
+    --hub-tabs: 36px;
+    --hub-pinned: 37px;
+  }
   .hub-topbar {
     top: calc(-1 * var(--hub-topbar));
+    margin-bottom: calc(42px - var(--hub-tabs));
   }
   .hub-search-open {
     top: 0;
@@ -591,24 +627,30 @@ button:disabled {
   .hub-search-open .hub-topnav {
     display: flex;
     flex: 1 0 100%;
-    height: 42px;
+    gap: 0;
+    height: var(--hub-tabs);
     margin: 0 calc(-1 * var(--hub-gutter));
-    padding: 0 6px;
+    padding: 0 calc(var(--hub-gutter) - 12px);
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     border-top: 1px solid var(--hub-bar-line);
     scrollbar-width: none;
+    transition: height 160ms;
   }
   .hub-topnav::-webkit-scrollbar {
     display: none;
   }
+  /* As wide as its words: more sections scroll in from the side instead of sharing out the width. */
   .hub-topnav > a {
-    flex: 1 0 auto;
-    justify-content: center;
-    padding: 0 8px;
+    flex: none;
+    padding: 0 12px;
   }
-  .hub-topnav > a[aria-current]::after {
-    right: 8px;
-    left: 8px;
+  .hub-shell[data-scrolled] .hub-topnav > a {
+    font-size: 13px;
+  }
+  .hub-shell[data-scrolled] .hub-topnav > a > svg {
+    width: 16px;
+    height: 16px;
   }
   .stream-brand > img {
     width: 32px;
@@ -621,12 +663,6 @@ button:disabled {
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 }
-@media (max-width: 419.98px) {
-  .hub-topnav > a > svg {
-    display: none;
-  }
-}
-
 /* ---------- Side column cards: a title with at most one link, then rows ---------- */
 .hub-card {
   min-width: 0;
@@ -900,8 +936,8 @@ button:disabled {
   color: var(--hub-muted);
 }
 /*
- * A logo or picture on its plate. Its surroundings size it with --stream-image-size and round it with
- * --stream-image-radius; on a dark banner they set --stream-image-plate, and --stream-image-ink and
+ * A logo or picture on its plate, which follows the theme. Its surroundings size it with --stream-image-size and
+ * round it with --stream-image-radius; on a dark banner they set --stream-image-plate, and --stream-image-ink and
  * --stream-image-initials for the letters shown in place of a missing picture.
  */
 .stream-image {

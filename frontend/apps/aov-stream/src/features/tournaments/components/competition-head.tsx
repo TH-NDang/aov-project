@@ -1,9 +1,10 @@
-import { Link } from "react-router"
+import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import type { CompetitionView } from "@aov/community-contracts"
 import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { dayRange } from "../../../components/community-ui"
 import { CompetitionClock, CompetitionLogo, StatusBadge } from "../../../components/competition-card"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink, GoLink } from "../../../components/go-link"
+import { RegionMark } from "../../../components/region-mark"
 import { Stage } from "../../../components/stage"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
@@ -76,22 +77,29 @@ export function CompetitionHead({ view, openStages }: { view: CompetitionView; o
       className="tn-head"
     >
       <header className="tn-head-main">
-        <CompetitionLogo
-          name={tournament.name}
-          url={tournament.logoUrl}
-          darkUrl={tournament.logoDarkUrl}
-          onLight
-          size="head"
-        />
+        <CompetitionLogo name={tournament.name} url={tournament.logoUrl} darkUrl={tournament.logoDarkUrl} size="head" />
         <div className="tn-head-title">
           <p className="tn-head-place">
             {circuit ? (
-              <Link to={`/pages/${circuit.code}`}>{circuit.name}</Link>
+              <GoLink className="hub-go-pill" to={`/pages/${circuit.code}`}>
+                {circuit.shortName && <abbr className="tn-head-short">{circuit.shortName}</abbr>}
+                {circuit.name}
+              </GoLink>
             ) : (
               plan.circuit && <span>{plan.circuit}</span>
             )}
-            {tournament.region && <span>{competitionRegionName(tournament.region, languageTag)}</span>}
-            {tier && <span>{tier}</span>}
+            {tournament.region && (
+              <span className="tn-head-tier">
+                <RegionMark code={tournament.region} />
+                {competitionRegionName(tournament.region, languageTag)}
+              </span>
+            )}
+            {tier && (
+              <span className="tn-head-tier">
+                <TierEmblem tier={tournament.tier} size={20} label={tier} />
+                <span aria-hidden="true">{tier}</span>
+              </span>
+            )}
           </p>
           <h1>{tournament.name}</h1>
           <div className="tn-head-facts">

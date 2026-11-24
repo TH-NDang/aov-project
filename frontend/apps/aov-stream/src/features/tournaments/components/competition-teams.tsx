@@ -1,6 +1,6 @@
 import type { CompetitionView, Lane, RosterMembershipContent } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink } from "../../../components/go-link"
 import { Stage } from "../../../components/stage"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"

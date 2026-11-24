@@ -2,6 +2,7 @@ import type { CSSProperties } from "react"
 import { infiniteQueryOptions, useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, PersonRole, ProfileKind } from "@aov/community-contracts"
 import { streamLanguageTag, streamText, useStreamLocale } from "./stream-locale"
+import { ThemedLogo } from "./themed-logo"
 import type { CompetitionStatus } from "../lib/competition-model"
 import { communityApi } from "../lib/community-api"
 import { communityKeys } from "../lib/community-keys"
@@ -142,8 +143,16 @@ export const useFeaturedCompetitions = () => useQuery(competitionsQuery({}, 0))
 
 export function Avatar({ profile, className = "" }: { profile: CommunityProfile; className?: string }) {
   const name = profile.content?.name || profile.code
-  return profile.content?.avatarUrl ? (
-    <img className={`cp-avatar ${className}`} src={profile.content.avatarUrl} alt="" />
+  const url = profile.content?.avatarUrl
+  // A circuit's or a team's picture is its logo, so it stands on the plate like every logo.
+  if (url && (profile.kind === "CIRCUIT" || profile.kind === "TEAM"))
+    return (
+      <span className={`cp-avatar cp-avatar-logo ${className}`}>
+        <ThemedLogo src={url} />
+      </span>
+    )
+  return url ? (
+    <img className={`cp-avatar ${className}`} src={url} alt="" />
   ) : (
     <div
       className={`cp-avatar cp-initial ${className}`}

@@ -172,9 +172,26 @@ class CompetitionRecencyIntegrationTest {
 
         var facets = read(get(ADMIN + "/tournaments/facets"));
         assertThat(facets.path("statuses").path("ONGOING").asInt()).isPositive();
-        assertThat(facets.path("regions").toString()).contains("TH", "VN");
-        assertThat(facets.path("years").toString()).contains("2023", "2022");
+        assertThat(facets.path("regions").propertyNames()).contains("TH", "VN");
+        assertThat(facets.path("years").propertyNames()).contains("2023", "2022");
         assertThat(facets.path("total").asInt()).isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void aFacetCountsWhatTheSearchAndTheOtherFiltersLeaveOfIt() throws Exception {
+        var marker = marker("counted");
+        create("tournaments", new Tournament(marker + "-thai", marker + " thai", "TH", 2023, null, null, null, null,
+                null, TournamentTier.A, null, null, TournamentStatus.FINISHED, null));
+        create("tournaments", new Tournament(marker + "-viet", marker + " viet", "VN", 2022, null, null, null, null,
+                null, TournamentTier.B, null, null, TournamentStatus.FINISHED, null));
+
+        var facets = read(get(ADMIN + "/tournaments/facets").param("q", marker).param("region", "TH"));
+
+        assertThat(facets.path("regions").propertyNames()).containsExactlyInAnyOrder("TH", "VN");
+        assertThat(facets.path("tiers").propertyNames()).containsExactly("A");
+        assertThat(facets.path("years").propertyNames()).containsExactly("2023");
+        assertThat(facets.path("statuses").path("FINISHED").asInt()).isEqualTo(1);
+        authorizedFails(get(ADMIN + "/tournaments/facets").param("tier", "NOPE"));
     }
 
     @Test

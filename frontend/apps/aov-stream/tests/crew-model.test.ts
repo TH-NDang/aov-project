@@ -10,7 +10,6 @@ const published = (id: string, name: string, extra: Partial<CompetitionPerson> =
   id,
   code: name.toLowerCase(),
   name,
-  avatarUrl: `https://cdn.test/${id}.png`,
   published: true,
   ...extra,
 })
@@ -23,17 +22,12 @@ const people = {
   p4: published("p4", "Tu"),
 }
 
-test("a published person links to their page and keeps their picture", () => {
-  assert.deepEqual(personEntry("p1", people), {
-    pageId: "p1",
-    name: "Lam",
-    avatarUrl: "https://cdn.test/p1.png",
-    href: "/pages/lam",
-  })
+test("a published person links to their own page", () => {
+  assert.deepEqual(personEntry("p1", people), { pageId: "p1", name: "Lam", href: "/pages/lam" })
 })
 
-test("an unpublished person is named as plain text without a picture", () => {
-  assert.deepEqual(personEntry("p3", people), { pageId: "p3", name: "Minh", avatarUrl: null, href: null })
+test("an unpublished person links to the page drawn from their competitions", () => {
+  assert.deepEqual(personEntry("p3", people), { pageId: "p3", name: "Minh", href: "/people/p3" })
 })
 
 test("a person the snapshot does not name is left out", () => {
@@ -117,7 +111,7 @@ test("a team's staff lists only that team, coaches first, with the title as writ
     staff.map((row) => [row.name, row.role, row.title, row.href]),
     [
       ["Hoang", "COACH", "Trợ lý huấn luyện viên", "/pages/hoang"],
-      ["Minh", "COACH", null, null],
+      ["Minh", "COACH", null, "/people/p3"],
       ["Tu", "TEAM_ANALYST", null, "/pages/tu"],
     ],
   )

@@ -18,10 +18,29 @@
 .tn-ranking > li + li {
   border-top: 1px solid var(--hub-border);
 }
-.tn-ranking > li[data-first] {
-  --stream-image-size: 40px;
-  grid-template-columns: 34px 40px minmax(0, 1fr) auto;
-  min-height: 64px;
+/* The first three: a medal, a larger crest and a wash of the metal; the champion is the tallest line. */
+.tn-ranking > li[data-medal] {
+  --medal: var(--aov-medal-bronze);
+  --stream-image-size: 36px;
+  grid-template-columns: 34px 36px minmax(0, 1fr) auto;
+  min-height: 56px;
+  margin-inline: -12px;
+  padding-inline: 12px;
+  border-radius: var(--aov-radius-control);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--medal) 16%, transparent), transparent 75%);
+}
+.tn-ranking > li[data-medal="silver"] {
+  --medal: var(--aov-medal-silver);
+}
+.tn-ranking > li[data-medal="gold"] {
+  --medal: var(--aov-medal-gold);
+  --stream-image-size: 48px;
+  grid-template-columns: 38px 48px minmax(0, 1fr) auto;
+  min-height: 76px;
+}
+.tn-ranking > li[data-medal] + li {
+  margin-top: 4px;
+  border-top-color: transparent;
 }
 .tn-ranking-place {
   color: var(--hub-muted);
@@ -29,18 +48,16 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.tn-ranking > li[data-first] > .tn-ranking-place {
-  color: var(--hub-accent-strong);
-  font-size: 24px;
-  font-weight: 700;
-}
 .tn-ranking strong {
   font-weight: 600;
   overflow-wrap: anywhere;
 }
-.tn-ranking > li[data-first] > strong {
-  font-size: 16px;
+.tn-ranking > li[data-medal] > strong {
   font-weight: 700;
+}
+.tn-ranking > li[data-medal="gold"] > strong {
+  font-size: 17px;
+  line-height: 22px;
 }
 .tn-ranking a:hover {
   color: var(--hub-accent-strong);

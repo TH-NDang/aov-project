@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
+import { ImageRights } from "../../../components/image-rights"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionMatches } from "../../../lib/match-model"
 import { competitionQuery } from "../../../lib/tournament-api"
 import { CompetitionAwards } from "../components/competition-awards"
+import { CompetitionAbout } from "../components/competition-about"
 import { CompetitionFacts } from "../components/competition-facts"
 import { CompetitionFormat } from "../components/competition-format"
 import { CompetitionHead } from "../components/competition-head"
@@ -134,12 +136,14 @@ export function PublicCompetitionPage() {
           <div className="tn-stack">
             <CompetitionFormat view={view} />
             <div className="tn-info-cards">
+              <CompetitionAbout view={view} />
               <CompetitionFacts view={view} />
               <CompetitionCrew view={view} />
             </div>
             <CompetitionAwards view={view} preview={8} wide />
           </div>
         )}
+        <ImageRights />
       </div>
     </StreamShell>
   )

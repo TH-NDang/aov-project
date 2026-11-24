@@ -1,0 +1,230 @@
+/* The teams of a bracket: a row of crests that scrolls sideways, each as wide as its name. */
+.tn-crests {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tn-crests::-webkit-scrollbar {
+  display: none;
+}
+.tn-crest {
+  --stream-image-size: 24px;
+  --stream-image-radius: 5px;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 8px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color 160ms,
+    background-color 160ms,
+    color 160ms;
+}
+.tn-crest:hover {
+  border-color: var(--hub-border-strong);
+  color: var(--hub-text);
+}
+.tn-crest[aria-pressed="true"] {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent-soft);
+  color: var(--hub-text);
+}
+
+/* A team's way in words: its crest, then one step per match. */
+.tn-journey {
+  --journey: var(--hub-accent);
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+  gap: 18px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--journey) 38%, var(--hub-border));
+  border-radius: var(--hub-radius-sm);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--journey) 14%, transparent), transparent 55%);
+}
+.tn-journey[data-end="champion"] {
+  --journey: var(--aov-medal-gold);
+}
+.tn-journey[data-end="runner-up"] {
+  --journey: var(--aov-medal-silver);
+}
+.tn-journey-team {
+  --stream-image-size: 44px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.tn-journey-team > span:last-child {
+  display: grid;
+}
+.tn-journey-team b {
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-journey-team small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-journey[data-end="champion"] .tn-journey-team small {
+  color: light-dark(var(--aov-game-gold), var(--aov-medal-gold));
+  font-weight: 600;
+}
+.tn-journey > ol {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  list-style: none;
+  scrollbar-width: none;
+}
+.tn-journey > ol::-webkit-scrollbar {
+  display: none;
+}
+.tn-journey li {
+  --step: var(--hub-success);
+  min-width: 148px;
+  flex: 1 0 auto;
+}
+.tn-journey li[data-outcome="lost"] {
+  --step: var(--hub-danger);
+}
+.tn-journey li:not([data-outcome]) {
+  --step: var(--hub-muted);
+}
+.tn-journey li > a {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 0 10px;
+  padding: 0 16px 0 0;
+  color: var(--hub-text);
+}
+/* The line between two steps, behind their numbers. */
+.tn-journey li:not(:last-child) > a::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 4px;
+  left: 26px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--step), var(--hub-border));
+}
+.tn-journey-number {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--step);
+  color: var(--hub-bg);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  place-items: center;
+}
+.tn-journey-round {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 6px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.tn-journey-rival {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.tn-journey-rival > b {
+  color: var(--step);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-journey li > a:hover .tn-journey-rival > span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The way as one line of light over the bracket, under the cards. */
+.tn-trail {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.tn-trail > path {
+  fill: none;
+  stroke: var(--hub-accent);
+  stroke-dasharray: 1;
+  stroke-linecap: round;
+  stroke-width: 3;
+  animation: tn-trail-run 320ms ease-out backwards;
+}
+.tn-trail[data-end="champion"] > path {
+  stroke: var(--aov-medal-gold);
+}
+/* A fall to the lower bracket: the line breaks up. */
+.tn-trail > path[data-fell] {
+  stroke: var(--hub-danger);
+  stroke-dasharray: 0.02 0.03;
+  stroke-width: 2.5;
+  filter: none;
+  animation-name: tn-trail-fade;
+}
+@keyframes tn-trail-run {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes tn-trail-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-crests {
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding-inline: var(--hub-gutter);
+  }
+  .tn-journey {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+  .tn-journey-team {
+    --stream-image-size: 36px;
+  }
+}

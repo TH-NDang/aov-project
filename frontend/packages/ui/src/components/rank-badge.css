@@ -1,0 +1,51 @@
+/* A place in a ranking: a plain number, or a medal for the first three. */
+.aov-rank {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.aov-rank[data-medal] {
+  --aov-medal: var(--aov-medal-gold);
+  flex: none;
+  color: var(--aov-on-medal);
+  font-weight: 700;
+}
+.aov-rank[data-medal="silver"] {
+  --aov-medal: var(--aov-medal-silver);
+}
+.aov-rank[data-medal="bronze"] {
+  --aov-medal: var(--aov-medal-bronze);
+}
+.aov-rank > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.aov-rank > span {
+  position: relative;
+}
+/* The coin sits a little under the middle, below the crown. */
+.aov-rank[data-medal] > span {
+  top: 2.5%;
+}
+.aov-rank-leaf,
+.aov-rank-crown {
+  fill: color-mix(in srgb, var(--aov-medal) 88%, #000);
+}
+.aov-rank-crown {
+  fill: var(--aov-medal);
+}
+.aov-rank-base {
+  fill: color-mix(in srgb, var(--aov-medal) 82%, #000);
+}
+.aov-rank-shine {
+  fill: var(--aov-medal);
+}
+.aov-rank-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--aov-medal) 45%, #fff);
+  stroke-width: 1.2;
+}

@@ -1,6 +1,11 @@
 import { Link, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
-import { profileKindLabels, type CompetitionView, type ProfileKind } from "@aov/community-contracts"
+import {
+  profileKindLabels,
+  type CompetitionParticipant,
+  type CompetitionView,
+  type ProfileKind,
+} from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
@@ -16,13 +21,22 @@ import { useFollowedIds } from "../../../lib/community-queries"
 import { competitionStatus } from "../../../lib/competition-model"
 import { profileKindEnglish, TimeAgo } from "../../../components/community-ui"
 import { CompetitionCard } from "../../../components/competition-card"
-import { competitionCatalogQuery } from "../../../lib/tournament-api"
+import { isParticipantKind } from "../../../lib/participant-model"
+import { shortCompetitionName } from "../../../lib/season-name"
+import { competitionCatalogQuery, participantsQuery } from "../../../lib/tournament-api"
+import { ParticipantCard, ParticipantList } from "../../../components/participant-list"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 import "../components/community.css"
 import "./community-explore.css"
 
 /** The order search results come in: who plays, who works around them, then who organizes. */
-const SEARCH_KINDS: ProfileKind[] = ["TEAM", "PLAYER", "PERSON", "ORGANIZATION", "CIRCUIT"]
+const PARTICIPANTS = ["TEAM", "PLAYER", "PERSON"] as const
+const SEARCH_KINDS: ProfileKind[] = ["ORGANIZATION", "CIRCUIT"]
+const PARTICIPANT_SEARCH = {
+  TEAM: ["Tìm đội tuyển", "Search teams"],
+  PLAYER: ["Tìm tuyển thủ", "Search players"],
+  PERSON: ["Tìm nhân sự", "Search staff"],
+} as const
 /** Pages a search shows per kind before the link to all of them: two rows of the widest grid. */
 const GROUP_SIZE = 8
 
@@ -33,15 +47,45 @@ const GROUP_SIZE = 8
  */
 export function CommunityExplore() {
   const { text } = useStreamLocale()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const query = params.get("q")?.trim() || ""
   const requested = params.get("kind") as ProfileKind | null
   const kind = requested && profileKinds.includes(requested) ? requested : null
+  // The lists of teams, players and personnel are long, so the bar's search narrows them in place.
+  const listed = !query && isParticipantKind(kind)
   return (
-    <StreamShell>
+    <StreamShell
+      search={
+        listed
+          ? {
+              value: params.get("name") || "",
+              onChange: (value) =>
+                setParams(
+                  (current) => {
+                    const next = new URLSearchParams(current)
+                    if (value) next.set("name", value)
+                    else next.delete("name")
+                    return next
+                  },
+                  { replace: true },
+                ),
+              label: text(PARTICIPANT_SEARCH[kind][0], PARTICIPANT_SEARCH[kind][1]),
+              placeholder: `${text(PARTICIPANT_SEARCH[kind][0], PARTICIPANT_SEARCH[kind][1])}…`,
+            }
+          : undefined
+      }
+    >
       <title>{text("Khám phá — AOV Stream", "Explore — AOV Stream")}</title>
       <div className="cp-container ex-page">
-        {!query ? <Browse /> : kind ? <KindResults query={query} kind={kind} /> : <SearchResults query={query} />}
+        {!query ? (
+          <Browse />
+        ) : isParticipantKind(kind) ? (
+          <ParticipantResults query={query} kind={kind} />
+        ) : kind ? (
+          <KindResults query={query} kind={kind} />
+        ) : (
+          <SearchResults query={query} />
+        )}
       </div>
     </StreamShell>
   )
@@ -51,20 +95,28 @@ function Browse() {
   const { text } = useStreamLocale()
   return (
     <>
-      <header className="tn-page-head ex-page-head">
-        <div>
-          <h1>{text("Khám phá", "Explore")}</h1>
-          <p>
-            {text(
-              "Trang của các hệ thống giải, tổ chức, đội tuyển, tuyển thủ và ban huấn luyện.",
-              "Pages of tournament circuits, organizations, teams, players and coaching staff.",
-            )}
-          </p>
-        </div>
-      </header>
+      <h1 className="sr-only">{text("Khám phá", "Explore")}</h1>
       <LiveNow />
       <NewVideos />
       <PageDirectory />
+    </>
+  )
+}
+
+/** The teams, players or personnel whose name holds the search. */
+function ParticipantResults({ query, kind }: { query: string; kind: CompetitionParticipant["kind"] }) {
+  const { text } = useStreamLocale()
+  return (
+    <>
+      <Link className="cp-back ex-back" to={`/explore?${new URLSearchParams({ q: query })}`}>
+        <StreamIcon name="back" size={16} />
+        {text("Tất cả kết quả", "All results")}
+      </Link>
+      <h1 className="sr-only">{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
+      <div className="tn-heading">
+        <h2>{text(profileKindLabels[kind], profileKindEnglish[kind])}</h2>
+      </div>
+      <ParticipantList kind={kind} q={query} />
     </>
   )
 }
@@ -141,7 +193,9 @@ function NewVideos() {
 function matchingCompetitions(catalog: CompetitionView[], search: string) {
   return catalog
     .filter((entry) =>
-      foldSearchText(`${entry.content.tournament.name} ${entry.content.plan.circuit}`).includes(foldSearchText(search)),
+      foldSearchText(
+        `${entry.content.tournament.name} ${shortCompetitionName(entry)} ${entry.content.plan.circuit}`,
+      ).includes(foldSearchText(search)),
     )
     .sort(
       (a, b) =>
@@ -162,6 +216,12 @@ function SearchResults({ query }: { query: string }) {
       staleTime: 60_000,
     })),
   })
+  const people = {
+    TEAM: useInfiniteQuery(participantsQuery("TEAM", query, GROUP_SIZE)),
+    PLAYER: useInfiniteQuery(participantsQuery("PLAYER", query, GROUP_SIZE)),
+    PERSON: useInfiniteQuery(participantsQuery("PERSON", query, GROUP_SIZE)),
+  }
+  const peopleCount = PARTICIPANTS.reduce((sum, kind) => sum + (people[kind].data?.pages[0]?.totalElements ?? 0), 0)
   const catalog = useQuery(competitionCatalogQuery)
   const posts = useInfiniteQuery({
     queryKey: communityKeys.postSearch(query),
@@ -176,9 +236,13 @@ function SearchResults({ query }: { query: string }) {
     competitions: competitions.length,
     posts: posts.data?.pages[0]?.totalElements ?? 0,
   }
-  const searching = pages.some((group) => group.isPending) || catalog.isPending || posts.isPending
+  const searching =
+    pages.some((group) => group.isPending) ||
+    PARTICIPANTS.some((kind) => people[kind].isPending) ||
+    catalog.isPending ||
+    posts.isPending
   const failed = pages.some((group) => group.isError) || (catalog.isError && !catalog.data) || posts.isLoadingError
-  const nothing = !searching && !failed && !totals.pages && !totals.competitions && !totals.posts
+  const nothing = !searching && !failed && !peopleCount && !totals.pages && !totals.competitions && !totals.posts
   const pageCount = totals.pages.toLocaleString(languageTag)
   const competitionCount = totals.competitions.toLocaleString(languageTag)
   const postCount = totals.posts.toLocaleString(languageTag)
@@ -214,6 +278,32 @@ function SearchResults({ query }: { query: string }) {
           </Link>
         </div>
       )}
+      {PARTICIPANTS.map((kind) => {
+        const found = people[kind].data?.pages[0]
+        if (!found?.items.length) return null
+        const shown = found.items.slice(0, preview.pages)
+        return (
+          <section key={kind} aria-labelledby={`search-${kind}`}>
+            <div className="tn-heading">
+              <h2 id={`search-${kind}`}>
+                {text(profileKindLabels[kind], profileKindEnglish[kind])}{" "}
+                <small>{found.totalElements.toLocaleString(languageTag)}</small>
+              </h2>
+              {found.totalElements > shown.length && (
+                <Link to={`/explore?${new URLSearchParams({ q: query, kind })}`}>
+                  {text("Xem tất cả", "See all")}
+                  <StreamIcon name="arrow" size={15} />
+                </Link>
+              )}
+            </div>
+            <ul className="pt-cards">
+              {shown.map((item) => (
+                <ParticipantCard key={item.id} item={item} />
+              ))}
+            </ul>
+          </section>
+        )
+      })}
       {SEARCH_KINDS.map((kind, index) => {
         const group = pages[index]!
         if (group.isError)

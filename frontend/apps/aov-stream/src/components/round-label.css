@@ -1,0 +1,18 @@
+/* The round of a match, stronger towards the final. */
+.tn-round[data-weight] {
+  font-weight: 600;
+}
+.tn-round[data-weight="closing"] {
+  color: var(--hub-accent-strong);
+}
+.tn-round[data-weight="final"] {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+  color: light-dark(var(--aov-game-gold), var(--aov-medal-gold));
+  font-weight: 700;
+}
+.tn-round > svg {
+  flex: none;
+}

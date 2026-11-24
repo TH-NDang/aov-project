@@ -136,6 +136,18 @@
   /* In-game gold: a price in gold and its coin, in the coin's amber rather than the brand accent. */
   --aov-game-gold: light-dark(oklch(66.6% 0.179 58.318), oklch(82.8% 0.189 84.429));
 
+  /* The medals of the first three places, the same metal on both themes, and the number on them. */
+  --aov-medal-gold: #e8b84a;
+  --aov-medal-silver: #c2cad8;
+  --aov-medal-bronze: #cf8f5f;
+  --aov-on-medal: #241a06;
+  /* Tournament tiers, the highest first; the letter on them takes the medals' ink. */
+  --aov-tier-s: #f2b93b;
+  --aov-tier-a: #c79bff;
+  --aov-tier-b: #6fb6ff;
+  --aov-tier-c: #67d0a0;
+  --aov-tier-d: #98a1b0;
+
   /* Status colors carry meaning only; they are not decoration. */
   --aov-success: light-dark(#12804f, #4cc38a);
   --aov-success-soft: light-dark(#e3f6ec, rgb(76 195 138 / 14%));

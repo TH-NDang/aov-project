@@ -153,26 +153,19 @@ export function CreateProfileSheet({
               value={source}
               onChange={(e) => setSource(e.target.value)}
             />
-            <ProfileImageField
-              label={isIndividualProfile(kind) ? "Ảnh chân dung" : "Logo"}
-              shape={isIndividualProfile(kind) ? "portrait" : "logo"}
-              subject={
-                kind === "CIRCUIT"
-                  ? "circuit"
-                  : kind === "PERSON"
-                    ? "person"
-                    : kind === "PLAYER"
-                      ? "player"
-                      : kind === "TEAM"
-                        ? "team"
-                        : "organization"
-              }
-              name={name}
-              sourceUrl={source}
-              value={avatarUrl}
-              onChange={setAvatarUrl}
-              onBusyChange={setUploading}
-            />
+            {/* The page of one person has no pictures: the service keeps none. */}
+            {!isIndividualProfile(kind) && (
+              <ProfileImageField
+                label="Logo"
+                shape="logo"
+                subject={kind === "CIRCUIT" ? "circuit" : kind === "TEAM" ? "team" : "organization"}
+                name={name}
+                sourceUrl={source}
+                value={avatarUrl}
+                onChange={setAvatarUrl}
+                onBusyChange={setUploading}
+              />
+            )}
             <p className="type-meta">
               Hồ sơ được tạo độc lập tài khoản đăng nhập. Bạn có thể bổ sung người đại diện sau.
             </p>

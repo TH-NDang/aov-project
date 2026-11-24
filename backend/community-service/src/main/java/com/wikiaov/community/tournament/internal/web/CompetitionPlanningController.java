@@ -3,6 +3,8 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.QueryParameters;
+import com.wikiaov.community.tournament.internal.planning.application.CompetitionParticipants;
+import com.wikiaov.community.tournament.internal.planning.application.CompetitionParticipants.Participant;
 import com.wikiaov.community.tournament.internal.planning.application.CompetitionPlanning;
 import com.wikiaov.community.tournament.internal.planning.application.CompetitionPlanning.View;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;
@@ -23,9 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = ApiPaths.ROOT)
 public class CompetitionPlanningController implements CompetitionPlanningApi {
     private final CompetitionPlanning planning;
+    private final CompetitionParticipants participants;
 
-    public CompetitionPlanningController(CompetitionPlanning planning) {
+    public CompetitionPlanningController(CompetitionPlanning planning, CompetitionParticipants participants) {
         this.planning = planning;
+        this.participants = participants;
     }
 
     @Override
@@ -33,13 +37,32 @@ public class CompetitionPlanningController implements CompetitionPlanningApi {
     public PageSlice<View> list(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "24") int size,
             @RequestParam(required = false) UUID teamId,
-            @RequestParam(required = false) UUID playerId, @RequestParam(required = false) UUID organizerPageId,
-            @RequestParam(required = false) UUID circuitPageId,
-            HttpServletRequest request) {
+            @RequestParam(required = false) UUID playerId, @RequestParam(required = false) UUID personPageId,
+            @RequestParam(required = false) UUID organizerPageId, @RequestParam(required = false) UUID circuitPageId,
+            @RequestParam(defaultValue = "FULL") CompetitionPlanning.Detail detail, HttpServletRequest request) {
         QueryParameters.requireOnly(request,
-                Set.of("page", "size", "teamId", "playerId", "organizerPageId", "circuitPageId"));
-        var filter = new CompetitionPlanning.PublishedFilter(teamId, playerId, organizerPageId, circuitPageId);
-        return planning.published(filter, page, size);
+                Set.of("page", "size", "teamId", "playerId", "personPageId", "organizerPageId", "circuitPageId",
+                        "detail"));
+        var filter = new CompetitionPlanning.PublishedFilter(teamId, playerId, personPageId, organizerPageId,
+                circuitPageId);
+        return planning.published(filter, detail, page, size);
+    }
+
+    @Override
+    @GetMapping(path = "/competitions/participants", version = "1")
+    public PageSlice<Participant> participants(@RequestParam CompetitionParticipants.Kind kind,
+            @RequestParam(required = false) String q, @RequestParam(required = false) String country,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size,
+            HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("kind", "q", "country", "page", "size"));
+        return participants.list(kind, q, country, page, size);
+    }
+
+    @Override
+    @GetMapping(path = "/admin/competitions/index", version = "1")
+    public List<CompetitionPlanning.IndexEntry> index(HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return planning.index();
     }
 
     @Override

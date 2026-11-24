@@ -1,0 +1,25 @@
+/* A region's flag, or what stands for a region without one. */
+.hub-flag {
+  display: inline-block;
+  flex: none;
+  border-radius: 2px;
+  margin-inline: 1px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--hub-text) 14%, transparent);
+  vertical-align: -2px;
+}
+.hub-flag-code {
+  display: inline-block;
+  flex: none;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--hub-raised);
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.hub-flag-globe {
+  display: inline-flex;
+  flex: none;
+}

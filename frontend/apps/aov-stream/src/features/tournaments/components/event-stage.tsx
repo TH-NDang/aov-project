@@ -1,13 +1,16 @@
 import { Link } from "react-router"
 import type { CompetitionView } from "@aov/community-contracts"
 import { LocalPrizeText } from "@aov/ui/components/local-money"
+import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import { dayRange } from "../../../components/community-ui"
 import { CompetitionClock, CompetitionLogo, StatusBadge } from "../../../components/competition-card"
 import { MatchStatus } from "../../../components/match-card"
+import { RegionMark } from "../../../components/region-mark"
 import { Stage } from "../../../components/stage"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
-import { competitionStatus, matchStrip, matchUnderway } from "../../../lib/competition-model"
+import { ThemedLogo } from "../../../components/themed-logo"
+import { codeName, competitionStatus, eventMatches, matchUnderway, TIER_NAMES } from "../../../lib/competition-model"
 import { competitionMatches, competitionMatchHref, type CompetitionMatch } from "../../../lib/match-model"
 import { matchSides } from "../../../lib/match-schedule"
 import { competitionProgress } from "../../../lib/stage-phases"
@@ -65,9 +68,8 @@ export function EventStage({ entry }: { entry: CompetitionView }) {
   const { text, languageTag } = useStreamLocale()
   const now = useNow()
   const { tournament, plan } = entry.content
-  const matches = matchStrip(competitionMatches([entry]), now, 4, 2)
-  const ahead = matches.filter((item) => item.result?.scoreA == null)
-  const shown = (ahead.length ? ahead : matches).slice(0, 4)
+  const tier = codeName(TIER_NAMES, tournament.tier, text)
+  const shown = eventMatches(competitionMatches([entry]), now)
   return (
     <Stage
       tint={tournament.name}
@@ -76,15 +78,14 @@ export function EventStage({ entry }: { entry: CompetitionView }) {
     >
       <div className="tn-event-facts">
         {(tournament.logoDarkUrl || tournament.logoUrl) && (
-          <img
-            className="tn-event-logo"
-            src={(tournament.logoDarkUrl || tournament.logoUrl)!}
-            alt=""
-            data-rim={!tournament.logoDarkUrl || undefined}
-          />
+          <ThemedLogo className="tn-event-logo" src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
         )}
         <div className="tn-event-text">
-          <StatusBadge status={competitionStatus(entry.content, now)} tone="banner" />
+          <span className="tn-event-marks">
+            <StatusBadge status={competitionStatus(entry.content, now)} tone="banner" />
+            {tier && <TierEmblem tier={tournament.tier} label={tier} />}
+            <RegionMark code={tournament.region} />
+          </span>
           <h3>
             <Link to={`/competitions/${entry.id}`}>{tournament.name}</Link>
           </h3>
@@ -122,6 +123,7 @@ export function EventStage({ entry }: { entry: CompetitionView }) {
 export function ComingEvent({ entry }: { entry: CompetitionView }) {
   const { text } = useStreamLocale()
   const { tournament, plan } = entry.content
+  const tier = codeName(TIER_NAMES, tournament.tier, text)
   return (
     <Link className="tn-coming" to={`/competitions/${entry.id}`}>
       <Stage
@@ -130,19 +132,15 @@ export function ComingEvent({ entry }: { entry: CompetitionView }) {
         className="tn-coming-stage"
       >
         {tournament.logoDarkUrl || tournament.logoUrl ? (
-          <img
-            className="tn-coming-logo"
-            src={(tournament.logoDarkUrl || tournament.logoUrl)!}
-            alt=""
-            loading="lazy"
-            data-rim={!tournament.logoDarkUrl || undefined}
-          />
+          <ThemedLogo className="tn-coming-logo" src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
         ) : (
           <CompetitionLogo name={tournament.name} size="card" />
         )}
         <span className="tn-coming-text">
           <b>
             <CompetitionClock entry={entry} />
+            {tier && <TierEmblem tier={tournament.tier} size={18} label={tier} />}
+            <RegionMark code={tournament.region} size={16} />
           </b>
           <strong title={tournament.name}>{tournament.name}</strong>
           <span>

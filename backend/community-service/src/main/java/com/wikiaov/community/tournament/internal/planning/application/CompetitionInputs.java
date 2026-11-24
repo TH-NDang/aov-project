@@ -21,9 +21,11 @@ import com.wikiaov.community.tournament.internal.roster.persistence.RosterReposi
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -53,6 +55,15 @@ public class CompetitionInputs {
 
     public CompetitionSnapshot snapshot(UUID id, CompetitionPlan plan) {
         return snapshot(id, plan, false);
+    }
+
+    /** Published snapshots with the short names and introductions their circuits carry now. */
+    public List<CompetitionSnapshot> described(List<CompetitionSnapshot> snapshots) {
+        var circuitIds = snapshots.stream().map(CompetitionSnapshot::circuit).filter(Objects::nonNull)
+                .map(CompetitionCircuits.Circuit::id).collect(Collectors.toSet());
+        var about = circuits.about(circuitIds);
+
+        return snapshots.stream().map(snapshot -> snapshot.describedBy(about)).toList();
     }
 
     public Map<UUID, Tournament> tournamentDetails(Collection<UUID> ids) {

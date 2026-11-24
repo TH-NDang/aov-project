@@ -1,10 +1,11 @@
 import { Fragment } from "react"
 import type { CompetitionStanding, CompetitionView } from "@aov/community-contracts"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink } from "../../../components/go-link"
+import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionMatches, type CompetitionMatch } from "../../../lib/match-model"
-import { standingGroups, teamForm, type StandingGroup } from "../../../lib/standings-model"
+import { ordersByGames, standingGroups, teamForm, type StandingGroup } from "../../../lib/standings-model"
 import { FormMarks } from "./form-marks"
 import "./standings-table.css"
 
@@ -52,11 +53,12 @@ function Row({
   const team = view.content.teams[row.teamId]
   const name = team?.name || text("Đội chưa có thông tin", "No team information yet")
   const difference = row.gameWins - row.gameLosses
+  // Before the first match every team shares the first line, which is no place worth a medal.
+  const medal = row.played > 0 ? medalOf(row.rank) : null
   return (
-    <tr data-qualified={row.qualified || undefined}>
+    <tr data-qualified={row.qualified || undefined} data-medal={medal || undefined}>
       <td className="tn-rank">
-        {row.rank}
-        {row.tied && <span title={text("Đồng hạng", "Tied")}>=</span>}
+        {medal ? <RankBadge place={row.rank} size={medal === "gold" ? 42 : 36} /> : row.rank}
         {row.qualified && (
           <span className="sr-only">{text(", đã giành suất đi tiếp", ", secured a spot to advance")}</span>
         )}
@@ -64,7 +66,10 @@ function Row({
       <th scope="row">
         <span className="tn-team">
           <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
-          <EntityPageLink kind="TEAM" id={row.teamId} name={name} />
+          <span className="tn-team-name">
+            <EntityPageLink kind="TEAM" id={row.teamId} name={name} />
+            {row.tied && row.played > 0 && <small>{text("Đồng hạng", "Tied")}</small>}
+          </span>
         </span>
       </th>
       <td className="tn-wide-only">
@@ -136,6 +141,7 @@ function GroupTable({
 
 /** A stage's table, split into its groups where its teams only meet within them. */
 export function StandingsTable({ view, table, limit }: { view: CompetitionView; table: Table; limit?: number }) {
+  const { text } = useStreamLocale()
   const groups = standingGroups(view, table)
   const stage = view.content.plan.stages.find((item) => item.code === table.stageCode)
   // The number of teams that go on is the stage's, so it draws no line inside one of several groups.
@@ -152,6 +158,14 @@ export function StandingsTable({ view, table, limit }: { view: CompetitionView; 
           limit={groups.length === 1 ? limit : undefined}
         />
       ))}
+      {ordersByGames(view, table) && (
+        <p className="tn-tables-note">
+          {text(
+            "Đội bằng điểm xếp theo hiệu số ván, rồi số ván thắng.",
+            "Teams level on points are ranked by game difference, then by games won.",
+          )}
+        </p>
+      )}
     </div>
   )
 }

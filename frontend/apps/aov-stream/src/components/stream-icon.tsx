@@ -42,6 +42,7 @@ const paths = {
   table: "M4 5h16v14H4V5Zm0 5h16M4 15h16M10 5v14",
   bracket: "M3 5h5v4H3m0 6h5v4H3m5-12h4v10H8m4-5h9",
   close: "M6 6l12 12M18 6 6 18",
+  filter: "M4 6h10M18 6h2M4 12h2M10 12h10M4 18h8M16 18h4M16 4v4M8 10v4M14 16v4",
   send: "M4 12 20 4l-6 16-3-7-7-1Z",
   /** A pushpin: a post pinned to the top of a page. */
   pin: "M8.5 3.5h7M10 3.5v6L6.5 14h11L14 9.5v-6M12 14v7",

@@ -1,7 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionView } from "@aov/community-contracts"
-import { aheadCompetitions, circuitGroups, recentChampions, seasonRows } from "../src/lib/directory-model.ts"
+import {
+  aheadCompetitions,
+  circuitChampions,
+  circuitGroups,
+  circuitYears,
+  seasonRows,
+} from "../src/lib/directory-model.ts"
 import { competition, on } from "./fixtures/competition.ts"
 
 const finished = { status: "FINISHED" }
@@ -20,18 +26,6 @@ test("what is on leads what is coming, soonest first, and a stale mark of coming
   ]
 
   assert.deepEqual(ids(aheadCompetitions(views, Date.parse(on(24)))), ["on", "sooner", "later"])
-})
-
-test("recent champions are the latest main events of the top tiers, others filling what is left", () => {
-  const views = [
-    event("small", { ...finished, tier: "C", startsOn: "2026-10-01" }),
-    event("old", { ...finished, tier: "S", startsOn: "2025-10-01" }),
-    event("big", { ...finished, tier: "A", startsOn: "2026-05-01" }),
-    event("part", { ...finished, tier: "S", startsOn: "2026-09-01", parentTournamentId: "big" }),
-  ]
-
-  assert.deepEqual(ids(recentChampions(views, 2)), ["big", "old"])
-  assert.deepEqual(ids(recentChampions(views, 3)), ["big", "old", "small"])
 })
 
 test("a season is followed by its parts", () => {
@@ -71,4 +65,18 @@ test("circuits follow their newest season and lone competitions close the list",
       ["other", "alone none"],
     ],
   )
+})
+
+test("a circuit's hall holds its finished seasons with a champion, newest first, and leaves the parts out", () => {
+  const won = (name: string) => ({ ...finished, placements: [{ place: "1", teamName: name }] })
+  const [group] = circuitGroups([
+    event("open", { status: "ONGOING", startsOn: "2026-06-01" }, { circuit: "X" }),
+    event("new", { ...won("Blue"), startsOn: "2025-06-01", year: 2025 }, { circuit: "X" }),
+    event("old", { ...won("Red"), startsOn: "2020-06-01", year: 2020 }, { circuit: "X" }),
+    event("part", { ...won("Green"), startsOn: "2025-05-01", parentTournamentId: "new" }, { circuit: "X" }),
+  ])
+
+  assert.deepEqual(ids(circuitChampions(group!)), ["new", "old"])
+  assert.equal(circuitYears(group!.rows.map((row) => row.view)), "2020–2026")
+  assert.equal(circuitYears([]), "")
 })

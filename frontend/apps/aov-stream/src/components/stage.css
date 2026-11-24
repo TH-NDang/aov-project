@@ -4,6 +4,18 @@
  */
 .tn-stage {
   --stage-hue: 240;
+  /* The build turns light-dark() into values fixed at the root, so what the stage draws with is named dark again. */
+  --hub-accent: var(--aov-stream-lavender);
+  --hub-accent-strong: var(--aov-stream-lavender-bright);
+  --hub-text: var(--aov-stream-cream);
+  --hub-text-soft: var(--aov-stream-text-soft);
+  --hub-muted: var(--aov-stream-text-muted);
+  --hub-plate: var(--aov-stream-indigo);
+  --hub-on-plate: var(--aov-stream-text-muted);
+  --hub-logo-light: none;
+  --hub-logo-dark: inline-block;
+  --hub-logo-paper: color-mix(in srgb, var(--aov-stream-mist) 84%, var(--aov-stream-indigo));
+  --hub-logo-night: transparent;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -13,8 +25,15 @@
   color: var(--aov-stream-cream);
   color-scheme: dark;
 }
+/* A white logo has no colour to give, so the product's own light stands under the lights. */
 .tn-stage[data-lit] {
-  background: var(--aov-stream-dusk);
+  background:
+    radial-gradient(
+      70% 140% at 8% 0%,
+      color-mix(in srgb, var(--aov-stream-periwinkle-deep) 46%, transparent),
+      transparent 70%
+    ),
+    var(--aov-stream-dusk);
 }
 .tn-stage-lights {
   position: absolute;
@@ -36,6 +55,7 @@
   width: 120px;
   height: 120px;
   opacity: 0.85;
+  mix-blend-mode: color;
   object-fit: contain;
   filter: blur(18px) saturate(1.9) brightness(1.1);
   transform: translate(-50%, -50%) scale(4.4);

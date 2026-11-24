@@ -67,6 +67,7 @@ export function RegistryLogoField({
   onBusyChange,
   kind,
   dark = false,
+  usual,
 }: {
   value: string
   name: string
@@ -75,6 +76,8 @@ export function RegistryLogoField({
   kind: "teams" | "tournaments" | "players"
   /** The version drawn for a dark background, previewed on one; Stream shows it in its dark theme. */
   dark?: boolean
+  /** The record's usual logo, which the dark field can take over when it reads well on a dark background too. */
+  usual?: string
 }) {
   const what =
     kind === "players"
@@ -173,6 +176,18 @@ export function RegistryLogoField({
             {busy ? <LoaderCircle size={15} className="animate-spin" /> : <Upload size={15} />}
             {busy ? "Đang tải ảnh…" : kind === "players" ? "Tải ảnh lên" : "Tải logo lên"}
           </Button>
+          {usual && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              title="Logo có màu đọc tốt trên cả nền sáng và nền tối thì không cần bản riêng"
+              onClick={() => onChange(value === usual ? "" : usual)}
+            >
+              {value === usual ? "Bỏ dùng chung" : "Dùng chung logo nền sáng"}
+            </Button>
+          )}
           <small>{canUpload ? "PNG, JPEG, WebP · tối đa 25 MB" : "Cần quyền media:write để tải ảnh."}</small>
         </div>
       </div>

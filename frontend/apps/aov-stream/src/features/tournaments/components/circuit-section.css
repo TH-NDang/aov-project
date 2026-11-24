@@ -56,6 +56,10 @@
   grid-area: name;
 }
 .tn-season-name > strong {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
   font-size: 15px;
   font-weight: 700;
   line-height: 20px;

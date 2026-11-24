@@ -1,10 +1,12 @@
 package com.wikiaov.community.tournament.internal.planning.persistence;
 
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +14,137 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlanRecord, UUID> {
+    /** A plan as a list names it, counted by the database so no plan document is loaded. */
+    interface IndexRow {
+        UUID getId();
+
+        int getEntrants();
+
+        int getMatches();
+
+        @Nullable
+        Instant getPublishedAt();
+
+        @Nullable
+        String getCircuit();
+
+        @Nullable
+        UUID getCircuitPageId();
+    }
+
+    /** A published competition for a list; its snapshot leaves out what only the competition's own page shows. */
+    interface ListedRow {
+        UUID getId();
+
+        Instant getPublishedAt();
+
+        String getSnapshot();
+    }
+
+    /** A team, player or person of published competitions, as the newest of them names it. */
+    interface ParticipantRow {
+        UUID getId();
+
+        String getContent();
+
+        int getCompetitions();
+
+        UUID getCompetitionId();
+
+        String getCompetitionName();
+
+        /** The team a player was registered with, or a person worked for, in that competition. */
+        @Nullable
+        UUID getTeamId();
+
+        @Nullable
+        String getTeam();
+
+        /** What a person did in that competition, as role names joined by commas. */
+        @Nullable
+        String getRoles();
+    }
+
+    /**
+     * Who takes part in published competitions: {@code collection} is the part of a snapshot to read, teams, players or
+     * people. Each stands once, as the newest competition names it, those seen last first. The rows of the page are
+     * chosen before their team and roles are looked up, which reads the whole snapshot of each. Native: unfolds the maps
+     * of the jsonb published snapshots.
+     */
+    @Query(value = """
+        WITH seen AS (
+          SELECT e.key AS id, e.value AS content, p.id AS competition,
+                 coalesce(p.published_snapshot #>> '{tournament,startsOn}', '') AS starts,
+                 count(*) OVER (PARTITION BY e.key) AS competitions,
+                 row_number() OVER (PARTITION BY e.key
+                   ORDER BY coalesce(p.published_snapshot #>> '{tournament,startsOn}', '') DESC, p.id) AS newest
+            FROM tournament.competition_plan p
+            CROSS JOIN LATERAL jsonb_each(p.published_snapshot -> :collection) e
+           WHERE p.published_at IS NOT NULL
+        ), chosen AS (
+          SELECT s.*, lower(coalesce(s.content->>'name', s.content->>'nickname')) AS label
+            FROM seen s
+           WHERE s.newest = 1 AND (:country = '' OR s.content->>'country' = :country)
+             AND lower(concat_ws(' ', s.content->>'name', s.content->>'shortName', s.content->>'nickname',
+                                 s.content->>'aliases')) LIKE lower(concat('%', :query, '%'))
+           ORDER BY s.starts DESC, s.competitions DESC, label, s.id
+           LIMIT :size OFFSET :start
+        )
+        SELECT CAST(s.id AS uuid) AS id, CAST(s.content AS text) AS content, s.competitions AS competitions,
+               s.competition AS competitionId, p.published_snapshot #>> '{tournament,name}' AS competitionName,
+               CAST(side.team_id AS uuid) AS teamId,
+               CAST(p.published_snapshot -> 'teams' -> side.team_id AS text) AS team, done.roles AS roles
+          FROM chosen s
+          JOIN tournament.competition_plan p ON p.id = s.competition
+          LEFT JOIN LATERAL (
+            SELECT line.value->>'teamId' AS team_id
+              FROM jsonb_array_elements(coalesce(p.published_snapshot -> 'rosters', '[]')
+                                        || coalesce(p.published_snapshot #> '{tournament,staff}', '[]')) line
+             WHERE s.id IN (line.value->>'playerId', line.value->>'pageId') LIMIT 1
+          ) side ON true
+          LEFT JOIN LATERAL (
+            SELECT string_agg(DISTINCT line.value->>'role', ',') AS roles
+              FROM (SELECT l.value FROM jsonb_array_elements(coalesce(p.published_snapshot #> '{tournament,staff}', '[]')
+                                        || coalesce(p.published_snapshot #> '{tournament,broadcast}', '[]')) l
+                    UNION ALL
+                    SELECT l.value FROM jsonb_each(coalesce(p.published_snapshot -> 'series', '{}')) match,
+                           jsonb_array_elements(coalesce(match.value -> 'broadcast', '[]')) l) line
+             WHERE line.value->>'pageId' = s.id
+          ) done ON :collection = 'people'
+         ORDER BY s.starts DESC, s.competitions DESC, s.label, s.id
+        """, nativeQuery = true)
+    List<ParticipantRow> participants(String collection, String query, String country, int size, long start);
+
+    /** How many {@link #participants} finds in all. Native: unfolds the maps of the jsonb published snapshots. */
+    @Query(value = """
+        SELECT count(*) FROM (
+          SELECT DISTINCT ON (e.key) e.key AS id, e.value AS content
+            FROM tournament.competition_plan p
+            CROSS JOIN LATERAL jsonb_each(p.published_snapshot -> :collection) e
+           WHERE p.published_at IS NOT NULL
+           ORDER BY e.key, coalesce(p.published_snapshot #>> '{tournament,startsOn}', '') DESC, p.id
+        ) s
+         WHERE (:country = '' OR s.content->>'country' = :country)
+           AND lower(concat_ws(' ', s.content->>'name', s.content->>'shortName', s.content->>'nickname',
+                               s.content->>'aliases')) LIKE lower(concat('%', :query, '%'))
+        """, nativeQuery = true)
+    long countParticipants(String collection, String query, String country);
+
+    /** Native for the jsonb counts. A tournament in the trash takes its plan with it. */
+    @Query(value = """
+        SELECT p.id AS id,
+               jsonb_array_length(coalesce(p.content->'entrants', '[]')) AS entrants,
+               jsonb_array_length(coalesce(p.content->'matches', '[]')) AS matches,
+               p.published_at AS publishedAt,
+               p.content->>'circuit' AS circuit,
+               p.circuit_page_id AS circuitPageId
+          FROM tournament.competition_plan p
+          JOIN tournament.tournament t ON t.id = p.id
+         WHERE t.deleted_at IS NULL
+         ORDER BY p.id
+        """, nativeQuery = true)
+    List<IndexRow> index();
+
     /**
      * The seasons of an organizer or circuit, in the order of the tournament list. A tournament in the trash takes its
      * plan with it. A part of a main event is a season of a page only when its main event is not one already: a
@@ -111,10 +244,39 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
         SELECT * FROM tournament.competition_plan WHERE published_at IS NOT NULL
           AND (:team = '' OR jsonb_exists(published_snapshot->'teams', :team))
           AND (:player = '' OR jsonb_exists(published_snapshot->'players', :player))
+          AND (:person = '' OR jsonb_exists(published_snapshot->'people', :person))
           AND (:organizer = '' OR published_snapshot->'plan'->>'organizerPageId' = :organizer)
           AND (:circuit = '' OR published_snapshot->'plan'->>'circuitPageId' = :circuit)
         ORDER BY published_at DESC, id
         """, nativeQuery = true)
-    Page<CompetitionPlanRecord> published(String team, String player, String organizer, String circuit,
+    Page<CompetitionPlanRecord> published(String team, String player, String person, String organizer, String circuit,
+            Pageable pageable);
+
+    /**
+     * The same competitions without series, rosters, players and people, which make up two thirds of a snapshot. Native:
+     * filters and cuts the jsonb published snapshot.
+     */
+    @Query(value = """
+        SELECT id AS id, published_at AS publishedAt,
+               CAST(published_snapshot || jsonb_build_object('series', jsonb_build_object(), 'players',
+                   jsonb_build_object(), 'people', jsonb_build_object(), 'rosters', jsonb_build_array()) AS text)
+                   AS snapshot
+          FROM tournament.competition_plan
+         WHERE published_at IS NOT NULL
+           AND (:team = '' OR jsonb_exists(published_snapshot->'teams', :team))
+           AND (:player = '' OR jsonb_exists(published_snapshot->'players', :player))
+          AND (:person = '' OR jsonb_exists(published_snapshot->'people', :person))
+           AND (:organizer = '' OR published_snapshot->'plan'->>'organizerPageId' = :organizer)
+           AND (:circuit = '' OR published_snapshot->'plan'->>'circuitPageId' = :circuit)
+         ORDER BY published_at DESC, id
+        """, countQuery = """
+        SELECT count(*) FROM tournament.competition_plan WHERE published_at IS NOT NULL
+          AND (:team = '' OR jsonb_exists(published_snapshot->'teams', :team))
+          AND (:player = '' OR jsonb_exists(published_snapshot->'players', :player))
+          AND (:person = '' OR jsonb_exists(published_snapshot->'people', :person))
+          AND (:organizer = '' OR published_snapshot->'plan'->>'organizerPageId' = :organizer)
+          AND (:circuit = '' OR published_snapshot->'plan'->>'circuitPageId' = :circuit)
+        """, nativeQuery = true)
+    Page<ListedRow> listed(String team, String player, String person, String organizer, String circuit,
             Pageable pageable);
 }

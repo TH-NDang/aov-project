@@ -1,6 +1,7 @@
 import type { CompetitionView } from "@aov/community-contracts"
 import { LocalMoney } from "@aov/ui/components/local-money"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
+import { EntityPageLink } from "../../../components/go-link"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { finalTable } from "../../../lib/champion-model"
@@ -17,10 +18,10 @@ export function FinalRanking({ view }: { view: CompetitionView }) {
       <h2>{text("Xếp hạng chung cuộc", "Final ranking")}</h2>
       <ol className="tn-ranking">
         {rows.map(({ place, team, prizeUsd, prizeLocal }) => (
-          <li key={`${place}:${team.name}`} data-first={place.trim() === "1" || undefined}>
+          <li key={`${place}:${team.name}`} data-medal={medalOf(place) ?? undefined}>
             <span className="tn-ranking-place">
               <span className="sr-only">{text("Hạng", "Place")} </span>
-              {place}
+              <RankBadge place={place} size={medalOf(place) === "gold" ? 36 : 30} />
             </span>
             <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
             <strong>{team.id ? <EntityPageLink kind="TEAM" id={team.id} name={team.name} /> : team.name}</strong>

@@ -50,17 +50,50 @@
 .tn-table tbody tr:not(.tn-table-line):hover {
   background: var(--hub-hover);
 }
+/* What the order of the table rests on, under it. */
+.tn-tables-note {
+  grid-column: 1 / -1;
+  margin: -6px 0 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
 .tn-table :is(th, td).tn-rank {
-  width: 52px;
+  width: 64px;
   padding-inline: 16px 4px;
   color: var(--hub-muted);
   text-align: center;
 }
 .tn-table tbody .tn-rank {
+  font-size: 16px;
   font-weight: 700;
 }
 .tn-table tr[data-qualified] .tn-rank {
   color: var(--hub-success);
+}
+/* The first three stand on a wash of their medal, the leader in a taller line with a larger crest and name. */
+.tn-table tr[data-medal] {
+  --medal: var(--aov-medal-bronze);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--medal) 14%, transparent), transparent min(56%, 420px));
+}
+.tn-table tr[data-medal="silver"] {
+  --medal: var(--aov-medal-silver);
+}
+.tn-table tr[data-medal="gold"] {
+  --medal: var(--aov-medal-gold);
+}
+.tn-table tr[data-medal] > .tn-rank {
+  box-shadow: inset 3px 0 var(--medal);
+}
+.tn-table tr[data-medal="gold"] > * {
+  padding-block: 14px;
+}
+.tn-table tr[data-medal="gold"] .tn-team {
+  --stream-image-size: 44px;
+  font-size: 17px;
+}
+.tn-table tr[data-medal="gold"] td > strong {
+  font-size: 20px;
 }
 .tn-table :is(thead th:nth-child(2), tbody th) {
   text-align: left;
@@ -81,6 +114,16 @@
   min-width: 0;
   align-items: center;
   gap: 12px;
+}
+.tn-team-name {
+  display: grid;
+  min-width: 0;
+}
+.tn-team-name > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
 }
 .tn-team a:hover {
   color: var(--hub-accent-strong);
@@ -129,5 +172,12 @@
   .tn-team {
     --stream-image-size: 30px;
     gap: 10px;
+  }
+  .tn-table :is(th, td).tn-rank:has(.aov-rank) {
+    width: 48px;
+  }
+  .tn-table tr[data-medal="gold"] .tn-team {
+    --stream-image-size: 36px;
+    font-size: 15px;
   }
 }

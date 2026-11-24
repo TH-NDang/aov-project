@@ -10,22 +10,28 @@
   min-width: 0;
   flex: 1;
 }
+/* The circuit's short name, as people call it. */
+.tn-head-short {
+  margin-right: 8px;
+  padding-right: 8px;
+  border-right: 1px solid rgb(255 255 255 / 28%);
+  font-weight: 700;
+  text-decoration: none;
+}
 .tn-head-place {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 16px;
+  align-items: center;
+  gap: 6px 16px;
   margin: 0;
   color: rgb(255 255 255 / 82%);
   font-size: 14px;
   line-height: 20px;
 }
-.tn-head-place > a {
-  color: #fff;
-  font-weight: 600;
-}
-.tn-head-place > a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.tn-head-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .tn-head-title > h1 {
   margin: 6px 0 14px;

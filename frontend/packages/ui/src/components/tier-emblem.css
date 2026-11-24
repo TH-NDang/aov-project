@@ -1,0 +1,52 @@
+/* The emblem of a tournament's tier: its silhouette filled with the tier's colour, the letter inside. */
+.aov-tier {
+  --aov-tier: var(--aov-tier-d);
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  color: var(--aov-on-medal);
+  font-weight: 700;
+  line-height: 1;
+  place-items: center;
+  vertical-align: middle;
+}
+.aov-tier[data-tier="S"] {
+  --aov-tier: var(--aov-tier-s);
+}
+.aov-tier[data-tier="A"] {
+  --aov-tier: var(--aov-tier-a);
+}
+.aov-tier[data-tier="B"] {
+  --aov-tier: var(--aov-tier-b);
+}
+.aov-tier[data-tier="C"] {
+  --aov-tier: var(--aov-tier-c);
+}
+.aov-tier > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.aov-tier path {
+  fill: var(--aov-tier);
+  stroke: color-mix(in srgb, var(--aov-tier) 55%, #fff);
+  stroke-linejoin: round;
+  stroke-width: 1;
+}
+.aov-tier > span {
+  position: relative;
+  margin-top: 6%;
+}
+/* Without rank to show, the lowest tier is an outline. */
+.aov-tier[data-tier="D"] {
+  color: var(--aov-muted);
+}
+.aov-tier[data-tier="D"] path {
+  fill: none;
+  stroke: var(--aov-tier);
+  stroke-width: 1.6;
+}
+.aov-tier[data-tier="D"] > span {
+  margin-top: 4%;
+}

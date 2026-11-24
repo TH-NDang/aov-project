@@ -13,7 +13,6 @@ import com.wikiaov.community.tournament.internal.archive.application.RegistryArc
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
-import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
 import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRecord;
@@ -54,7 +53,6 @@ public class PlayerRegistry {
     public View<Player> create(Player content, String actor, boolean allowSameName) {
         archives.lockWrites();
         validate(content);
-        media.requireAvailable(content.photoUrl());
         if (!allowSameName) {
             refuseSameName(content);
         }
@@ -66,7 +64,6 @@ public class PlayerRegistry {
     public View<Player> update(UUID id, Long version, Player content, String actor) {
         archives.lockWrites();
         validate(content);
-        media.requireAvailable(content.photoUrl());
 
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         RegistryArchivePolicy.requireActive(row);
@@ -117,10 +114,6 @@ public class PlayerRegistry {
                                 name -> name == null || name.isBlank() || name.length() > ReferenceLabels.MAX_LABEL)) {
             throw TournamentErrors.invalid("signatureHeroes allows " + MAX_SIGNATURE_HEROES
                     + " names of at most " + ReferenceLabels.MAX_LABEL + " characters.");
-        }
-        if (!SourceUrls.valid(content.photoUrl())) {
-            throw TournamentErrors
-                    .invalid("photoUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
         }
         if (!ReferenceLabels.validAliases(content.aliases())) {
             throw TournamentErrors

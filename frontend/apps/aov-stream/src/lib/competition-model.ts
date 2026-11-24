@@ -44,6 +44,13 @@ export function matchStrip(entries: CompetitionMatch[], now = Date.now(), ahead 
   return [...underway, ...upcoming, ...results]
 }
 
+/** The matches shown on an event's stage: those on now and next, or the latest results once none is left. */
+export function eventMatches(entries: CompetitionMatch[], now = Date.now()) {
+  const matches = matchStrip(entries, now, 4, 2)
+  const ahead = matches.filter((item) => item.result?.scoreA == null)
+  return (ahead.length ? ahead : matches).slice(0, 4)
+}
+
 /** The side that won a decided match, or null while it is open. */
 export function matchWinner(entry: CompetitionMatch): "a" | "b" | null {
   const { scoreA, scoreB } = entry.result || {}

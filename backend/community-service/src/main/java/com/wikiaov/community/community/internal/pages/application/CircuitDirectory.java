@@ -3,7 +3,11 @@ package com.wikiaov.community.community.internal.pages.application;
 import com.wikiaov.community.community.internal.domain.PageContent.Kind;
 import com.wikiaov.community.community.internal.pages.persistence.PageRepository;
 import com.wikiaov.community.tournament.CompetitionCircuits;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,5 +29,30 @@ public class CircuitDirectory implements CompetitionCircuits {
 
         return new Circuit(row.getId(), row.getCode(), content.name(), content.avatarUrl(),
                 row.getPublishedContent() != null);
+    }
+
+    @Override
+    public Map<UUID, About> about(Collection<UUID> pageIds) {
+        if (pageIds.isEmpty()) {
+            return Map.of();
+        }
+
+        var about = new HashMap<UUID, About>();
+        for (var row : pages.findAllById(pageIds)) {
+            var content = row.getPublishedContent();
+            if (row.getKind() == Kind.CIRCUIT && content != null) {
+                about.put(row.getId(), new About(content.shortName(), firstParagraph(content.biography())));
+            }
+        }
+
+        return about;
+    }
+
+    private static @Nullable String firstParagraph(@Nullable String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+
+        return text.strip().split("\\R\\s*\\R", 2)[0].strip();
     }
 }

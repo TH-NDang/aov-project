@@ -2,6 +2,7 @@ import type { CompetitionView } from "@aov/community-contracts"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { codeName, playedOrder, STAGE_FORMAT_NAMES } from "../../../lib/competition-model"
 import { stageName } from "../../../lib/match-labels"
+import { allPlayed } from "../../../lib/standings-model"
 import { Bracket } from "./bracket"
 import { FinalRanking } from "./final-ranking"
 import { Section } from "./section"
@@ -39,7 +40,7 @@ export function CompetitionStandings({ view }: { view: CompetitionView }) {
           title={stageName(stage.name)}
           note={
             table
-              ? table.complete
+              ? table.complete || allPlayed(view, table)
                 ? text("Đã hoàn tất", "Final")
                 : text("Tạm tính", "Provisional")
               : codeName(STAGE_FORMAT_NAMES, stage.format, text)

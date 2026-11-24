@@ -38,11 +38,12 @@ class CompetitionDirectoryTest {
 
     @Test
     void theFacetsOfEveryTournamentCountTheParts() {
-        when(directory.tournamentFacets(false)).thenReturn(List.of());
+        when(directory.tournamentFacets(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
+                eq(false))).thenReturn(List.of());
 
-        directories.tournamentFacets(TournamentLevel.ALL);
+        directories.tournamentFacets(filter("RECENT", TournamentLevel.ALL));
 
-        verify(directory).tournamentFacets(false);
+        verify(directory).tournamentFacets("", "", "", "", "", "", false);
     }
 
     @Test

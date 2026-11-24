@@ -1,0 +1,34 @@
+/* The statement of rights: plain reading text in one column. */
+.cr-page {
+  max-width: 720px;
+  gap: 24px;
+}
+.cr-page > h1 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+}
+.cr-page > section {
+  display: grid;
+  gap: 8px;
+}
+.cr-page h2 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.cr-page p {
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 15px;
+  line-height: 24px;
+}
+.cr-page p > a {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

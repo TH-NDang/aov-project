@@ -197,7 +197,7 @@ test("tournament list opens the selected record and displays recorded match coun
   assert.ok(opener)
   assert.match(document.body.textContent ?? "", /Từ 01\/10\/2026/)
   assert.match(document.body.textContent ?? "", /2\/6 trận đã đấu/)
-  assert.match(document.body.textContent ?? "", /4 đội tham dự/)
+  assert.match(document.body.textContent ?? "", /4 đội/)
   await act(async () => opener.click())
   assert.equal(opened, "cup")
 })

@@ -1,8 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react"
 import { Link } from "react-router"
 import type { PublishedGame } from "@aov/community-contracts"
-import { EntityPageLink } from "../../../components/public-competitions"
+import { EntityPageLink } from "../../../components/go-link"
 import { Stage } from "../../../components/stage"
+import { RoundLabel } from "../../../components/round-label"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -30,7 +31,7 @@ export type HeadTeam = {
   known?: boolean
 }
 
-type Head = { tint: string; round: string | null; bestOf: number; teams: [HeadTeam, HeadTeam] }
+type Head = { tint: string; round: ReactNode; bestOf: number; teams: [HeadTeam, HeadTeam] }
 
 /**
  * The head of a match of a competition's plan: its round, how many games decide it, and both sides in full. A side
@@ -41,7 +42,7 @@ export function matchHeadOf(entry: CompetitionMatch, locale: string): Head {
   const team = (side: MatchSide): HeadTeam => ({ ...side, name: side.fullName, shortName: side.name })
   return {
     tint: entry.competition.content.tournament.name,
-    round: matchRound(entry, locale),
+    round: <RoundLabel entry={entry} label={matchRound(entry, locale)} />,
     bestOf: entry.match.bestOf,
     teams: [team(a), team(b)],
   }

@@ -230,6 +230,19 @@ export function bracketLayout(entries: CompetitionMatch[]): BracketLayout {
   return { nodes, links: drawn, columns: lastColumn + 1, rows: Math.max(1, next), lanes: headings }
 }
 
+export type RoundWeight = "final" | "closing" | "semi"
+
+/**
+ * How close a round is to the title: the final itself, the match that closes a lane, the semifinals of either kind, or
+ * null for the rounds before them.
+ */
+export function roundWeight({ lane, left, matches }: BracketRound): RoundWeight | null {
+  if (lane === "final" || (lane === "rounds" && left === 0 && matches === 1)) return "final"
+  if ((lane === "upper" || lane === "lower") && left === 0 && matches === 1) return "closing"
+  if (left === 1 && (lane === "lower" ? matches === 1 : lane !== "third" && matches === 2)) return "semi"
+  return null
+}
+
 /** A round of a bracket in `locale`. */
 export function bracketRoundName({ lane, left, order, matches }: BracketRound, locale = "vi-VN"): string {
   const pick = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)

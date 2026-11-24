@@ -10,7 +10,7 @@ import { LANE_LABELS } from "@/lib/lanes"
 import { ProfileCountry } from "../components/profile-country"
 import { yearRange } from "./directory-api"
 import { PublishedMark } from "./directory-shell"
-import { EntryAction, EntryPicture } from "./entry-parts"
+import { EntryAction } from "./entry-parts"
 
 const age = (birthDate?: string | null) => {
   const year = Number(birthDate?.slice(0, 4))
@@ -44,9 +44,7 @@ export function PlayerRow({
       {/* On a phone the name gives way, so the actions stay on screen. */}
       <td className="px-4 py-2.5 @max-2xl:w-full @max-2xl:max-w-0">
         <div className="flex min-w-0 items-center gap-3">
-          <EntryPicture missing={!player.photoUrl} label="Thiếu ảnh">
-            <PlayerPhoto name={player.nickname} url={player.photoUrl ?? undefined} size={40} />
-          </EntryPicture>
+          <PlayerPhoto name={player.nickname} size={40} />
           <div className="min-w-0">
             <p className="type-section-title flex items-center gap-2">
               {pageId ? (

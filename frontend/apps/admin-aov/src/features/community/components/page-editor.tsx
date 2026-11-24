@@ -205,15 +205,12 @@ function Editor({
     ["sources", "Nguồn thông tin", BookOpenText, content.sources.length],
     ...(access.canPublish && community ? [["access", "Quyền đại diện", ShieldCheck, null] as Tab] : []),
   ]
+  // The page of one person has no pictures: the service keeps none.
+  const pictured = !isIndividualProfile(entry.kind)
   const completionItems = [
     { done: !!content.name, label: "Tên hiển thị", target: "overview", icon: UserRound },
     { done: !!content.biography, label: "Giới thiệu", target: "overview", icon: Info },
-    {
-      done: !!content.avatarUrl,
-      label: isIndividualProfile(entry.kind) ? "Ảnh chân dung" : "Logo",
-      target: "images",
-      icon: ImagePlus,
-    },
+    ...(pictured ? [{ done: !!content.avatarUrl, label: "Logo", target: "images", icon: ImagePlus }] : []),
     { done: content.sources.length > 0, label: "Nguồn đối chiếu", target: "sources", icon: BookOpenText },
   ]
   const completed = completionItems.filter((item) => item.done).length
@@ -236,7 +233,7 @@ function Editor({
           {httpUrl(content.coverUrl) && (
             <img src={content.coverUrl!} alt={`Ảnh bìa ${content.name}`} className="size-full object-cover" />
           )}
-          {access.canWrite && (
+          {access.canWrite && pictured && (
             <Button
               type="button"
               variant="secondary"
@@ -255,23 +252,19 @@ function Editor({
           <div className="relative -mt-10 shrink-0 sm:-mt-12">
             <span className="flex size-20 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-muted text-muted-foreground sm:size-24">
               {httpUrl(content.avatarUrl) ? (
-                <img
-                  src={content.avatarUrl!}
-                  alt={`${isIndividualProfile(entry.kind) ? "Ảnh chân dung" : "Logo"} ${content.name}`}
-                  className="size-full object-contain"
-                />
+                <img src={content.avatarUrl!} alt={`Logo ${content.name}`} className="size-full object-contain" />
               ) : (
                 <ProfileTypeIcon kind={entry.kind} roles={content.personRoles} className="size-6" />
               )}
             </span>
-            {access.canWrite && (
+            {access.canWrite && pictured && (
               <Button
                 type="button"
                 variant="secondary"
                 size="icon"
                 className="absolute -bottom-1 -right-1 size-8 rounded-full border shadow-sm"
-                aria-label={isIndividualProfile(entry.kind) ? "Chỉnh sửa ảnh chân dung" : "Chỉnh sửa logo"}
-                title={isIndividualProfile(entry.kind) ? "Chỉnh sửa ảnh chân dung" : "Chỉnh sửa logo"}
+                aria-label="Chỉnh sửa logo"
+                title="Chỉnh sửa logo"
                 disabled={uploading || update.isPending}
                 onClick={() => setQuickEdit({ type: "image", field: "avatarUrl" })}
               >
@@ -451,7 +444,9 @@ function Editor({
             {uploading ? "Đang tải ảnh…" : update.isPending ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : "Đã lưu"}
           </p>
           <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Hoàn thiện hồ sơ">
-            <span className="type-meta mr-1">Hoàn thiện {completed}/4</span>
+            <span className="type-meta mr-1">
+              Hoàn thiện {completed}/{completionItems.length}
+            </span>
             {completionItems.map(({ done, label, target, icon: CompletionIcon }) => (
               <Tooltip key={label}>
                 <TooltipTrigger asChild>

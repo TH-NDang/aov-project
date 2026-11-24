@@ -42,7 +42,7 @@ public class EditorReferenceSearch {
            AND reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
            AND id IN (:ids)
         UNION ALL
-        SELECT id,'PLAYER' AS kind,name,code,NULL AS "shortName",content->>'photoUrl' AS icon,
+        SELECT id,'PLAYER' AS kind,name,code,NULL AS "shortName",NULL AS icon,
                CAST(content->'aliases' AS text) AS "aliasesJson"
           FROM tournament.player
          WHERE deleted_at IS NULL AND :players
@@ -71,7 +71,7 @@ public class EditorReferenceSearch {
                  WHERE t.deleted_at IS NULL AND :teams
                    AND t.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
                 UNION ALL
-                SELECT p.id,'PLAYER' AS kind,p.name,p.code,NULL AS "shortName",p.content->>'photoUrl' AS icon,
+                SELECT p.id,'PLAYER' AS kind,p.name,p.code,NULL AS "shortName",NULL AS icon,
                        CAST(p.content->'aliases' AS text) AS "aliasesJson", p.search_names, a.active_on
                   FROM tournament.player p
                   LEFT JOIN tournament.player_activity a ON a.player_id = p.id

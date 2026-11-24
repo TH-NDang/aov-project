@@ -1,12 +1,11 @@
 import type { ReactNode } from "react"
-import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { useStreamLocale } from "../../../components/stream-locale"
 import type { ScheduleScope } from "../../../lib/match-schedule"
 
 /** Each part of a schedule, with its name in Vietnamese and in English. */
-const SCOPES: [ScheduleScope, readonly [string, string]][] = [
+export const SCOPES: [ScheduleScope, readonly [string, string]][] = [
   ["all", ["Tất cả", "All"]],
   ["upcoming", ["Lịch đấu", "Schedule"]],
   ["results", ["Kết quả", "Results"]],
@@ -50,6 +49,9 @@ export function ScheduleScopePills({
   )
 }
 
+/** One choice of a filter: its value, its name, the picture that goes with it and how many results it would leave. */
+export type FilterOption = readonly [value: string, name: string, mark?: ReactNode, count?: string]
+
 /** A filter with an "all" choice first. `className` places it in the bar that holds it. */
 export function FilterSelect({
   label,
@@ -83,34 +85,5 @@ export function FilterSelect({
         ))}
       </SelectContent>
     </Select>
-  )
-}
-
-/** The selects of a schedule folded behind one button, for a narrow screen. */
-export function ScheduleFilterSheet({
-  count,
-  total,
-  onReset,
-  children,
-}: {
-  count: number
-  total: number
-  onReset: () => void
-  children: ReactNode
-}) {
-  const { text, languageTag } = useStreamLocale()
-  const shown = total.toLocaleString(languageTag)
-  return (
-    <PublicFilterSheet
-      title={text("Lọc trận đấu", "Filter matches")}
-      triggerLabel={text("Lọc", "Filter")}
-      triggerClassName="tn-schedule-filter"
-      count={count}
-      resetLabel={text("Xóa lọc", "Clear filters")}
-      onReset={onReset}
-      resultLabel={text(`Xem ${shown} trận`, `Show ${shown} ${total === 1 ? "match" : "matches"}`)}
-    >
-      <div className="competition-sheet-filters">{children}</div>
-    </PublicFilterSheet>
   )
 }

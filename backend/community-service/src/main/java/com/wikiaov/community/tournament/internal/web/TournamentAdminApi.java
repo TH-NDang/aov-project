@@ -11,7 +11,9 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Vie
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
@@ -67,6 +69,14 @@ public interface TournamentAdminApi {
             UUID teamId, UUID tournamentId, @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
             @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size, @Parameter(hidden = true) HttpServletRequest request);
 
+    @Operation(operationId = "tournamentAdminApi_teamFacets", summary = "List what the team directory can be narrowed by")
+    TeamFacets teamFacets(@Size(max = Parameters.MAX_SEARCH) String q,
+            @Parameter(hidden = true) HttpServletRequest request);
+
+    @Operation(operationId = "tournamentAdminApi_playerFacets", summary = "List what the player directory can be narrowed by")
+    PlayerFacets playerFacets(@Size(max = Parameters.MAX_SEARCH) String q, String country, String lane, String status,
+            @Parameter(hidden = true) HttpServletRequest request);
+
     @Operation(operationId = "tournamentAdminApi_playerDirectory", summary = "List the player directory")
     PageSlice<PlayerEntry> playerDirectory(@Size(max = Parameters.MAX_SEARCH) String q, String country, String lane,
             String status, String sort, @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
@@ -100,7 +110,9 @@ public interface TournamentAdminApi {
             @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size, @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "tournamentAdminApi_tournamentFacets", summary = "List what tournaments can be narrowed by")
-    TournamentFacets tournamentFacets(TournamentLevel level, @Parameter(hidden = true) HttpServletRequest request);
+    TournamentFacets tournamentFacets(@Size(max = Parameters.MAX_SEARCH) String q, String alsoRegions, String status,
+            String tier, String region, Integer year, TournamentLevel level,
+            @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "tournamentAdminApi_tournamentParts", summary = "List the parts of main events")
     List<TournamentPart> tournamentParts(UUID parentId, @Parameter(hidden = true) HttpServletRequest request);
