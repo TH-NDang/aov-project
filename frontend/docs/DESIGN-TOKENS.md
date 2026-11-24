@@ -94,8 +94,13 @@ chân sidebar Admin ghi công Game Icons theo giấy phép; giữ các dòng đ�
 Vị trí, vai trò và độ khó của tướng dùng chung một bộ dấu trong `packages/ui/src/components/hero-marks.tsx` (`HeroMark`,
 `HeroLaneIcon`, `HeroRoleIcon`), khung 48×48, lấy màu chữ. Wiki, Admin và Stream đều vẽ bằng bộ này.
 
-Chỉ số và thuật ngữ trong game nằm trong sprite `packages/ui/src/assets/gameplay-art.svg` (khung 64×64), dùng qua
-`gameplayIcons`. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng;
+Chỉ số và thuật ngữ trong game nằm trong sprite `packages/ui/src/assets/gameplay-art.svg`, dùng qua `gameplayIcons`.
+Mười lăm hình là Game Icons (khung 512×512), chọn theo từng thuật ngữ: sát thương và công vật lý `broadsword`, sát
+thương và công phép `fireball`, sát thương chuẩn `shield-impact`, giáp `shoulder-armor`, giáp phép `magic-shield`, hồi
+máu `healing`, lá chắn `energy-shield`, tốc chạy `wingfoot`, tốc đánh `spinning-blades`, chí mạng `explosion-rays`, làm
+chậm `sticky-boot`, choáng `stoned-skull`, giảm hồi chiêu `extra-time`, nội tại `spark-spirit`, thông số theo cấp chiêu
+`upgrade`. Các hình còn lại (`heart`, `crit-damage`, `flame`, `coin`, `mana`, `vamp`) do dự án tự vẽ trên khung 64×64.
+Tên symbol giữ nguyên, nên chỉ số của tướng, đánh giá tướng và hình đã chọn của thuật ngữ đổi theo. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng;
 đừng vẽ thêm bản có màu. `termIcon(term)` chọn hình cho một thuật ngữ: hình đã chọn lưu dạng `glyph:<tên>` trong trường
 `icon`, không chọn thì theo mặc định của thuật ngữ đó.
 
