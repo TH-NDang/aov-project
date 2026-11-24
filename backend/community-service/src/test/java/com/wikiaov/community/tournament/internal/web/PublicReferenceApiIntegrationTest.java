@@ -111,6 +111,27 @@ class PublicReferenceApiIntegrationTest {
     }
 
     @Test
+    void aRealNameRecordedAfterThePublicationTakesTheNamesDrawnFromItOutOfTheList() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var profile = new HashMap<String, Object>(Map.of("code", code("player"), "nickname", "Late" + suffix,
+                "aliases", List.of("Văn " + suffix, "Nicky")));
+        String team = record("teams", Map.of("code", code("team"), "name", "Alpha " + suffix));
+        String other = record("teams", Map.of("code", code("other"), "name", "Beta " + suffix));
+        String player = record("players", profile);
+        String id = record("tournaments", Map.of("code", code("cup"), "name", "Cup " + suffix, "region", "VN"));
+        record("roster-memberships", Map.of("tournamentId", id, "teamId", team, "playerId", player));
+        publish(id, team, other);
+        assertThat(named("/people", player).path("aliases")).hasSize(2);
+
+        profile.put("fullName", "Nguyễn Văn " + suffix);
+        editor(put(ADMIN + "/players/" + player), Map.of("version", 0, "content", profile));
+
+        var aliases = named("/people", player).path("aliases");
+        assertThat(aliases).hasSize(1);
+        assertThat(aliases.get(0).asString()).isEqualTo("Nicky");
+    }
+
+    @Test
     void noAnswerCarriesThePicturesOrRealNamesOfPeople() throws Exception {
         var people = mvc.perform(get(ROOT + "/references/people")).andReturn().getResponse().getContentAsString();
 

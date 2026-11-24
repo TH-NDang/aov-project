@@ -69,11 +69,9 @@ public record PublishedCompetition(
         }
     }
 
-    /** {@code fullName} is read only to keep it out of the names a text can use. */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Player(
             String nickname,
-            @Nullable String fullName,
             List<String> aliases,
             @Nullable String country
     ) {

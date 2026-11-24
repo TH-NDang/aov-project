@@ -33,7 +33,7 @@ class ReferenceBookTest {
         var older = competition(2024, Map.of(TEAM, team("Marines Esports", "ME")), Map.of(), List.of());
         var newer = competition(2026, Map.of(TEAM, team("GAM Esports", "GAM")), Map.of(), List.of());
 
-        var book = ReferenceBook.of(List.of(older, newer), List.of(), Map.of());
+        var book = ReferenceBook.of(List.of(older, newer), List.of(), Map.of(), Map.of());
 
         assertThat(book.names(List.of(ReferenceKind.TEAM))).containsExactly(new Name(TEAM, ReferenceKind.TEAM,
                 "GAM Esports", "GAM", List.of("Marines Esports", "gam"), "/teams/" + TEAM, null, List.of()));
@@ -47,7 +47,8 @@ class ReferenceBookTest {
         var page = new NamedPage(UUID.randomUUID(), CompetitionPages.Kind.TEAM, "gam", TEAM, "GAM", null, "VN", null,
                 "A team.");
 
-        var name = ReferenceBook.of(List.of(played), List.of(page), Map.of()).names(List.of(ReferenceKind.TEAM))
+        var name = ReferenceBook.of(List.of(played), List.of(page), Map.of(), Map.of())
+                .names(List.of(ReferenceKind.TEAM))
                 .getFirst();
 
         assertThat(name.name()).isEqualTo("GAM");
@@ -57,13 +58,14 @@ class ReferenceBookTest {
 
     @Test
     void aPlayerCarriesEveryTeamWithTheLatestFirstAndNoPartOfTheRealName() {
-        var player = new Player("XB", "Nguyễn Xuân Bách", List.of("Xuân Bách", "XBeo"), "VN");
+        var player = new Player("XB", List.of("Xuân Bách", "XBeo"), "VN");
         var older = competition(2024, Map.of(OTHER_TEAM, team("Old", "OLD")), Map.of(PLAYER, player),
                 List.of(new Seat(PLAYER, OTHER_TEAM)));
         var newer = competition(2026, Map.of(TEAM, team("New", "NEW")), Map.of(PLAYER, player),
                 List.of(new Seat(PLAYER, TEAM)));
 
-        var book = ReferenceBook.of(List.of(older, newer), List.of(), Map.of());
+        var book = ReferenceBook.of(List.of(older, newer), List.of(), Map.of(),
+                Map.of(PLAYER, "Nguyễn Xuân Bách"));
 
         assertThat(book.names(List.of(ReferenceKind.PLAYER))).containsExactly(new Name(PLAYER, ReferenceKind.PLAYER,
                 "XB", null, List.of("XBeo"), "/players/" + PLAYER, null, List.of(TEAM, OTHER_TEAM)));
@@ -72,11 +74,11 @@ class ReferenceBookTest {
 
     @Test
     void someoneWhoPlaysAndCastsStandsOnceAsThePlayer() {
-        var player = new Player("XB", null, List.of(), "VN");
+        var player = new Player("XB", List.of(), "VN");
         var played = withPeople(2026, Map.of(PLAYER, player), Map.of(PERSON_PAGE, new Person("XB")),
                 List.of(new Duty(PERSON_PAGE, "CASTER", null)));
 
-        var book = ReferenceBook.of(List.of(played), List.of(), Map.of(PERSON_PAGE, PLAYER));
+        var book = ReferenceBook.of(List.of(played), List.of(), Map.of(PERSON_PAGE, PLAYER), Map.of());
 
         assertThat(book.names(ReferenceKind.INDIVIDUALS)).extracting(Name::kind).containsExactly(ReferenceKind.PLAYER);
     }
@@ -88,7 +90,8 @@ class ReferenceBookTest {
         var newer = withPeople(2026, Map.of(), Map.of(PERSON_PAGE, new Person("Tony")),
                 List.of(new Duty(PERSON_PAGE, "CASTER", null)));
 
-        var preview = ReferenceBook.of(List.of(older, newer), List.of(), Map.of()).preview(ReferenceKind.PERSON,
+        var preview = ReferenceBook.of(List.of(older, newer), List.of(), Map.of(), Map.of()).preview(
+                ReferenceKind.PERSON,
                 PERSON_PAGE);
 
         assertThat(preview.path()).isEqualTo("/people/" + PERSON_PAGE);
@@ -103,7 +106,7 @@ class ReferenceBookTest {
         var seasons = List.of(competition(2025, Map.of(), Map.of(), List.of()),
                 competition(2026, Map.of(), Map.of(), List.of()));
 
-        var book = ReferenceBook.of(seasons, List.of(page), Map.of());
+        var book = ReferenceBook.of(seasons, List.of(page), Map.of(), Map.of());
 
         assertThat(book.names(List.of(ReferenceKind.COMPETITION))).extracting(Name::circuitId)
                 .containsExactly(CIRCUIT, CIRCUIT);
@@ -115,10 +118,10 @@ class ReferenceBookTest {
 
     @Test
     void aShortNameThatIsAlsoANicknameIsLeftOutOfTheListAndStaysOnThePreview() {
-        var player = new Player("LYL", null, List.of(), null);
+        var player = new Player("LYL", List.of(), null);
         var played = competition(2026, Map.of(TEAM, team("LiveYourLife", "LYL")), Map.of(PLAYER, player), List.of());
 
-        var book = ReferenceBook.of(List.of(played), List.of(), Map.of());
+        var book = ReferenceBook.of(List.of(played), List.of(), Map.of(), Map.of());
 
         assertThat(book.names(List.of(ReferenceKind.TEAM)).getFirst().shortName()).isNull();
         assertThat(book.preview(ReferenceKind.TEAM, TEAM).shortName()).isEqualTo("LYL");
@@ -131,7 +134,7 @@ class ReferenceBookTest {
         var played = competition(2026, Map.of(TEAM, team("RoV Pro League", "RPL"), OTHER_TEAM,
                 team("Thai seat", "rpl")), Map.of(), List.of());
 
-        var book = ReferenceBook.of(List.of(played), List.of(circuit), Map.of());
+        var book = ReferenceBook.of(List.of(played), List.of(circuit), Map.of(), Map.of());
 
         assertThat(book.names(List.of(ReferenceKind.TEAM))).isEmpty();
         assertThat(book.names(List.of(ReferenceKind.CIRCUIT))).hasSize(1);
@@ -141,7 +144,7 @@ class ReferenceBookTest {
     void aRecordIsFoundOnlyUnderItsOwnKind() {
         var played = competition(2026, Map.of(TEAM, team("GAM Esports", "GAM")), Map.of(), List.of());
 
-        var book = ReferenceBook.of(List.of(played), List.of(), Map.of());
+        var book = ReferenceBook.of(List.of(played), List.of(), Map.of(), Map.of());
 
         assertThat(book.preview(ReferenceKind.PLAYER, TEAM)).isNull();
     }

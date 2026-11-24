@@ -42,24 +42,30 @@ final class ReferenceBook {
     private final List<PublishedCompetition> competitions;
     private final List<NamedPage> pages;
     private final Map<UUID, UUID> playersByPage;
+    private final Map<UUID, String> realNames;
     private final Map<ReferenceKind, List<Name>> names = new EnumMap<>(ReferenceKind.class);
     private final Map<ReferenceKind, Map<UUID, Preview>> previews = new EnumMap<>(ReferenceKind.class);
 
     private ReferenceBook(List<PublishedCompetition> competitions, List<NamedPage> pages,
-            Map<UUID, UUID> playersByPage) {
+            Map<UUID, UUID> playersByPage, Map<UUID, String> realNames) {
         this.competitions = competitions.stream().sorted(NEWEST_FIRST).toList();
         this.pages = pages;
         this.playersByPage = playersByPage;
+        this.realNames = realNames;
         for (var kind : ReferenceKind.values()) {
             names.put(kind, new ArrayList<>());
             previews.put(kind, new LinkedHashMap<>());
         }
     }
 
-    /** {@code playersByPage} names the player behind each profile page that crews and staff lists name, if any. */
+    /**
+     * {@code playersByPage} names the player behind each profile page that crews and staff lists name, if any.
+     * {@code realNames} come from the registry of players, since publications carry none. They only keep names drawn
+     * from them out.
+     */
     static ReferenceBook of(List<PublishedCompetition> competitions, List<NamedPage> pages,
-            Map<UUID, UUID> playersByPage) {
-        var book = new ReferenceBook(competitions, pages, playersByPage);
+            Map<UUID, UUID> playersByPage, Map<UUID, String> realNames) {
+        var book = new ReferenceBook(competitions, pages, playersByPage, realNames);
         book.addEditorialPages();
         book.addCompetitions();
         book.addTeams();
@@ -209,7 +215,7 @@ final class ReferenceBook {
             var record = player.record;
             var label = page == null ? record.nickname() : page.name();
             var name = new Name(id, kind, label, null,
-                    ShownNames.othersOfPlayer(concat(player.names, record.aliases()), label, record.fullName()),
+                    ShownNames.othersOfPlayer(concat(player.names, record.aliases()), label, realNames.get(id)),
                     kind.path(id, code(page)), null, List.copyOf(player.teams));
             add(name, new Preview(name, record.country(), Logo.NONE, null, player.competitions, null,
                     player.latest()));
