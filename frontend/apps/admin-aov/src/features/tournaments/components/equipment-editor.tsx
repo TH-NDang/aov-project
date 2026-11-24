@@ -2,6 +2,7 @@ import { useState } from "react"
 import type { Catalog, EquipmentEvent, EquipmentSnapshot, Participant } from "@aov/community-contracts"
 import { ArrowDownUp, Camera, Clock3, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { confirmAction } from "@/components/confirm-dialog"
 import { CatalogPicker } from "./catalog-picker"
 import { emptySnapshot, minuteLabel, parseGameTime } from "../model/tournament-model"
 import { NativeSelect } from "@/components/native-select"
@@ -220,6 +221,34 @@ export function EquipmentEditor({
         ),
       })
   }
+  // An empty mark goes at once; one that holds something is named first, because it has no other copy.
+  async function removeSnapshot(snapshot: EquipmentSnapshot) {
+    const known = snapshot.slots.filter((slot) => slot.known).length
+    const confirmed =
+      (!known && !snapshot.note?.trim()) ||
+      (await confirmAction({
+        title: `Xóa mốc ${minuteLabel(snapshot.atSeconds)}?`,
+        description: `${known} ô đã ghi${snapshot.note?.trim() ? " và ghi chú" : ""} → không còn mốc này.`,
+        confirmLabel: "Xóa mốc",
+      }))
+    if (confirmed)
+      onChange({
+        ...participant,
+        equipmentSnapshots: participant.equipmentSnapshots.filter((entry) => entry !== snapshot),
+      })
+  }
+  async function removeEvent(event: EquipmentEvent) {
+    const item = [event.item, event.replacedItem].map((entry) => entry?.name?.trim()).filter(Boolean)
+    const confirmed =
+      (!item.length && !event.note?.trim()) ||
+      (await confirmAction({
+        title: "Xóa biến động trang bị?",
+        description: `${minuteLabel(event.atSeconds)} · ${[EVENT_LABELS[event.type], ...item].join(" · ")} → không còn.`,
+        confirmLabel: "Xóa biến động",
+      }))
+    if (confirmed)
+      onChange({ ...participant, equipmentEvents: participant.equipmentEvents.filter((entry) => entry !== event) })
+  }
   return (
     <div className="tournament-equipment-editor">
       <p className="tournament-muted">
@@ -262,12 +291,7 @@ export function EquipmentEditor({
           key={`${snapshot.atSeconds}-${index}`}
           value={snapshot}
           catalog={catalog}
-          onRemove={() =>
-            onChange({
-              ...participant,
-              equipmentSnapshots: participant.equipmentSnapshots.filter((_, position) => position !== index),
-            })
-          }
+          onRemove={() => void removeSnapshot(snapshot)}
           onChange={(value) =>
             onChange({
               ...participant,
@@ -289,12 +313,7 @@ export function EquipmentEditor({
           key={index}
           value={event}
           catalog={catalog}
-          onRemove={() =>
-            onChange({
-              ...participant,
-              equipmentEvents: participant.equipmentEvents.filter((_, position) => position !== index),
-            })
-          }
+          onRemove={() => void removeEvent(event)}
           onChange={(value) =>
             onChange({
               ...participant,

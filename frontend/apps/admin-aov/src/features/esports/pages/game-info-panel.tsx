@@ -10,9 +10,9 @@ import { useGamePatches } from "../data/use-esports-data"
 import { MvpChooser, usePlayerName } from "@/features/tournaments/components/mvp-chooser"
 import { RecordLifecycleActions } from "@/features/tournaments/components/record-lifecycle-actions"
 import { candidateName, mvpGroups, type MvpGroup } from "@/features/tournaments/model/mvp-model"
-import type { RosterOption } from "../components/game/draft-editor"
 import { RelativeDate } from "../components/relative-date"
 import type { GameView } from "../model/game-view"
+import type { RosterOption } from "../model/line-up"
 
 /** What this panel edits: how the game's catalog is read, where it sits in the match, its MVP and a note. */
 export type GameInfo = Pick<

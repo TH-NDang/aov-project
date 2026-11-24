@@ -1,64 +1,49 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { DocumentView, GameContent, Reference, SeriesContent } from "@aov/community-contracts"
 import {
-  CalendarClock,
-  Crown,
-  ExternalLink,
   FastForward,
-  Flag,
-  Gem,
-  Info,
-  Keyboard,
-  Link2,
-  ListChecks,
   ListVideo,
-  Loader2,
   Pause,
   PenLine,
-  Pencil,
   Play,
   Plus,
   Rewind,
-  ShieldBan,
+  ShieldCheck,
   Swords,
   Undo2,
   Users,
-  Youtube,
+  Zap,
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Input } from "@aov/ui/components/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { cn } from "@aov/ui/lib/utils"
-import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
+import { formatClock, parseClock } from "@/lib/clock"
 import { initialGame } from "@/features/tournaments/model/tournament-model"
 import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { useGameCatalog, useGamePatches, useGames, useRecords, useRosters } from "../data/use-esports-data"
 import { useTournamentView } from "../data/use-tournament-view"
 import { useSeriesVideo } from "../data/series-video"
 import { WikiReferences } from "./wiki-references"
-import {
-  BestOfBadge,
-  EmptyState,
-  ResultTag,
-  TeamLogo,
-  TimeTag,
-  VIDEO_MARK,
-  VideoMark,
-  WinPips,
-} from "../components/primitives"
-import { byStanding, type RosterOption } from "../components/game/draft-editor"
-import { usePhoneLayout } from "../components/game/floating-panel"
+import { EmptyState, TeamLogo, TimeTag, VIDEO_MARK } from "../components/primitives"
+import { FloatingPanel, usePhoneLayout } from "../components/game/floating-panel"
 import { useSavedPlayhead } from "../components/game/use-saved-playhead"
 import { VodPlayer, type VodPlayerHandle } from "../components/game/vod-player"
 import { BroadcastTimeline, type TimelineRow } from "../components/series/broadcast-timeline"
+import { AddGameButton, GameChips, QuickGamesButton } from "../components/series/game-chips"
+import { GamePrimary, GameTools } from "../components/series/game-toolbar"
+import { MatchHeader } from "../components/series/match-header"
+import { MatchSetupGuide, useDraftVideo, VideoLinkCard } from "../components/series/match-setup"
+import { MatchSwitcher } from "../components/series/match-switcher"
+import { isTyping, ShortcutList } from "../components/series/shortcut-list"
 import { broadcastChapters, type RetimeTarget } from "../model/broadcast-timeline"
-import { seriesWinner } from "../model/competition"
+import { previousGame } from "../model/carry-over"
 import { seriesLabel } from "../model/series-label"
 import { buildGameView, referenceIndex, type GameView, type TeamView } from "../model/game-view"
 import { stageInfo } from "../model/labels"
-import { RelativeDate } from "../components/relative-date"
+import { byStanding, type RosterOption } from "../model/line-up"
+import { publishRows } from "../model/match-publishing"
+import { hasEveryGame, nextGameNumber, openQuickNumbers, quickRows } from "../model/series-score"
 import {
   axisLength,
   broadcastEvents,
@@ -72,27 +57,27 @@ import {
 } from "../model/series-vod"
 import { killScoreAt, type TimelineEvent, type TimelineKind } from "../model/timeline"
 import { youtubeLinkTime, youtubeVideoId } from "../model/vod"
-import { formatClock, parseClock } from "@/lib/clock"
 import { seriesLocks } from "../model/series-rules"
 import { earliestLive, moveTurn, readDraft, setDraftTimes } from "../model/draft"
 import { MARK_LABELS, moveMark } from "../model/observation-marks"
 import { moveEvent, withPlayback } from "../model/timeline-io"
 import { recordingProgress, type RecordingProgress } from "../model/recording-progress"
-import { ProgressBadge } from "../components/game/progress-badge"
 import {
   FocusedGame,
   isMajorMoment,
   itemLookups,
+  panelFor,
   type DetailRequest,
   type GameActions,
   type Panel,
 } from "./focused-game"
+import { EditMatchButton } from "./edit-match-button"
+import { MatchPublishPanel } from "./match-publish-panel"
+import { QuickGamesPanel } from "./quick-games-panel"
+import { ScoreCheck } from "./score-check"
 import { AccessGate, Crumbs, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
 
 const SHORTCUT_KINDS: Record<string, TimelineKind> = { k: "KILL", o: "OBJECTIVE", i: "ITEM", n: "NOTE" }
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement &&
-  (!!target.closest("input, textarea, select, [contenteditable=true]") || target.isContentEditable)
 /** Readings far from a requested seek are ignored this long, while YouTube still reports the old position. */
 const SEEK_SETTLE_MS = 2500
 /** How long a moved marker can be put back with one click. */
@@ -102,6 +87,8 @@ const NO_ITEMS: Reference[] = []
 /** A marker moved on the timeline: what happened, and how to put it back. */
 type MoveUndo = { id: number; gameId: string; text: string; revert: () => void }
 export type GameStart = { url: string; second: number }
+/** The panels of the whole match, opened from its header: publishing, and the quick entry of its games. */
+export type MatchPanel = "publish" | "quick"
 
 const linkSecond = (value: string | null) =>
   value === null ? null : /^\d+$/.test(value) ? Number(value) : parseClock(value)
@@ -118,12 +105,12 @@ function MatchView({ access }: { access: Access }) {
   const players = useRecords("players")
   const games = useGames(seriesId)
   const rosters = useRosters(tournamentId)
-  const record = view.records.find((entry) => entry.id === seriesId)
+  const record = view.records.find((entry) => entry.id === seriesId) as DocumentView<SeriesContent> | undefined
   const sorted = useMemo(
     () => [...(games.data ?? [])].sort((a, b) => a.content.number - b.content.number),
     [games.data],
   )
-  const [editing, setEditing] = useState(false)
+  const [matchPanel, setMatchPanel] = useState<MatchPanel | null>(null)
   const setParam = useCallback(
     (values: Record<string, string | null>) =>
       setParams(
@@ -204,35 +191,66 @@ function MatchView({ access }: { access: Access }) {
       </EsportsPage>
     )
 
-  const nextNumber = Math.max(0, ...sorted.map((entry) => entry.content.number)) + 1
-  const canAddGame = access.canWrite && sorted.length < record.content.bestOf
+  const editable = access.canWrite && params.get("edit") === "1"
+  const nextNumber = nextGameNumber(sorted)
+  // A match whose score is complete gets another game only after its score changed.
+  const canAddGame = access.canWrite && sorted.length < record.content.bestOf && !hasEveryGame(record.content, sorted)
+  const waiting = publishRows(sorted).filter((row) => row.state === "ready").length
 
   return (
     <EsportsPage>
-      <Crumbs
-        items={[
-          { label: "Giải đấu", to: "/tournaments" },
-          { label: view.tournament.content.name, to: tournamentPath(tournamentId) },
-          { label: seriesLabel(record.content) || stageInfo(record.content.stage).label },
-        ]}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <Crumbs
+          items={[
+            { label: "Giải đấu", to: "/tournaments" },
+            { label: view.tournament.content.name, to: tournamentPath(tournamentId) },
+            { label: seriesLabel(record.content) || stageInfo(record.content.stage).label },
+          ]}
+        />
+        <MatchSwitcher
+          records={view.records}
+          seriesId={seriesId}
+          team={view.team}
+          editing={params.get("edit") === "1"}
+        />
+      </div>
       <MatchHeader content={record.content} team={view.team}>
         {access.canWrite && (
-          <>
-            <Button
-              size="sm"
-              variant={params.get("edit") === "1" ? "default" : "secondary"}
-              aria-pressed={params.get("edit") === "1"}
-              onClick={() => setParam({ edit: params.get("edit") === "1" ? null : "1" })}
-            >
-              <PenLine size={14} /> {params.get("edit") === "1" ? "Đang ghi" : "Chế độ ghi"}
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
-              <Pencil size={14} /> Sửa trận
-            </Button>
-          </>
+          <Button
+            size="sm"
+            variant={editable ? "default" : "secondary"}
+            aria-pressed={editable}
+            onClick={() => setParam({ edit: editable ? null : "1" })}
+          >
+            <PenLine aria-hidden /> {editable ? "Đang ghi" : "Chế độ ghi"}
+          </Button>
         )}
+        {sorted.length > 0 && (access.canWrite || access.canPublish) && (
+          <Button
+            size="sm"
+            variant="secondary"
+            aria-pressed={matchPanel === "publish"}
+            onClick={() => setMatchPanel(matchPanel === "publish" ? null : "publish")}
+          >
+            <ShieldCheck aria-hidden /> Xuất bản
+            {waiting > 0 && (
+              <span className="esp-num rounded-full bg-[var(--esp-gold)] px-1.5 text-xs font-bold text-[var(--esp-ink)]">
+                {waiting}
+              </span>
+            )}
+          </Button>
+        )}
+        {access.canWrite && <EditMatchButton key={seriesId} record={record} actorKey={access.actorKey} />}
       </MatchHeader>
+      {access.canWrite && (
+        <ScoreCheck
+          key={`score-${seriesId}`}
+          record={record}
+          games={sorted}
+          team={view.team}
+          fallbackSource={view.tournament.content.sourceUrl}
+        />
+      )}
       {create.isError && (
         <p role="alert" className="text-sm text-destructive">
           {tournamentError(create.error)}
@@ -243,11 +261,14 @@ function MatchView({ access }: { access: Access }) {
         series={record}
         games={sorted}
         teams={view.teams}
+        team={view.team}
         players={players.data ?? []}
         roster={roster}
-        editable={access.canWrite && params.get("edit") === "1"}
+        editable={editable}
         canWrite={access.canWrite}
         canPublish={access.canPublish}
+        matchPanel={matchPanel}
+        onMatchPanel={setMatchPanel}
         onEnableEditing={() => setParam({ edit: "1" })}
         requestedGame={params.get("game")}
         fromLink={linkSecond(params.get("t"))}
@@ -257,7 +278,7 @@ function MatchView({ access }: { access: Access }) {
         tournamentRegion={view.tournament.content.region}
         resultNote={
           record.content.result && !sorted.length
-            ? `Tỉ số cho biết đã đấu ${(record.content.result.scoreA ?? 0) + (record.content.result.scoreB ?? 0)} ván nhưng chưa ghi ván nào.`
+            ? `Tỷ số cho biết đã đấu ${(record.content.result.scoreA ?? 0) + (record.content.result.scoreB ?? 0)} ván nhưng chưa ghi ván nào.`
             : null
         }
         addGame={
@@ -273,15 +294,6 @@ function MatchView({ access }: { access: Access }) {
       {record.content.note && (
         <section className="admin-section px-4 py-3 text-sm text-muted-foreground">{record.content.note}</section>
       )}
-      {editing && (
-        <RegistryEditor
-          kind="series"
-          entry={record as DocumentView<SeriesContent>}
-          open
-          onClose={() => setEditing(false)}
-          tournamentId={tournamentId}
-        />
-      )}
     </EsportsPage>
   )
 }
@@ -294,11 +306,14 @@ function MatchViewer({
   series,
   games,
   teams,
+  team,
   players,
   roster,
   editable,
   canWrite,
   canPublish,
+  matchPanel,
+  onMatchPanel,
   onEnableEditing,
   requestedGame,
   fromLink,
@@ -308,14 +323,17 @@ function MatchViewer({
   resultNote,
   addGame,
 }: {
-  series: { id: string; content: SeriesContent }
+  series: DocumentView<SeriesContent>
   games: DocumentView<GameContent>[]
   teams: Parameters<typeof buildGameView>[1]
+  team: (id: string) => TeamView
   players: Parameters<typeof buildGameView>[2]
   roster: (teamId: string) => RosterOption[]
   editable: boolean
   canWrite: boolean
   canPublish: boolean
+  matchPanel: MatchPanel | null
+  onMatchPanel: (panel: MatchPanel | null) => void
   onEnableEditing: () => void
   requestedGame: string | null
   fromLink: number | null
@@ -324,7 +342,7 @@ function MatchViewer({
   tournamentRegion?: string
   /** Shown before the first game is recorded. */
   resultNote: string | null
-  /** Records the next game; with a video it starts at the playhead, outside every recorded game. */
+  /** Records the next game: at the playhead of the video, outside every recorded game, or empty without a video. */
   addGame: { number: number; pending: boolean; onAdd: (start: GameStart | null) => Promise<string> } | null
 }) {
   const phone = usePhoneLayout()
@@ -442,16 +460,31 @@ function MatchViewer({
         at,
       )
     : null
+  const focusGame = (chapter: GameChapter) => {
+    setLastFocus(chapter.gameId)
+    seek(chapter.from)
+  }
+  const [newGame, setNewGame] = useState<string | null>(null)
   const startGame = async () => {
     if (!addGame) return
     try {
-      await addGame.onAdd(video ? { url: video.url, second: Math.floor(at) } : null)
+      setNewGame(await addGame.onAdd(video ? { url: video.url, second: Math.floor(at) } : null))
     } catch {
       return
     }
     setDraftLink("")
     setPanel({ kind: "draft" })
   }
+  // A game made without a video has no position of its own to play, so it is brought forward once it is listed.
+  const showNewGame = useEffectEvent((id: string) => {
+    const chapter = chapters.find((candidate) => candidate.gameId === id)
+    if (!chapter) return
+    if (!chapter.synced) focusGame(chapter)
+    setNewGame(null)
+  })
+  useEffect(() => {
+    if (newGame) showNewGame(newGame)
+  }, [newGame, chapters])
   const useVideo = (url: string) => {
     if (games.length) applyVideoToAll(url)
     else setDraftLink(url)
@@ -595,6 +628,8 @@ function MatchViewer({
       const state = shortcuts.current
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isTyping(event.target)) return
       if (state.panel?.kind === "composer") return
+      // Shift + P and Shift + N belong to the match switcher.
+      if (event.shiftKey && /^[pn]$/i.test(event.key)) return
       const key = event.key.toLowerCase()
       const jump = (seconds: number) => {
         const target = Math.max(0, state.at + seconds)
@@ -631,45 +666,33 @@ function MatchViewer({
   const focusedView = focused ? views[focused.gameId] : undefined
   const score = focused ? killScoreAt(focused.events, gameAt) : null
 
-  const chips = chapters.length > 0 && (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Các ván">
-      {chapters.map((chapter) => {
-        const view = views[chapter.gameId]
-        const winner = chapter.winner ? view?.sides[chapter.winner].team : null
-        const active = chapter.gameId === focused?.gameId
-        return (
-          <button
-            key={chapter.gameId}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => {
-              setLastFocus(chapter.gameId)
-              seek(chapter.from)
-            }}
-            className={cn(
-              "flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition",
-              active ? "border-[var(--esp-gold)] bg-[var(--esp-gold-soft)]" : "bg-card hover:bg-muted",
-            )}
-          >
-            <span className="text-sm font-bold">Ván {chapter.number}</span>
-            {progressOf[chapter.gameId] && <ProgressBadge progress={progressOf[chapter.gameId]!} />}
-            {winner && (
-              <span className="flex items-center gap-1 text-xs">
-                <TeamLogo team={winner} size={18} />
-                <Crown size={12} className="text-[var(--esp-gold)]" aria-label="thắng" />
-              </span>
-            )}
-            <span className="esp-num text-xs text-muted-foreground" title="Thời lượng ván">
-              ⏱ {formatClock(chapter.duration)}
-            </span>
-            {!chapter.synced && videoId && (
-              <span className="rounded bg-muted px-1 text-xs text-muted-foreground">chưa căn video</span>
-            )}
-          </button>
-        )
-      })}
-    </div>
+  const quick = editable ? quickRows(series.content, games) : []
+  const missingGames = quick.filter((row) => !row.entry).length
+  const chips = (
+    <GameChips
+      chapters={chapters}
+      views={views}
+      progressOf={progressOf}
+      focusedId={focused?.gameId ?? null}
+      hasVideo={!!videoId}
+      onSelect={focusGame}
+    >
+      {editable && (addGame || missingGames > 0) && (
+        <>
+          {addGame && (
+            <AddGameButton
+              number={addGame.number}
+              first={!focused}
+              pending={addGame.pending}
+              insideGame={inside?.number ?? null}
+              videoAt={video ? at : null}
+              onAdd={() => void startGame()}
+            />
+          )}
+          {missingGames > 0 && <QuickGamesButton missing={missingGames} onOpen={() => onMatchPanel("quick")} />}
+        </>
+      )}
+    </GameChips>
   )
 
   const player_ = videoId ? (
@@ -684,13 +707,19 @@ function MatchViewer({
       onPlayingChange={setPlaying}
     />
   ) : (
-    <VideoLinkCard editable={editable} canWrite={canWrite} onEnableEditing={onEnableEditing} onUse={useVideo} />
+    <VideoLinkCard
+      editable={editable}
+      canWrite={canWrite}
+      compact={games.length > 0}
+      onEnableEditing={onEnableEditing}
+      onUse={useVideo}
+    />
   )
 
   const gameCard = focused && focusedView && score && (
     <div className="flex items-center gap-3 admin-section px-3 py-2">
       <span className="text-xs font-semibold text-muted-foreground">
-        {here ? "Đang phát" : "Ván đang chọn"} · Ván {focused.number}
+        {here && videoId ? "Đang phát" : "Ván đang chọn"} · Ván {focused.number}
       </span>
       <span className="esp-num ml-auto flex items-center gap-2 text-base font-bold">
         <TeamLogo team={focusedView.sides.BLUE.team} size={22} />
@@ -710,7 +739,7 @@ function MatchViewer({
   )
 
   const transport = (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex items-center gap-1.5">
       <Button size="icon" variant="ghost" className="size-8" onClick={() => step(-1)} aria-label="Sự kiện trước ( [ )">
         <Rewind size={15} />
       </Button>
@@ -732,17 +761,16 @@ function MatchViewer({
       >
         <FastForward size={15} />
       </Button>
+      {/* Drawn over the edge of the section, so a note never moves the buttons under the pointer. */}
       {flash && (
         <span
           key={flash.id}
           role="status"
-          className="esp-num rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background animate-in fade-in"
+          className="esp-num pointer-events-none absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium whitespace-nowrap text-background animate-in fade-in"
         >
           {flash.text}
         </span>
       )}
-      {/* A phone has no keyboard to use them with. */}
-      {!phone && <ShortcutList open={keysOpen} onOpenChange={setKeysOpen} editable={editable} />}
     </div>
   )
 
@@ -804,109 +832,74 @@ function MatchViewer({
     />
   )
 
-  const startButton = addGame && editable && (
-    <Button
-      size="sm"
-      variant={focused ? "outline" : "default"}
-      disabled={addGame.pending || !!inside || (!video && !games.length)}
-      title={
-        inside
-          ? `Đang trong ván ${inside.number}: kết thúc ván ${inside.number} hoặc tua ra ngoài ván`
-          : !video && !games.length
-            ? "Gắn video của trận trước"
-            : undefined
-      }
-      onClick={() => void startGame()}
-    >
-      {addGame.pending ? <Loader2 size={14} className="animate-spin" /> : <ShieldBan size={14} />}{" "}
-      {video ? "Bắt đầu cấm chọn ván" : "Thêm ván"} {addGame.number}
-      {video && (
-        <span className="esp-num">
-          {" "}
-          tại <VideoMark /> {formatClock(at)}
-        </span>
-      )}
-    </Button>
-  )
-
   const focusedProgress = focused ? progressOf[focused.gameId] : undefined
-  const progressButton = focused && focusedProgress && (canWrite || canPublish) && (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={() => setPanel({ kind: "progress" })}
-      aria-label={`Tiến độ ghi ván ${focused.number}`}
-    >
-      <ListChecks size={14} /> Tiến độ
-      <ProgressBadge progress={focusedProgress} />
-    </Button>
+  const tools = focused && focusedProgress && (
+    <GameTools
+      number={focused.number}
+      progress={focusedProgress}
+      editable={editable}
+      canSeeProgress={canWrite || canPublish}
+      phone={phone}
+      openTool={panel?.kind ?? null}
+      onOpen={(tool) => setPanel(panel?.kind === tool ? null : { kind: tool })}
+    />
   )
-  // On a phone the tools keep their names and form one row that scrolls sideways, instead of bare icons.
-  const tools = (editable || progressButton) && (
-    <span
-      className={cn(
-        "flex items-center gap-1.5",
-        phone ? "w-full flex-nowrap overflow-x-auto pb-1 [&>*]:shrink-0" : "flex-wrap",
+  // A phone records moments from the floating button.
+  const primary = editable && focused && !(phone && focused.live) && (
+    <GamePrimary
+      number={focused.number}
+      live={focused.live}
+      hasVideo={!!video}
+      canGoLive={canGoLive}
+      at={at}
+      onRecord={() => setPanel({ kind: "composer", eventKind: "KILL" })}
+      onGoLive={goLive}
+    />
+  )
+  // Without a video and without moments there is nothing to lay out in time.
+  const onAxis = !!videoId || events.length > 0
+  const matchPanels = (
+    <>
+      {matchPanel === "publish" && (
+        <FloatingPanel
+          title="Xuất bản các ván"
+          icon={<ShieldCheck size={15} />}
+          onClose={() => onMatchPanel(null)}
+          width={480}
+        >
+          <MatchPublishPanel
+            games={games}
+            team={team}
+            canPublish={canPublish}
+            beforePublish={async () => gameActions.current?.settled()}
+            onOpenStep={(gameId, target) => {
+              const chapter = chapters.find((candidate) => candidate.gameId === gameId)
+              if (!chapter) return
+              if (!editable) onEnableEditing()
+              focusGame(chapter)
+              onMatchPanel(null)
+              setPanel(panelFor(target, chapter.live))
+            }}
+          />
+        </FloatingPanel>
       )}
-    >
-      {progressButton}
-      {editable && focused && (
-        <>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setPanel({ kind: "sync" })}
-            aria-label="Video, đồng bộ và kết thúc ván"
-            title="Link video, mốc vào trận, tạm dừng, mốc kết thúc và đội thắng"
-          >
-            <Link2 size={14} /> {phone ? "Video" : "Video & kết thúc ván"}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setPanel({ kind: "draft" })} aria-label="Cấm chọn">
-            <ShieldBan size={14} /> Cấm chọn
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setPanel({ kind: "loadout" })}
-            aria-label="Tuyển thủ, phụ trợ, phù hiệu, bảng ngọc và trang bị"
-          >
-            <Gem size={14} /> {phone ? "Tuyển thủ, đồ" : "Tuyển thủ, ngọc, trang bị"}
-          </Button>
-          {focused.live ? (
-            !phone && (
-              <Button size="sm" onClick={() => setPanel({ kind: "composer", eventKind: "KILL" })}>
-                <Plus size={14} /> Ghi sự kiện
-              </Button>
-            )
-          ) : (
-            <Button
-              size="sm"
-              disabled={!canGoLive}
-              title={
-                canGoLive
-                  ? "Đặt 0:00 của đồng hồ game tại vị trí video này"
-                  : video
-                    ? "Tua video tới lúc vào trận, sau các lượt cấm chọn đã ghi"
-                    : "Gắn video của trận trước"
-              }
-              onClick={goLive}
-            >
-              <Flag size={14} /> Vào trận {focused.number} tại <VideoMark /> {formatClock(at)}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setPanel({ kind: "info" })}
-            aria-label={`Thông tin ván ${focused.number}`}
-            title="Mùa và patch của ván, số ván, ghi chú, gỡ công khai, xóa ván"
-          >
-            <Info size={14} /> {phone ? "Thông tin" : `Thông tin ván ${focused.number}`}
-          </Button>
-        </>
+      {matchPanel === "quick" && editable && openQuickNumbers(quick).length > 0 && (
+        <FloatingPanel
+          title={`Ghi nhanh các ván · tỷ số ${series.content.result?.scoreA ?? 0} – ${series.content.result?.scoreB ?? 0}`}
+          icon={<Zap size={15} />}
+          onClose={() => onMatchPanel(null)}
+          width={520}
+        >
+          <QuickGamesPanel
+            series={series}
+            games={games}
+            team={team}
+            region={tournamentRegion}
+            onDone={() => onMatchPanel(null)}
+          />
+        </FloatingPanel>
       )}
-      {editable && startButton}
-    </span>
+    </>
   )
 
   // The player, chips and timeline live outside the per-game subtree: switching games must never recreate the
@@ -916,14 +909,23 @@ function MatchViewer({
       <div className={cn("esp-viewer", phone && "pb-24")}>
         <div className="esp-area-chips min-w-0">{chips}</div>
         <div className="esp-area-video min-w-0">{player_}</div>
-        <section className="esp-area-timeline min-w-0 space-y-2 admin-section px-3 pt-3 pb-2">
-          <div className="flex flex-wrap items-center gap-2">
-            {transport}
-            {tools}
-          </div>
-          {phone && gameCard}
-          {timeline}
-        </section>
+        {(videoId || chapters.length > 0) && (
+          <section className="esp-area-timeline relative min-w-0 space-y-2 admin-section px-3 pt-3 pb-2">
+            {/* One row where there is room; otherwise the tools take a row of their own under the transport. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              {onAxis && transport}
+              <div className={cn("min-w-0", onAxis && "order-3 w-full @5xl:order-2 @5xl:w-auto")}>{tools}</div>
+              <div className="order-2 ml-auto flex items-center gap-1.5 @5xl:order-3">
+                {primary}
+                {/* A phone has no keyboard to use them with. */}
+                {!phone && <ShortcutList open={keysOpen} onOpenChange={setKeysOpen} editable={editable} />}
+              </div>
+            </div>
+            {phone && gameCard}
+            {onAxis && timeline}
+          </section>
+        )}
+        {matchPanels}
         {!focused || !focusedEntry || !focusedView ? (
           <MatchSetupGuide
             hasVideo={!!video}
@@ -941,6 +943,8 @@ function MatchViewer({
             chapter={focused}
             items={items}
             catalog={catalog.data}
+            catalogError={catalog.isLoadingError ? catalog.error : undefined}
+            onReloadCatalog={() => void catalog.refetch()}
             canPublish={canPublish}
             tournamentId={series.content.tournamentId}
             tournamentRegion={tournamentRegion}
@@ -949,6 +953,7 @@ function MatchViewer({
             spells={catalog.data?.spells ?? []}
             roster={roster}
             locks={locks}
+            previous={previousGame(games, focused.number)}
             editable={editable}
             phone={phone}
             gameAt={gameAt}
@@ -1036,271 +1041,5 @@ function MatchViewer({
         )}
       </div>
     </WikiReferences>
-  )
-}
-
-const SHORTCUTS: { keys: string[]; text: string; edit?: boolean }[] = [
-  { keys: ["Space"], text: "Phát / tạm dừng" },
-  { keys: ["←", "→"], text: "Lùi / tới 5 giây (giữ Shift: 1 giây)" },
-  { keys: [",", "."], text: "Lùi / tới 1 giây" },
-  { keys: ["J", "L"], text: "Lùi / tới 10 giây (giữ Shift: 30 giây)" },
-  { keys: ["Home"], text: "Về đầu ván đang xem (lúc bắt đầu cấm chọn)" },
-  { keys: ["[", "]"], text: "Sự kiện trước / sau" },
-  { keys: ["E"], text: "Ghi sự kiện", edit: true },
-  { keys: ["K", "O", "I", "N"], text: "Ghi hạ gục / mục tiêu / trang bị / khoảnh khắc", edit: true },
-  { keys: ["Alt", "←", "→"], text: "Dời mốc đang chọn trên thanh 1 giây (giữ Shift: 5 giây)", edit: true },
-  { keys: ["?"], text: "Mở / đóng danh sách này" },
-]
-
-/** Every keyboard shortcut of the match page, opened from the transport or with "?". */
-function ShortcutList({
-  open,
-  onOpenChange,
-  editable,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  editable: boolean
-}) {
-  return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        <Button size="sm" variant="ghost" className="ml-auto h-8 text-xs text-muted-foreground">
-          <Keyboard size={14} /> Phím tắt
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 space-y-2 p-3 text-xs">
-        <p className="font-semibold">Phím tắt khi xem video</p>
-        <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5">
-          {SHORTCUTS.filter((entry) => editable || !entry.edit).map((entry) => (
-            <div key={entry.text} className="contents">
-              <dt className="flex gap-1">
-                {entry.keys.map((key) => (
-                  <kbd key={key} className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">
-                    {key}
-                  </kbd>
-                ))}
-              </dt>
-              <dd className="text-muted-foreground">{entry.text}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="text-xs text-muted-foreground">
-          Bấm vào video vẫn dùng được phím tắt. Kéo video nổi bằng chuột, hoặc Alt + phím mũi tên.
-        </p>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-/** The match video typed before any game exists; once a game is recorded the games carry it. */
-function useDraftVideo(seriesId: string) {
-  const key = `esports:match-video:${seriesId}`
-  const [value, setValue] = useState(() => {
-    try {
-      return localStorage.getItem(key) ?? ""
-    } catch {
-      return ""
-    }
-  })
-  const update = (next: string) => {
-    setValue(next)
-    try {
-      if (next) localStorage.setItem(key, next)
-      else localStorage.removeItem(key)
-    } catch {
-      // Storage can be unavailable; the link then lasts until the page closes.
-    }
-  }
-  return [value, update] as const
-}
-
-/** Step one of recording a match: the YouTube video the whole match is played in. */
-function VideoLinkCard({
-  editable,
-  canWrite,
-  onEnableEditing,
-  onUse,
-}: {
-  editable: boolean
-  canWrite: boolean
-  onEnableEditing: () => void
-  onUse: (url: string) => void
-}) {
-  const [link, setLink] = useState("")
-  const valid = !!youtubeVideoId(link)
-  return (
-    <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-      <Youtube size={32} />
-      {editable ? (
-        <>
-          <p>Gắn video YouTube của cả trận để có dòng thời gian và ghi theo mốc video.</p>
-          <form
-            className="flex w-full max-w-lg gap-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (valid) onUse(link.trim())
-            }}
-          >
-            <Input
-              value={link}
-              onChange={(event) => setLink(event.target.value)}
-              placeholder="https://www.youtube.com/watch?v=…"
-              aria-label="Link YouTube của cả trận"
-              aria-invalid={!!link.trim() && !valid}
-              className="h-9"
-            />
-            <Button type="submit" disabled={!valid}>
-              <Link2 size={14} /> Gắn video
-            </Button>
-          </form>
-          {!!link.trim() && !valid && (
-            <p className="text-xs text-destructive">Chỉ nhận link YouTube (watch, youtu.be, live).</p>
-          )}
-        </>
-      ) : (
-        <>
-          <p>Trận chưa có video YouTube.</p>
-          {canWrite && (
-            <Button size="sm" variant="outline" onClick={onEnableEditing}>
-              <PenLine size={14} /> Bật chế độ ghi để gắn video
-            </Button>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-/** What to do next while the match has no recorded game yet. */
-function MatchSetupGuide({
-  hasVideo,
-  editable,
-  canWrite,
-  resultNote,
-  nextNumber,
-  onEnableEditing,
-}: {
-  hasVideo: boolean
-  editable: boolean
-  canWrite: boolean
-  resultNote: string | null
-  nextNumber: number | null
-  onEnableEditing: () => void
-}) {
-  const steps = [
-    { done: hasVideo, text: "Gắn video YouTube của cả trận." },
-    {
-      done: false,
-      text: `Tua tới màn cấm chọn rồi bấm “Bắt đầu cấm chọn ván ${nextNumber ?? 1}” trên dòng thời gian.`,
-    },
-    { done: false, text: "Ghi từng lượt cấm/chọn theo đội, đổi tướng giữa các đường rồi “Chốt” đội hình." },
-    { done: false, text: "Tới 0:00 trong game bấm “Vào trận”, ghi diễn biến, rồi “Kết thúc ván” với đội thắng." },
-  ]
-  return (
-    <section className="esp-area-side min-w-0 space-y-3 admin-section py-4 text-sm">
-      {resultNote && <p className="text-muted-foreground">{resultNote}</p>}
-      <ol className="space-y-2">
-        {steps.map((step, index) => (
-          <li key={index} className="flex gap-2">
-            <span
-              className={cn(
-                "grid size-5 shrink-0 place-items-center rounded-full text-xs font-bold",
-                step.done ? "bg-[var(--esp-live)] text-white" : "bg-muted text-muted-foreground",
-              )}
-            >
-              {step.done ? "✓" : index + 1}
-            </span>
-            <span className={cn(step.done && "text-muted-foreground line-through")}>{step.text}</span>
-          </li>
-        ))}
-      </ol>
-      {!editable && canWrite && (
-        <Button size="sm" onClick={onEnableEditing}>
-          <PenLine size={14} /> Bật chế độ ghi
-        </Button>
-      )}
-      {nextNumber === null && <p className="text-xs text-muted-foreground">Trận đã đủ số ván của BO.</p>}
-    </section>
-  )
-}
-
-function MatchHeader({
-  content,
-  team,
-  children,
-}: {
-  content: SeriesContent
-  team: (id: string) => TeamView
-  children?: ReactNode
-}) {
-  const winner = seriesWinner(content)
-  const side = (view: TeamView, wins: number | undefined, won: boolean, align: "left" | "right") => (
-    <div
-      className={cn(
-        "flex min-w-0 flex-1 items-center gap-2 @xl:gap-3",
-        align === "right" && "flex-row-reverse text-right",
-        winner && !won && "esp-loser",
-      )}
-    >
-      <span className="relative shrink-0">
-        <TeamLogo
-          team={view}
-          size={48}
-          className={cn("bg-white/5", won && "shadow-[0_0_0_2px_var(--esp-win),0_0_22px_-4px_var(--esp-win)]")}
-        />
-        {won && <Crown size={16} className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[var(--esp-gold)]" />}
-      </span>
-      <span className={cn("flex min-w-0 flex-col gap-1", align === "right" ? "items-end" : "items-start")}>
-        <span className="block max-w-full truncate font-bold @3xl:text-base">
-          <span className="@xl:hidden">{view.shortName}</span>
-          <span className="hidden @xl:inline">{view.name}</span>
-        </span>
-        <span className={cn("flex items-center gap-2", align === "right" && "flex-row-reverse")}>
-          {winner && <ResultTag won={won} />}
-          <span className="hidden @xl:inline-flex">
-            <WinPips wins={wins} bestOf={content.bestOf} align={align === "right" ? "end" : "start"} won={won} />
-          </span>
-        </span>
-      </span>
-    </div>
-  )
-  return (
-    <section className="esp-banner rounded-2xl">
-      <div className="space-y-3 p-4 @3xl:px-6">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/70">
-          <span className="font-semibold text-white">{stageInfo(content.stage).label}</span>
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarClock size={14} />
-            <RelativeDate value={content.scheduledAt} withTime fallback="Chưa xếp lịch" />
-          </span>
-          <BestOfBadge bestOf={content.bestOf} />
-          {content.sourceUrl && /^https?:\/\//.test(content.sourceUrl) && (
-            <a
-              href={content.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs hover:text-white"
-            >
-              <ExternalLink size={12} /> Nguồn
-            </a>
-          )}
-          <span className="ml-auto flex flex-wrap gap-2">{children}</span>
-        </div>
-        <div className="flex items-center gap-2 @xl:gap-3 @3xl:gap-8">
-          {side(team(content.teamAId), content.result?.scoreA, winner === "A", "left")}
-          <div className="esp-num flex shrink-0 items-center gap-2 text-2xl font-bold">
-            <span className={winner === "B" ? "text-white/35" : winner === "A" ? "text-[var(--esp-gold)]" : ""}>
-              {content.result?.scoreA ?? "–"}
-            </span>
-            <span className="text-base text-white/40">:</span>
-            <span className={winner === "A" ? "text-white/35" : winner === "B" ? "text-[var(--esp-gold)]" : ""}>
-              {content.result?.scoreB ?? "–"}
-            </span>
-          </div>
-          {side(team(content.teamBId), content.result?.scoreB, winner === "B", "right")}
-        </div>
-      </div>
-    </section>
   )
 }

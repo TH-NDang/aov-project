@@ -631,7 +631,7 @@ test("side by side, the red team's panel mirrors the blue one", async () => {
 })
 
 test("filling from the roster seats a starter before a substitute, never a player who left, and never one twice", async () => {
-  const { canFillFromRoster, fillFromRoster } = await import("../src/features/esports/components/game/draft-editor")
+  const { fillFromRoster } = await import("../src/features/esports/model/line-up")
   type Option = Parameters<typeof fillFromRoster>[1] extends (teamId: string) => (infer T)[] ? T : never
   const blue: Option[] = [
     { id: "sub-mid", name: "Bench", lane: "MID", status: "SUBSTITUTE" },
@@ -644,20 +644,15 @@ test("filling from the roster seats a starter before a substitute, never a playe
   const seatOf = (content: GameContent, side: number, lane: string) =>
     content.sides[side]!.participants.find((entry) => entry.lane === lane)!.playerId ?? null
 
-  const filled = fillFromRoster(gameContent(), roster, "BLUE")
+  const filled = fillFromRoster(gameContent(), roster)
   assert.equal(seatOf(filled, 0, "MID"), "mid", "a starter before a substitute")
   assert.equal(seatOf(filled, 0, "TOP"), null, "a player who left is not seated")
   assert.equal(seatOf(filled, 0, "JUNGLE"), "jungle")
-  assert.equal(seatOf(filled, 1, "TOP"), null, "the other team is left as it is")
-  assert.equal(canFillFromRoster(filled, roster, "BLUE"), false, "nothing more to fill for that team")
-  assert.equal(canFillFromRoster(filled, roster, "RED"), true)
+  assert.equal(seatOf(filled, 1, "TOP"), "red-top")
+  assert.deepEqual(fillFromRoster(filled, roster), filled, "nothing more to fill")
 
   const starterOnTop = gameContent({ playerId: "mid" })
-  assert.equal(
-    seatOf(fillFromRoster(starterOnTop, roster, "BLUE"), 0, "MID"),
-    "sub-mid",
-    "a seated player is not seated again",
-  )
+  assert.equal(seatOf(fillFromRoster(starterOnTop, roster), 0, "MID"), "sub-mid", "a seated player is not seated again")
 })
 
 test("the panel names who played a seat, fills a team from its roster and opens on equipment", async () => {
@@ -696,12 +691,11 @@ test("the panel names who played a seat, fills a team from its roster and opens 
       [...picker().options].map((option) => option.textContent),
       ["Chưa ghi tuyển thủ", "Topper", "Bench · dự bị"],
     )
-    const fillButton = (side: string) =>
-      [...document.querySelectorAll(`section[data-side="${side}"] button`)].find((button) =>
+    const fillButton = () =>
+      [...document.querySelectorAll("button")].find((button) =>
         button.textContent?.includes("Điền tuyển thủ theo đội hình"),
-      ) as HTMLButtonElement | undefined
-    assert.equal(fillButton("RED"), undefined, "a team without a roster offers no fill")
-    await act(async () => fillButton("BLUE")!.click())
+      )
+    await act(async () => fillButton()!.click())
     assert.equal(latest.sides[0]!.participants[0]!.playerId, "p-top", "the starter takes the seat")
 
     await act(async () => {
