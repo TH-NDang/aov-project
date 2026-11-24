@@ -38,7 +38,7 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
   `--aov-accent` và `--aov-accent-strong`. Bảng nổi (popover, menu, sheet, drawer) lấy `--aov-raised` làm nền, nên mục
   được đánh dấu bên trong lên thêm một bậc (`--aov-wiki-panel-high`).
 - Stream đặt tên lại các token chung thành `--hub-*` ở đầu `stream.css` và chạy được ở cả giao diện sáng lẫn tối. Thanh
-  trên và chân trang luôn màu chàm đêm. Logo đội và giải nằm trên ô `--hub-plate`, đổi theo giao diện: nhạt ở giao diện
+  trên và chân trang theo giao diện. Logo đội và giải nằm trên ô `--hub-plate`, đổi theo giao diện: nhạt ở giao diện
   sáng, chàm đêm ở giao diện tối. `ThemedLogo` chọn bản logo vẽ cho nền đó.
 - Chữ AOV WiKi và AOV Stream trong menu chuyển ứng dụng giữ màu riêng của từng sản phẩm ở mọi app: `--aov-brand-wiki-*`,
   `--aov-brand-stream-*` trong `tokens.css`. Các thành phần dùng chung trong `packages/ui` chỉ đọc token, không gõ màu.
