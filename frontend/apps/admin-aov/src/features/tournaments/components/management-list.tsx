@@ -39,7 +39,7 @@ export function ManagementToolbar({
         />
       )}
       {/* The filters move below the search together, so the search keeps its width and no filter ends up alone. */}
-      <div className="contents @xl:grid @xl:flex-auto @xl:grid-flow-col @xl:items-center @xl:gap-2 [&>select]:w-full [&>select]:min-w-0 @max-xl:[&>select:last-of-type:nth-of-type(odd)]:col-span-2">
+      <div className="contents @xl:grid @xl:flex-auto @xl:grid-flow-col @xl:items-center @xl:gap-2 [&>select]:w-full [&>select]:min-w-0 [&>select]:truncate @max-xl:[&>select:last-of-type:nth-of-type(odd)]:col-span-2">
         {children}
         {onReset && (
           <Button variant="ghost" size="sm" className="justify-self-start @max-xl:col-span-2" onClick={onReset}>
@@ -57,7 +57,8 @@ export function ManagementTable({
   children,
 }: {
   label: string
-  columns: { label: string; className?: string }[]
+  /** `header` stands in for the label on screen, such as a box that ticks every row; the label still names it. */
+  columns: { label: string; header?: ReactNode; className?: string }[]
   children: ReactNode
 }) {
   return (
@@ -70,7 +71,7 @@ export function ManagementTable({
               key={column.label}
               className={cn("type-label px-3 text-muted-foreground @3xl:px-4", column.className)}
             >
-              {column.label}
+              {column.header ?? column.label}
             </TableHead>
           ))}
         </TableRow>

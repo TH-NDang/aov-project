@@ -9,6 +9,7 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Vie
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
 import com.wikiaov.community.tournament.internal.roster.application.RosterAdministration;
+import com.wikiaov.community.tournament.internal.roster.application.RosterBatch;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.UUID;
@@ -55,5 +56,11 @@ public class RosterAdminController implements RosterAdminApi {
     public View<RosterMembership> updateMembership(@PathVariable UUID id,
             @RequestBody Update<RosterMembership> request) {
         return rosters.update(id, request.version(), request.content());
+    }
+
+    @Override
+    @PostMapping(path = ApiPaths.ADMIN + "/roster-memberships/batch", version = "1")
+    public RosterBatch.Result batch(@RequestBody RosterBatch request) {
+        return rosters.batch(request);
     }
 }

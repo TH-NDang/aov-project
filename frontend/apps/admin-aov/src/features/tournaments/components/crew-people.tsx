@@ -99,15 +99,20 @@ export function CrewList({
   const groups = crewByRole(crew)
   if (!groups.length) return <p className="type-meta">{empty}</p>
   return (
-    <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+    <dl className="space-y-3">
       {groups.map((group) => (
-        <div key={group.role} className="min-w-0 space-y-2">
-          <dt className="type-label text-muted-foreground">{personRoleLabels[group.role]}</dt>
-          {group.members.map((member) => (
-            <dd key={member.pageId}>
-              <PersonLine pageId={member.pageId} known={people?.[member.pageId]} actorKey={actorKey} />
-            </dd>
-          ))}
+        <div key={group.role} className="grid gap-x-4 gap-y-1.5 sm:grid-cols-[136px_minmax(0,1fr)] sm:items-start">
+          <dt className="type-label text-muted-foreground sm:pt-1.5">{personRoleLabels[group.role]}</dt>
+          <dd className="flex min-w-0 flex-wrap gap-1.5">
+            {group.members.map((member) => (
+              <PersonChip
+                key={member.pageId}
+                pageId={member.pageId}
+                known={people?.[member.pageId]}
+                actorKey={actorKey}
+              />
+            ))}
+          </dd>
         </div>
       ))}
     </dl>

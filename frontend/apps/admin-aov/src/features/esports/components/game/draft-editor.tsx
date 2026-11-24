@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import type { DraftKind, GameContent, Lane, Reference, RosterStatus, Selection, Side } from "@aov/community-contracts"
-import { ArrowLeftRight, Ban, History, Lock, LockOpen, Undo2, Users } from "lucide-react"
+import type { DraftKind, GameContent, Reference, Selection, Side } from "@aov/community-contracts"
+import { ArrowLeftRight, Ban, History, Lock, LockOpen, Undo2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { cn } from "@aov/ui/lib/utils"
@@ -15,88 +15,14 @@ import {
   withTurns,
 } from "../../model/draft"
 import type { GameView, IconRef } from "../../model/game-view"
+import { otherSide, rosterOptionLabel, swapSides, type RosterOption } from "../../model/line-up"
 import { heroKeys, type HeroLocks } from "../../model/series-rules"
 import { formatClock } from "@/lib/clock"
 import { HeroIcon, LaneIcon, TeamLogo, TimeTag, VIDEO_MARK } from "../primitives"
+import { CarryOverBar } from "./carry-over-bar"
 import { ReferencePicker } from "./reference-picker"
 import { NativeSelect } from "@/components/native-select"
 import { LANE_LABELS } from "@/lib/lanes"
-
-export type RosterOption = { id: string; name: string; lane?: Lane | null; status?: RosterStatus; photoUrl?: string }
-
-/** Starters first, then members of unknown standing, then substitutes. */
-const STANDING: Record<RosterStatus, number> = { ACTIVE: 0, UNKNOWN: 1, SUBSTITUTE: 2, INACTIVE: 3 }
-export const byStanding = (a: RosterOption, b: RosterOption) =>
-  STANDING[a.status ?? "UNKNOWN"] - STANDING[b.status ?? "UNKNOWN"]
-
-const otherSide = (side: Side): Side => (side === "BLUE" ? "RED" : "BLUE")
-
-/** Swaps which team plays blue, keeping each team's bans, picks and turns with it. */
-export function swapSides(content: GameContent): GameContent {
-  const draft = readDraft(content)
-  return {
-    ...content,
-    sides: content.sides
-      .map((side) => ({ ...side, side: otherSide(side.side) }))
-      .sort((a, b) => (a.side === b.side ? 0 : a.side === "BLUE" ? -1 : 1)),
-    ...(draft.turns.length
-      ? { draft: { ...draft, turns: draft.turns.map((turn) => ({ ...turn, side: otherSide(turn.side) })) } }
-      : {}),
-  }
-}
-
-/**
- * Fills empty player slots from the registered roster by lane, a starter before a substitute, and never seats one
- * player twice in a team. With `only`, the other team is left as it is. Substitutions are not known here, so a game
- * a substitute played still needs that seat changed by hand.
- */
-export function fillFromRoster(
-  content: GameContent,
-  roster: (teamId: string) => RosterOption[],
-  only?: Side,
-): GameContent {
-  return {
-    ...content,
-    sides: content.sides.map((side) => {
-      if (only && side.side !== only) return side
-      const members = [...roster(side.teamId)].sort(byStanding)
-      const seated = new Set(side.participants.flatMap((participant) => participant.playerId ?? []))
-      return {
-        ...side,
-        participants: side.participants.map((participant) => {
-          if (participant.playerId) return participant
-          const member = members.find(
-            (option) => option.lane === participant.lane && option.status !== "INACTIVE" && !seated.has(option.id),
-          )
-          if (!member) return participant
-          seated.add(member.id)
-          return { ...participant, playerId: member.id }
-        }),
-      }
-    }),
-  }
-}
-
-/** A member as a choice for a seat: the lane only when it is not the seat's, and whether they sit out or left. */
-export const rosterOptionLabel = (member: RosterOption, lane: Lane) =>
-  [
-    member.name,
-    member.lane && member.lane !== lane ? ` (${LANE_LABELS[member.lane].name})` : "",
-    member.status === "INACTIVE" ? " · đã rời" : member.status === "SUBSTITUTE" ? " · dự bị" : "",
-  ].join("")
-
-/** Whether filling from the roster would seat anyone: some seat is empty and a member plays its lane. */
-export function canFillFromRoster(content: GameContent, roster: (teamId: string) => RosterOption[], only?: Side) {
-  return content.sides.some(
-    (side) =>
-      (!only || side.side === only) &&
-      side.participants.some(
-        (participant) =>
-          !participant.playerId &&
-          roster(side.teamId).some((member) => member.lane === participant.lane && member.status !== "INACTIVE"),
-      ),
-  )
-}
 
 /**
  * The ban/pick phase entered turn by turn while watching the video. Turns belong to teams, not players: after the
@@ -110,6 +36,7 @@ export function DraftEditor({
   spells,
   roster,
   locks,
+  previous = null,
   videoNow,
   onChange,
 }: {
@@ -119,6 +46,8 @@ export function DraftEditor({
   spells: Reference[]
   roster: (teamId: string) => RosterOption[]
   locks: HeroLocks
+  /** The game of this match line-ups can be taken from. */
+  previous?: GameContent | null
   /** Current player position; recorded turns take it as their mark. */
   videoNow: number | null
   onChange: (change: (content: GameContent) => GameContent) => void
@@ -149,6 +78,7 @@ export function DraftEditor({
       : null
   }
   const canStamp = stamp && videoNow != null && draft.startSecond != null && videoNow >= draft.startSecond
+  const hasMarks = videoNow != null || draft.startSecond != null || draft.lockedSecond != null
   const firstMark = Math.min(
     ...[draft.lockedSecond, ...draft.turns.map((turn) => turn.atSecond), content.sourceTimestampSeconds].filter(
       (value): value is number => value != null,
@@ -443,23 +373,12 @@ export function DraftEditor({
     )
   }
 
-  const canFill = canFillFromRoster(content, roster)
-
   const lineupView = (
     <div className="space-y-2">
+      <CarryOverBar content={content} previous={previous} view={view} roster={roster} onChange={onChange} />
       <div className="grid grid-cols-2 gap-2">{(["BLUE", "RED"] as const).map(lineup)}</div>
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="mr-auto text-xs text-muted-foreground">Bấm ô tướng để hoán đổi trong đội, rồi chốt.</span>
-        {canFill && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7"
-            onClick={() => onChange((current) => fillFromRoster(current, roster))}
-          >
-            <Users size={13} /> Điền tuyển thủ
-          </Button>
-        )}
         <Button size="sm" variant="outline" className="h-7" onClick={() => onChange(swapSides)}>
           <ArrowLeftRight size={13} /> Đổi bên
         </Button>
@@ -472,13 +391,13 @@ export function DraftEditor({
           >
             <LockOpen size={13} /> Bỏ chốt
           </Button>
-        ) : (
+        ) : videoNow == null ? null : (
           <Button
             size="sm"
             className="h-7"
             disabled={!canLock}
             title={canLock ? undefined : "Phát video tới lúc đội hình đã cố định"}
-            onClick={() => onChange((current) => setDraftTimes(current, { lockedSecond: Math.floor(videoNow ?? 0) }))}
+            onClick={() => onChange((current) => setDraftTimes(current, { lockedSecond: Math.floor(videoNow) }))}
           >
             <Lock size={13} /> Chốt tại {VIDEO_MARK} {formatClock(videoNow)}
           </Button>
@@ -489,32 +408,35 @@ export function DraftEditor({
 
   return (
     <div className="space-y-2.5 p-3">
-      <div className="flex flex-wrap items-center gap-1.5 text-xs">
-        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5">
-          Bắt đầu {draft.startSecond != null ? <TimeTag kind="video" seconds={draft.startSecond} /> : "chưa ghi"}
-        </span>
-        {/* A game recorded before drafts existed, or a start marked late, gets its draft start from the player. */}
-        <button
-          type="button"
-          className="rounded-md px-1.5 py-0.5 text-muted-foreground hover:bg-muted disabled:opacity-40"
-          disabled={!canMarkStart}
-          title={canMarkStart ? undefined : "Tua video tới màn cấm chọn, trước lượt đầu tiên và trước lúc vào trận"}
-          onClick={() => onChange((current) => setDraftTimes(current, { startSecond: Math.floor(videoNow ?? 0) }))}
-        >
-          Đặt tại {VIDEO_MARK} {formatClock(videoNow)}
-        </button>
-        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5">
-          <Lock size={11} />{" "}
-          {draft.lockedSecond != null ? <TimeTag kind="video" seconds={draft.lockedSecond} /> : "chưa chốt"}
-        </span>
-        <label
-          className="ml-auto inline-flex items-center gap-1 text-muted-foreground"
-          title="Mỗi lượt lấy vị trí video lúc chọn tướng"
-        >
-          <input type="checkbox" checked={stamp} onChange={(event) => setStamp(event.target.checked)} />
-          Ghi mốc theo lượt
-        </label>
-      </div>
+      {/* Without a video there is no position to mark. */}
+      {hasMarks && (
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5">
+            Bắt đầu {draft.startSecond != null ? <TimeTag kind="video" seconds={draft.startSecond} /> : "chưa ghi"}
+          </span>
+          {/* A game recorded before drafts existed, or a start marked late, gets its draft start from the player. */}
+          <button
+            type="button"
+            className="rounded-md px-1.5 py-0.5 text-muted-foreground hover:bg-muted disabled:opacity-40"
+            disabled={!canMarkStart}
+            title={canMarkStart ? undefined : "Tua video tới màn cấm chọn, trước lượt đầu tiên và trước lúc vào trận"}
+            onClick={() => onChange((current) => setDraftTimes(current, { startSecond: Math.floor(videoNow ?? 0) }))}
+          >
+            Đặt tại {VIDEO_MARK} {formatClock(videoNow)}
+          </button>
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5">
+            <Lock size={11} />{" "}
+            {draft.lockedSecond != null ? <TimeTag kind="video" seconds={draft.lockedSecond} /> : "chưa chốt"}
+          </span>
+          <label
+            className="ml-auto inline-flex items-center gap-1 text-muted-foreground"
+            title="Mỗi lượt lấy vị trí video lúc chọn tướng"
+          >
+            <input type="checkbox" checked={stamp} onChange={(event) => setStamp(event.target.checked)} />
+            Ghi mốc theo lượt
+          </label>
+        </div>
+      )}
       <div
         className="grid grid-cols-2 gap-0.5 rounded-lg bg-muted p-0.5 text-xs"
         role="tablist"

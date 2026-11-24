@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import type { Catalog, GameContent, ObservationStatus, Participant, Side } from "@aov/community-contracts"
-import { Clock3, EyeOff, Shield, Swords, TriangleAlert, Users, X } from "lucide-react"
+import { Clock3, EyeOff, Shield, Swords, TriangleAlert, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
 import { EquipmentEditor } from "@/features/tournaments/components/equipment-editor"
 import { LoadoutEditor, type ObservedAtControl } from "./loadout-editor"
 import { HeroIcon, LaneIcon, TimeTag, VIDEO_MARK } from "../components/primitives"
-import {
-  canFillFromRoster,
-  fillFromRoster,
-  rosterOptionLabel,
-  type RosterOption,
-} from "../components/game/draft-editor"
+import { CarryOverBar } from "../components/game/carry-over-bar"
 import { ReferencePicker } from "../components/game/reference-picker"
 import type { GameView, IconRef } from "../model/game-view"
+import { rosterOptionLabel, type RosterOption } from "../model/line-up"
 import type { LoadoutPart } from "../model/loadout"
 import { seatSide, type SeatKey } from "../model/timeline"
 import { formatClock } from "@/lib/clock"
@@ -90,6 +86,7 @@ export function LoadoutPanel({
   view,
   catalog,
   roster,
+  previous = null,
   clock,
   target,
   error,
@@ -101,6 +98,8 @@ export function LoadoutPanel({
   catalog: Catalog
   /** Each team's registered players at this tournament, starters first. */
   roster: (teamId: string) => RosterOption[]
+  /** The game of this match players and loadouts can be taken from. */
+  previous?: GameContent | null
   clock?: LoadoutClock
   /** Opens on this player and part; a new object re-targets a panel that is already open. */
   target?: LoadoutTarget | null
@@ -193,6 +192,7 @@ export function LoadoutPanel({
           <span>Thay đổi vừa rồi chưa lưu được, bảng đã quay về bản đã lưu. {error}</span>
         </p>
       )}
+      <CarryOverBar content={content} previous={previous} view={view} roster={roster} loadouts onChange={apply} />
       {(["BLUE", "RED"] as const).map((code) => {
         const team = view.sides[code]
         return (
@@ -227,17 +227,6 @@ export function LoadoutPanel({
               })}
             </div>
             <div className="flex flex-wrap gap-1.5 pl-3 text-xs">
-              {canFillFromRoster(content, roster, code) && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7"
-                  title="Điền các ô chưa ghi bằng người đăng ký ở giải đúng vị trí, ưu tiên đội hình chính. Ván có người vào thay vẫn cần sửa tay."
-                  onClick={() => apply((current) => fillFromRoster(current, roster, code))}
-                >
-                  <Users size={13} /> Điền tuyển thủ theo đội hình
-                </Button>
-              )}
               {nowGame != null && (
                 <>
                   <Button

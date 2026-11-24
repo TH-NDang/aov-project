@@ -23,6 +23,9 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.games.application.GamePatchScopes;
+import com.wikiaov.community.tournament.internal.games.application.GamePatchScopes.PatchScope;
+import com.wikiaov.community.tournament.internal.games.application.GamePatchScopes.Source;
 import com.wikiaov.community.tournament.internal.games.application.GameRecords;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +48,14 @@ public class TournamentAdministration {
     private final GameRecords games;
     private final WikiCatalog catalog;
     private final CompetitionDirectory directory;
+    private final GamePatchScopes patchScopes;
     private final TransactionTemplate reads;
     private final TransactionTemplate writes;
 
     public TournamentAdministration(TeamRegistry teams, PlayerRegistry players, PlayerMerge merges,
             TournamentRegistry tournaments,
             SeriesRegistry series, GameRecords games, WikiCatalog catalog, CompetitionDirectory directory,
-            PlatformTransactionManager transactions) {
+            GamePatchScopes patchScopes, PlatformTransactionManager transactions) {
         this.teams = teams;
         this.players = players;
         this.merges = merges;
@@ -60,6 +64,7 @@ public class TournamentAdministration {
         this.games = games;
         this.catalog = catalog;
         this.directory = directory;
+        this.patchScopes = patchScopes;
         this.reads = new TransactionTemplate(transactions);
         this.reads.setReadOnly(true);
         this.writes = new TransactionTemplate(transactions);
@@ -181,6 +186,13 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
+    public List<PatchScope> gamePatches(UUID tournamentId) {
+        tournaments.get(tournamentId);
+        return patchScopes.forTournament(tournamentId);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
     public View<Tournament> getTournament(UUID id) {
         return tournaments.get(id);
     }
@@ -260,10 +272,13 @@ public class TournamentAdministration {
         var draft = reads.execute(status -> games.get(id));
         TournamentErrors.version(draft.version(), version);
         var content = draft.content();
+        var scope = reads.execute(status -> patchScopes.forGame(id, content));
 
+        // A game without a patch of its own is published in the patch its stage was played on.
+        var season = scope.source() == Source.STAGE ? scope.seasonId() : content.seasonId();
+        var patch = scope.source() == Source.STAGE ? scope.patchId() : content.patchVariantId();
         var references = catalog.read(content.region() == null ? "VN" : content.region(),
-                content.locale() == null ? "vi-VN" : content.locale(), content.seasonId(), content.patchVariantId(),
-                content.includeUnscoped());
+                content.locale() == null ? "vi-VN" : content.locale(), season, patch, content.includeUnscoped());
 
         return writes.execute(status -> games.publish(id, version, references, actor()));
     }

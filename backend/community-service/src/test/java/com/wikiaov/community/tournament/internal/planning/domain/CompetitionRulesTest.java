@@ -29,12 +29,12 @@ import org.junit.jupiter.api.Test;
 class CompetitionRulesTest {
     private Stage group(int legs, List<String> ties) {
         return new Stage("GROUP", "Group", "ROUND_ROBIN", 5, legs, 1, 0, 2, ties, "https://example.com", null, null,
-                null, null);
+                null, null, null);
     }
 
     private Stage ruled(@Nullable DraftRule draftRule, List<PatchLine> patches) {
         return new Stage("GROUP", "Group", "ROUND_ROBIN", 5, 1, 1, 0, 2, List.of(), "https://example.com", draftRule,
-                null, null, patches);
+                null, null, patches, null);
     }
 
     private List<Entry> entrants(int count) {
@@ -119,10 +119,40 @@ class CompetitionRulesTest {
     }
 
     @Test
+    void aPatchLineHoldsFromItsReleaseDayUntilTheNextLineOfTheStage() {
+        var first = new PatchLine("Week 1", LocalDate.of(2026, 8, 13), null, null, null, null, null, null);
+        var second = new PatchLine("Week 2-4", LocalDate.of(2026, 8, 27), null, UUID.randomUUID(), null, null, null,
+                null);
+        var content = plan(entrants(2), ruled(null, List.of(second, first)), List.of());
+
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 13))).isEqualTo(first);
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 26))).isEqualTo(first);
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 27))).isEqualTo(second);
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 10, 1))).isEqualTo(second);
+    }
+
+    @Test
+    void aDayBeforeTheFirstLineOrAnUnknownStageHasNoPatchLine() {
+        var first = new PatchLine("Week 1", LocalDate.of(2026, 8, 13), null, null, null, null, null, null);
+        var content = plan(entrants(2), ruled(null, List.of(first)), List.of());
+
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2026, 8, 12))).isNull();
+        assertThat(content.patchLineAt("PLAYOFFS", LocalDate.of(2026, 8, 20))).isNull();
+    }
+
+    @Test
+    void aSingleUndatedLineCoversTheWholeStage() {
+        var only = new PatchLine("Playoffs", null, null, UUID.randomUUID(), null, null, null, null);
+        var content = plan(entrants(2), ruled(null, List.of(only)), List.of());
+
+        assertThat(content.patchLineAt("GROUP", LocalDate.of(2020, 1, 1))).isEqualTo(only);
+    }
+
+    @Test
     void bracketResolvesWinnerAndLoserSlotsWithoutInventingTeams() {
         var entries = entrants(6);
         var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", null, null, null,
-                null);
+                null, null);
         var fixtures = new ArrayList<>(CompetitionRules.aogPlayoffs(stage, 4));
         var seeds = new HashMap<Integer, UUID>();
         entries.forEach(entry -> seeds.put(entry.seed(), entry.teamId()));
@@ -168,7 +198,7 @@ class CompetitionRulesTest {
     @Test
     void playoffFixturesCarryTheirBracketTitleWithoutAName() {
         var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", null, null, null,
-                null);
+                null, null);
 
         var titles = CompetitionRules.aogPlayoffs(stage, 3).stream().map(Match::title).toList();
 
@@ -195,5 +225,35 @@ class CompetitionRulesTest {
         var match = new Match("M1", "GROUP", 1, null, 5, null, open, open, null, MatchTitle.of(Kind.EXTRA));
 
         CompetitionRules.validate(plan(entries, stage, List.of(match)));
+    }
+
+    @Test
+    void aStageWithItsOwnTeamsRanksOnlyThem() {
+        var entries = entrants(4);
+        var teamIds = entries.stream().limit(2).map(Entry::teamId).toList();
+        var stage = groupOf(teamIds);
+        var content = new CompetitionPlan("", "", null, null, "", "", "", "", null, entries, List.of(stage), null,
+                CompetitionRules.roundRobin(stage, entries), null);
+
+        CompetitionRules.validate(content);
+        var table = CompetitionResults.tables(content, CompetitionResults.resolve(content, Map.of())).getFirst();
+
+        assertThat(content.matches()).hasSize(1);
+        assertThat(table.rows()).extracting(CompetitionResults.Standing::teamId)
+                .containsExactlyInAnyOrderElementsOf(teamIds);
+    }
+
+    @Test
+    void aStageMayNotNameATeamThatIsNoEntrant() {
+        var stage = groupOf(List.of(UUID.randomUUID()));
+        var content = new CompetitionPlan("", "", null, null, "", "", "", "", null, entrants(4), List.of(stage), null,
+                null, null);
+
+        assertThatThrownBy(() -> CompetitionRules.validate(content)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private Stage groupOf(List<UUID> teamIds) {
+        return new Stage("GROUP", "Group A", "ROUND_ROBIN", 3, 1, 1, 0, 1, List.of(), "", null, null, null, null,
+                teamIds);
     }
 }

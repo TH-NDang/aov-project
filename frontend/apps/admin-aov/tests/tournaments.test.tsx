@@ -11,7 +11,7 @@ import {
   parseGameTime,
   selectionName,
 } from "../src/features/tournaments/model/tournament-model"
-import { button, choose, click, QuietResizeObserver, render, withDom, withGlobals } from "./fixtures/dom"
+import { answerConfirm, button, choose, click, QuietResizeObserver, render, withDom, withGlobals } from "./fixtures/dom"
 
 withDom({
   url: "http://localhost:5175/tournaments",
@@ -112,6 +112,24 @@ test("equipment editor saves a six-slot observation without fabricating purchase
   await click(button("Thêm mốc 6 ô"), "add snapshot button")
   assert.match(document.querySelector('[role="alert"]')?.textContent ?? "", /đã có/)
   assert.equal(latest.equipmentSnapshots.length, 1)
+})
+
+test("a mark that holds observed slots is removed only after a question", async () => {
+  const { EquipmentEditor } = await import("../src/features/tournaments/components/equipment-editor")
+  const snapshot = emptySnapshot(300)
+  snapshot.slots[0] = { slot: 1, known: true, item: null }
+  const changes: number[] = []
+  await render(
+    <EquipmentEditor
+      participant={{ ...emptyParticipant("TOP"), equipmentSnapshots: [snapshot] }}
+      catalog={catalog}
+      onChange={(next) => changes.push(next.equipmentSnapshots.length)}
+    />,
+  )
+  await click(button("Xóa mốc 05:00"), "remove mark button")
+  assert.deepEqual(changes, [])
+  await answerConfirm("Xóa mốc")
+  assert.deepEqual(changes, [0])
 })
 
 test("changing one game's season keeps its already observed picks and leaves other games untouched", async () => {

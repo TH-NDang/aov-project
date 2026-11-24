@@ -6,12 +6,13 @@ import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
 import { confirmAction } from "@/components/confirm-dialog"
 import { GameScope } from "@/features/tournaments/components/game-scope"
+import { useGamePatches } from "../data/use-esports-data"
 import { MvpChooser, usePlayerName } from "@/features/tournaments/components/mvp-chooser"
 import { RecordLifecycleActions } from "@/features/tournaments/components/record-lifecycle-actions"
 import { candidateName, mvpGroups, type MvpGroup } from "@/features/tournaments/model/mvp-model"
-import type { RosterOption } from "../components/game/draft-editor"
 import { RelativeDate } from "../components/relative-date"
 import type { GameView } from "../model/game-view"
+import type { RosterOption } from "../model/line-up"
 
 /** What this panel edits: how the game's catalog is read, where it sits in the match, its MVP and a note. */
 export type GameInfo = Pick<
@@ -84,6 +85,7 @@ export function GameInfoPanel({
   onOpenProgress: () => void
 }) {
   const stored = gameInfoOf(entry.content)
+  const patches = useGamePatches(tournamentId)
   const [draft, setDraft] = useState(stored)
   const change = changedGameInfo(stored, draft)
   const dirty = Object.keys(change).length > 0
@@ -117,6 +119,7 @@ export function GameInfoPanel({
     <div className="space-y-4 p-4 text-sm">
       <GameScope
         content={{ ...entry.content, ...draft }}
+        scope={patches.data?.get(entry.id)}
         disabled={false}
         tournamentRegion={tournamentRegion}
         onChange={(next) => setDraft(gameInfoOf(next))}

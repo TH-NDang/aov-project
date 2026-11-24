@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.roster.persistence;
 
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,4 +16,7 @@ public interface RosterRepository extends JpaRepository<RosterRecord, UUID> {
            AND (:state='ALL' OR (:state='ACTIVE' AND membership.deletedAt IS NULL) OR (:state='DELETED' AND membership.deletedAt IS NOT NULL))
         """)
     Page<RosterRecord> search(UUID tournamentId, UUID teamId, UUID playerId, String state, Pageable page);
+
+    /** A player has one line per team of a tournament, in use or in the trash. */
+    Optional<RosterRecord> findByTournamentIdAndTeamIdAndPlayerId(UUID tournamentId, UUID teamId, UUID playerId);
 }

@@ -1,5 +1,7 @@
 import type {
+  BracketOptions,
   CompetitionPlan,
+  CompetitionRevision,
   CompetitionView,
   CompetitionSummary,
   PlannedMatch,
@@ -15,6 +17,7 @@ export const competitionKeys = {
   summaries: (actorKey: string) => [...plans, actorKey, "summaries"] as const,
   ofOrganization: (actorKey: string, kind: "ORGANIZATION" | "CIRCUIT" | undefined, organizationId: string) =>
     [...plans, actorKey, kind, organizationId] as const,
+  revisions: (actorKey: string, tournamentId: string) => [...plans, actorKey, tournamentId, "revisions"] as const,
   /** What readers see of one competition, read again whenever it is published anew. */
   published: (tournamentId: string, publishedAt: string | null | undefined) =>
     [...plans, "published", tournamentId, publishedAt] as const,
@@ -53,9 +56,13 @@ export const competitionApi = {
       method: "POST",
       body: JSON.stringify({ version: entry.version }),
     }),
-  preview: (content: CompetitionPlan, stageCode: string, opponent: number) =>
+  preview: (content: CompetitionPlan, stageCode: string, options: BracketOptions) =>
     communityRequest<PlannedMatch[]>("/admin/competitions/preview", {
       method: "POST",
-      body: JSON.stringify({ content, stageCode, opponent }),
+      body: JSON.stringify({ content, stageCode, ...options }),
     }),
+  revisions: (id: string, page = 0) =>
+    communityRequest<PageSlice<CompetitionRevision>>(`/admin/competitions/${id}/revisions?page=${page}&size=20`),
+  revision: (id: string, revisionId: string) =>
+    communityRequest<CompetitionPlan>(`/admin/competitions/${id}/revisions/${revisionId}`),
 }

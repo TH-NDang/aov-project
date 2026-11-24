@@ -7,6 +7,7 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Upd
 import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.roster.application.RosterBatch;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,4 +31,7 @@ public interface RosterAdminApi {
 
     @Operation(operationId = "rosterAdminApi_updateMembership", summary = "Change a roster membership")
     View<RosterMembership> updateMembership(UUID id, Update<RosterMembership> request);
+
+    @Operation(operationId = "rosterAdminApi_batch", summary = "Write several roster memberships at once")
+    RosterBatch.Result batch(RosterBatch request);
 }

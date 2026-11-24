@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.planning.domain;
 import com.wikiaov.community.tournament.internal.domain.MatchTitle;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,11 +75,18 @@ public record CompetitionPlan(
             @Nullable DraftRule draftRule,
             @Nullable SideSelection sideSelection,
             @Nullable String rulesNote,
-            List<PatchLine> patches
+            List<PatchLine> patches,
+            List<UUID> teamIds
     ) {
         public Stage {
             tieBreakers = tieBreakers == null ? List.of("GAME_DIFF", "GAME_WINS") : List.copyOf(tieBreakers);
             patches = patches == null ? List.of() : List.copyOf(patches);
+            teamIds = teamIds == null ? List.of() : List.copyOf(teamIds);
+        }
+
+        /** Whether the team plays this stage; a stage that names no team is played by every entrant. */
+        public boolean includes(UUID teamId) {
+            return teamIds.isEmpty() || teamIds.contains(teamId);
         }
     }
 
@@ -172,10 +180,35 @@ public record CompetitionPlan(
                 notes, venues, entrants, stages, playoffSeeds, matches, circuitPageId);
     }
 
+    /** The entrants that play a stage, in entry order. */
+    public List<Entry> playing(Stage stage) {
+        return entrants.stream().filter(entry -> entry.plays() && stage.includes(entry.teamId())).toList();
+    }
+
     /** Whether a new series of this stage is played without the rule against picking a hero again. */
     public boolean repeatPicksAllowed(String stageCode) {
         return stages.stream()
                 .anyMatch(stage -> stage.code().equals(stageCode) && stage.draftRule() == DraftRule.STANDARD);
+    }
+
+    /**
+     * The patch line of a stage in effect on {@code day}: a line holds from its release day until the next line of
+     * the stage. A day before the first dated line falls outside every line. A stage with a single undated line plays
+     * all of its games on that line.
+     */
+    public @Nullable PatchLine patchLineAt(String stageCode, LocalDate day) {
+        var stage = stages.stream().filter(candidate -> candidate.code().equals(stageCode)).findFirst().orElse(null);
+        if (stage == null || stage.patches().isEmpty()) {
+            return null;
+        }
+
+        if (stage.patches().size() == 1 && stage.patches().getFirst().releasedOn() == null) {
+            return stage.patches().getFirst();
+        }
+        return stage.patches().stream()
+                .filter(line -> line.releasedOn() != null && !line.releasedOn().isAfter(day))
+                .max(Comparator.comparing(PatchLine::releasedOn))
+                .orElse(null);
     }
 
     public static CompetitionPlan empty() {

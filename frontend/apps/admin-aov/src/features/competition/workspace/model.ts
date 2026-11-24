@@ -3,7 +3,6 @@ import {
   type CompetitionSlot,
   type CompetitionSnapshot,
   type CompetitionStage,
-  type CompetitionStanding,
   type DocumentView,
   type GameContent,
   type PlannedMatch,
@@ -16,6 +15,7 @@ import {
 } from "@aov/community-contracts"
 import { localeText } from "@aov/ui/lib/locale-text"
 import { dayKeyInZone, toInstant } from "@aov/ui/lib/time-zone"
+import type { WorkspaceFocus } from "./parts"
 
 export const WORKSPACE_STEPS = ["overview", "teams", "format", "schedule", "final", "publish"] as const
 export type WorkspaceStep = (typeof WORKSPACE_STEPS)[number]
@@ -217,6 +217,12 @@ export type BracketLayout = {
 
 export const BRACKET = { nodeWidth: 240, nodeHeight: 96, columnGap: 40, rowGap: 20, laneLabel: 28, laneGap: 24 }
 
+/** The match two losers play for third place: its winner plays nobody after it. */
+export const isThirdPlace = (match: PlannedMatch, matches: readonly PlannedMatch[]) =>
+  match.a.type === "LOSER" &&
+  match.b.type === "LOSER" &&
+  !matches.some((other) => [other.a, other.b].some((slot) => slot.type === "WINNER" && slot.matchKey === match.key))
+
 /**
  * Places the matches of an elimination stage. A match that takes a loser belongs to the lower bracket, a match fed by
  * winners of both brackets is the final, and a match sits level with the middle of the matches it is fed by.
@@ -307,11 +313,6 @@ export function layoutBracket(matches: PlannedMatch[]): BracketLayout {
   }
 }
 
-/** Seeds taken from a finished table: its first `count` teams in table order. */
-export function seedsFromStandings(rows: CompetitionStanding[], count: number): Record<number, string> {
-  return Object.fromEntries(rows.slice(0, count).map((row, index) => [index + 1, row.teamId]))
-}
-
 /** True for an address that starts with http or https, the only links a source or a video may be. */
 export const isWebLink = (value: string) => /^https?:\/\//i.test(value)
 
@@ -336,6 +337,8 @@ export type WorkspaceCheck = {
   detail: string
   state: CheckState
   step: WorkspaceStep
+  /** The place in the step that fixes it. */
+  focus?: WorkspaceFocus
   /** Publication is refused while a required check is not met. */
   required: boolean
 }
@@ -411,6 +414,7 @@ export function workspaceChecks(input: {
       detail: `${withRoster}/${plan.entrants.length} đội`,
       state: state(plan.entrants.length > 0 && withRoster === plan.entrants.length),
       step: "teams",
+      focus: { show: "NO_ROSTER" },
       required: false,
     },
     {
@@ -427,6 +431,7 @@ export function workspaceChecks(input: {
       detail: `${timed}/${plan.matches.length}`,
       state: state(plan.matches.length > 0 && timed === plan.matches.length),
       step: "schedule",
+      focus: { show: "NO_TIME", open: "times" },
       required: false,
     },
     {
@@ -435,6 +440,7 @@ export function workspaceChecks(input: {
       detail: resolved.every((match) => match.consistent) ? "Không lệch" : "Có trận lệch suất",
       state: state(resolved.every((match) => match.consistent)),
       step: "schedule",
+      focus: { show: "MISMATCH" },
       required: false,
     },
     {
@@ -443,6 +449,7 @@ export function workspaceChecks(input: {
       detail: `${dueScored}/${due.length} trận`,
       state: state(dueScored === due.length),
       step: "schedule",
+      focus: { show: "NO_SCORE", open: "results" },
       required: false,
     },
     {
@@ -658,8 +665,37 @@ export function suggestedPlacements(
       : { place: "2", teamName: "", reason: `Chờ ${matchLabel(final.match)}` },
   )
   let next = 3
+  const stageMatches = layout.nodes.map((node) => node.match)
+  const third = layout.nodes.find((node) => node !== final && isThirdPlace(node.match, stageMatches))
+  if (third) {
+    const result = outcome(third.match.key)
+    const name3 = matchLabel(third.match)
+    lines.push(
+      result
+        ? {
+            place: "3",
+            teamId: result.winner ?? undefined,
+            teamName: name(result.winner),
+            reason: `Thắng ${name3} · ${result.winnerScore}`,
+            lastOpponent: name(result.loser) || undefined,
+            lastScore: result.winnerScore,
+          }
+        : { place: "3", teamName: "", reason: `Chờ ${name3}` },
+      result
+        ? {
+            place: "4",
+            teamId: result.loser ?? undefined,
+            teamName: name(result.loser),
+            reason: `Thua ${name3} · ${result.loserScore}`,
+            lastOpponent: name(result.winner) || undefined,
+            lastScore: result.loserScore,
+          }
+        : { place: "4", teamName: "", reason: `Chờ ${name3}` },
+    )
+    next = 5
+  }
   const eliminating = layout.nodes
-    .filter((node) => node !== final && !dropsSomewhere.has(node.match.key))
+    .filter((node) => node !== final && node !== third && !dropsSomewhere.has(node.match.key))
     .sort((a, b) => b.column - a.column)
   for (const column of [...new Set(eliminating.map((node) => node.column))]) {
     const group = eliminating.filter((node) => node.column === column)

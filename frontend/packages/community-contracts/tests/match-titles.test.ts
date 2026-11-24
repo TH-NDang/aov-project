@@ -19,6 +19,13 @@ test("bracket titles read their round and number in the reader's language", () =
   assert.equal(matchTitleText({ kind: "GRAND_FINAL" }, english), "Grand final")
 })
 
+test("knockout titles name their round by the teams left in it", () => {
+  assert.equal(matchTitleText({ kind: "ROUND_OF", round: 16, number: 3 }, vietnamese), "Vòng 16 đội · 3")
+  assert.equal(matchTitleText({ kind: "QUARTERFINAL", number: 2 }, english), "Quarterfinal 2")
+  assert.equal(matchTitleText({ kind: "THIRD_PLACE" }, vietnamese), "Tranh hạng ba")
+  assert.equal(matchTitleText({ kind: "UPPER_ROUND", round: 1, number: 4 }, vietnamese), "Vòng 1 nhánh thắng · 4")
+})
+
 test("a name an editor typed wins over the title", () => {
   const match = { label: "Opening match", title: { kind: "GRAND_FINAL" } as MatchTitle }
 
@@ -36,7 +43,7 @@ test("a record from before titles keeps its stored name, and one with neither ha
 })
 
 test("a title kind this app does not know yet reads as no title", () => {
-  assert.equal(matchTitleText({ kind: "THIRD_PLACE" as MatchTitle["kind"] }, english), null)
+  assert.equal(matchTitleText({ kind: "SHOW_MATCH" as MatchTitle["kind"] }, english), null)
 })
 
 test("an open side reads the match it comes from, its seed or undecided in the reader's language", () => {

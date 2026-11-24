@@ -38,4 +38,12 @@ public class PlanRevision {
         this.actor = actor;
         this.createdAt = Instant.now();
     }
+
+    public UUID getTournamentId() {
+        return tournamentId;
+    }
+
+    public CompetitionSnapshot getContent() {
+        return content;
+    }
 }

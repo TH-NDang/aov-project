@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 class WikiCatalogTest {
     private static final UUID SEASON = UUID.randomUUID(), OTHER = UUID.randomUUID(), FIRST = UUID.randomUUID(),
             LATEST = UUID.randomUUID(), RULESET = UUID.randomUUID(), HERO = UUID.randomUUID(),
-            REVISION = UUID.randomUUID();
+            REVISION = UUID.randomUUID(), LATEST_PATCH = UUID.randomUUID();
     private HttpServer server;
     private WikiCatalog catalog;
     private final List<String> requested = new ArrayList<>();
@@ -87,6 +87,15 @@ class WikiCatalogTest {
     }
 
     @Test
+    void aWikiPatchIdResolvesToTheMarketsReleaseOfThatPatch() {
+        var result = catalog.read("VN", "vi-VN", SEASON, LATEST_PATCH, false);
+
+        assertThat(result.resolvedContext().patchVariantId()).isEqualTo(LATEST);
+        assertThat(requested).filteredOn(value -> !value.contains("catalog-context") && !value.endsWith("/regions"))
+                .allMatch(value -> value.contains("patchVariantId=" + LATEST));
+    }
+
+    @Test
     void mismatchedSeasonPatchIsRejectedBeforeReadingGameplay() {
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", OTHER, FIRST, false))
                 .isInstanceOf(ApiException.class)
@@ -117,11 +126,13 @@ class WikiCatalogTest {
 
     private static String context() {
         return "{\"current\":{\"rulesetId\":\"" + RULESET + "\"},\"seasons\":[{\"id\":\"" + SEASON
-                + "\",\"name\":\"S4 2026\",\"patches\":[" + patch(FIRST, 2) + "," + patch(LATEST, 3) + "]}]}";
+                + "\",\"name\":\"S4 2026\",\"patches\":[" + patch(FIRST, UUID.randomUUID(), 2) + ","
+                + patch(LATEST, LATEST_PATCH, 3) + "]}]}";
     }
 
-    private static String patch(UUID id, int ordinal) {
-        return "{\"id\":\"" + id + "\",\"code\":\"patch-" + ordinal + "\",\"title\":\"Patch " + ordinal
+    private static String patch(UUID id, UUID patchId, int ordinal) {
+        return "{\"id\":\"" + id + "\",\"patchId\":\"" + patchId + "\",\"code\":\"patch-" + ordinal
+                + "\",\"title\":\"Patch " + ordinal
                 + "\",\"rulesetId\":\"" + RULESET + "\",\"ordinal\":" + ordinal + "}";
     }
 }

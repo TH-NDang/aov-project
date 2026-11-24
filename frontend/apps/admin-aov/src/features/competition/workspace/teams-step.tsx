@@ -1,6 +1,4 @@
 import { useState } from "react"
-import { Link } from "react-router"
-import { useQuery } from "@tanstack/react-query"
 import {
   personRoleLabels,
   type DocumentView,
@@ -8,22 +6,25 @@ import {
   type PlayerContent,
   type RosterMembershipContent,
   type StaffMember,
+  type TeamContent,
   type TournamentContent,
 } from "@aov/community-contracts"
-import { Pencil, Trash2, UserRoundPlus, Users } from "lucide-react"
+import { ArrowDown, ArrowUp, ClipboardList, CopyPlus, Pencil, Plus, Trash2, UserRoundPlus, Users } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
 import { LaneIcon, PlayerPhoto, TeamLogo } from "@/features/esports/components/primitives"
-import { useRecords } from "@/features/esports/data/use-esports-data"
+import { CreateProfileSheet } from "@/features/community/components/create-profile-sheet"
+import { PasteNamesDialog } from "@/features/tournaments/components/paste-names-dialog"
 import { RecordPicker } from "@/features/tournaments/components/record-picker"
+import { RosterBoardSheet } from "@/features/tournaments/components/roster-board-sheet"
 import { TeamRecordSheet } from "@/features/tournaments/components/team-record-sheet"
 import { PersonChip, type KnownPeople } from "@/features/tournaments/components/crew-people"
-import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-sheet"
 import { staffOfTeam } from "@/features/tournaments/model/crew-model"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { tournamentApi } from "@/features/tournaments/api/tournament-api"
+import { FillMissingRosters } from "./missing-rosters"
 import { rosterBoard, rosterOrder } from "./model"
-import { Chip, Notice, Panel, type Workspace } from "./parts"
+import { Chip, Panel, type Workspace } from "./parts"
 import { useRosterPlayers } from "./use-roster-players"
 import { NativeSelect } from "@/components/native-select"
 import { LANE_LABELS } from "@/lib/lanes"
@@ -134,17 +135,12 @@ function Staff({ lines, people, actorKey }: { lines: StaffMember[]; people: Know
  * team's staff. `tournament` is the record that holds the staff; absent while it loads.
  */
 export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: DocumentView<TournamentContent> }) {
-  const [editing, setEditing] = useState(false)
-  const [missingOnly, setMissingOnly] = useState(false)
-  const [rosterTeam, setRosterTeam] = useState<string | null>(null)
-  const [recordTeam, setRecordTeam] = useState<string | null>(null)
-  const team = useQuery({
-    queryKey: tournamentKeys.one("teams", ws.access.actorKey, rosterTeam),
-    queryFn: ({ signal }) => tournamentApi.read("teams", rosterTeam!, signal),
-    enabled: !!rosterTeam,
-  })
-  // The sheet names players from the whole directory, so it is loaded only once a roster is opened.
-  const players = useRecords("players", !!rosterTeam)
+  const [editing, setEditing] = useState(!ws.plan.entrants.length)
+  const [missingOnly, setMissingOnly] = useState(ws.focus.show === "NO_ROSTER")
+  const { team: focusTeam, open: focusOpen } = ws.focus
+  const [rosterTeam, setRosterTeam] = useState<string | null>(focusTeam && focusOpen === "roster" ? focusTeam : null)
+  const [recordTeam, setRecordTeam] = useState<string | null>(focusTeam && focusOpen === "record" ? focusTeam : null)
+  const [adding, setAdding] = useState<"paste" | "create" | null>(null)
   const rosterPlayers = useRosterPlayers(ws.entry.id, ws.access.actorKey, ws.rosters.length > 0)
   const names: Names = { players: rosterPlayers.data, loading: rosterPlayers.isPending }
   const rostersOf = (teamId: string) =>
@@ -152,21 +148,49 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
   const missing = ws.plan.entrants.filter((entry) => !rostersOf(entry.teamId).length).length
   const shown = ws.plan.entrants.filter((entry) => !missingOnly || !rostersOf(entry.teamId).length)
   const setEntrants = (value: typeof ws.plan.entrants) => ws.change("entrants", value)
+  const missingIds = ws.plan.entrants
+    .filter((entry) => entry.status !== "WITHDRAWN" && !rostersOf(entry.teamId).length)
+    .map((entry) => entry.teamId)
+  const addTeams = (teams: { id: string; name: string; content?: TeamContent }[]) => {
+    const fresh = teams.filter((team) => !ws.plan.entrants.some((entry) => entry.teamId === team.id))
+    for (const team of fresh) ws.rememberTeam(team.id, team.name, team.content)
+    setEntrants([...ws.plan.entrants, ...fresh.map((team) => ({ teamId: team.id, status: "REGISTERED", note: "" }))])
+  }
+  const move = (teamId: string, offset: -1 | 1) => {
+    const next = [...ws.plan.entrants]
+    const at = next.findIndex((entry) => entry.teamId === teamId)
+    const other = next[at + offset]
+    if (!other) return
+    next[at + offset] = next[at]!
+    next[at] = other
+    setEntrants(next)
+  }
   const remove = async (teamId: string) => {
     const confirmed = await confirmAction({
       title: `Gỡ ${ws.team(teamId).name} khỏi giải?`,
       description: "Đội sẽ rời danh sách tham dự khi bạn lưu bản nháp. Hồ sơ đội và đội hình đã nhập không bị xóa.",
       confirmLabel: "Gỡ đội",
     })
-    if (confirmed) setEntrants(ws.plan.entrants.filter((row) => row.teamId !== teamId))
+    if (!confirmed) return
+    // A stage or a seeding may only name entrants, so the team leaves them in the same step.
+    ws.changeAll({
+      entrants: ws.plan.entrants.filter((row) => row.teamId !== teamId),
+      stages: ws.plan.stages.map((stage) =>
+        stage.teamIds?.includes(teamId) ? { ...stage, teamIds: stage.teamIds.filter((id) => id !== teamId) } : stage,
+      ),
+      playoffSeeds: Object.fromEntries(Object.entries(ws.plan.playoffSeeds).filter(([, id]) => id !== teamId)),
+    })
   }
 
   return (
     <div className="space-y-4">
-      {missing > 0 && (
-        <Notice tone="warn">
-          {missing} đội chưa có đội hình. Ván đấu chỉ gán được tuyển thủ khi đội đã có đội hình đăng ký ở giải này.
-        </Notice>
+      {ws.loaded && missing > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg bg-(--aov-warning-soft) px-3.5 py-2.5">
+          <span className="type-body">
+            {missing} đội chưa có đội hình nên ván đấu của các đội này chưa gán được tuyển thủ.
+          </span>
+          {ws.canEdit && missingIds.length > 0 && <FillMissingRosters ws={ws} teamIds={missingIds} />}
+        </div>
       )}
       <Panel
         title={`Đội tham dự · ${ws.plan.entrants.length}`}
@@ -183,6 +207,11 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                 Chưa có đội hình · {missing}
               </Button>
             )}
+            {ws.canEdit && !ws.plan.entrants.length && (
+              <Button type="button" variant="outline" onClick={() => ws.openCopy(["entrants", "rosters", "staff"])}>
+                <CopyPlus aria-hidden /> Chép từ giải khác
+              </Button>
+            )}
             {ws.canEdit && (
               <Button type="button" variant="outline" onClick={() => setEditing(!editing)}>
                 <Pencil aria-hidden /> {editing ? "Xong" : "Sửa danh sách"}
@@ -191,6 +220,35 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
           </div>
         }
       >
+        {editing && ws.canEdit && (
+          <div className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-4 py-3">
+            <span className="w-64">
+              <RecordPicker
+                kind="teams"
+                value=""
+                label="Thêm đội tham dự"
+                context={{ tournamentId: ws.entry.id }}
+                exclude={ws.plan.entrants.map((row) => row.teamId)}
+                onChange={(teamId, name) => {
+                  if (!teamId) return
+                  addTeams([{ id: teamId, name }])
+                  void tournamentApi
+                    .read("teams", teamId)
+                    .then((team) => ws.rememberTeam(teamId, team.content.name, team.content))
+                }}
+              />
+            </span>
+            <Button type="button" variant="outline" onClick={() => setAdding("paste")}>
+              <ClipboardList aria-hidden /> Dán danh sách
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setAdding("create")}>
+              <Plus aria-hidden /> Tạo đội mới
+            </Button>
+            <Button type="button" variant="outline" onClick={() => ws.openCopy(["entrants", "rosters", "staff"])}>
+              <CopyPlus aria-hidden /> Chép từ giải khác
+            </Button>
+          </div>
+        )}
         {shown.map((entry) => {
           const view = ws.team(entry.teamId)
           const rows = rostersOf(entry.teamId)
@@ -241,7 +299,7 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                 {rows.length ? (
                   <span className="type-meta">{rows.length} tuyển thủ</span>
                 ) : (
-                  <Chip tone="warn">Chưa có đội hình</Chip>
+                  ws.loaded && <Chip tone="warn">Chưa có đội hình</Chip>
                 )}
                 <span className="ml-auto flex items-center gap-1">
                   <Button
@@ -251,6 +309,30 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                   >
                     <UserRoundPlus aria-hidden /> {rows.length ? "Sửa đội hình" : "Thêm đội hình"}
                   </Button>
+                  {editing && ws.canEdit && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Đưa ${view.name} lên`}
+                        disabled={ws.plan.entrants[0] === entry}
+                        onClick={() => move(entry.teamId, -1)}
+                      >
+                        <ArrowUp aria-hidden />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Đưa ${view.name} xuống`}
+                        disabled={ws.plan.entrants.at(-1) === entry}
+                        onClick={() => move(entry.teamId, 1)}
+                      >
+                        <ArrowDown aria-hidden />
+                      </Button>
+                    </>
+                  )}
                   {editing && ws.canEdit && (
                     <Button
                       type="button"
@@ -303,32 +385,7 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
             Chưa tải được tên tuyển thủ. Mở "Sửa đội hình" để xem chi tiết.
           </p>
         )}
-        {editing && ws.canEdit && (
-          <div className="flex flex-wrap items-center gap-3 border-t px-4 py-3">
-            <div className="max-w-md min-w-64">
-              <RecordPicker
-                kind="teams"
-                value=""
-                label="Thêm đội tham dự"
-                context={{ tournamentId: ws.entry.id }}
-                exclude={ws.plan.entrants.map((row) => row.teamId)}
-                onChange={(teamId, name) => {
-                  if (!teamId) return
-                  ws.rememberTeam(teamId, name)
-                  setEntrants([...ws.plan.entrants, { teamId, status: "REGISTERED", note: "" }])
-                }}
-              />
-            </div>
-            <Link className="type-body underline" to="/teams">
-              Tạo hồ sơ đội
-            </Link>
-            <span className="type-meta">Danh sách đội được ghi khi bạn bấm Lưu bản nháp.</span>
-          </div>
-        )}
       </Panel>
-      <Link className="type-body underline" to="/players">
-        Quản lý hồ sơ tuyển thủ
-      </Link>
       {recordTeam && (
         <TeamRecordSheet
           teamId={recordTeam}
@@ -338,14 +395,37 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
           onClose={() => setRecordTeam(null)}
         />
       )}
-      {rosterTeam && team.data && (
-        <TeamRosterSheet
-          team={team.data}
-          players={players.data || []}
-          initialTournamentId={ws.entry.id}
-          canWrite={ws.access.canWrite}
+      {rosterTeam && ws.loaded && (
+        <RosterBoardSheet
+          key={rosterTeam}
+          teamId={rosterTeam}
+          team={ws.teams[rosterTeam]}
+          tournamentId={ws.entry.id}
+          rows={ws.rosters.filter((row) => row.content.teamId === rosterTeam)}
+          players={rosterPlayers.data}
           actorKey={ws.access.actorKey}
+          canWrite={ws.access.canWrite}
           onClose={() => setRosterTeam(null)}
+        />
+      )}
+      {adding === "paste" && (
+        <PasteNamesDialog
+          kind="teams"
+          context={{ tournamentId: ws.entry.id }}
+          exclude={ws.plan.entrants.map((row) => row.teamId)}
+          onAdd={addTeams}
+          onClose={() => setAdding(null)}
+        />
+      )}
+      {adding === "create" && (
+        <CreateProfileSheet
+          kind="TEAM"
+          submitLabel="Tạo và thêm vào giải"
+          onClose={() => setAdding(null)}
+          onCreated={(profile) => {
+            setAdding(null)
+            if (profile.entityId) addTeams([{ id: profile.entityId, name: profile.content?.name ?? profile.code }])
+          }}
         />
       )}
     </div>

@@ -140,7 +140,7 @@ export function OverviewStep({
         />
       </div>
 
-      <aside className="space-y-5">
+      <aside className="order-first space-y-5 xl:order-none">
         <DataChecksPanel ws={ws} record={record} />
         <Panel title="Việc nên làm tiếp" icon={ListChecks}>
           <ul>
@@ -150,7 +150,7 @@ export function OverviewStep({
                   <span className="type-body block">{check.label}</span>
                   <span className="type-meta">{check.detail}</span>
                 </span>
-                <Button type="button" variant="outline" onClick={() => ws.go(check.step)}>
+                <Button type="button" variant="outline" onClick={() => ws.go(check.step, check.focus)}>
                   Mở
                 </Button>
               </li>
@@ -161,7 +161,7 @@ export function OverviewStep({
                   <span className="type-body block">Ghi chi tiết {detailLeft} ván</span>
                   <span className="type-meta">Tuyển thủ, phụ trợ và thứ tự cấm chọn theo video</span>
                 </span>
-                <Button type="button" variant="outline" onClick={() => ws.go("schedule")}>
+                <Button type="button" variant="outline" onClick={() => ws.go("schedule", { show: "PLAYERS_MISSING" })}>
                   Mở
                 </Button>
               </li>

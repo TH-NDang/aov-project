@@ -124,5 +124,8 @@ export function useGameSaver(entry: DocumentView<GameContent>) {
     setState({ status: "idle" })
   }, [client])
 
-  return { save, publish, withdraw, state, reload }
+  /** Resolves once every queued save was answered. */
+  const settled = useCallback(() => queue.current.then(() => undefined), [])
+
+  return { save, publish, withdraw, settled, state, reload }
 }

@@ -18,7 +18,6 @@ import {
   resolvedIndex,
   resultProblem,
   rosterBoard,
-  seedsFromStandings,
   slotText,
   stepFromParam,
   suggestedPlacements,
@@ -231,22 +230,6 @@ test("a score must fit the best-of and carry a source", () => {
   assert.match(resultProblem(5, 3, 1, "liquipedia")!, /link nguồn/)
 })
 
-test("seeds come from the table in order", () => {
-  const rows = ["sgp", "fpl", "bme"].map((teamId, index) => ({
-    rank: index + 1,
-    teamId,
-    played: 0,
-    won: 0,
-    lost: 0,
-    gameWins: 0,
-    gameLosses: 0,
-    points: 0,
-    tied: false,
-    qualified: true,
-  }))
-  assert.deepEqual(seedsFromStandings(rows, 2), { 1: "sgp", 2: "fpl" })
-})
-
 const snapshot = (resolved: ResolvedMatch[], value = plan(playoffs)): CompetitionSnapshot => ({
   tournament: { code: "aog", name: "AOG", region: "VN" },
   plan: value,
@@ -414,4 +397,36 @@ test("a match time next to a clock change keeps the offset of its own day", () =
   // New York leaves summer time on 1 November 2026: 09:00 that morning is UTC-5, the evening before UTC-4.
   assert.equal(zonedInputInstant("2026-11-01T09:00", "America/New_York"), "2026-11-01T14:00:00.000Z")
   assert.equal(zonedInputInstant("2026-10-31T21:00", "America/New_York"), "2026-11-01T01:00:00.000Z")
+})
+
+test("the match for third place decides places three and four", () => {
+  const knockout = [
+    match("S1", 1, team("sgp"), team("bme")),
+    match("S2", 1, team("fpl"), team("fl")),
+    match("P3", 2, loser("S1"), loser("S2")),
+    match("F", 2, winner("S1"), winner("S2")),
+  ]
+  const resolved = [
+    row("S1", "sgp", "bme", 4, 1),
+    row("S2", "fpl", "fl", 4, 2),
+    row("P3", "bme", "fl", 4, 3),
+    row("F", "sgp", "fpl", 4, 0),
+  ]
+
+  const places = suggestedPlacements(
+    plan(knockout, { stages: [{ ...plan(playoffs).stages.at(-1)!, code: "PLAYOFF", format: "SINGLE_ELIMINATION" }] }),
+    resolved,
+    [],
+    teams,
+  )
+
+  assert.deepEqual(
+    places.map((line) => [line.place, line.teamId]),
+    [
+      ["1", "sgp"],
+      ["2", "fpl"],
+      ["3", "bme"],
+      ["4", "fl"],
+    ],
+  )
 })

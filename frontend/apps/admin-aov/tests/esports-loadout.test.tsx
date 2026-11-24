@@ -15,7 +15,6 @@ import {
   stepArcana,
 } from "../src/features/esports/model/loadout"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
-import { latency } from "./fixtures/latency"
 
 const stone = (code: string, name: string, color: string, tier = 3): Reference => ({
   id: code,
@@ -415,10 +414,13 @@ test("edits made before the previous one is saved do not undo each other", async
     let accept = true
     let show: (content: GameContent) => void = () => {}
     let queue: Promise<unknown> = Promise.resolve()
-    // The service: answers after a moment, one change at a time, each applied to what it holds.
+    // The service: answers once told to, one change at a time, each applied to what it holds.
+    let answer = () => {}
+    let held = Promise.resolve()
+    const hold = () => (held = new Promise((resolve) => (answer = resolve)))
     const send = (change: (content: GameContent) => GameContent) =>
       (queue = queue.then(async () => {
-        await latency(8)
+        await held
         if (!accept) return false
         server = change(server)
         show(server)
@@ -447,10 +449,12 @@ test("edits made before the previous one is saved do not undo each other", async
     await render(<Host />)
     assert.equal(listed().length, 3)
 
+    hold()
     await click('[aria-label="Bỏ Tỉ lệ chí mạng"]')
     assert.deepEqual(listed(), ["Bỏ Công vật lý · Xuyên giáp", "Bỏ Máu tối đa"], "the row leaves at once")
     assert.deepEqual(recorded(), ["r-ad", "r-crit", "p-hp"], "while the service has not answered yet")
     await click('[aria-label="Bỏ Công vật lý · Xuyên giáp"]')
+    answer()
     await waitFor(() => recorded().join() === "p-hp", "both removals are saved")
     assert.deepEqual(recorded(), ["p-hp"], "the second removal did not bring the first row back")
     assert.deepEqual(listed(), ["Bỏ Máu tối đa"])
@@ -458,8 +462,10 @@ test("edits made before the previous one is saved do not undo each other", async
 
     // A refused change is taken back, and the reason is told inside the panel.
     accept = false
+    hold()
     await click('[aria-label="Bỏ Máu tối đa"]')
     assert.deepEqual(listed(), [])
+    answer()
     await waitFor(() => listed().length === 1, "the refused removal is taken back")
     assert.deepEqual(listed(), ["Bỏ Máu tối đa"], "the panel returns to what is saved")
     await render(<Host error="Phiên bản đã đổi." />)
@@ -631,7 +637,7 @@ test("side by side, the red team's panel mirrors the blue one", async () => {
 })
 
 test("filling from the roster seats a starter before a substitute, never a player who left, and never one twice", async () => {
-  const { canFillFromRoster, fillFromRoster } = await import("../src/features/esports/components/game/draft-editor")
+  const { fillFromRoster } = await import("../src/features/esports/model/line-up")
   type Option = Parameters<typeof fillFromRoster>[1] extends (teamId: string) => (infer T)[] ? T : never
   const blue: Option[] = [
     { id: "sub-mid", name: "Bench", lane: "MID", status: "SUBSTITUTE" },
@@ -644,20 +650,15 @@ test("filling from the roster seats a starter before a substitute, never a playe
   const seatOf = (content: GameContent, side: number, lane: string) =>
     content.sides[side]!.participants.find((entry) => entry.lane === lane)!.playerId ?? null
 
-  const filled = fillFromRoster(gameContent(), roster, "BLUE")
+  const filled = fillFromRoster(gameContent(), roster)
   assert.equal(seatOf(filled, 0, "MID"), "mid", "a starter before a substitute")
   assert.equal(seatOf(filled, 0, "TOP"), null, "a player who left is not seated")
   assert.equal(seatOf(filled, 0, "JUNGLE"), "jungle")
-  assert.equal(seatOf(filled, 1, "TOP"), null, "the other team is left as it is")
-  assert.equal(canFillFromRoster(filled, roster, "BLUE"), false, "nothing more to fill for that team")
-  assert.equal(canFillFromRoster(filled, roster, "RED"), true)
+  assert.equal(seatOf(filled, 1, "TOP"), "red-top")
+  assert.deepEqual(fillFromRoster(filled, roster), filled, "nothing more to fill")
 
   const starterOnTop = gameContent({ playerId: "mid" })
-  assert.equal(
-    seatOf(fillFromRoster(starterOnTop, roster, "BLUE"), 0, "MID"),
-    "sub-mid",
-    "a seated player is not seated again",
-  )
+  assert.equal(seatOf(fillFromRoster(starterOnTop, roster), 0, "MID"), "sub-mid", "a seated player is not seated again")
 })
 
 test("the panel names who played a seat, fills a team from its roster and opens on equipment", async () => {
@@ -696,12 +697,11 @@ test("the panel names who played a seat, fills a team from its roster and opens 
       [...picker().options].map((option) => option.textContent),
       ["Chưa ghi tuyển thủ", "Topper", "Bench · dự bị"],
     )
-    const fillButton = (side: string) =>
-      [...document.querySelectorAll(`section[data-side="${side}"] button`)].find((button) =>
+    const fillButton = () =>
+      [...document.querySelectorAll("button")].find((button) =>
         button.textContent?.includes("Điền tuyển thủ theo đội hình"),
-      ) as HTMLButtonElement | undefined
-    assert.equal(fillButton("RED"), undefined, "a team without a roster offers no fill")
-    await act(async () => fillButton("BLUE")!.click())
+      )
+    await act(async () => fillButton()!.click())
     assert.equal(latest.sides[0]!.participants[0]!.playerId, "p-top", "the starter takes the seat")
 
     await act(async () => {

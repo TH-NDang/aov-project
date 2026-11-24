@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 @Tag(name = "competitions")
 public interface CompetitionPlanningApi {
@@ -30,7 +31,9 @@ public interface CompetitionPlanningApi {
     record Preview(
             CompetitionPlan content,
             String stageCode,
-            int opponent
+            int opponent,
+            @Nullable Integer teams,
+            @Nullable Boolean thirdPlace
     ) {
     }
 
@@ -53,6 +56,13 @@ public interface CompetitionPlanningApi {
 
     @Operation(operationId = "competitionPlanningApi_preview", summary = "Preview generated matches of a stage")
     List<CompetitionPlan.Match> preview(Preview body);
+
+    @Operation(operationId = "competitionPlanningApi_revisions", summary = "List the history of a competition plan")
+    PageSlice<CompetitionPlanning.Revision> revisions(UUID id, @Min(0) int page,
+            @Min(1) @Max(PageLimits.MAX_SIZE) int size, @Parameter(hidden = true) HttpServletRequest request);
+
+    @Operation(operationId = "competitionPlanningApi_revision", summary = "Read a competition plan of the past")
+    CompetitionPlan revision(UUID id, UUID revisionId, @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "competitionPlanningApi_materialize", summary = "Create the series of decided matches")
     View materialize(UUID id, Version body);

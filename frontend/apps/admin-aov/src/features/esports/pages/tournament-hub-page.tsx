@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
@@ -10,34 +10,37 @@ import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
+import { CreateTournamentSheet } from "@/features/tournaments/components/create-tournament-sheet"
 import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
 import { RegistryImportSheet } from "@/features/tournaments/components/registry-import"
 import { useTournamentStats } from "../data/use-esports-data"
 import { TournamentList } from "@/features/tournaments/components/tournament-list"
+import { TournamentBulkBar } from "@/features/tournaments/components/tournament-bulk-bar"
+import { TOURNAMENT_SORTS, TournamentToolbar } from "@/features/tournaments/components/tournament-toolbar"
+import type { TournamentRowActions } from "@/features/tournaments/components/tournament-row-menu"
+import { useRecordLifecycle } from "@/features/tournaments/components/use-record-lifecycle"
+import { useRowSelection } from "@/features/tournaments/components/use-row-selection"
+import { useTournamentChanges } from "@/features/tournaments/components/use-tournament-changes"
+import { useUrlSearch } from "@/features/tournaments/components/use-url-search"
 import { regionsNamedBy } from "@/features/tournaments/model/record-reason"
-import { partsByMainEvent } from "@/features/tournaments/model/tournament-parts"
+import { partDefaults, partsByMainEvent } from "@/features/tournaments/model/tournament-parts"
 import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/api/tournament-api"
-import { useDebounced } from "@/features/community/directory/directory-api"
 import {
   ManagementEmpty,
   ManagementFooter,
   ManagementLoading,
   ManagementPanel,
-  ManagementToolbar,
 } from "@/features/tournaments/components/management-list"
-import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
+import { STATUS_LABELS } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
-import { NativeSelect } from "@/components/native-select"
 
 type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
 type TournamentStats = Omit<ContractStats, "tournamentId">
+type Entry = DocumentView<TournamentContent>
+/** The sheet open over the list. */
+type Dialog = { type: "create"; source?: Entry; partOf?: Entry } | { type: "edit"; entry: Entry } | { type: "import" }
 
 const STATUS_FILTERS: StatusFilter[] = ["all", "ONGOING", "UPCOMING", "FINISHED", "ANNOUNCED", "UNKNOWN"]
-const SORTS: Record<TournamentSort, string> = {
-  RECENT: "Gần đây trước",
-  STATUS: "Ưu tiên trạng thái",
-  NAME: "Tên A–Z",
-}
 
 export function TournamentHubPage() {
   return <AccessGate>{(access) => <Hub access={access} />}</AccessGate>
@@ -46,15 +49,14 @@ export function TournamentHubPage() {
 function Hub({ access }: { access: Access }) {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const [search, setSearch] = useState("")
-  const [creating, setCreating] = useState(false)
-  const [importing, setImporting] = useState(false)
-  const [order, setOrder] = useState<TournamentSort>("RECENT")
+  const { search, setSearch, settled } = useUrlSearch()
+  const [dialog, setDialog] = useState<Dialog | null>(null)
   const status = (STATUS_FILTERS.find((value) => value === params.get("status")) ?? "all") as StatusFilter
   const tier = params.get("tier") ?? ""
   const region = params.get("region") ?? ""
   const year = params.get("year") ?? ""
-  const settled = useDebounced(search)
+  const order =
+    (Object.keys(TOURNAMENT_SORTS) as TournamentSort[]).find((value) => value === params.get("sort")) ?? "RECENT"
   const tournaments = useInfiniteQuery({
     queryKey: tournamentKeys.hub(access.actorKey, settled, { status, tier, region, year }, order),
     initialPageParam: 0,
@@ -106,19 +108,19 @@ function Hub({ access }: { access: Access }) {
     return result
   }, [counters.data, plans.data])
 
+  const published = useMemo(
+    () => plans.data && new Set(plans.data.filter((plan) => plan.publishedAt).map((plan) => plan.id)),
+    [plans.data],
+  )
+
   const visible = useMemo(() => tournaments.data?.pages.flatMap((page) => page.items) ?? [], [tournaments.data])
   const matching = tournaments.data?.pages[0]?.totalElements ?? 0
   const filtered = !!search.trim() || status !== "all" || !!tier || !!region || !!year
-  const regions = facets.data?.regions ?? []
-  const years = (facets.data?.years ?? []).map(String)
   const resetFilters = () => {
     setSearch("")
     setParams((current) => {
       const next = new URLSearchParams(current)
-      next.delete("status")
-      next.delete("tier")
-      next.delete("region")
-      next.delete("year")
+      for (const key of ["q", "status", "tier", "region", "year"]) next.delete(key)
       return next
     })
   }
@@ -129,7 +131,24 @@ function Hub({ access }: { access: Access }) {
       else next.delete(key)
       return next
     })
-  const open = (entry: DocumentView<TournamentContent>) => navigate(tournamentPath(entry.id))
+  const open = (entry: Entry) => navigate(tournamentPath(entry.id))
+
+  const selection = useRowSelection(
+    visible.map((entry) => entry.id),
+    [settled, status, tier, region, year].join("|"),
+  )
+  const selected = visible.filter((entry) => selection.ids.has(entry.id))
+  const changes = useTournamentChanges({ parts: partsByEvent, onSettled: selection.settle })
+  const lifecycle = useRecordLifecycle("tournaments", { onChanged: () => {} })
+  const actions: TournamentRowActions | undefined = access.canWrite
+    ? {
+        duplicate: (source) => setDialog({ type: "create", source }),
+        addPart: (partOf) => setDialog({ type: "create", partOf }),
+        edit: (entry) => setDialog({ type: "edit", entry }),
+        changeStatus: (entry, next) => void changes.changeStatus([entry], next),
+        trash: (entry) => void lifecycle.remove(entry, entry.content.name),
+      }
+    : undefined
   const error = (tournaments.isLoadingError ? tournaments.error : null) ?? counters.error
 
   return (
@@ -139,13 +158,13 @@ function Hub({ access }: { access: Access }) {
         actions={
           <>
             {access.canWrite && (
-              <Button onClick={() => setCreating(true)}>
+              <Button onClick={() => setDialog({ type: "create" })}>
                 <Plus aria-hidden="true" /> Tạo giải đấu
               </Button>
             )}
             <PageActionsMenu label="Giải đấu: nhập dữ liệu và thùng rác">
               {access.canWrite && (
-                <DropdownMenuItem onSelect={() => setImporting(true)}>
+                <DropdownMenuItem onSelect={() => setDialog({ type: "import" })}>
                   <Upload />
                   Nhập dữ liệu
                 </DropdownMenuItem>
@@ -178,71 +197,25 @@ function Hub({ access }: { access: Access }) {
         <ManagementLoading />
       ) : (
         <ManagementPanel>
-          <ManagementToolbar
+          <TournamentToolbar
             search={search}
             onSearchChange={setSearch}
-            searchLabel="Tìm giải đấu"
-            placeholder="Tên giải đấu, mã hoặc khu vực…"
+            values={{ tier, region, year, sort: order }}
+            regions={facets.data?.regions ?? []}
+            years={(facets.data?.years ?? []).map(String)}
+            onFilter={(key, value) => setFilter(key, key === "sort" && value === "RECENT" ? "" : value)}
             onReset={filtered ? resetFilters : undefined}
-          >
-            <NativeSelect
-              aria-label="Hạng giải"
-              value={tier}
-              onChange={(event) => setFilter("tier", event.target.value)}
-              className="max-w-full"
-            >
-              <option value="">Tất cả hạng giải</option>
-              {Object.entries(TIER_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              aria-label="Khu vực giải đấu"
-              value={region}
-              onChange={(event) => setFilter("region", event.target.value)}
-              className="max-w-full"
-            >
-              <option value="">Mọi khu vực</option>
-              {regions.map((value) => (
-                <option key={value} value={value}>
-                  {regionName(value)}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              aria-label="Năm giải đấu"
-              value={year}
-              onChange={(event) => setFilter("year", event.target.value)}
-              className="max-w-full"
-            >
-              <option value="">Mọi năm</option>
-              {years.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              aria-label="Sắp xếp giải đấu"
-              value={order}
-              onChange={(event) => setOrder(event.target.value as TournamentSort)}
-              className="max-w-full"
-            >
-              {Object.entries(SORTS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-          </ManagementToolbar>
+          />
+          {lifecycle.failure && <div className="border-b p-3">{lifecycle.failure}</div>}
           {visible.length ? (
             <TournamentList
               entries={visible}
-              stats={stats}
+              stats={counters.isSuccess && !plans.isPending ? stats : undefined}
               onOpen={open}
               parts={partsByEvent}
+              published={published}
+              actions={actions}
+              selection={access.canWrite ? selection : undefined}
               search={settled}
               partHref={tournamentPath}
             />
@@ -267,8 +240,32 @@ function Hub({ access }: { access: Access }) {
         </ManagementPanel>
       )}
 
-      {creating && <RegistryEditor kind="tournaments" open onClose={() => setCreating(false)} />}
-      {importing && <RegistryImportSheet key={access.actorKey} onClose={() => setImporting(false)} />}
+      {access.canWrite && (
+        <TournamentBulkBar selected={selected} changes={changes} onClear={() => selection.select([])} />
+      )}
+      <HubDialog dialog={dialog} actorKey={access.actorKey} onClose={() => setDialog(null)} />
     </EsportsPage>
   )
+}
+
+function HubDialog({
+  dialog,
+  actorKey,
+  onClose,
+}: {
+  dialog: Dialog | null
+  actorKey: string
+  onClose: () => void
+}): ReactNode {
+  if (dialog?.type === "create")
+    return (
+      <CreateTournamentSheet
+        source={dialog.source}
+        defaults={dialog.partOf && partDefaults(dialog.partOf.id, dialog.partOf.content)}
+        onClose={onClose}
+      />
+    )
+  if (dialog?.type === "edit") return <RegistryEditor kind="tournaments" entry={dialog.entry} open onClose={onClose} />
+  if (dialog?.type === "import") return <RegistryImportSheet key={actorKey} onClose={onClose} />
+  return null
 }

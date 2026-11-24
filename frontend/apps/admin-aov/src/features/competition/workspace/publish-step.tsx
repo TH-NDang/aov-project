@@ -2,8 +2,9 @@ import { Check, ChevronRight, CircleAlert, Clock3, ExternalLink, Send } from "lu
 import { Button } from "@aov/ui/components/button"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { publicSite } from "@/features/community/api/page-api"
-import { STEP_LABELS, type PendingChange, type RecordingTotals, type WorkspaceCheck } from "./model"
-import { Chip, Panel, Progress, type Workspace } from "./parts"
+import { STEP_LABELS, type PendingChange, type WorkspaceCheck } from "./model"
+import { Chip, Panel, type Workspace } from "./parts"
+import { PublishGames } from "./publish-games"
 
 function CheckRow({ check, onOpen }: { check: WorkspaceCheck; onOpen: () => void }) {
   return (
@@ -35,14 +36,12 @@ export function PublishStep({
   ws,
   checks,
   pending,
-  totals,
   onPublish,
   onWithdraw,
 }: {
   ws: Workspace
   checks: WorkspaceCheck[]
   pending: PendingChange[]
-  totals?: RecordingTotals
   onPublish: () => void
   onWithdraw: () => void
 }) {
@@ -65,7 +64,7 @@ export function PublishStep({
         >
           <ul>
             {required.map((check) => (
-              <CheckRow key={check.id} check={check} onOpen={() => ws.go(check.step)} />
+              <CheckRow key={check.id} check={check} onOpen={() => ws.go(check.step, check.focus)} />
             ))}
           </ul>
         </Panel>
@@ -80,7 +79,7 @@ export function PublishStep({
         >
           <ul>
             {advised.map((check) => (
-              <CheckRow key={check.id} check={check} onOpen={() => ws.go(check.step)} />
+              <CheckRow key={check.id} check={check} onOpen={() => ws.go(check.step, check.focus)} />
             ))}
           </ul>
         </Panel>
@@ -163,26 +162,7 @@ export function PublishStep({
             )}
           </div>
         </Panel>
-        <Panel title="Ván đấu" meta="Công bố riêng từng ván">
-          <div className="space-y-3 p-4">
-            {totals ? (
-              <>
-                <div className="type-body flex justify-between gap-3">
-                  <span>Ván đã công bố</span>
-                  <span className="font-semibold tabular-nums">
-                    {totals.published}/{totals.games}
-                  </span>
-                </div>
-                <Progress value={totals.published} total={totals.games} />
-              </>
-            ) : (
-              <p className="type-meta">Đang đếm các ván đã ghi…</p>
-            )}
-            <button type="button" className="type-body underline" onClick={() => ws.go("schedule")}>
-              Mở lịch để ghi và công bố ván
-            </button>
-          </div>
-        </Panel>
+        <PublishGames ws={ws} />
       </aside>
     </div>
   )

@@ -68,8 +68,9 @@ bản nháp với snapshot công khai và liệt kê "thay đổi chưa công b�
 vẫn chụp toàn bộ giải, không công bố riêng từng trận. Bảng xếp hạng chưa đủ trận giữ nhãn tạm tính.
 
 Từ 24/11/2026, bước "Tổng quan" có khối "Kiểm tra dữ liệu": các lỗi dữ liệu Admin tự nhận ra được trong giải, mỗi lỗi
-kèm cách sửa. Khối chỉ dùng dữ liệu không gian giải đã đọc và các API sẵn có; không thêm endpoint hay migration. Mỗi
-thao tác sửa đều hỏi xác nhận, nêu giá trị cũ → mới, và ghi thẳng vào bản ghi (không nằm trong bản nháp kế hoạch).
+kèm cách sửa hoặc đường tới đúng chỗ sửa. Khối chỉ dùng dữ liệu không gian giải đã đọc và các API sẵn có. Sửa bản ghi
+(đội hình, ban huấn luyện, giải) hỏi xác nhận, nêu giá trị cũ → mới, và ghi thẳng; sửa kế hoạch thì vào bản nháp và hoàn
+tác được.
 
 | Lỗi | Cách nhận ra | Cách sửa |
 |---|---|---|
@@ -77,10 +78,48 @@ thao tác sửa đều hỏi xác nhận, nêu giá trị cũ → mới, và ghi
 | Một người hai dòng trong một đội hình | Hai dòng đội hình của cùng đội ở giải, của hai hồ sơ khác nhau mà biệt danh hoặc tên khác trùng nhau | Bỏ một trong hai dòng vào thùng rác; gộp hồ sơ vẫn làm ở bảng sửa tuyển thủ |
 | Đội đá trận mà không có đội hình | Đội có loạt trận ở giải nhưng không có dòng đội hình | Khi đúng một đội có đội hình mà không đá trận nào mang cùng tên chính, chuyển các dòng đội hình đó sang đội đá trận |
 | MVP chưa liên kết | Ván của giải có ghi chú "MVP: …" mà chưa có `mvpPlayerId` | Mở màn "Liên kết cần xem" |
+| Tỷ số lệch với ván đã ghi | Mọi ván của trận đã có đội thắng, phân định được loạt và khác tỷ số của trận | Mở lịch, lọc đúng các trận đó |
+| Đã ghi đủ ván nhưng chưa có tỷ số | Như trên nhưng trận chưa có tỷ số | Mở bảng nhập kết quả, điền theo ván đã ghi |
+| Đội hình chính lệch vị trí | Đội có từ năm người thi đấu chính mà một vị trí trùng hoặc trống | Mở bảng đội hình của đội |
+| Một người thi đấu chính ở hai đội | Cùng hồ sơ là `ACTIVE` ở hai đội của giải | Mở đội hình từng đội |
+| Trận chưa nằm trong lịch | Loạt trận của giải không có trong `matches` | Thêm vào giai đoạn cùng mã, giữ đội, giờ, tỷ số (vào bản nháp) |
+| Giai đoạn chưa theo thứ tự ngày đấu | Trận đầu của giai đoạn sau đấu trước giai đoạn trước | Xếp lại theo ngày (vào bản nháp) |
+| Nhánh đấu chưa nối | Giai đoạn loại trực tiếp có từ ba trận mà không suất nào là thắng/thua, trong khi kết quả cho biết ai đi đâu | Mở lịch, nối nhánh theo kết quả |
+| Một đội hai trận cùng giờ | Hai trận cùng `scheduledAt` có chung một đội | Mở bảng xếp lịch ở trận đó |
+| Trận ngoài thời gian của giải | Ngày đấu (theo múi giờ của giải) trước `startsOn` hoặc sau `endsOn` | Nới thời gian của giải theo lịch |
+| Trạng thái giải lệch ngày | `status` trái với `startsOn`/`endsOn` | Đặt trạng thái theo ngày |
 
 Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhất hai đội, ít nhất một giai đoạn, tổ chức đã công bố
 nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
 cuộc). Mục nên bổ sung không chặn công bố.
+
+### Thao tác nhanh trong không gian giải (24/11/2026)
+
+Người dùng yêu cầu ngày 24/11/2026 để biên tập nhanh hơn và làm được mọi việc mà không rời màn hình. Nguyên tắc cũ giữ
+nguyên: chỉ đọc trước, ghi đè thì hỏi và nêu cũ → mới, công bố chủ động.
+
+**Cả bản nháp.** Đầu trang nêu số thay đổi chưa lưu, mở ra là danh sách theo bước. Hoàn tác/làm lại từng thao tác trong
+bản nháp (Ctrl+Z, Ctrl+Shift+Z), Ctrl+S lưu, Alt+1…6 mở bước; gõ chữ liền nhau trong một ô là một lần hoàn tác. "Lịch sử
+bản nháp" liệt kê các bản đã lưu và nạp lại một bản vào bản nháp: trận đã mở thành loạt trận thật từ đó tới nay được giữ,
+cùng giai đoạn và đội của chúng. "Chép thiết lập từ giải khác" chép thông tin, đội, đội hình, giai đoạn, ban huấn luyện và
+ê-kíp; đội và giai đoạn vào bản nháp, đội hình và nhân sự ghi ngay sau xác nhận. Không chép lịch, kết quả, phiên bản game,
+nguồn và ghi chú của đội hình, người đã rời.
+
+**Đường dẫn tới đúng chỗ.** Ngoài `step` và `match`, đường dẫn nhận `team`, `stage`, `key` (khóa trận trong kế hoạch),
+`show` (lọc trận hoặc đội còn thiếu) và `open` (mở sẵn chỗ ghi: `roster`, `record`, `stage`, `result`, `results`,
+`times`). Mục kiểm tra, việc nên làm và điều kiện công bố đều dẫn thẳng bằng các tham số này.
+
+| Bước | Thao tác thêm |
+|---|---|
+| Đội & đội hình | Thêm nhiều đội bằng danh sách tên, tạo đội tại chỗ, chép từ giải khác, đổi thứ tự. Đội hình sửa cả bảng: vị trí và trạng thái một lần bấm, thêm nhiều người, chép từ giải khác, dán danh sách, tạo hồ sơ, cảnh báo trùng/thiếu vị trí, ghi một lần. Các đội chưa có đội hình chép từ giải gần nhất trong một lần xác nhận |
+| Thể thức | Đổi thứ tự giai đoạn, xếp theo ngày đấu, nhân đôi, năm mẫu, chọn đội của từng giai đoạn |
+| Lịch & kết quả | Lọc theo việc còn thiếu (chưa có tỷ số, giờ, video; thiếu ván; ván thiếu tuyển thủ; tỷ số lệch ván; lệch suất; chưa công bố). "Nhập kết quả": bảng tỷ số và video của nhiều trận, gõ số là sang ô kế, dán nhiều dòng, điền theo ván đã ghi, hỏi một lần khi ghi đè. "Xếp lịch": bảng giờ, vòng, cặp đấu, BO, thứ tự; dời giờ, xếp giờ lần lượt, đánh số vòng, chuyển giai đoạn, thêm/bỏ trận. Nối nhánh theo kết quả. Hạt giống lấy xen kẽ từ các bảng |
+| Chung cuộc | Giải thưởng gom theo tên giải, thêm người nhận cùng giải, điền đội theo đội hình của giải; trận tranh hạng ba cho hạng 3 và 4 |
+| Công bố | Đếm ván đủ dữ liệu, mục còn thiếu nhiều nhất, xuất bản mọi ván đủ dữ liệu của giải trong một lần, báo từng ván bị từ chối |
+
+Nối nhánh theo kết quả đọc trận trước đó của mỗi đội trong giai đoạn: đội thắng đi tiếp bằng suất `WINNER`, đội thua bằng
+`LOSER`. Chỉ nối khi trận trước có tỷ số và chưa suất nào dùng kết quả đó, nên cặp đấu và tỷ số không đổi; các trận của
+giai đoạn được xếp lại để suất chỉ trỏ tới trận đứng trước.
 
 ### Luật và phiên bản của giai đoạn (23/11/2026)
 
@@ -112,6 +151,60 @@ có không bị đổi.
 Admin hiện luật và phiên bản trong thẻ giai đoạn ở bước "Thể thức" và cho sửa trong phần sửa giai đoạn. Stream hiện
 chúng trong phần thể thức của trang giải.
 
+### Phạm vi patch của ván (24/11/2026)
+
+Người dùng chọn cách này ngày 24/11/2026: patch của giải đặt theo phạm vi ở giai đoạn, không ghi riêng từng ván. Trước
+đó ván chỉ có patch khi người ghi chọn tay (0/327 ván của AOG Mùa Đông 2026), nên ván không ghi patch được công bố theo
+patch mới nhất của Wiki.
+
+- **Phạm vi:** dòng phiên bản của giai đoạn có hiệu lực từ `releasedOn` tới trước dòng có ngày kế tiếp của cùng giai
+  đoạn. Giai đoạn chỉ có một dòng không ghi ngày thì dòng đó áp cho cả giai đoạn. Dòng không ngày trong giai đoạn có
+  nhiều dòng không tạo phạm vi.
+- **Ngày của ván:** `startedAt` của ván, thiếu thì lịch `scheduledAt` của trận, đổi sang ngày theo
+  `timezone` của kế hoạch giải. Giai đoạn của ván là `stage` của trận.
+- **Nguồn patch của ván** (`source`):
+  - `GAME`: ván tự ghi `seasonId` hoặc `patchVariantId`; đây là ngoại lệ (ví dụ trận đá bù) và luôn thắng.
+  - `STAGE`: dòng phiên bản của giai đoạn phủ ngày của ván; ván lấy `patchId` và `seasonId` của dòng.
+  - `NONE`: không dòng nào phủ, ví dụ giai đoạn chưa có dòng hoặc ván diễn ra trước dòng đầu tiên.
+- **Không ghi vào ván:** patch theo phạm vi được suy ra khi đọc và khi công bố. Sửa một dòng là mọi ván trong phạm vi đổi
+  theo; bản công bố của ván vẫn giữ ngữ cảnh đã đóng băng lúc công bố.
+- **Catalog:** catalog của Wiki nhận patch theo mã bản phát hành của thị trường (`patchVariantId`) hoặc theo mã patch
+  Wiki (`patchId`); mã patch được đổi sang bản phát hành của thị trường của ván.
+- **Công bố ván:** ván `STAGE` được công bố trong mùa và patch của dòng; ván `GAME` như trước; ván `NONE` theo
+  mùa hiện tại như trước.
+- **API:** `GET /admin/tournaments/{id}/game-patches` (`tournament:read`, không nhận tham số) trả mỗi ván
+  `{gameId, source, seasonId, patchId, patchVariantId, stageCode, playedOn, lineLabel, lineName, lineReleasedOn}`,
+  theo ngày thi đấu.
+- **Admin:** phần phiên bản của ván ghi rõ "Theo giai đoạn" với nhãn và tên dòng, và cho ghi đè patch riêng. Catalog
+  khi ghi ván đọc theo patch đã suy ra. Bảng "Kiểm tra dữ liệu" báo các ván không thuộc phạm vi nào khi giải đã có
+  dòng phiên bản.
+
+### Bảng đấu, mẫu nhánh, đội hình ghi cả đội và lịch sử kế hoạch (24/11/2026)
+
+Người dùng yêu cầu ngày 24/11/2026: Admin thao tác giải đấu nhanh hơn, thiếu thao tác thì bổ sung. Phần này ghi các
+thay đổi ở service; phần giao diện xem "Thao tác nhanh trong không gian giải".
+
+**Đội của giai đoạn.** Giai đoạn có thêm `teamIds`: các đội tham dự đá giai đoạn đó, ví dụ một bảng. Bỏ trống là mọi đội
+tham dự. `teamIds` chỉ được nêu đội trong `entrants`, mỗi đội một lần. Lịch vòng tròn và bảng xếp hạng của giai đoạn chỉ
+tính các đội này; giai đoạn đã lưu trước đây không có `teamIds` nên giữ nguyên.
+
+**Mẫu nhánh.** Xem trước lịch (`POST /admin/competitions/preview`) nhận thêm `teams` (số hạt giống) và `thirdPlace`:
+
+| Thể thức | Cách dựng |
+|---|---|
+| SINGLE_ELIMINATION | 2–64 hạt giống, mặc định là mọi đội của giai đoạn. Hạt giống 1 và 2 ở hai nửa khác nhau; số đội không tròn lũy thừa của 2 thì hạt giống cao vào thẳng vòng sau. `thirdPlace` thêm trận tranh hạng ba |
+| DOUBLE_ELIMINATION | 6 hạt giống (mặc định): mẫu playoffs AOG với `opponent`. 4, 8, 16, 32 hạt giống: nhánh thắng/thua chuẩn, đội thua nhánh thắng rơi xuống nửa đối diện để không gặp lại ngay |
+
+Số hạt giống không vượt quá số đội của giai đoạn.
+
+**Đội hình ghi cả đội.** `POST /admin/roster-memberships/batch` nhận `{create, update, remove}`, tối đa 500 dòng, ghi tất
+cả hoặc không ghi dòng nào. Thứ tự: bỏ, sửa, thêm. Thêm một tuyển thủ mà dòng của đội đó đang ở thùng rác thì dòng cũ
+được khôi phục với nội dung mới, thay vì báo trùng.
+
+**Lịch sử kế hoạch.** Mỗi lần lưu, mở nhập kết quả, công bố hay gỡ đều đã chụp một bản (`plan_revision`). Admin đọc danh
+sách các bản và nội dung kế hoạch của một bản để nạp lại vào bản nháp đang sửa; không có thao tác ghi đè trực tiếp từ
+lịch sử, nên khôi phục vẫn đi qua "Lưu bản nháp" và các kiểm tra của nó.
+
 ### Tên trận theo mã (18/11/2026)
 
 Người dùng chọn cách này ngày 18/11/2026 để tên trận do lịch tự động sinh ra hiển thị đúng ngôn ngữ người đọc. Trận
@@ -123,6 +216,12 @@ cho `title`. Đổi tên không bỏ `title`, xóa tên thì trận lại hiển
 | kind | Số | Tiếng Việt | Tiếng Anh |
 |---|---|---|---|
 | ROUND_ROBIN | `leg`, `round` | Lượt 1 · Vòng 2 | Leg 1 · Round 2 |
+| ROUND_OF | `round` (số đội còn lại), `number` | Vòng 16 đội · 3 | Round of 16 · 3 |
+| QUARTERFINAL | `number` | Tứ kết 2 | Quarterfinal 2 |
+| SEMIFINAL | `number` | Bán kết 1 | Semifinal 1 |
+| THIRD_PLACE | — | Tranh hạng ba | Third place match |
+| FINAL | — | Chung kết | Final |
+| UPPER_ROUND | `round`, `number` | Vòng 1 nhánh thắng · 4 | Upper bracket round 1 · 4 |
 | UPPER_SEMIFINAL | `number` | Bán kết nhánh thắng 1 | Upper bracket semifinal 1 |
 | UPPER_FINAL | — | Chung kết nhánh thắng | Upper bracket final |
 | LOWER_ROUND | `round`, `number` | Vòng 1 nhánh thua · 2 | Lower bracket round 1 · 2 |
@@ -131,7 +230,7 @@ cho `title`. Đổi tên không bỏ `title`, xóa tên thì trận lại hiển
 | GRAND_FINAL | — | Chung kết tổng | Grand final |
 | EXTRA | — | Trận bổ sung | Additional match |
 
-- Lịch tạo tự động (vòng tròn, mẫu playoffs AOG) chỉ có `title`, không có `label`. Trận Admin thêm thủ công có `title`
+- Lịch tạo tự động (vòng tròn, các mẫu nhánh) chỉ có `title`, không có `label`. Trận Admin thêm thủ công có `title`
   EXTRA.
 - `title` phải có `kind`; `leg`, `round`, `number` nếu có thì từ 1 đến 99. Sai trả 400 `TOURNAMENT_INVALID_CONTENT`, ở
   kế hoạch lẫn ở loạt trận.
@@ -597,6 +696,14 @@ Mỗi dòng: {`kind`, `recordId`, `tournamentId`, `tournamentName`, `seriesId`, 
 ván, trận hoặc giải cần mở để sửa; `label` là tên trận hoặc tên giải thưởng. Xếp theo giải bắt đầu gần nhất, rồi tên giải,
 rồi `recordId`.
 
+Từ 24/11/2026 màn này liên kết ngay tại dòng. Dòng chỉ hiện tên được ghi (toàn văn ở chú giải khi rê chuột) và đề xuất
+bản ghi khớp tên, không phân biệt dấu và hoa thường: tuyển thủ trong đội hình hai đội trước, rồi người từng ở hai đội,
+rồi người ngoài (kèm quốc gia). Một lần bấm là liên kết, hoàn tác được trong 8 giây; "Chọn khác…" mở ô chọn. "Liên kết
+gợi ý chắc chắn" làm nhiều dòng sau một xác nhận, chỉ với dòng có đúng một người khớp chính xác trong đội hình của trận;
+người ngoài đội hình không bao giờ được liên kết hàng loạt. Dòng có nhiều bình luận viên liên kết đủ mọi người một lần,
+vì dòng rời danh sách khi trận có `broadcast`. Liên kết ghi đúng như màn sửa của từng loại: ghi chú giữ nguyên, giải
+thưởng lấy tên của bản ghi; chỗ vừa được người khác liên kết thì không ghi đè.
+
 ### Admin
 
 - Tổng quan: mục "Ê-kíp phát sóng" vẽ ảnh, tên và vai trò từng người; thêm người bằng ô chọn hồ sơ PERSON/PLAYER có tìm
@@ -786,6 +893,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
 | GET /admin/tournaments/facets?level= | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách; `level=MAIN` đếm theo giải chính |
+| GET /admin/tournaments/{id}/game-patches | Mùa và patch của từng ván: tự ghi (`GAME`), theo dòng phiên bản của giai đoạn (`STAGE`) hoặc không có (`NONE`) |
 | GET /admin/tournaments/parts?parentId= | Các phần chưa xóa của một giải chính, hoặc mọi phần khi bỏ `parentId`: [{id,parentId,name,logoUrl,logoDarkUrl,competitionType,status,tier,region,startsOn,endsOn}] |
 | GET /admin/teams?q=&sort=&tournamentId=&state=&page=&size= | sort RECENT (mặc định), NAME, UPDATED. Dòng có thêm `lastActiveOn`, `context` TOURNAMENT khi thuộc giải; hai trường này không có khi không áp dụng |
 | GET /admin/players?q=&sort=&teamId=&tournamentId=&state=&page=&size= | Như trên; `context` là TEAM_IN_TOURNAMENT, TEAM hoặc TOURNAMENT |
@@ -834,7 +942,9 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Ngày sai dạng hoặc quá 60 ngày trả 400 INVALID_QUERY_PARAMETER |
 | GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp, theo thứ tự danh sách giải) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |
-| POST /admin/competitions/preview | {content,stageCode,opponent}; lịch xem trước, không ghi DB |
+| POST /admin/competitions/preview | {content,stageCode,opponent,teams?,thirdPlace?}; lịch xem trước, không ghi DB (xem "Mẫu nhánh") |
+| GET /admin/competitions/{id}/revisions?page=&size=, /admin/competitions/{id}/revisions/{revisionId} | Lịch sử kế hoạch mới nhất trước: [{id,action,createdAt,entrants,stages,matches}] / kế hoạch của một bản |
+| POST /admin/roster-memberships/batch | {create,update:[{id,version,content}],remove:[{id,version}]}, tối đa 500 dòng, ghi tất cả hoặc không dòng nào |
 | POST /admin/competitions/{id}/materialize, /publish, /withdraw | {version}; tạo trận thật / chụp snapshot / ẩn công khai |
 
 Lỗi page: PAGE_NOT_FOUND 404, PAGE_ACTION_FORBIDDEN 403, PAGE_CONFLICT 409, PAGE_INVALID_CONTENT 422.

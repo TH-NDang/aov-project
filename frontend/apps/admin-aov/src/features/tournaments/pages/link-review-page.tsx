@@ -1,30 +1,22 @@
-import { Link, useSearchParams } from "react-router"
+import { useMemo } from "react"
+import { useSearchParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import type { LinkMention, LinkMentionKind } from "@aov/community-contracts"
-import { ArrowRight, Trophy } from "lucide-react"
-import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
+import type { LinkMentionKind } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { Tabs, TabsTrigger } from "@aov/ui/components/tabs"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { PageHeader } from "@/components/page-header"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
-import { AccessGate, EsportsPage, matchPath, tournamentPath } from "@/features/esports/pages/esports-shell"
+import { AccessGate, EsportsPage } from "@/features/esports/pages/esports-shell"
 import { formatNumber } from "@/lib/text"
 import { tournamentApi, tournamentError, tournamentKeys } from "../api/tournament-api"
-import {
-  LINK_MENTION_ACTIONS,
-  LINK_MENTION_KINDS,
-  LINK_MENTION_LABELS,
-  mentionPlace,
-  mentionTarget,
-  mentionsByTournament,
-} from "../model/link-review-model"
-import { ThemedAvatarImage } from "@/components/themed-logo-img"
+import { LinkReviewList } from "../components/link-review-list"
+import { LINK_MENTION_KINDS, LINK_MENTION_LABELS } from "../model/link-review-model"
 
 /**
- * Names still written as text where a record could be linked: MVPs, casters, award recipients and their teams. Each
- * row opens the place where it is linked; a row leaves the list once it is.
+ * Names still written as text where a record could be linked: MVPs, casters, award recipients and their teams. A row
+ * is linked in place and leaves the list, or opens the place where its name is written.
  */
 export function LinkReviewPage() {
   return (
@@ -32,7 +24,7 @@ export function LinkReviewPage() {
       {(access) => (
         <EsportsPage>
           <PageHeader title="Liên kết cần xem" />
-          <LinkReview actorKey={access.actorKey} />
+          <LinkReview actorKey={access.actorKey} canWrite={access.canWrite} />
         </EsportsPage>
       )}
     </AccessGate>
@@ -42,14 +34,7 @@ export function LinkReviewPage() {
 const kindOf = (value: string | null): LinkMentionKind =>
   LINK_MENTION_KINDS.find((kind) => kind === value) ?? LINK_MENTION_KINDS[0]
 
-const targetPath = (mention: LinkMention) => {
-  const target = mentionTarget(mention)
-  return target.screen === "match"
-    ? `${matchPath(target.tournamentId, target.seriesId)}?${target.search}`
-    : `${tournamentPath(target.tournamentId)}?${target.search}`
-}
-
-function LinkReview({ actorKey }: { actorKey: string }) {
+function LinkReview({ actorKey, canWrite }: { actorKey: string; canWrite: boolean }) {
   const [params, setParams] = useSearchParams()
   const kind = kindOf(params.get("kind"))
   const facets = useQuery({
@@ -62,7 +47,7 @@ function LinkReview({ actorKey }: { actorKey: string }) {
     queryFn: ({ pageParam, signal }) => tournamentApi.linkReview(kind, pageParam, signal),
     getNextPageParam: nextPageOf,
   })
-  const mentions = rows.data?.pages.flatMap((page) => page.items) ?? []
+  const mentions = useMemo(() => rows.data?.pages.flatMap((page) => page.items) ?? [], [rows.data])
   const count = (value: LinkMentionKind) => facets.data?.find((row) => row.kind === value)?.count
 
   return (
@@ -88,60 +73,14 @@ function LinkReview({ actorKey }: { actorKey: string }) {
             Thử lại
           </Button>
         </div>
-      ) : !mentions.length ? (
-        <p className="type-body text-muted-foreground">Không còn chỗ nào cần liên kết.</p>
       ) : (
         <div className="space-y-4">
-          {mentionsByTournament(mentions).map((group, index) => (
-            <section
-              key={`${group.tournamentId}-${index}`}
-              className="admin-panel overflow-hidden"
-              aria-label={group.tournamentName}
-            >
-              <header className="flex items-center gap-3 border-b px-4 py-3">
-                <TournamentLogo id={group.tournamentId} />
-                <h2 className="type-section-title min-w-0 truncate">{group.tournamentName}</h2>
-              </header>
-              <ul className="divide-y">
-                {group.mentions.map((mention, at) => (
-                  <li
-                    key={`${mention.recordId}-${at}`}
-                    className="grid items-center gap-x-4 gap-y-1 px-4 py-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
-                  >
-                    <span className="type-body min-w-0 truncate">{mentionPlace(mention)}</span>
-                    <span className="type-body min-w-0 truncate" title={mention.text}>
-                      “{mention.text}”
-                    </span>
-                    <Button asChild variant="outline" size="sm" className="justify-self-start sm:justify-self-end">
-                      <Link to={targetPath(mention)}>
-                        {LINK_MENTION_ACTIONS[mention.kind]} <ArrowRight aria-hidden />
-                      </Link>
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          {!mentions.length && <p className="type-body text-muted-foreground">Không còn chỗ nào cần liên kết.</p>}
+          {/* Stays after the last row is linked, so that link can still be taken back. */}
+          <LinkReviewList key={kind} mentions={mentions} kind={kind} actorKey={actorKey} canWrite={canWrite} />
           <InfiniteScroll query={rows} label="Đang tải thêm" />
         </div>
       )}
     </div>
-  )
-}
-
-/** The tournament's logo, read the way the pickers read it, so it is shared with them. */
-function TournamentLogo({ id }: { id: string }) {
-  const tournament = useQuery({
-    queryKey: tournamentKeys.pickerSelected("tournaments", id),
-    queryFn: ({ signal }) => tournamentApi.read("tournaments", id, signal),
-    staleTime: 60_000,
-  })
-  return (
-    <Avatar className="size-8 shrink-0 rounded-lg border bg-background">
-      <ThemedAvatarImage url={tournament.data?.content.logoUrl} darkUrl={tournament.data?.content.logoDarkUrl} />
-      <AvatarFallback className="rounded-lg">
-        <Trophy className="size-4" />
-      </AvatarFallback>
-    </Avatar>
   )
 }

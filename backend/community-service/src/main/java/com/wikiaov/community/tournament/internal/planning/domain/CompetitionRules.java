@@ -59,7 +59,7 @@ public final class CompetitionRules {
         }
 
         var teams = entrants(plan);
-        var stages = stages(plan);
+        var stages = stages(plan, teams);
         seeds(plan, teams);
         matches(plan, teams, stages);
     }
@@ -97,7 +97,7 @@ public final class CompetitionRules {
     }
 
     /** Checks the stages and returns their codes. */
-    private static Set<String> stages(CompetitionPlan plan) {
+    private static Set<String> stages(CompetitionPlan plan, Set<UUID> teams) {
         var stages = new HashSet<String>();
         for (var stage : plan.stages()) {
             if (stage.code() == null || !stage.code().matches("[A-Z0-9_]{2,60}") || !stages.add(stage.code())) {
@@ -112,6 +112,10 @@ public final class CompetitionRules {
             text(stage.sourceUrl(), MAX_TEXT);
             text(stage.rulesNote(), MAX_TEXT);
             patches(stage);
+            if (!teams.containsAll(stage.teamIds())
+                    || new HashSet<>(stage.teamIds()).size() != stage.teamIds().size()) {
+                throw new IllegalArgumentException("A stage may only name entrants, each once.");
+            }
             bestOf(stage.bestOf());
             if (stage.legs() < 1 || stage.legs() > MAX_LEGS || stage.winPoints() < 0 || stage.lossPoints() < 0
                     || stage.advance() < 0 || stage.advance() > MAX_ADVANCE) {
@@ -217,7 +221,8 @@ public final class CompetitionRules {
 
     public static List<Match> roundRobin(Stage stage, List<Entry> entrants) {
         var rotation = new ArrayList<>(
-                entrants.stream().filter(Entry::plays).map(Entry::teamId).toList());
+                entrants.stream().filter(entry -> entry.plays() && stage.includes(entry.teamId())).map(Entry::teamId)
+                        .toList());
         if (rotation.size() < 2) {
             throw new IllegalArgumentException("At least two entrants are required.");
         }

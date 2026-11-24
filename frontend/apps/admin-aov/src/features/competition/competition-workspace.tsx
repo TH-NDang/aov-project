@@ -1,27 +1,12 @@
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ComponentType } from "react"
 import { useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-  CalendarDays,
-  Check,
-  CircleAlert,
-  ExternalLink,
-  GitBranch,
-  LayoutDashboard,
-  RotateCcw,
-  Save,
-  Send,
-  Trophy,
-  Users,
-} from "lucide-react"
-import type { CompetitionPlan, CompetitionView, TeamContent } from "@aov/community-contracts"
-import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
-import { Button } from "@aov/ui/components/button"
+import { CalendarDays, Check, CircleAlert, GitBranch, LayoutDashboard, Send, Trophy, Users } from "lucide-react"
+import type { CompetitionView, TeamContent } from "@aov/community-contracts"
 import { cn } from "@aov/ui/lib/utils"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
-import { pageApi, pageKeys, publicSite } from "@/features/community/api/page-api"
-import { StatusPill, TierBadge } from "@/features/esports/components/primitives"
+import { pageApi, pageKeys } from "@/features/community/api/page-api"
 import { useRosters, useTournamentGames, useTournamentSeries } from "@/features/esports/data/use-esports-data"
 import {
   AccessGate,
@@ -33,8 +18,7 @@ import {
 } from "@/features/esports/pages/esports-shell"
 import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
-import { tournamentDates } from "@/features/tournaments/components/tournament-metadata"
-import { partLabel, type EventFamily } from "@/features/tournaments/model/tournament-parts"
+import { partDefaults, partLabel, type EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { competitionApi, competitionKeys } from "./competition-api"
 import { EventPartTabs } from "./workspace/event-parts"
 import { FinalStep } from "./workspace/final-step"
@@ -51,11 +35,23 @@ import {
   type WorkspaceStep,
 } from "./workspace/model"
 import { OverviewStep } from "./workspace/overview-step"
-import { Chip, teamViewOf, type Workspace as WorkspaceApi, type WorkspaceAction } from "./workspace/parts"
+import { CopySetupSheet } from "./workspace/copy-setup-sheet"
+import { PlanHistorySheet } from "./workspace/plan-history-sheet"
+import {
+  FOCUS_KEYS,
+  teamViewOf,
+  type Workspace as WorkspaceApi,
+  type WorkspaceAction,
+  type WorkspaceFocus,
+} from "./workspace/parts"
 import { PublishStep } from "./workspace/publish-step"
 import { ScheduleStep } from "./workspace/schedule-step"
 import { TeamsStep } from "./workspace/teams-step"
-import { useThemedLogo } from "@/lib/themed-logo"
+import { usePlanDraft } from "./workspace/use-plan-draft"
+import { useWorkspaceKeys } from "./workspace/use-workspace-keys"
+import { WorkspaceHeader } from "./workspace/workspace-header"
+import { draftChanges } from "./model/plan-draft"
+import type { CopyPart } from "./model/copy-setup"
 
 const STEP_ICONS: Record<WorkspaceStep, ComponentType<{ className?: string }>> = {
   overview: LayoutDashboard,
@@ -95,7 +91,18 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const client = useQueryClient()
   const [params, setParams] = useSearchParams()
   const step = stepFromParam(params.get("step"))
-  const go = useCallback((value: WorkspaceStep) => setParams({ step: value }), [setParams])
+  const go = useCallback(
+    (value: WorkspaceStep, focus: WorkspaceFocus = {}) =>
+      setParams({
+        step: value,
+        ...Object.fromEntries(FOCUS_KEYS.flatMap((key) => (focus[key] ? [[key, focus[key]]] : []))),
+      }),
+    [setParams],
+  )
+  const focus = useMemo(
+    () => Object.fromEntries(FOCUS_KEYS.map((key) => [key, params.get(key) ?? undefined])) as WorkspaceFocus,
+    [params],
+  )
   const stepNavigation = useRef<HTMLElement>(null)
   useEffect(() => {
     const navigation = stepNavigation.current
@@ -106,13 +113,16 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       navigation.scrollTo({ left: navigation.scrollLeft + left - 8, behavior: "smooth" })
   }, [step])
 
-  const [plan, setPlan] = useState(entry.content.plan)
+  const draft = usePlanDraft(entry.content.plan)
+  const { plan, change, changeAll, reset } = draft
   const [baseline, setBaseline] = useState(entry.content.plan)
   const [draftVersion, setDraftVersion] = useState(entry.version)
   const dirty = JSON.stringify(plan) !== JSON.stringify(baseline)
   const [notice, setNotice] = useState("")
   const [editing, setEditing] = useState(false)
   const [addingPart, setAddingPart] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [copying, setCopying] = useState<{ parts?: CopyPart[] } | null>(null)
   const [pickedTeams, setPickedTeams] = useState<Record<string, TeamContent>>({})
 
   const series = useTournamentSeries(entry.id)
@@ -168,12 +178,12 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const hasEdits = useEffectEvent(() => dirty)
   useEffect(() => {
     if (!hasEdits()) {
-      setPlan(entry.content.plan)
+      reset(entry.content.plan)
       setBaseline(entry.content.plan)
     }
     // A match result saved from the schedule bumps the plan's version on the server even while the plan has edits.
     setDraftVersion(entry.version)
-  }, [entry.content.plan, entry.version])
+  }, [entry.content.plan, entry.version, reset])
   useEffect(() => {
     if (!dirty) return
     const warn = (event: BeforeUnloadEvent) => {
@@ -191,7 +201,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       return action === "save" ? current : competitionApi.action(current, action)
     },
     onSuccess: async (value, action) => {
-      setPlan(value.content.plan)
+      reset(value.content.plan)
       setBaseline(value.content.plan)
       setDraftVersion(value.version)
       setNotice(
@@ -208,11 +218,6 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     },
     meta: { silent: true },
   })
-  const change = useCallback(<K extends keyof CompetitionPlan>(key: K, value: CompetitionPlan[K]) => {
-    setPlan((old) => ({ ...old, [key]: value }))
-    setNotice("")
-  }, [])
-
   const teams = useMemo(() => ({ ...pickedTeams, ...entry.content.teams }), [pickedTeams, entry.content.teams])
   const resolved = useMemo(() => resolvedIndex(entry.content.resolved), [entry.content.resolved])
   const placements = tournament.data?.content.placements?.length ?? entry.content.tournament.placements?.length ?? 0
@@ -245,19 +250,27 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     baseline,
     published: published.data?.content ?? null,
     change,
+    changeAll,
     dirty,
     busy: mutate.isPending,
     canEdit: access.canWrite && !mutate.isPending,
     resolved,
     teams,
     team: (id) => teamViewOf(id ?? "", id ? teams[id] : undefined),
-    rememberTeam: (id, name) => setPickedTeams((value) => ({ ...value, [id]: { code: "", name } })),
+    rememberTeam: (id, name, content) => setPickedTeams((value) => ({ ...value, [id]: content ?? { code: "", name } })),
     series: series.data ?? [],
     rosters: rosters.data ?? [],
+    loaded: series.isSuccess && rosters.isSuccess,
     games: games.data,
     go,
+    focus,
+    openCopy: (parts) => setCopying({ parts }),
     run: (action) => mutate.mutate(action),
   }
+  const changes = useMemo(
+    () => (dirty ? draftChanges(baseline, plan, (id) => teams[id]?.name ?? "đội mới") : []),
+    [dirty, baseline, plan, teams],
+  )
 
   const publish = async () => {
     if (entry.publishedAt) {
@@ -290,7 +303,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       title: "Bỏ các thay đổi chưa lưu?",
       description: "Bản nháp trở về lần lưu gần nhất. Tỷ số đã lưu không bị ảnh hưởng.",
     })
-    if (confirmed) setPlan(baseline)
+    if (confirmed) reset(baseline)
   }
 
   const stepState: Record<WorkspaceStep, { detail: string; tone: "ok" | "todo" | "neutral" }> = {
@@ -299,8 +312,8 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       tone: check("source")?.state === "ok" && check("organizer")?.state === "ok" ? "ok" : "todo",
     },
     teams: {
-      detail: check("rosters")?.detail + " có đội hình",
-      tone: check("rosters")?.state === "ok" ? "ok" : "todo",
+      detail: rosters.data ? check("rosters")?.detail + " có đội hình" : `${plan.entrants.length} đội`,
+      tone: !rosters.data ? "neutral" : check("rosters")?.state === "ok" ? "ok" : "todo",
     },
     format: { detail: `${plan.stages.length} giai đoạn`, tone: plan.stages.length ? "ok" : "todo" },
     schedule: {
@@ -321,7 +334,12 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     },
   }
   const info = entry.content.tournament
-  const infoLogo = useThemedLogo(info.logoUrl, info.logoDarkUrl)
+  useWorkspaceKeys({
+    save: () => access.canWrite && dirty && !mutate.isPending && mutate.mutate("save"),
+    undo: draft.undo,
+    redo: draft.redo,
+    step: (index) => WORKSPACE_STEPS[index] && go(WORKSPACE_STEPS[index]),
+  })
 
   return (
     <EsportsPage>
@@ -336,61 +354,25 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
             : [{ label: "Giải đấu", to: "/tournaments" }, { label: info.name }]
         }
       />
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar className="size-14 rounded-lg border bg-background">
-            <AvatarImage src={infoLogo.url} alt="" className="object-contain" data-logo-plate={infoLogo.plate} />
-            <AvatarFallback className="rounded-lg">
-              <Trophy className="size-6" />
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <h1 className="type-page-title">{info.name}</h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <Chip tone={entry.publishedAt ? "ok" : "warn"}>{entry.publishedAt ? "Đã công bố" : "Bản nháp"}</Chip>
-              <StatusPill status={info.status} />
-              <TierBadge tier={info.tier} compact />
-              {tournamentDates(info) && <Chip>{tournamentDates(info)}</Chip>}
-              <Chip>{plan.entrants.length} đội</Chip>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="type-meta" role="status">
-            {mutate.isPending ? "Đang ghi…" : dirty ? "Có thay đổi chưa lưu" : notice || "Bản nháp đã lưu"}
-          </span>
-          {entry.publishedAt && (
-            <a
-              className="type-body inline-flex items-center gap-1.5 underline"
-              href={`${publicSite}/competitions/${entry.id}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Xem trang <ExternalLink size={14} aria-hidden />
-            </a>
-          )}
-          {access.canWrite && dirty && (
-            <Button type="button" variant="ghost" disabled={mutate.isPending} onClick={() => void discard()}>
-              <RotateCcw aria-hidden /> Bỏ thay đổi
-            </Button>
-          )}
-          {access.canWrite && (
-            <Button
-              type="button"
-              variant={entry.publishedAt && !dirty ? "outline" : "default"}
-              disabled={mutate.isPending || !dirty}
-              onClick={() => mutate.mutate("save")}
-            >
-              <Save aria-hidden /> Lưu bản nháp
-            </Button>
-          )}
-          {access.canPublish && entry.publishedAt && (pending.length > 0 || dirty) && (
-            <Button type="button" disabled={mutate.isPending || blocked} onClick={() => void publish()}>
-              <Send aria-hidden /> Cập nhật bản công bố{pending.length ? ` · ${pending.length}` : ""}
-            </Button>
-          )}
-        </div>
-      </header>
+      <WorkspaceHeader
+        ws={ws}
+        entry={entry}
+        notice={notice}
+        changes={changes}
+        pending={pending.length}
+        blocked={blocked}
+        canUndo={draft.canUndo}
+        canRedo={draft.canRedo}
+        actions={{
+          save: () => mutate.mutate("save"),
+          discard: () => void discard(),
+          publish: () => void publish(),
+          undo: draft.undo,
+          redo: draft.redo,
+          openHistory: () => setHistoryOpen(true),
+          openCopy: () => setCopying({}),
+        }}
+      />
       <EventPartTabs family={family} currentId={entry.id} />
       <nav
         ref={stepNavigation}
@@ -408,6 +390,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
               onClick={() => go(id)}
               aria-current={active ? "step" : undefined}
               aria-label={`Bước ${index + 1}: ${STEP_LABELS[id]}. ${state.detail}`}
+              title={`Alt+${index + 1}`}
               className={cn(
                 "-mb-px flex min-w-44 flex-1 items-start gap-2.5 border-b-2 px-3 pt-2.5 pb-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                 active ? "border-primary" : "border-transparent hover:bg-muted/50",
@@ -456,16 +439,15 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
             onAddPart={() => setAddingPart(true)}
           />
         )}
-        {step === "teams" && <TeamsStep ws={ws} tournament={tournament.data} />}
-        {step === "format" && <FormatStep ws={ws} />}
-        {step === "schedule" && <ScheduleStep ws={ws} />}
+        {step === "teams" && <TeamsStep key={`${focus.team}-${focus.open}`} ws={ws} tournament={tournament.data} />}
+        {step === "format" && <FormatStep key={`${focus.stage}-${focus.open}`} ws={ws} />}
+        {step === "schedule" && <ScheduleStep key={`${focus.match}-${focus.key}-${focus.open}`} ws={ws} />}
         {step === "final" && <FinalStep ws={ws} tournament={tournament.data} />}
         {step === "publish" && (
           <PublishStep
             ws={ws}
             checks={checks}
             pending={pending}
-            totals={totals}
             onPublish={() => void publish()}
             onWithdraw={() => void withdraw()}
           />
@@ -473,6 +455,16 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       </div>
       {editing && tournament.data && (
         <RegistryEditor open kind="tournaments" entry={tournament.data} onClose={() => setEditing(false)} />
+      )}
+      {historyOpen && <PlanHistorySheet ws={ws} onRestore={changeAll} onClose={() => setHistoryOpen(false)} />}
+      {copying && (
+        <CopySetupSheet
+          ws={ws}
+          record={tournament.data}
+          initialParts={copying.parts}
+          onPlan={changeAll}
+          onClose={() => setCopying(null)}
+        />
       )}
       {addingPart && (
         <RegistryEditor
@@ -485,16 +477,3 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     </EsportsPage>
   )
 }
-
-/** A new part starts from its main event: same region, year, tier and logo, with the event's name to extend. */
-const partDefaults = (mainEventId: string, main: CompetitionView["content"]["tournament"]): Record<string, string> => ({
-  parentTournamentId: mainEventId,
-  code: `${main.code}-`,
-  name: `${main.name} - `,
-  region: main.region,
-  competitionType: "QUALIFIER",
-  ...(main.year ? { year: String(main.year) } : {}),
-  ...(main.tier ? { tier: main.tier } : {}),
-  ...(main.logoUrl ? { logoUrl: main.logoUrl } : {}),
-  ...(main.logoDarkUrl ? { logoDarkUrl: main.logoDarkUrl } : {}),
-})

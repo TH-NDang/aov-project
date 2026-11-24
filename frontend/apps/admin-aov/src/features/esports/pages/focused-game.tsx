@@ -15,7 +15,7 @@ import {
 } from "lucide-react"
 import { useGameSaver, type SaveState } from "../data/use-game-saver"
 import type { ItemLookups } from "../components/game/cluster-card"
-import { DraftEditor, type RosterOption } from "../components/game/draft-editor"
+import { DraftEditor } from "../components/game/draft-editor"
 import { EventComposer, type VideoClock } from "../components/game/event-composer"
 import { EventDetailDialog } from "../components/game/event-detail-dialog"
 import { EventFeed, type FeedFilter } from "../components/game/event-feed"
@@ -24,7 +24,9 @@ import { Scoreboard } from "../components/game/scoreboard"
 import { VodSyncPanel } from "../components/game/vod-sync-panel"
 import { referenceIndex, type GameView } from "../model/game-view"
 import type { HeroLocks } from "../model/series-rules"
+import type { RosterOption } from "../model/line-up"
 import { recordingProgress, type ProgressTarget } from "../model/recording-progress"
+import { LoadError } from "./esports-shell"
 import { GameInfoPanel } from "./game-info-panel"
 import { LoadoutPanel } from "./loadout-panel"
 import type { LoadoutPart } from "../model/loadout"
@@ -64,6 +66,19 @@ export type GameActions = {
   save: (change: (content: GameContent) => GameContent) => Promise<boolean>
   publish: () => Promise<boolean>
   withdraw: () => Promise<boolean>
+  /** Resolves once every queued save was answered. */
+  settled: () => Promise<void>
+}
+
+/**
+ * The panel that records a step. The result of a game is recorded where it ends, in the video panel; what the service
+ * still reports usually comes down to the game's market, season or patch, which the info panel holds.
+ */
+export function panelFor(target: ProgressTarget, live: boolean): Panel {
+  if (target === "composer") return live ? { kind: "composer", eventKind: "KILL" } : { kind: "draft" }
+  if (target === "result") return { kind: "sync", focus: "end" }
+  if (target === "data") return { kind: "info" }
+  return { kind: target }
 }
 
 export type FocusedGameParts = {
@@ -96,8 +111,11 @@ export function FocusedGame({
   heroes,
   spells,
   catalog,
+  catalogError,
+  onReloadCatalog,
   roster,
   locks,
+  previous,
   editable,
   canPublish,
   phone,
@@ -128,8 +146,13 @@ export function FocusedGame({
   heroes: Reference[]
   spells: Reference[]
   catalog?: Catalog
+  /** Why the catalog could not be read, when it could not. */
+  catalogError?: unknown
+  onReloadCatalog: () => void
   roster: (teamId: string) => RosterOption[]
   locks: HeroLocks
+  /** The game of this match line-ups can be taken from; null in the first one. */
+  previous: GameContent | null
   editable: boolean
   canPublish: boolean
   phone: boolean
@@ -157,30 +180,18 @@ export function FocusedGame({
   onUndoable?: (text: string, revert: () => void) => void
   children: (parts: FocusedGameParts) => ReactNode
 }) {
-  const { save, publish, withdraw, state: saveState, reload } = useGameSaver(entry)
+  const { save, publish, withdraw, settled, state: saveState, reload } = useGameSaver(entry)
   useEffect(() => {
     if (!actions) return
-    actions.current = { save, publish, withdraw }
+    actions.current = { save, publish, withdraw, settled }
     return () => {
       actions.current = null
     }
-  }, [actions, save, publish, withdraw])
+  }, [actions, save, publish, withdraw, settled])
   const progress = useMemo(() => recordingProgress(entry), [entry])
   const openTarget = (target: ProgressTarget) => {
     if (!editable) onEnableEditing()
-    // The result of a game is recorded where it ends, in the video panel; what the service still reports usually
-    // comes down to the game's market, season or patch, which the info panel holds.
-    onPanel(
-      target === "composer"
-        ? chapter.live
-          ? { kind: "composer", eventKind: "KILL" }
-          : { kind: "draft" }
-        : target === "result"
-          ? { kind: "sync", focus: "end" }
-          : target === "data"
-            ? { kind: "info" }
-            : { kind: target },
-    )
+    onPanel(panelFor(target, chapter.live))
   }
   const events = useMemo(() => readTimeline(entry.content), [entry.content])
   const lookups = useMemo(() => itemLookups(items), [items])
@@ -273,7 +284,7 @@ export function FocusedGame({
     publishedNote: editable && view.published && (
       <p className="rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground">
         Ván {view.number} đã xuất bản: thay đổi ở đây chỉ vào bản nháp, trang công khai giữ bản cũ cho tới khi xuất bản
-        lại trong “Dữ liệu ván”.
+        lại.
       </p>
     ),
     popups: (
@@ -315,6 +326,7 @@ export function FocusedGame({
               spells={spells}
               roster={roster}
               locks={locks}
+              previous={previous}
               videoNow={videoNow}
               onChange={(change) => void save(change)}
             />
@@ -337,6 +349,7 @@ export function FocusedGame({
               view={view}
               catalog={catalog}
               roster={roster}
+              previous={previous}
               clock={
                 videoId && chapter.synced
                   ? {
@@ -352,6 +365,24 @@ export function FocusedGame({
               onSeekGame={(second) => seekGame(second)}
               onChange={(change) => save(change)}
             />
+          </FloatingPanel>
+        )}
+        {editable && panel?.kind === "loadout" && !catalog && (
+          <FloatingPanel
+            title={`Tuyển thủ, trang bị · Ván ${view.number}`}
+            icon={<Gem size={15} />}
+            onClose={() => onPanel(null)}
+            width={760}
+          >
+            <div className="p-4">
+              {catalogError ? (
+                <LoadError error={catalogError} onRetry={onReloadCatalog} />
+              ) : (
+                <p className="type-body text-muted-foreground" role="status">
+                  Đang tải danh mục của ván…
+                </p>
+              )}
+            </div>
           </FloatingPanel>
         )}
         {editable && panel?.kind === "info" && (
