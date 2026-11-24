@@ -1,10 +1,9 @@
 import { Link } from "react-router"
-import { ArrowUpRight, ChevronDown, ChevronRight, ChevronUp, Languages, Search, X } from "lucide-react"
-import { useId, useMemo, useState, type ReactNode } from "react"
+import { ArrowUpRight, ChevronRight, Languages, Search, X } from "lucide-react"
+import { useMemo, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
-import { AllEntityKindsIcon, entityKindIcons } from "@aov/ui/components/entity-kind-icons"
 import {
   resolveEntityRoute,
   foldEntitySearch,
@@ -17,30 +16,16 @@ import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
+import { useDebounced } from "@/features/community/directory/directory-api"
+import { formatNumber } from "@/lib/text"
+import { AliasChips } from "./alias-chips"
+import { CatalogKindFilter, type CatalogKind } from "./catalog-kind-filter"
+import { isRecordKind, recordKinds } from "./record-catalog-api"
+import { RecordCatalogRows } from "./record-catalog-rows"
+import { useRecordCounts } from "./use-record-catalog"
 
 const kinds = entityKindLabels
 const fold = foldEntitySearch
-
-function AliasChips({ aliases }: { aliases: string[] }) {
-  return (
-    <span className="flex flex-wrap gap-1">
-      {aliases.slice(0, 3).map((alias) => (
-        <span
-          key={alias}
-          className="max-w-full truncate rounded-md bg-muted/60 px-1.5 py-0.5 text-xs font-normal text-foreground/75"
-          title={alias}
-        >
-          {alias}
-        </span>
-      ))}
-      {aliases.length > 3 && (
-        <span className="text-xs text-muted-foreground" title={aliases.slice(3).join(", ")}>
-          +{aliases.length - 3}
-        </span>
-      )}
-    </span>
-  )
-}
 
 export function ReferenceCatalogTable({
   entities,
@@ -73,10 +58,8 @@ export function ReferenceCatalogTable({
   searchSlot?: HTMLElement | null
 }) {
   const [search, setSearch] = useState("")
-  const [kind, setKind] = useState("all")
+  const [kind, setKind] = useState<CatalogKind>("all")
   const [missingTranslation, setMissingTranslation] = useState(false)
-  const [expandedKinds, setExpandedKinds] = useState(false)
-  const kindsId = useId()
   const termsOnly = variant ? variant === "terms" : entities.every((entity) => entity.kind === "term")
   const searchField = (
     <SearchField
@@ -90,37 +73,43 @@ export function ReferenceCatalogTable({
       }}
     />
   )
-  const kindCounts = useMemo(() => {
-    const counts = new Map<EntityReference["kind"], number>()
-    for (const entity of entities) counts.set(entity.kind, (counts.get(entity.kind) ?? 0) + 1)
-    return counts
-  }, [entities])
-  const availableKinds = Object.keys(kinds).filter((key) =>
-    kindCounts.has(key as EntityReference["kind"]),
-  ) as EntityReference["kind"][]
-  const kindOptions = ["all", ...availableKinds] as const
-  const compactKinds = new Set<string>(kindOptions.slice(0, 4))
-  if (!compactKinds.has(kind) && availableKinds.some((key) => key === kind)) {
-    compactKinds.delete(kindOptions[3]!)
-    compactKinds.add(kind)
-  }
-  const matching = useMemo(
-    () =>
-      entities.filter(
-        (entity) =>
-          (kind === "all" || entity.kind === kind) &&
-          fold([entity.id, ...entity.translations.flatMap((text) => [text.name, ...text.aliases])].join(" ")).includes(
-            fold(search.trim()),
-          ),
-      ),
-    [entities, kind, search],
+  const wanted = fold(search.trim())
+  const settledSearch = useDebounced(search.trim())
+  // Entries of the catalog itself are in memory; records kept by other screens are read from them page by page.
+  const own = useMemo(
+    () => (termsOnly ? entities : entities.filter(({ kind }) => !isRecordKind(kind))),
+    [entities, termsOnly],
   )
+  const found = useMemo(
+    () =>
+      own.filter((entity) =>
+        fold([entity.id, ...entity.translations.flatMap((text) => [text.name, ...text.aliases])].join(" ")).includes(
+          wanted,
+        ),
+      ),
+    [own, wanted],
+  )
+  const ownKinds = useMemo(() => new Set(own.map((entity) => entity.kind)), [own])
+  const recordCounts = useRecordCounts(settledSearch, !termsOnly)
+  const counts = new Map<CatalogKind, number | undefined>(recordCounts)
+  for (const key of ownKinds) counts.set(key, 0)
+  for (const entity of found) counts.set(entity.kind, counts.get(entity.kind)! + 1)
+  const numbers = [...counts.values()]
+  counts.set("all", numbers.includes(undefined) ? undefined : numbers.reduce((sum: number, count) => sum + count!, 0))
+  const availableKinds = (Object.keys(kinds) as EntityReference["kind"][]).filter(
+    (key) => ownKinds.has(key) || (!termsOnly && isRecordKind(key)),
+  )
+  const matching = kind === "all" ? found : found.filter((entity) => entity.kind === kind)
   const missing = matching.filter(
     (entity) => !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase()),
   )
   const rows = missingTranslation ? missing : matching
   const revealed = useRevealedRows(rows, JSON.stringify([search, kind, missingTranslation]))
   const filtered = !!search || kind !== "all" || missingTranslation
+  // Their names have one language, so the filter for missing translations is about the catalog's own entries.
+  const requested =
+    termsOnly || missingTranslation ? [] : kind === "all" ? recordKinds : isRecordKind(kind) ? [kind] : []
+  const total = termsOnly || missingTranslation ? rows.length : counts.get(kind)
   function resetFilters() {
     setSearch("")
     setKind("all")
@@ -138,59 +127,7 @@ export function ReferenceCatalogTable({
           {searchSlot ? createPortal(searchField, searchSlot) : <div className="min-w-0 flex-1">{searchField}</div>}
           {actions}
         </div>
-        {!termsOnly && availableKinds.length > 1 && (
-          <div className="space-y-2 border-t pt-3">
-            <div
-              id={kindsId}
-              role="group"
-              aria-label="Lọc loại tham chiếu"
-              className="grid max-w-full grid-cols-2 items-center gap-1.5 @xl/catalog:flex @xl/catalog:flex-wrap"
-            >
-              {kindOptions.map((key) => {
-                const Icon = key === "all" ? AllEntityKindsIcon : entityKindIcons[key]
-                const label = key === "all" ? "Tất cả" : kinds[key]
-                return (
-                  <Button
-                    key={key}
-                    size="sm"
-                    variant="ghost"
-                    className={`h-8 min-w-0 justify-start gap-1.5 rounded-lg border px-2 text-xs @xl/catalog:px-2.5 ${!expandedKinds && !compactKinds.has(key) ? "hidden @xl/catalog:inline-flex" : ""} ${kind === key ? "border-foreground/15 bg-background font-semibold text-foreground shadow-xs" : "border-transparent text-foreground/75 hover:bg-background/70"}`}
-                    aria-label={label}
-                    title={label}
-                    aria-pressed={kind === key}
-                    onClick={() => {
-                      setKind(key)
-                    }}
-                  >
-                    <Icon aria-hidden className="size-3.5" />
-                    <span className="min-w-0 truncate">{label}</span>
-                    <span aria-hidden className="ml-auto text-xs text-muted-foreground tabular-nums @xl/catalog:ml-0.5">
-                      {key === "all" ? entities.length : kindCounts.get(key)}
-                    </span>
-                  </Button>
-                )
-              })}
-            </div>
-            {kindOptions.length > 4 && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-7 w-full gap-1.5 text-xs text-muted-foreground @xl/catalog:hidden"
-                aria-expanded={expandedKinds}
-                aria-controls={kindsId}
-                onClick={() => setExpandedKinds((value) => !value)}
-              >
-                {expandedKinds ? (
-                  <ChevronUp aria-hidden className="size-3.5" />
-                ) : (
-                  <ChevronDown aria-hidden className="size-3.5" />
-                )}
-                {expandedKinds ? "Thu gọn" : `Xem thêm ${kindOptions.length - 4} nhóm`}
-              </Button>
-            )}
-          </div>
-        )}
+        {!termsOnly && <CatalogKindFilter kinds={availableKinds} counts={counts} value={kind} onChange={setKind} />}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
         <p role="status" className="text-sm text-muted-foreground tabular-nums">
@@ -198,9 +135,11 @@ export function ReferenceCatalogTable({
             "Đang tải danh mục…"
           ) : (
             <>
-              <strong className="font-semibold text-foreground">{rows.length}</strong>{" "}
+              <strong className="font-semibold text-foreground">
+                {total === undefined ? "…" : formatNumber(total)}
+              </strong>{" "}
               {termsOnly ? "thuật ngữ" : "tham chiếu"}
-              {rows.length !== entities.length ? ` / ${entities.length}` : ""}
+              {termsOnly && rows.length !== entities.length ? ` / ${entities.length}` : ""}
             </>
           )}
         </p>
@@ -391,6 +330,7 @@ export function ReferenceCatalogTable({
                   </tr>
                 )
               })}
+            {!loading && !revealed.loader.hasNextPage && <RecordCatalogRows kinds={requested} search={settledSearch} />}
           </tbody>
         </table>
         {loading && (
@@ -404,7 +344,7 @@ export function ReferenceCatalogTable({
             ))}
           </div>
         )}
-        {!loading && !rows.length && (
+        {!loading && total === 0 && (
           <div className="flex min-h-48 flex-col items-center justify-center gap-2 p-6 text-center">
             <Search className="mb-1 size-6 text-muted-foreground/60" />
             <p className="text-sm font-medium">

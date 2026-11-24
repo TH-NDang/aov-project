@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query"
 import type { ReferenceKind, ReferenceNames, ReferencePreview } from "@aov/community-contracts"
 import type { RichTextSettings } from "@aov/ui/lib/entity-rich-text"
-import type { WikiMode } from "./reference-model"
+import type { WikiMode } from "@aov/ui/lib/running-text-names"
 import { communityRequest, wikiPublicRequest } from "./stream-api"
 
 /** Every query key of references in texts; reads and invalidation both use these. */

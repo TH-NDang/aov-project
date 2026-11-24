@@ -38,7 +38,7 @@ import { PageLeaveGuard } from "@/components/page-leave-guard"
 import { useReferenceCatalog } from "./catalog"
 import { saveSettings, loadLegacySettings, referenceSettingsKeys } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
-import { ReferencePreviewWorkspace } from "./reference-preview-workspace"
+import { ReferencePreviewWorkspace, type TextKind } from "./reference-preview-workspace"
 import { AdminDescriptionField } from "./rich-text-field"
 import { useSkillReferences } from "./use-skill-references"
 import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
@@ -95,6 +95,9 @@ export function TerminologyPage() {
   // The language of the translations lives in the URL, so a reload or a shared link keeps it.
   const [locale, setLocale] = useSearchParam("locale", "vi-VN")
   const [preview, setPreview] = useState("")
+  const [streamPreview, setStreamPreview] = useState("")
+  const [textParam, setTextParam] = useSearchParam("text", "game")
+  const textKind: TextKind = textParam === "stream" ? "STREAM" : "GAME"
   const [message, setMessage] = useState("")
   const [saving, setSaving] = useState(false)
   const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
@@ -240,10 +243,11 @@ export function TerminologyPage() {
     setDraft({ ...settings, entities: [...settings.entities, next] })
     setSelected(`term:${id}`)
   }
+  const locked = saving || catalog.settings.isPending
   return (
     <main className="mx-auto w-full min-w-0 max-w-7xl space-y-4 p-4 md:px-6 md:py-5">
       <PageLeaveGuard dirty={!!draft || saving} ask={askLeave} />
-      <fieldset disabled={saving || catalog.settings.isPending} className="contents">
+      <fieldset disabled={locked} className="min-w-0">
         <header className="min-w-0 space-y-4">
           <PageHeader
             title="Thuật ngữ & tham chiếu"
@@ -310,6 +314,9 @@ export function TerminologyPage() {
             </ScrollableTabsList>
           </Tabs>
         </header>
+      </fieldset>
+      {/* Apart from the header: Chromium rebuilds a fieldset when its children change and loses the title with it. */}
+      <fieldset disabled={locked} className="min-w-0 space-y-4">
         {catalog.catalog.isError && (
           <p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm">
             Không tải đủ danh mục. Các mục chưa tải sẽ không được tự nhận diện.
@@ -720,8 +727,10 @@ export function TerminologyPage() {
         </Sheet>
         {view === "preview" && (
           <ReferencePreviewWorkspace
-            value={preview}
-            onChange={setPreview}
+            kind={textKind}
+            onKindChange={(kind) => setTextParam(kind === "STREAM" ? "stream" : null)}
+            value={textKind === "STREAM" ? streamPreview : preview}
+            onChange={textKind === "STREAM" ? setStreamPreview : setPreview}
             entities={previewEntities}
             locale={locale}
             onLocaleChange={setLocale}

@@ -2402,6 +2402,17 @@ Tab **Thử hiển thị** dùng chung ô mô tả 2 trong 1 (vừa viết vừa
 chọn tham chiếu và chọn ngôn ngữ; không có khung xem trước thứ hai. Nội dung thử không lưu vào dữ liệu game. JSON Vite cũ chỉ còn nguồn chuyển
 đổi tùy chọn: đọc vào nháp, kiểm tra rồi lưu backend, không tự ghi đè hoặc xóa file cũ.
 
+Tab này thử hai loại văn bản (25/11/2026), vì mỗi loại có quy tắc nhận diện riêng. **Văn bản game** là ô mô tả trên, nhận
+tướng, thuật ngữ và nội dung game đã bật nhận diện. **Văn bản Stream** nhận đúng như Stream (tài liệu 04, "Tham chiếu trong
+văn bản"): ô đánh dấu tên sẽ thành liên kết, danh sách bên dưới nói mỗi tên mở trang nào. Tên viết sai chữ hoa được nhắc cách
+viết, ví dụ "aog" cần viết "AOG". Chỉ có tên đã công bố, vì tab đọc các danh sách công khai mà Stream đọc. Mỗi tên mang
+logo của chính nó, đọc từ thẻ xem trước; tuyển thủ và nhân sự mang biểu tượng của loại vì không có ảnh người.
+
+Tab **Tham chiếu danh mục** liệt kê mọi loại có thể tham chiếu (25/11/2026). Tướng, trang bị, phù hiệu, bảng ngọc, phụ trợ và
+quốc gia nằm trong danh mục; chế độ chơi, hệ thống giải, tổ chức, giải đấu, đội, tuyển thủ và nhân sự được đọc từng trang từ nơi
+quản lý chúng khi người đọc cuộn tới, kể cả bản nháp. Mỗi loại có số mục tìm thấy; tìm kiếm hỏi mọi loại. Dòng của các loại này
+mở thẳng trang quản lý, vì tên và logo không sửa ở đây. Người không có quyền đọc một loại thì thấy loại đó rỗng.
+
 
 ### Thư viện icon kỹ năng chưa đủ thông tin (2026-10-20)
 

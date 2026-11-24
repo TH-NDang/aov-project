@@ -70,6 +70,8 @@ type ReferencePart = Exclude<ReferenceInputPart, { type: "text" }>
 type Host = { element: HTMLSpanElement; part: ReferencePart }
 const empty: EntityReference[] = []
 const clipboardType = "application/x-aov-rich-text"
+/** How a text without formatting is shown: each name links once a paragraph. */
+const runningText = { markup: "references", firstOccurrenceOnly: true } as const
 
 const sameSelection = (left: TextSelection, right: TextSelection) =>
   left.start === right.start && left.end === right.end
@@ -141,7 +143,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
         const selection = focused ? getReferenceInputSelection(root) : undefined
         clearHighlights.current()
         removeDecorations(root)
-        const matches = passiveReferenceHighlights(root, recognitionIndex)
+        const matches = passiveReferenceHighlights(root, recognitionIndex, formatting ? undefined : runningText)
         const icons = decorateReferences(root, matches)
         clearHighlights.current = registerPassiveHighlights(root, matches, highlightKey)
         // Positions count source text only, so the caret returns to the same place around the new icons.
@@ -149,7 +151,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
         setDecorations(icons)
       }, 350)
       return () => clearTimeout(timer)
-    }, [value, recognitionIndex, autoRecognize, disabled, highlightKey, recognitionRevision, inside])
+    }, [value, recognitionIndex, autoRecognize, disabled, formatting, highlightKey, recognitionRevision, inside])
     React.useEffect(() => () => clearHighlights.current(), [])
     const composing = React.useRef(false)
     const remembered = React.useRef<TextSelection>({ start: 0, end: 0 })

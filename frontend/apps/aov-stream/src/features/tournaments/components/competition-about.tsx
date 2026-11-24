@@ -3,7 +3,7 @@ import type { CompetitionView } from "@aov/community-contracts"
 import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
-import { referenceKey } from "../../../lib/reference-model"
+import { referenceKey } from "@aov/ui/lib/running-text-names"
 import "./competition-about.css"
 
 /** What the circuit of a competition is, for a reader who meets it here first. Nothing shows without a text. */

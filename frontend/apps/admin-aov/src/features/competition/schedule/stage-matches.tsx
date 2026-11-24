@@ -1,12 +1,12 @@
 import { useState } from "react"
 import type { CompetitionStage, PlannedMatch } from "@aov/community-contracts"
 import { Trophy } from "lucide-react"
+import { Segmented } from "@/components/segmented"
 import type { MatchPanelMode } from "../workspace/match-panel"
 import { defaultGroupMode, groupMatches, hasScore, matchLabel, type GroupMode } from "../workspace/model"
 import { Panel, type Workspace } from "../workspace/parts"
 import { PlanBracket } from "../workspace/plan-bracket"
 import { MatchDetail, MatchGroups, ScoreChip, sideName } from "./match-groups"
-import { Segmented } from "./schedule-toolbar"
 import { SeedStrip } from "./seed-strip"
 import { StandingsPanel } from "./standings-panel"
 

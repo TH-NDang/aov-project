@@ -23,7 +23,12 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     const url = String(input)
     requests.push(url)
     const parsed = new URL(url, "http://localhost")
-    if (parsed.pathname === "/api/community/v1/admin/reference-catalog")
+    if (parsed.pathname === "/api/wiki/v1/admin/game-modes") return Response.json([])
+    if (
+      ["reference-catalog", "pages", "tournaments"].some(
+        (list) => parsed.pathname === `/api/community/v1/admin/${list}`,
+      )
+    )
       return Response.json({
         items: [],
         totalElements: 0,
@@ -115,20 +120,30 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
       "Wiki domains share one compact catalog read",
     )
     assert.equal(
-      requests.filter(
-        (url) => new URL(url, "http://localhost").pathname === "/api/community/v1/admin/reference-catalog",
-      ).length,
+      requests.filter((url) => {
+        const { pathname, searchParams } = new URL(url, "http://localhost")
+        return pathname === "/api/community/v1/admin/reference-catalog" && !searchParams.has("kind")
+      }).length,
       1,
       "The separate community catalog stays bounded and shared between consumers",
     )
     assert.equal(
       requests.some((url) =>
-        /\/admin\/(?:heroes|items|enchantments|arcana|spells|teams|players|tournaments|series|games)(?:\/|$)/.test(
+        /\/admin\/(?:heroes|items|enchantments|arcana|spells|teams|players|series|games)(?:\/|$)/.test(
           new URL(url, "http://localhost").pathname,
         ),
       ),
       false,
       "Reference loading does not download full catalogs or individual hero revisions",
+    )
+    assert.equal(
+      requests
+        .map((url) => new URL(url, "http://localhost"))
+        .some(
+          ({ pathname, searchParams }) => pathname.endsWith("/admin/tournaments") && searchParams.get("page") !== "0",
+        ),
+      false,
+      "Tournaments are counted and read one page at a time",
     )
     assert.equal(
       requests.some((url) => url.includes("/data/trang-bi.json")),

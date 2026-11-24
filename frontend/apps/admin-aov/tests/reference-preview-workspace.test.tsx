@@ -23,6 +23,8 @@ test("the try-out tab writes in the shared description box without a second pane
     const [value, setValue] = React.useState("Nội dung ban đầu")
     return (
       <ReferencePreviewWorkspace
+        kind="GAME"
+        onKindChange={() => {}}
         value={value}
         onChange={setValue}
         locale="vi-VN"

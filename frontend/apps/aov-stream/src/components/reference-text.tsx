@@ -1,5 +1,5 @@
 import { Fragment, useMemo } from "react"
-import { parseRichText } from "@aov/ui/lib/entity-rich-text"
+import { readRunningText } from "@aov/ui/lib/running-text"
 import { plainReferences } from "../lib/reference-model"
 import { useReferences } from "../lib/use-references"
 import { ReferenceLink } from "./reference-link"
@@ -19,17 +19,7 @@ export function ReferenceText({ text, about = nothing }: { text: string; about?:
   const key = about.join(" ")
   const subjects = useMemo(() => (key ? key.split(" ") : nothing), [key])
   const references = useReferences(text, subjects)
-  const nodes = useMemo(
-    () =>
-      references &&
-      parseRichText(text, references.index, {
-        markup: "references",
-        firstOccurrenceOnly: true,
-        exclude: new Set(subjects),
-        resolveAddress: references.resolveAddress,
-      }),
-    [text, references, subjects],
-  )
+  const nodes = useMemo(() => references && readRunningText(text, references, subjects), [text, references, subjects])
   if (!nodes) return <>{plainReferences(text)}</>
   return (
     <>

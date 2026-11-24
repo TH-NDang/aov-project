@@ -1,4 +1,10 @@
-import { defaultEntityColor, parseRichText, type createEntityIndex, type EntityReference } from "./entity-rich-text"
+import {
+  defaultEntityColor,
+  parseRichText,
+  type createEntityIndex,
+  type EntityReference,
+  type RichTextOptions,
+} from "./entity-rich-text"
 
 type PassiveHighlight = { range: Range; color?: string; underline: boolean; entity: EntityReference }
 type HighlightRuntime = {
@@ -7,7 +13,11 @@ type HighlightRuntime = {
 }
 
 /** Highlight exact names without inserting markup, replacing text, or moving the caret. */
-export function passiveReferenceHighlights(root: HTMLElement, index: ReturnType<typeof createEntityIndex>) {
+export function passiveReferenceHighlights(
+  root: HTMLElement,
+  index: ReturnType<typeof createEntityIndex>,
+  options: Pick<RichTextOptions, "markup" | "firstOccurrenceOnly"> = {},
+) {
   const matches: PassiveHighlight[] = []
   const document = root.ownerDocument
   const walker = document.createTreeWalker(root, 4)
@@ -24,7 +34,7 @@ export function passiveReferenceHighlights(root: HTMLElement, index: ReturnType<
     // Literal source tags are editable text, not parsed formatting with matching DOM offsets.
     if (/<\/?(?:b|i|muted|noauto|color|ref)(?:[=>]|\b)/i.test(text)) continue
     let offset = 0
-    for (const part of parseRichText(text, index, { maxReferences: 500 - matches.length })) {
+    for (const part of parseRichText(text, index, { ...options, maxReferences: 500 - matches.length })) {
       if (part.type === "text") offset += part.text.length
       else if (part.type === "reference") {
         const start = offset

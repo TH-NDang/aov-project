@@ -800,6 +800,8 @@ Giới thiệu, lịch sử, bài viết và bình luận là chữ thuần. Khi
 khác và địa chỉ trang của hệ thống giải, tổ chức, giải, đội, tuyển thủ, nhân sự và nội dung Wiki (tướng, trang bị, phù hiệu,
 ngọc, phụ trợ, chế độ chơi), rồi biến thành liên kết có thẻ xem trước. Không lưu liên kết vào dữ liệu: sửa tên hay thu hồi
 trang là văn bản cũ đổi theo. Nhận diện nằm ở bộ phân tích dùng chung (ADR-011), Admin và Wiki không đổi cách nhận diện.
+Admin thử được cách Stream nhận tên ở tab Thử hiển thị của Thuật ngữ & tham chiếu, loại Văn bản Stream; cả hai dựng và đọc tên
+bằng `packages/ui/src/lib/running-text.ts`.
 
 ### Danh sách công khai
 
@@ -859,8 +861,9 @@ Quy tắc viết trong `packages/ui/src/lib/reference-names.ts`, danh sách từ
 - Trong câu, tên có gạch chân màu nhấn và không có mũi tên của `GoLink`, vì mũi tên sẽ chen giữa tên và dấu câu. Rê chuột hiện
   thẻ (logo, loại, một dòng); chạm lần đầu hiện thẻ ngay cạnh tên, chạm tiếp mở trang. Người không có ảnh.
 - Nhắc tên có chủ ý lưu là `<ref=kind:id>tên</ref>` trong chữ thuần; `kind` thêm `circuit`, `organization`, `competition`,
-  `person`, `mode`. Mục không còn công bố thì đọc như chữ. Ô nhập `MentionInput` (gõ @) dựng trên `EntityReferenceInput`, đã có
-  test nhưng chưa gắn vào màn hình nào: bài viết, bình luận và trò chuyện công khai chưa được mở trong đợt này.
+  `person`, `mode`. Mục không còn công bố thì đọc như chữ. Ô nhập `MentionInput` (gõ @) dựng trên `EntityReferenceInput`, mới
+  dùng ở ô thử của Admin; trên Stream chưa gắn vào màn hình nào, vì bài viết, bình luận và trò chuyện công khai chưa được mở
+  trong đợt này.
 
 ## Tuyển thủ trùng tên và gộp hồ sơ (20/11/2026)
 
