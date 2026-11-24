@@ -333,11 +333,24 @@ export type DocumentView<T> = {
   context?: RankContext
 }
 export type RankContext = "TEAM_IN_TOURNAMENT" | "TEAM" | "TOURNAMENT" | "PARTICIPANT"
+/**
+ * How many tournaments each value of a filter leaves beside the search and the other filters; a value that leaves none
+ * is missing. `total` counts every tournament of the level.
+ */
 export type TournamentFacets = {
   total: number
   statuses: Record<string, number>
-  regions: string[]
-  years: number[]
+  tiers: Record<string, number>
+  regions: Record<string, number>
+  years: Record<string, number>
+}
+/** What the team directory can be narrowed by, counted like `TournamentFacets`. */
+export type TeamFacets = { countries: Record<string, number> }
+/** What the player directory can be narrowed by, counted like `TournamentFacets`. */
+export type PlayerFacets = {
+  countries: Record<string, number>
+  lanes: Record<string, number>
+  statuses: Record<string, number>
 }
 export type RegistryRecordState = "ACTIVE" | "DELETED" | "ALL"
 export type DeletionUsage = { type: string; count: number; adminPath: string }

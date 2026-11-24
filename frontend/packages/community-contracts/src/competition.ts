@@ -1,4 +1,5 @@
 import type { PlayerContent, TeamContent, TournamentContent, SeriesContent, RosterMembershipContent } from "./index"
+import type { PersonRole } from "./pages"
 import { matchName, type MatchTitle, type TitleText } from "./match-titles.ts"
 
 export type CompetitionSlot = {
@@ -80,6 +81,42 @@ export type CompetitionPlan = {
   playoffSeeds: Record<number, string>
   matches: PlannedMatch[]
 }
+/** The circuit of a competition; its short name and introduction are what its page says now. */
+export type CompetitionCircuit = {
+  id: string
+  code: string
+  name: string
+  logoUrl?: string | null
+  published: boolean
+  shortName?: string | null
+  introduction?: string | null
+}
+/**
+ * A team, player or person of published competitions, named as the newest of them names it. A player carries the team
+ * of that competition's roster, a person the team they worked for and what they did. People carry no picture; the id of
+ * a person is the one of their profile page.
+ */
+export type CompetitionParticipant = {
+  id: string
+  kind: "TEAM" | "PLAYER" | "PERSON"
+  /** What a person did in that competition; empty for teams and players. */
+  roles: PersonRole[]
+  name: string
+  shortName?: string | null
+  country?: string | null
+  imageUrl?: string | null
+  imageDarkUrl?: string | null
+  competitions: number
+  competitionId: string
+  competitionName: string
+  team?: {
+    id: string
+    name: string
+    shortName?: string | null
+    logoUrl?: string | null
+    logoDarkUrl?: string | null
+  } | null
+}
 export type ResolvedMatch = {
   key: string
   teamAId?: string | null
@@ -113,7 +150,7 @@ export type CompetitionPerson = {
   published: boolean
 }
 export type CompetitionSnapshot = {
-  circuit?: { id: string; code: string; name: string; logoUrl?: string | null; published: boolean } | null
+  circuit?: CompetitionCircuit | null
   organizer?: { id: string; code: string; name: string; logoUrl?: string | null; published: boolean } | null
   tournament: TournamentContent
   plan: CompetitionPlan
