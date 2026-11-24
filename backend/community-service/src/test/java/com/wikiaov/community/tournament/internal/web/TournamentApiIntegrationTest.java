@@ -703,30 +703,27 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
-    void playersHaveOptionalSafePhotosAndAliasesWithoutBreakingOldPayloadsOrReferencePrivacy() throws Exception {
+    void playersHaveAliasesAndNoPhotosWithoutBreakingOldPayloadsOrReferencePrivacy() throws Exception {
         String key = UUID.randomUUID().toString();
         var player = create("players", new Player("photo-" + key, "Player " + key, "Private full name", "VN",
                 "https://img.example.test/player.png", List.of(" Old nickname " + key + " ")));
         mvc.perform(authorized(get(ADMIN + "/players")).param("q", "old nickname " + key))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.items[0].content.photoUrl").value("https://img.example.test/player.png"));
+                .andExpect(jsonPath("$.items[0].content.photoUrl").isEmpty());
         String body = mvc.perform(authorized(get(ADMIN + "/reference-catalog")).param("kind", "PLAYER")
                 .param("q", "old nickname " + key)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(player.get("id")))
-                .andExpect(jsonPath("$.items[0].icon").value("https://img.example.test/player.png"))
+                .andExpect(jsonPath("$.items[0].icon").doesNotExist())
                 .andReturn().getResponse().getContentAsString();
         assertThat(body).doesNotContain("Private full name", "fullName", "country");
 
         var legacy = json.readValue("{\"code\":\"old-player\",\"nickname\":\"Old player\"}", Player.class);
         assertThat(legacy.photoUrl()).isNull();
         assertThat(legacy.aliases()).isEmpty();
-        for (var invalid : List.of(
-                new Player("unsafe-" + UUID.randomUUID(), "Unsafe", null, null, "data:image/png,test", List.of()),
-                new Player("duplicate-alias-" + UUID.randomUUID(), "Aliases", null, null, null,
-                        List.of("Name", " name ")))) {
-            mvc.perform(authorized(post(ADMIN + "/players")).contentType(MediaType.APPLICATION_JSON)
-                    .content(json.writeValueAsString(Map.of("content", invalid)))).andExpect(status().isBadRequest());
-        }
+        var duplicates = new Player("duplicate-alias-" + UUID.randomUUID(), "Aliases", null, null, null,
+                List.of("Name", " name "));
+        mvc.perform(authorized(post(ADMIN + "/players")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("content", duplicates)))).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -1306,6 +1303,16 @@ class TournamentApiIntegrationTest {
         mvc.perform(authorized(get(ADMIN + "/players/directory")).param("q", marker).param("status", "ACTIVE"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].nickname").value(marker + " Starter"));
 
+        // Filters count what the others leave, so nothing on offer finds an empty list.
+        mvc.perform(authorized(get(ADMIN + "/players/directory/facets")).param("q", marker).param("lane", "MID"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.lanes.MID").value(1))
+                .andExpect(jsonPath("$.lanes.JUNGLE").value(1))
+                .andExpect(jsonPath("$.statuses.ACTIVE").doesNotExist());
+        mvc.perform(authorized(get(ADMIN + "/teams/directory/facets")).param("q", marker))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.countries.ZZ").doesNotExist());
+        mvc.perform(authorized(get(ADMIN + "/players/directory/facets")).param("status", "NOPE"))
+                .andExpect(status().isBadRequest());
+
         mvc.perform(authorized(get(ADMIN + "/players/directory")).param("lane", "NOPE"))
                 .andExpect(status().isBadRequest());
         mvc.perform(authorized(get(ADMIN + "/players/directory")).param("sort", "PRIZE"))
@@ -1360,10 +1367,6 @@ class TournamentApiIntegrationTest {
         mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(
                         Map.of("content", new Team("other-" + UUID.randomUUID(), "Other", null, null, image)))))
-                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_MEDIA_RETIRED"));
-        mvc.perform(authorized(post(ADMIN + "/players")).contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(Map.of("content",
-                        new Player("other-" + UUID.randomUUID(), "Other", null, null, image, List.of())))))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_MEDIA_RETIRED"));
     }
 

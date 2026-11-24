@@ -75,6 +75,10 @@ public final class TournamentContent {
         }
     }
 
+    /**
+     * A player has no picture: {@code photoUrl} of older records and requests is read and dropped, so no answer carries
+     * one and saving a record removes it.
+     */
     public record Player(
             String code,
             String nickname,
@@ -88,6 +92,7 @@ public final class TournamentContent {
             List<String> signatureHeroes
     ) {
         public Player {
+            photoUrl = null;
             aliases = aliases == null
                     ? List.of()
                     : aliases.stream().map(value -> value == null ? null : value.strip()).toList();

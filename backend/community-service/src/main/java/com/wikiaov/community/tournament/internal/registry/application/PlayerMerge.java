@@ -93,7 +93,7 @@ public class PlayerMerge {
         }
 
         return new Player(kept.code(), kept.nickname(), either(kept.fullName(), merged.fullName()), kept.country(),
-                either(kept.photoUrl(), merged.photoUrl()), aliases, either(kept.birthDate(), merged.birthDate()),
+                null, aliases, either(kept.birthDate(), merged.birthDate()),
                 either(kept.lane(), merged.lane()),
                 kept.careerStatus() == CareerStatus.UNKNOWN ? merged.careerStatus() : kept.careerStatus(),
                 kept.signatureHeroes().isEmpty() ? merged.signatureHeroes() : kept.signatureHeroes());

@@ -29,12 +29,12 @@ public class PeopleDirectory implements CompetitionPeople {
             var shown = row.getPublishedContent();
             if (published && shown != null) {
                 shown = shown.present(row.getPresentation());
-                people.put(row.getId(), new Person(row.getId(), row.getCode(), shown.name(), shown.avatarUrl(), true));
+                people.put(row.getId(), new Person(row.getId(), row.getCode(), shown.name(), null, true));
             } else if (published) {
                 people.put(row.getId(), new Person(row.getId(), null, row.getContent().name(), null, false));
             } else {
                 var draft = row.getContent();
-                people.put(row.getId(), new Person(row.getId(), row.getCode(), draft.name(), draft.avatarUrl(),
+                people.put(row.getId(), new Person(row.getId(), row.getCode(), draft.name(), null,
                         shown != null));
             }
         }

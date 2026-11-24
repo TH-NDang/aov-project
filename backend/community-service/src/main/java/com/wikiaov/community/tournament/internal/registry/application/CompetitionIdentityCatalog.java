@@ -37,7 +37,7 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
             throw TournamentErrors.invalid("Restore the player before linking it.");
         }
         var data = row.content();
-        return new Identity(id, data.code(), data.nickname(), data.country(), data.photoUrl());
+        return new Identity(id, data.code(), data.nickname(), data.country(), null);
     }
 
     @Override
@@ -46,7 +46,7 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
             boolean allowSameName) {
         var id = kind == Kind.TEAM
                 ? teams.create(new Team(code, name, null, country, imageUrl), actor).id()
-                : players.create(new Player(code, name, null, country, imageUrl, null), actor, allowSameName).id();
+                : players.create(new Player(code, name, null, country, null, null), actor, allowSameName).id();
         return read(kind, id);
     }
 
@@ -63,8 +63,7 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
             var previous = row.content();
             players.update(id, row.version(),
                     new Player(previous.code(), details.name(), previous.fullName(), details.country(),
-                            details.imageUrl(), previous.aliases(),
-                            previous.birthDate(), previous.lane(), previous.careerStatus(),
+                            null, previous.aliases(), previous.birthDate(), previous.lane(), previous.careerStatus(),
                             previous.signatureHeroes()),
                     actor);
         }

@@ -179,6 +179,12 @@ public record PageContent(
         }
     }
 
+    /** The same content without a picture or cover, as editors' records of one person have none. */
+    public PageContent withoutPictures() {
+        return new PageContent(name, shortName, country, biography, null, null, links, sources, history, achievements,
+                roster, personRoles, channelOrganizationId, organizationId);
+    }
+
     public PageContent present(Presentation presentation) {
         if (presentation == null) {
             return this;
