@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -130,6 +131,74 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
 
         boolean getRelated();
     }
+
+    /** A published page as a text names it; {@code summary} is the start of its introduction. */
+    interface NamedRow {
+        UUID getId();
+
+        String getKind();
+
+        String getCode();
+
+        @Nullable
+        UUID getEntityId();
+
+        String getName();
+
+        @Nullable
+        String getShortName();
+
+        @Nullable
+        String getCountry();
+
+        @Nullable
+        String getLogoUrl();
+
+        @Nullable
+        String getSummary();
+    }
+
+    /**
+     * Every published page as its readers see it: the introduction and picture its representatives chose replace the
+     * edited ones, except on a page of the {@code editorial} kind, which has none. Native: reads a few fields of the
+     * jsonb documents.
+     */
+    @Query(value = """
+        SELECT p.id AS id, p.kind AS kind, p.code AS code, p.entity_id AS "entityId",
+               p.published_content->>'name' AS name, p.published_content->>'shortName' AS "shortName",
+               p.published_content->>'country' AS country, shown.content->>'avatarUrl' AS "logoUrl",
+               left(shown.content->>'biography', 600) AS summary
+          FROM community.page p
+         CROSS JOIN LATERAL (SELECT CASE WHEN p.presentation IS NULL OR p.kind = :editorial THEN p.published_content
+                                         ELSE p.presentation END AS content) shown
+         WHERE p.published_content IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                           WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
+         ORDER BY lower(p.published_content->>'name'), p.id
+        """, nativeQuery = true)
+    List<NamedRow> named(String editorial);
+
+    /** Changes with every publication, withdrawal and change by a representative. Native: hashes the rows together. */
+    @Query(value = """
+        SELECT coalesce(md5(string_agg(concat(p.id, p.published_at, md5(CAST(p.presentation AS text))), ','
+                                       ORDER BY p.id)), '')
+          FROM community.page p
+         WHERE p.published_content IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                           WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
+        """, nativeQuery = true)
+    String namedRevision();
+
+    /** The identity a page stands for. */
+    interface EntityRow {
+        UUID getId();
+
+        UUID getEntityId();
+    }
+
+    @Query("select p.id as id, p.entityId as entityId from PageRecord p "
+            + "where p.id in :ids and p.kind = PLAYER and p.entityId is not null")
+    List<EntityRow> playersBehind(Collection<UUID> ids);
 
     Optional<PageRecord> findByCode(String code);
 
