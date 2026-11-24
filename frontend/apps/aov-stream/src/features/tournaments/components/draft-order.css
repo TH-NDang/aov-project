@@ -1,0 +1,86 @@
+/* The draft as two lines, one per team, that scroll sideways together; bans are drawn smaller and without colour. */
+.tn-order {
+  display: flex;
+  gap: 20px;
+  padding: 14px 20px 18px;
+  overflow-x: auto;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  scrollbar-width: thin;
+}
+.tn-order-teams {
+  position: sticky;
+  z-index: 1;
+  left: -20px;
+  display: grid;
+  grid-template-rows: 48px 48px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: -20px;
+  padding: 26px 12px 0 20px;
+  background: var(--hub-surface);
+  font-size: 14px;
+  font-weight: 700;
+}
+.tn-order-teams > span {
+  padding-left: 10px;
+  border-left: 3px solid var(--hub-blue);
+}
+.tn-order-teams > span[data-side="RED"] {
+  border-color: var(--hub-red);
+}
+.tn-order-phase {
+  flex: none;
+}
+.tn-order-phase > h3 {
+  margin: 0 0 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-order-phase > ol {
+  display: grid;
+  grid-template-rows: 48px 48px;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-order-phase li {
+  --reference-size: 48px;
+  --reference-radius: var(--hub-radius-sm);
+  position: relative;
+  display: grid;
+  width: 48px;
+  place-items: center;
+}
+.tn-order-phase[data-kind="BAN"] li {
+  --reference-size: 38px;
+  filter: grayscale(0.9);
+  opacity: 0.78;
+}
+/* The banned hero is struck through, as in the lineup. */
+.tn-order-phase[data-kind="BAN"] li::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 1.5px),
+    var(--hub-danger) calc(50% - 1.5px) calc(50% + 1.5px),
+    transparent calc(50% + 1.5px)
+  );
+}
+@media (max-width: 899.98px) {
+  .tn-order {
+    gap: 16px;
+    padding: 12px 12px 14px;
+  }
+  .tn-order-teams {
+    left: -12px;
+    margin-left: -12px;
+    padding-left: 12px;
+  }
+}

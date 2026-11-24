@@ -9,6 +9,7 @@ import type {
 } from "@aov/community-contracts"
 import { matchTitleText } from "@aov/community-contracts/match-titles"
 import { localeText } from "@aov/ui/lib/locale-text"
+import { roundPart } from "./match-labels.ts"
 
 export type CatalogKind = "heroes" | "items" | "arcana" | "enchantments" | "spells"
 
@@ -20,7 +21,6 @@ export const LANE_NAMES = {
   DRAGON: ["Đường Rồng", "Abyssal Dragon lane"],
   SUPPORT: ["Hỗ trợ", "Support"],
 } as const
-export const LANE_SHORT = { TOP: "DSL", JUNGLE: "JUG", MID: "MID", DRAGON: "ADL", SUPPORT: "SUP" } as const
 /** How much of a loadout the source showed, in Vietnamese and in English. */
 export const OBSERVATION_NAMES = {
   UNKNOWN: ["Chưa thu thập", "Not collected"],
@@ -120,6 +120,7 @@ export function seriesRound(series?: Pick<SeriesContent, "name" | "title"> | nul
     .split("·")
     .map((part) => part.trim())
     .filter((part) => part && !/\bvs\.?\b/i.test(part))
+    .flatMap((part) => roundPart(part, locale) ?? [])
   return parts.join(" · ") || null
 }
 

@@ -1,0 +1,26 @@
+/* The directory: what is on and coming, the latest champions, then every circuit with its seasons. */
+.tn-directory {
+  gap: 20px;
+}
+.tn-directory-part {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.tn-circuits {
+  display: grid;
+  min-width: 0;
+  gap: 36px;
+}
+@media (max-width: 899.98px) {
+  .tn-directory {
+    gap: 14px;
+  }
+  .tn-directory-part {
+    margin-bottom: 10px;
+  }
+  .tn-circuits {
+    gap: 28px;
+  }
+}

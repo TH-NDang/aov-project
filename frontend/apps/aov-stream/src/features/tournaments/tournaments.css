@@ -1,12 +1,16 @@
-/* Matches and competitions as the home page, the directory and a competition's own page show them. */
+/*
+ * What the pages of tournaments share with each other and with the community's pages: headings, side cards, facts,
+ * short lists. What one component draws lives in that component's sheet.
+ */
 
 /* ---------- Section heading: a title, an optional count and one link on the right ---------- */
 .tn-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px 16px;
-  margin-bottom: 12px;
+  gap: 4px 16px;
+  margin-bottom: 14px;
 }
 /* In a section that spaces its parts with a gap, the heading keeps no margin of its own. */
 .tn-heading[data-flush] {
@@ -16,17 +20,20 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 10px;
+  gap: 2px 12px;
   margin: 0;
   color: var(--hub-text);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
-  line-height: 24px;
+  line-height: 28px;
+  letter-spacing: -0.015em;
 }
 .tn-heading h2 small {
   color: var(--hub-muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
 }
 /* A title that is a link turns to the accent when pointed at. */
 .tn-heading h2 > a:hover {
@@ -52,158 +59,235 @@
   text-underline-offset: 3px;
 }
 
-/*
- * ---------- Match card: two rows of team and score ----------
- * Positioned so the hidden copy LocalTime keeps of each time stays inside the card: in a strip or a bracket that
- * scrolls sideways it would otherwise escape the scroller and widen the page on phones.
- */
-.tn-match {
-  position: relative;
+/* ---------- Page head: a title with one action, straight on the page ---------- */
+.tn-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+.tn-page-head h1 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+  letter-spacing: -0.02em;
+}
+.tn-page-head p {
+  margin: 2px 0 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+}
+
+/* ---------- Unfolding the rest of a list ---------- */
+.tn-more {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-more > svg {
+  transform: rotate(90deg);
+}
+
+/* ---------- Page layouts ---------- */
+.tn-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 32px;
+}
+.tn-overview-main,
+.tn-overview-side,
+.tn-stack {
   display: grid;
   min-width: 0;
-  gap: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--hub-border);
+  gap: 36px;
+}
+.tn-overview-side {
+  gap: 16px;
+}
+/* A side column with nothing in it leaves the page to the content. */
+.tn-overview:not(:has(> .tn-overview-side > *)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.tn-overview-side:not(:has(> *)) {
+  display: none;
+}
+.tn-block {
+  min-width: 0;
+}
+/* The tabs of a page stay in reach while its content scrolls, under the bar of the app. */
+.tn-sticky-tabs {
+  position: sticky;
+  z-index: 20;
+  top: var(--hub-topbar);
+  background: var(--hub-bg);
+}
+.tn-match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: 10px;
+}
+
+/* ---------- Side cards: facts, rankings, awards ---------- */
+.tn-side-card {
+  min-width: 0;
+  padding: 18px;
   border-radius: var(--hub-radius-sm);
   background: var(--hub-surface);
+}
+.tn-side-card > h2 {
+  margin: 0 0 8px;
   color: var(--hub-text);
-  transition:
-    border-color 120ms,
-    background-color 120ms;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
 }
-a.tn-match:hover,
-a.tn-match:focus-visible {
-  border-color: var(--hub-accent-border);
-  background: var(--hub-hover);
+.tn-facts {
+  margin: 0;
 }
-.tn-match[data-live] {
-  border-color: color-mix(in srgb, var(--hub-red) 55%, var(--hub-border));
+.tn-facts > div {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hub-border);
 }
-.tn-match[data-final] {
-  border-color: var(--hub-accent-border);
+.tn-facts dt {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
 }
-.tn-match-meta,
-.tn-match-foot {
+.tn-facts dd {
+  margin: 2px 0 0;
+  color: var(--hub-text);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+/* A page's about card: each value sits in a line with its mark, and the card ends without a rule under the last. */
+.tn-facts[data-variant="about"] > div:last-child {
+  border-bottom: 0;
+}
+.tn-facts[data-variant="about"] dd {
   display: flex;
-  min-width: 0;
   align-items: center;
   gap: 6px;
-  color: var(--hub-muted);
-  font-size: 12px;
-  line-height: 16px;
 }
-.tn-match-meta > img {
-  width: 16px;
-  height: 16px;
-  flex: none;
-  border-radius: 4px;
-  object-fit: contain;
-}
-.tn-match-meta > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* In a list of several competitions the name keeps two lines, since names often differ only at the end. */
-.tn-match-meta[data-context] {
-  align-items: flex-start;
-}
-.tn-match-meta[data-context] > img {
-  margin-top: 1px;
-}
-.tn-match-meta[data-context] > span {
+/* In a page's main column the facts stand side by side, without rules between them. */
+.tn-facts[data-variant="wide"] {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 0 24px;
+}
+.tn-facts[data-variant="wide"] > div {
+  border-bottom: 0;
+}
+.tn-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.tn-links a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 5px;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+}
+.tn-links a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Members of a team in groups, on a team's page ---------- */
+.tn-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+.tn-team-card {
   min-width: 0;
-  white-space: normal;
+  padding: 16px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
 }
-.tn-match-competition {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.tn-team-card ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.tn-match-round {
-  overflow: hidden;
-  color: var(--hub-text-soft);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tn-match-foot {
-  justify-content: space-between;
-}
-/* A time never breaks between its hour and its day. */
-.tn-match-foot time {
-  white-space: nowrap;
-}
-.tn-match-team {
-  --stream-image-size: 24px;
-  --stream-image-radius: var(--aov-radius-control);
+.tn-team-card li {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
+  /* The name keeps its width; a long role wraps at the end of the row instead of running over it. */
+  grid-template-columns: 24px minmax(min-content, 1fr) minmax(0, max-content);
   align-items: center;
   gap: 8px;
+  min-height: 36px;
+  border-top: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-team-card li > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.tn-lane {
+  display: grid;
+  place-items: center;
+  color: var(--hub-accent-strong);
+}
+
+/* ---------- What is not there, and what was noted, said once ---------- */
+.tn-quiet {
+  margin: 0;
+  color: var(--hub-muted);
   font-size: 14px;
   line-height: 20px;
 }
-.tn-match-team > strong {
-  overflow: hidden;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tn-match-team > b {
-  min-width: 1.25em;
-  font-size: 15px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-.tn-match-team[data-lost] {
-  color: var(--hub-muted);
-}
-.tn-match-team[data-lost] > strong {
-  font-weight: 400;
-}
-.tn-match-team[data-won] > b {
+.tn-quiet > button {
   color: var(--hub-accent-strong);
-}
-.tn-match-team[data-open] > strong {
-  color: var(--hub-muted);
-  font-weight: 400;
-}
-.tn-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--hub-red);
-  font-weight: 700;
-}
-.tn-live::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent);
-}
-
-/* ---------- Facts on the artwork of a competition's or a match's head ---------- */
-.hub-banner-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-.hub-banner-stats > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 12px;
-  border-radius: var(--aov-radius-pill);
-  background: rgb(255 255 255 / 14%);
-  color: #fff;
-  font-size: 12px;
   font-weight: 600;
+}
+.tn-footnote {
+  display: grid;
+  max-width: 72ch;
+  gap: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+.tn-footnote > p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.tn-footnote > a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-self: start;
+  gap: 5px;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.tn-footnote > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---------- Home: the row of matches above the feed ---------- */
@@ -212,7 +296,7 @@ a.tn-match:focus-visible {
 }
 .tn-strip-row {
   display: grid;
-  grid-auto-columns: minmax(232px, 1fr);
+  grid-auto-columns: minmax(240px, 1fr);
   grid-auto-flow: column;
   gap: 10px;
   /* Room for the focus ring and the hover border, which a scroll box would otherwise clip. */
@@ -220,15 +304,15 @@ a.tn-match:focus-visible {
   padding: 4px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  scroll-padding-inline: 4px;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
 }
 .tn-strip-row > * {
   scroll-snap-align: start;
 }
-.tn-strip-row > .tn-strip-skeleton {
-  height: 112px;
-  border: 0;
+.tn-strip-skeleton {
+  height: 176px;
 }
 
 /* ---------- A short list of competitions in the side column ---------- */
@@ -281,32 +365,54 @@ a.tn-match:focus-visible {
   color: var(--hub-success);
 }
 
-/* A competition's or a team's mark on a tile of its own. */
-.tn-logo {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  flex: none;
-  place-items: center;
-  overflow: hidden;
-  border-radius: var(--hub-radius-sm);
+@media (max-width: 1079.98px) {
+  .tn-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tn-overview-side {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    align-items: start;
+  }
 }
-.tn-logo > img {
-  width: 100%;
-  height: 100%;
-  padding: 8%;
-  object-fit: contain;
-}
-/* Without a logo, the monogram over the colour drawn from the name. */
-.tn-logo > b {
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
 @media (max-width: 899.98px) {
+  .tn-heading {
+    margin-bottom: 10px;
+  }
   .tn-heading h2 {
-    font-size: 17px;
+    font-size: 18px;
+    line-height: 24px;
+  }
+  .tn-heading h2 small {
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .tn-page-head h1 {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .tn-page-head p {
+    display: none;
+  }
+  /* A head that says how to use the page keeps its sentence, a size smaller. */
+  .tn-page-head[data-lead="kept"] p {
+    display: block;
+    font-size: 13px;
+  }
+  .tn-overview,
+  .tn-overview-main,
+  .tn-stack {
+    gap: 28px;
+  }
+  /* Under the pinned row of the app's tabs. */
+  .tn-sticky-tabs {
+    top: 43px;
+  }
+  .tn-match-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .tn-side-card {
+    padding: 14px;
   }
   /* A phone shows one card and the edge of the next, so the row reads as something to swipe. */
   .tn-strip-row {
@@ -317,8 +423,8 @@ a.tn-match:focus-visible {
     scrollbar-width: none;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .tn-match {
-    transition: none;
+@media (max-width: 479.98px) {
+  .tn-match-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

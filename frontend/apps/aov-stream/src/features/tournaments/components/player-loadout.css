@@ -1,0 +1,88 @@
+/* What a player built, beside or under their name. */
+.tn-build {
+  display: grid;
+  min-width: 0;
+  grid-area: build;
+  gap: 4px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-slots {
+  --reference-size: 100%;
+  --reference-radius: var(--aov-radius-control);
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 34px));
+  gap: 4px;
+}
+.tn-slot {
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-sunken);
+  color: var(--hub-muted);
+  font-size: 13px;
+  aspect-ratio: 1;
+}
+.tn-slot[data-unknown] {
+  border: 1px dashed var(--hub-border-strong);
+  background: none;
+}
+.tn-runes {
+  --reference-size: 28px;
+  --reference-radius: 50%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}
+.tn-runes > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+/* The primary branch stands a step larger than the other. */
+.tn-runes > span[data-branch] {
+  --reference-size: 34px;
+}
+[data-slot="b"] > .tn-build {
+  justify-items: end;
+}
+[data-slot="b"] > .tn-build > .tn-runes {
+  justify-content: flex-end;
+}
+/* Under the name, a build starts on the side of its hero. */
+@media (max-width: 1179.98px) {
+  [data-slot="a"] > .tn-build {
+    justify-items: end;
+  }
+  [data-slot="a"] > .tn-build > .tn-runes {
+    justify-content: flex-end;
+  }
+  [data-slot="b"] > .tn-build {
+    justify-items: start;
+  }
+  [data-slot="b"] > .tn-build > .tn-runes {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-slots {
+    width: 100%;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .tn-slot {
+    font-size: 12px;
+  }
+  .tn-runes {
+    --reference-size: 22px;
+    gap: 3px 5px;
+  }
+  .tn-runes > span[data-branch] {
+    --reference-size: 26px;
+  }
+}

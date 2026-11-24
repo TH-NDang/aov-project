@@ -1,0 +1,139 @@
+/* The stages of a competition, one under another: the stage at the left, its rules and updates beside it. */
+.tn-format {
+  margin: 0;
+  padding: 0;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  list-style: none;
+}
+.tn-format > li {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  align-content: start;
+  gap: 12px 32px;
+  padding: 20px;
+}
+.tn-format > li + li {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-format header {
+  grid-row: span 2;
+}
+.tn-format h3 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.tn-format header > p {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-format-rules {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  list-style: none;
+}
+.tn-format-rules > li {
+  max-width: 68ch;
+}
+/* The updates in the order they were used, on one line of time. */
+.tn-patches {
+  display: grid;
+  grid-auto-columns: minmax(180px, 1fr);
+  grid-auto-flow: column;
+  grid-column: 2;
+  gap: 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+}
+.tn-patches > li {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 2px;
+  padding-top: 16px;
+  border-top: 2px solid var(--hub-border);
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-patches > li::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--hub-accent);
+}
+.tn-patches strong {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-patch-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+.tn-patches a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 5px;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.tn-patches a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* The dots stand on the line's upper edge, which the scroller would clip. */
+.tn-patches {
+  padding-top: 6px;
+}
+@media (max-width: 899.98px) {
+  .tn-format > li {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+  .tn-format header > p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 14px;
+  }
+  .tn-patches {
+    grid-auto-flow: row;
+    grid-column: 1;
+    gap: 4px;
+    padding-top: 0;
+  }
+  /* One under another, the line of time runs down. */
+  .tn-patches > li {
+    padding: 4px 0 8px 20px;
+    border-top: 0;
+    border-left: 2px solid var(--hub-border);
+    margin-left: 5px;
+  }
+  .tn-patches > li::before {
+    top: 9px;
+    left: -6px;
+  }
+}

@@ -1,0 +1,127 @@
+/* A competition's mark on a tile, and a competition as a card of a grid. */
+.tn-logo {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+}
+.tn-logo > img {
+  width: 100%;
+  height: 100%;
+  padding: 8%;
+  object-fit: contain;
+}
+/* A logo without a version for dark backgrounds may be dark itself: a pale rim keeps it readable on the tile. */
+.tn-logo > img[data-rim] {
+  filter: drop-shadow(0 0 1px rgb(255 255 255 / 80%)) drop-shadow(0 0 6px rgb(255 255 255 / 30%));
+}
+/* Without a logo, the monogram over the colour drawn from the name. */
+.tn-logo > b {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.tn-logo[data-size="card"] {
+  width: 64px;
+  height: 64px;
+}
+.tn-logo[data-size="card"] > b {
+  font-size: 16px;
+}
+.tn-logo[data-size="head"] {
+  width: 128px;
+  height: 128px;
+  border-radius: 20px;
+}
+.tn-logo[data-size="head"] > b {
+  font-size: 34px;
+}
+.tn-logo[data-light] {
+  background: rgb(255 255 255 / 96%);
+}
+.tn-logo[data-light] > img {
+  padding: 10%;
+}
+.tn-logo[data-light] > b {
+  color: var(--aov-stream-ink);
+}
+
+.tn-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 10px;
+}
+.tn-card {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.tn-card:hover {
+  background: var(--hub-hover);
+}
+.tn-card-body {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+/* Two lines at most: what tells seasons apart is often at the end of the name. */
+.tn-card-body > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.tn-card-meta {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-card-champion {
+  --stream-image-size: 22px;
+  --stream-image-radius: 5px;
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-card-champion > svg {
+  flex: none;
+  color: var(--hub-accent-strong);
+}
+.tn-card-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+@media (max-width: 899.98px) {
+  .tn-logo[data-size="head"] {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--hub-radius);
+  }
+  .tn-logo[data-size="head"] > b {
+    font-size: 22px;
+  }
+}

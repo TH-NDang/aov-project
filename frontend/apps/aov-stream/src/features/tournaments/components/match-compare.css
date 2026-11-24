@@ -1,0 +1,96 @@
+/* Two teams side by side: the figure of each on its own side of what it counts. */
+.tn-compare {
+  padding: 8px 20px 14px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-compare-teams,
+.tn-compare dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 220px) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+}
+.tn-compare-teams {
+  --stream-image-size: 40px;
+  --stream-image-radius: var(--aov-radius-control);
+  min-height: 64px;
+}
+.tn-compare-teams > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+}
+.tn-compare-teams > span[data-side="a"] {
+  flex-direction: row-reverse;
+}
+.tn-compare-teams > span[data-side="b"] {
+  grid-column: 3;
+}
+.tn-compare dl {
+  margin: 0;
+}
+.tn-compare dl > div {
+  min-height: 46px;
+  border-top: 1px solid var(--hub-border);
+}
+.tn-compare dt {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+}
+.tn-compare dd {
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-compare dd:first-child {
+  text-align: right;
+}
+.tn-compare dd[data-ahead] {
+  color: var(--hub-accent-strong);
+  font-weight: 700;
+}
+.tn-compare-met {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 18px;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--hub-border);
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-compare-met > a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.tn-compare-met > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 899.98px) {
+  .tn-compare {
+    padding-inline: 14px;
+  }
+  .tn-compare-teams {
+    grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  }
+  .tn-compare dl > div {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 130px) minmax(0, 1fr);
+    gap: 8px;
+  }
+}

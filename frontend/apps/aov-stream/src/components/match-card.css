@@ -1,0 +1,129 @@
+/*
+ * A match as two rows of team and score. Positioned so the hidden copy LocalTime keeps of each time stays inside the
+ * card: in a strip that scrolls sideways it would otherwise escape the scroller and widen the page on phones.
+ */
+.tn-match {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition: border-color 160ms;
+}
+a.tn-match:hover,
+a.tn-match:focus-visible {
+  border-color: var(--hub-accent);
+}
+.tn-match[data-live] {
+  border-color: color-mix(in srgb, var(--hub-red) 60%, var(--hub-border));
+}
+.tn-match-head,
+.tn-match-foot {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+/* A time never breaks between its hour and its day. */
+.tn-match-head time {
+  white-space: nowrap;
+}
+.tn-match-foot {
+  justify-content: flex-start;
+}
+.tn-match-foot[data-context] {
+  align-items: flex-start;
+  padding-top: 8px;
+  border-top: 1px solid var(--hub-border);
+}
+.tn-match-foot > img {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  object-fit: contain;
+}
+.tn-match-foot > span {
+  display: grid;
+  min-width: 0;
+}
+/* In a list of several competitions the name keeps two lines, since names often differ only at the end. */
+.tn-match-competition {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--hub-text-soft);
+}
+.tn-match-team {
+  --stream-image-size: 32px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 20px;
+}
+.tn-match-blank {
+  width: 32px;
+  height: 32px;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: var(--aov-radius-control);
+}
+.tn-match-team > strong {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-match-team > b {
+  min-width: 1.25em;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.tn-match-team:is([data-lost], [data-open]) {
+  color: var(--hub-muted);
+}
+.tn-match-team:is([data-lost], [data-open]) > :is(strong, b) {
+  font-weight: 500;
+}
+.tn-match-team[data-won] > b {
+  color: var(--hub-accent-strong);
+}
+.tn-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--hub-red);
+  font-weight: 700;
+}
+.tn-live::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+  animation: tn-live-pulse 1.8s ease-out infinite;
+}
+/* The dot sends out one ring at a time, the way a broadcast marks what is on air. */
+@keyframes tn-live-pulse {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent);
+  }
+  70%,
+  to {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}

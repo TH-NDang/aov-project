@@ -1,0 +1,119 @@
+/* People a competition names: its broadcast crew, each team's staff and the MVP of a match or a game. */
+
+/* A person's picture: round, as on their own page. */
+.tn-face {
+  --stream-image-size: 28px;
+  --stream-image-radius: 50%;
+  display: inline-flex;
+  flex: none;
+}
+.tn-face[data-size="small"] {
+  --stream-image-size: 24px;
+}
+
+/* The crew by role: groups fill the width they get, one under another in a narrow card. */
+.tn-crew {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px 24px;
+  margin: 0;
+}
+.tn-crew dt {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.tn-crew dd {
+  margin: 4px 0 0;
+}
+.tn-crew ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-crew li {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.tn-crew a:hover {
+  color: var(--hub-accent-strong);
+}
+
+/* The crew of one match, under its games. */
+.tn-match-crew {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+.tn-crew-panel {
+  padding: 16px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+
+/* A team's staff under its roster, in the rows of the roster; right under the team's name when it has no roster. */
+.tn-staff {
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--hub-border);
+}
+.tn-staff > ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-staff li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-areas:
+    "face name"
+    "face role";
+  align-items: center;
+  gap: 0 10px;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-staff li > :first-child {
+  grid-area: face;
+}
+.tn-staff li > small {
+  grid-area: role;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.tn-staff a:hover {
+  color: var(--hub-accent-strong);
+}
+.tn-staff > h3 {
+  margin: 0 0 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+/* The MVP among the facts of a head: the name stands out and is underlined when pointed at. */
+.tn-mvp > b {
+  font-weight: 700;
+}
+.tn-mvp a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

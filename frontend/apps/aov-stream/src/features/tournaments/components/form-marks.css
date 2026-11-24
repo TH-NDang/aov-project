@@ -1,0 +1,16 @@
+.tn-form {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+}
+.tn-form > i {
+  width: 7px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--hub-danger);
+}
+.tn-form > i[data-won] {
+  height: 18px;
+  background: var(--hub-success);
+}

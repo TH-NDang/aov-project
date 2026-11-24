@@ -1,0 +1,151 @@
+/* The controls and the parts of a schedule; its rows are in match-row.css and its days in day-strip.css. */
+.tn-schedule-view {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}
+/* One row of controls: the quick switch first, the selects at the far end. */
+.tn-schedule-bar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.tn-schedule-bar > .tn-schedule-scope {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-schedule-bar > .tn-schedule-filter {
+  margin-left: auto;
+}
+.tn-schedule-bar > .competition-filter-group {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-schedule-bar .competition-select {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-schedule-bar .competition-select > [data-slot="select-value"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The sentence wraps in its own column, so the way out stays beside it instead of dropping to a line of its own. */
+.tn-schedule-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-schedule-note > span {
+  min-width: 0;
+}
+.tn-schedule-note > button {
+  min-height: 36px;
+  flex: none;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-schedule-note > button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-schedule {
+  display: grid;
+  min-width: 0;
+  gap: 36px;
+}
+.tn-schedule-part {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}
+.tn-day {
+  min-width: 0;
+}
+.tn-day-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  margin: 0 0 8px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.tn-day-title > b {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-day-title > span:not(.tn-live)::first-letter {
+  text-transform: uppercase;
+}
+/* Filters of the competition directory, of a schedule and of the games. */
+.competition-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.competition-filters .competition-search {
+  flex: 999 1 210px;
+  width: auto;
+  min-width: 0;
+}
+.competition-filters > .competition-scope {
+  flex: none;
+}
+/* The filters move below the search together, so no filter ends up alone on a line. */
+.competition-filter-group {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.competition-sheet-filters {
+  display: grid;
+  gap: 8px;
+}
+.competition-sheet-filters .competition-select {
+  width: 100%;
+  min-height: 44px;
+}
+.competition-select {
+  width: auto;
+  min-width: 100px;
+  min-height: var(--hub-control-height);
+  border-color: var(--hub-border);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* How many competitions the filters leave, beside the way to clear them. */
+.competition-result {
+  padding-left: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.competition-clear {
+  padding: 8px;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+}
+@media (max-width: 899.98px) {
+  .competition-select {
+    min-height: 40px;
+    min-width: 0;
+  }
+  .tn-schedule {
+    gap: 28px;
+  }
+}

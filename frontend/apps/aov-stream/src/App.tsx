@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from "react-router"
-import { TournamentDirectory } from "./features/tournaments/tournament-directory"
-import { GamePage } from "./features/tournaments/game-page"
+import { GamesPage } from "./features/tournaments/pages/games-page"
+import { GamePage } from "./features/tournaments/pages/game-page"
 import { CommunityHome } from "./features/community/pages/community-home"
 import { CommunityExplore } from "./features/community/pages/community-explore"
 import { CommunityProfilePage } from "./features/community/pages/community-profile"
@@ -11,13 +11,11 @@ import {
 } from "./features/community/pages/community-account"
 import { CommunityLoginCallback } from "./components/community-session"
 import "./features/community/components/community.css"
-import { PublicCompetitionPage } from "./features/tournaments/competition-page"
-import { CompetitionDirectory } from "./features/tournaments/competition-hub"
-import { MatchPage } from "./features/tournaments/match-page"
-import "./features/tournaments/competition.css"
+import { PublicCompetitionPage } from "./features/tournaments/pages/competition-page"
+import { CompetitionDirectory } from "./features/tournaments/pages/competition-directory-page"
+import { MatchPage } from "./features/tournaments/pages/match-page"
 import "./features/tournaments/tournaments.css"
-import "./features/tournaments/competition-pages.css"
-import "./features/tournaments/games.css"
+import "./features/tournaments/components/schedule.css"
 export default function App() {
   return (
     <Routes>
@@ -26,7 +24,7 @@ export default function App() {
       <Route path="/competitions/:id" element={<PublicCompetitionPage />} />
       <Route path="/competitions/:id/matches/:matchKey" element={<MatchPage />} />
       <Route path="/matches/:seriesId" element={<MatchPage />} />
-      <Route path="/games" element={<TournamentDirectory />} />
+      <Route path="/games" element={<GamesPage />} />
       <Route path="/games/:id" element={<GamePage />} />
       <Route path="/explore" element={<CommunityExplore />} />
       <Route path="/pages" element={<ExploreRedirect />} />

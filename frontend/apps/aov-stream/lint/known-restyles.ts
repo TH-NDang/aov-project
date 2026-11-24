@@ -14,8 +14,4 @@ export const knownRestyles = [
   "features/community/components/community-profile.css .tn-match-grid",
   "features/community/components/community-profile.css .tn-team-card",
   "features/community/components/community-profile.css .tn-team-grid",
-  "features/tournaments/competition-pages.css .hub-banner-stats",
-  "features/tournaments/competition-pages.css .hub-kicker",
-  "features/tournaments/competition.css .hub-banner-stats",
-  "features/tournaments/competition.css .hub-kicker",
 ]

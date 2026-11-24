@@ -1,0 +1,100 @@
+/* The moments of a game along one line of time, each on its team's side of it. */
+.tn-moments {
+  position: relative;
+  margin: 0;
+  padding: 8px 20px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  list-style: none;
+}
+.tn-moments > li {
+  --side: var(--hub-border-strong);
+  display: grid;
+  min-height: 48px;
+  grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr);
+  align-items: center;
+}
+.tn-moments > li[data-side="BLUE"] {
+  --side: var(--hub-blue);
+}
+.tn-moments > li[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-moment {
+  --reference-size: 34px;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  grid-column: 1;
+  grid-row: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 8px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-moments > li[data-slot="b"] > .tn-moment {
+  grid-column: 3;
+  justify-content: flex-start;
+}
+.tn-moment > b {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.tn-moment > small {
+  flex: 1 1 100%;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-moment-assists {
+  --reference-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+.tn-moment-time {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1;
+  justify-items: center;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-moment-time > time {
+  min-width: 56px;
+  padding: 2px 8px;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--side) 16%, var(--hub-surface));
+  color: var(--hub-text);
+  font-weight: 600;
+  text-align: center;
+}
+.tn-moment-time > small {
+  font-size: 12px;
+  line-height: 16px;
+}
+@media (max-width: 899.98px) {
+  .tn-moments {
+    padding: 6px 12px;
+  }
+  .tn-moments > li {
+    grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr);
+  }
+  .tn-moment {
+    --reference-size: 28px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .tn-moments > li:not([data-slot="b"]) > .tn-moment {
+    text-align: right;
+  }
+  .tn-moment-assists {
+    display: none;
+  }
+}

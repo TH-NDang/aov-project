@@ -67,8 +67,8 @@ là hàng thứ hai dính ở đầu màn hình. Trang nằm trong cột `--aov-
 |---|---|---|
 | Đầu trang | Hàng thương hiệu cao 48px (cú, chữ AOV Stream, nút tìm kiếm, chuông khi đã đăng nhập, "⋯" dưới 768px hoặc tài khoản) cuộn đi khi đọc; hàng tab bên dưới dính lại, cuộn ngang, dưới 420px bỏ icon. Bấm tìm kiếm thì nút quay lại và ô nhập thay hàng thương hiệu | Một thanh cao 56px: cú và menu chuyển ứng dụng, ba mục, ô tìm kiếm, chuông thông báo và tài khoản. Dưới 1100px ô tìm thu thành nút, bấm thì ô nhập chiếm cả thanh |
 | Bảng tin | Dải Trận đấu cuộn ngang → chip lọc bảng tin → bài viết, tải thêm khi cuộn | Dải Trận đấu → bảng tin bên trái, cột phụ 320px bên phải: Giải đang và sắp diễn ra; Tham gia cộng đồng khi chưa đăng nhập, Đang theo dõi và Gợi ý theo dõi khi đã đăng nhập. Dưới 1100px cột phụ ẩn vì chỉ chứa lối tắt đã có ở chỗ khác |
-| Giải đấu | Tiêu đề và nút Tra cứu ván đấu → tab Các giải đấu, Lịch & kết quả → ô tìm và nút Lọc → Đang và sắp diễn ra → các hệ thống giải. Ở tab Lịch & kết quả, chip Tất cả, Lịch đấu, Kết quả nằm hàng riêng dưới ô tìm | Tiêu đề, một dòng mờ và nút Tra cứu ván đấu → tab → ô tìm cùng nhóm ô lọc trên một hàng (chip Tất cả, Lịch đấu, Kết quả cạnh ô tìm) → Đang và sắp diễn ra → mỗi hệ thống giải một nhóm, mùa mới nhất trước, mùa cũ gấp lại |
-| Một giải | Quay lại Tất cả giải đấu → đầu giải (logo, hệ thống giải, tên, trạng thái, ngày, số đội, giải thưởng, nhà vô địch) → tab Tổng quan, Lịch & kết quả, BXH & nhánh đấu, Đội tham dự, cuộn ngang → Tổng quan: trận, bảng xếp hạng, nhánh đấu, rồi Thông tin, Thể thức, Giải thưởng cá nhân | Như compact; từ 1080px Thông tin, Thể thức, Giải thưởng cá nhân nằm ở cột phải 320px |
+| Giải đấu | Tiêu đề và nút Tra cứu ván đấu → tab Các giải đấu, Lịch & kết quả → Đang diễn ra (sân khấu của giải, các trận đang và sắp đấu bên dưới) → Sắp diễn ra → Nhà vô địch gần đây, cuộn ngang → ô tìm và nút Lọc → các hệ thống giải, mỗi mùa một hàng với nhà vô địch. Ở tab Lịch & kết quả: ô tìm và nút Lọc → chip Tất cả, Lịch đấu, Kết quả → dải ngày cuộn ngang → các trận theo ngày | Như compact; giải đang diễn ra có các trận ở nửa phải sân khấu, nhóm ô lọc cùng hàng với ô tìm (chip cạnh ô tìm ở tab lịch). Mỗi hệ thống giải một danh sách, mùa mới nhất trước, vòng loại và giải phụ nằm dưới giải chính, mùa cũ gấp lại. Khi đang lọc, phần mở đầu ẩn đi |
+| Một giải | Quay lại Tất cả giải đấu → sân khấu của giải (logo, hệ thống giải, tên, trạng thái, ngày, số đội, giải thưởng, nhà vô địch hoặc tiến độ, các giai đoạn ở chân) → tab Tổng quan, Lịch & kết quả, BXH & nhánh đấu, Đội tham dự, Thể thức & thông tin, cuộn ngang và ghim dưới thanh trên → Tổng quan: trận đang và sắp đấu, kết quả mới nhất, nhánh đấu (cuộn ngang, mở ở vòng đang đấu), bảng xếp hạng, thông tin, xếp hạng chung cuộc, giải thưởng | Như compact; nhánh đấu chiếm cả bề ngang, từ 1080px xếp hạng chung cuộc và giải thưởng nằm ở cột phải 340px (cột trống thì nhường chỗ cho nội dung) |
 
 ## Admin
 
@@ -164,9 +164,11 @@ của người xem, riêng thanh trên và chân trang luôn màu đêm ngả t�
 | Tìm kiếm trên điện thoại | Bấm nút tìm kiếm thì thanh thành nút quay lại và ô nhập; bên dưới mở một màn phủ kín trang với lối tắt Bảng tin, Giải đấu, Khám phá và một dòng gợi ý, đến khi người xem tìm |
 | Chữ logo | Cùng một kiểu với Wiki (`PublicAppWordmark`): "AOV" đậm màu chữ, tên sản phẩm màu nhấn có ánh chuyển nhẹ, cùng cỡ chữ ở hai app |
 | Đầu trang danh sách | `.tn-page-head`: tiêu đề 28/36, một dòng mờ (ẩn trên compact), tối đa một nút bên phải |
-| Đầu một giải, một trận | Nền `.hub-art` màu sinh từ tên, vì các giải chưa có ảnh riêng; chỉ cao vừa nội dung |
-| Tiêu đề mục | `.tn-heading`: 18/24 đậm, số đếm mờ, một liên kết bên phải |
-| Thẻ | Nền thẻ, bo 10px, không viền; rê chuột đổi nền, không xê dịch thẻ. Thẻ trận nhỏ `.tn-match` giữ viền mảnh |
+| Sân khấu của một giải, một trận | `Stage`: nền đêm ở cả hai giao diện, ánh sáng là chính logo của giải hoặc của hai đội làm nhòe thành màu; không có logo thì màu sinh từ tên. Ánh sáng chỉ hiện dần một lần khi mở trang |
+| Nhánh đấu | `Bracket`: mỗi trận đứng ngang giữa các trận dẫn tới nó, nối bằng đường kẻ; trỏ vào một đội thì đường đi của đội sáng lên. Kế hoạch không ghi liên kết giữa các trận thì suy ra từ kết quả |
+| Bảng xếp hạng | Phong độ là năm vạch: vạch cao xanh lá là thắng, vạch thấp đỏ là thua. Đường kẻ xanh lá ngăn các đội đi tiếp |
+| Tiêu đề mục | `.tn-heading`: 22/28 đậm (18/24 trên compact), số đếm mờ, một liên kết bên phải |
+| Thẻ | Nền thẻ, bo 10px, không viền; rê chuột đổi nền, không xê dịch thẻ. Thẻ trận nhỏ `.tn-match` và ô trận trong nhánh đấu giữ viền mảnh |
 | Màu nhấn | Giao diện sáng: xanh tím đậm của lông cú. Giao diện tối: tím oải hương. Liên kết, chip và tab đang chọn theo màu này |
 | Chip | `.hub-pills`: một hàng cuộn ngang, chip đang chọn tô đặc màu nhấn |
 | Tab | `.cp-tabs`: chữ 14px; tab đang mở giữ màu chữ thường, đậm hơn và có vạch màu nhấn bên dưới; một hàng cuộn ngang |

@@ -1,0 +1,62 @@
+/*
+ * The dark stage of a competition or a match, lit by the logos of whoever stands on it. It sets the dark colour scheme
+ * for everything on it, so the theme tokens inside read as on a dark page in both themes.
+ */
+.tn-stage {
+  --stage-hue: 240;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--hub-radius);
+  background:
+    radial-gradient(90% 120% at 50% -20%, hsl(var(--stage-hue) 32% 34% / 42%), transparent 62%), var(--aov-stream-dusk);
+  color: var(--aov-stream-cream);
+  color-scheme: dark;
+}
+.tn-stage[data-lit] {
+  background: var(--aov-stream-dusk);
+}
+.tn-stage-lights {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+}
+/* A floor of shade keeps text readable over a pale logo's light. */
+.tn-stage-lights::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(18 18 32 / 22%), rgb(18 18 32 / 60%));
+}
+/* Drawn small and scaled up: the blur then costs a fraction of what it would at full size. */
+.tn-stage-light {
+  position: absolute;
+  top: 50%;
+  width: 120px;
+  height: 120px;
+  opacity: 0.85;
+  object-fit: contain;
+  filter: blur(18px) saturate(1.9) brightness(1.1);
+  transform: translate(-50%, -50%) scale(4.4);
+  animation: tn-stage-lit 1100ms ease-out;
+}
+.tn-stage-light[data-at="left"] {
+  left: var(--stage-light-left, 10%);
+}
+.tn-stage-light[data-at="center"] {
+  left: 50%;
+}
+.tn-stage-light[data-at="right"] {
+  left: var(--stage-light-right, 90%);
+}
+@keyframes tn-stage-lit {
+  from {
+    opacity: 0;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-stage-light {
+    transform: translate(-50%, -50%) scale(3);
+  }
+}
