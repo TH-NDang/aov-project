@@ -134,6 +134,7 @@ export type SeriesTeam = {
   name: string
   shortName: string
   logoUrl?: string
+  logoDarkUrl?: string | null
   /** Games won in the series, once its result is recorded. */
   score: number | null
   won: boolean
@@ -159,6 +160,7 @@ export function seriesTeams(game: Pick<PublishedGame, "series" | "teams">, local
       name: team?.name || (english ? "No team information yet" : "Đội chưa có thông tin"),
       shortName: team?.shortName || team?.name || (english ? "Team" : "Đội"),
       logoUrl: team?.logoUrl,
+      logoDarkUrl: team?.logoDarkUrl,
       score,
       won: ahead,
       lost: decided && !ahead,

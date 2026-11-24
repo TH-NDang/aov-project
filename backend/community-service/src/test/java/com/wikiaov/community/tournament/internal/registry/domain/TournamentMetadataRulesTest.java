@@ -75,6 +75,18 @@ class TournamentMetadataRulesTest {
         assertThat(TournamentMetadataRules.violations(broken)).hasSizeGreaterThanOrEqualTo(6);
     }
 
+    @Test
+    void darkLogoMustBeAPlainWebAddressLikeTheLogo() {
+        var light = "https://img.example.test/event.png";
+        var dark = new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null, light, null, null, null,
+                null, null, null, null, null, null, null, null, null, "https://img.example.test/event-dark.png");
+        assertThat(TournamentMetadataRules.violations(dark)).isEmpty();
+
+        var unsafe = new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null, light, null, null, null,
+                null, null, null, null, null, null, null, null, null, "javascript:alert(1)");
+        assertThat(TournamentMetadataRules.violations(unsafe)).anyMatch(message -> message.contains("logoDarkUrl"));
+    }
+
     private static Tournament tournament(TournamentResult result) {
         return new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null,
                 "https://img.example.test/event.png", TournamentTier.S, CompetitionType.CUP, VenueMode.OFFLINE,

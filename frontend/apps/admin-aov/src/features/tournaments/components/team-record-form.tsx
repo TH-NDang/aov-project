@@ -30,6 +30,7 @@ export const RECORD_FIELDS: Record<RecordKind, RecordField[]> = {
     { key: "aliases", label: "Tên khác", placeholder: "Flash Wolves, tên viết khác" },
     { key: "country", label: "Quốc gia / khu vực", options: TEAM_REGIONS },
     { key: "logoUrl", label: "Logo" },
+    { key: "logoDarkUrl", label: "Logo nền tối" },
   ],
   players: [
     { key: "nickname", label: "Tên thi đấu", required: true },
@@ -121,8 +122,20 @@ export function TeamRecordForm({
             onBusyChange={setUploading}
           />
         </div>
+        {kind === "teams" && (
+          <div className="sm:col-span-2">
+            <RegistryLogoField
+              kind={kind}
+              dark
+              value={values.logoDarkUrl ?? ""}
+              name={values.name ?? ""}
+              onChange={(url) => set("logoDarkUrl", url)}
+              onBusyChange={setUploading}
+            />
+          </div>
+        )}
         {fields
-          .filter((field) => field.key !== image)
+          .filter((field) => field.key !== image && field.key !== "logoDarkUrl")
           .map((field) =>
             field.options ? (
               <label key={field.key} className="grid min-w-0 gap-2">

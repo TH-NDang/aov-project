@@ -58,6 +58,7 @@ public class TournamentRegistry {
         validateMainEvent(null, content);
         archives.validateParents(content);
         media.requireAvailable(content.logoUrl());
+        media.requireAvailable(content.logoDarkUrl());
 
         var row = repository.saveAndFlush(new TournamentRecord(UUID.randomUUID(), content, actor));
         return TournamentViews.view(row, row.getContent());
@@ -67,6 +68,7 @@ public class TournamentRegistry {
         archives.lockWrites();
         validate(content);
         media.requireAvailable(content.logoUrl());
+        media.requireAvailable(content.logoDarkUrl());
 
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         RegistryArchivePolicy.requireActive(row);

@@ -110,7 +110,8 @@ public class CompetitionDirectory {
             var content = records.get(row.id()).getContent();
             var lineup = lineups.get(row.id());
             return new TeamEntry(row.id(), content.code(), content.name(), content.shortName(), content.country(),
-                    content.logoUrl(), row.tournaments(), row.matches(), row.wins(), row.losses(),
+                    content.logoUrl(), content.logoDarkUrl(), row.tournaments(), row.matches(), row.wins(),
+                    row.losses(),
                     row.titles(), row.prizeUsd(), tournamentRef(latest.get(row.tournamentId())),
                     lineup == null ? List.of() : lineup.members(), lineup == null ? null : lineup.tournament(),
                     row.lastActiveOn());
@@ -169,7 +170,8 @@ public class CompetitionDirectory {
         return ids.stream().map(records::get).map(row -> {
             var part = row.getContent();
             return new TournamentPart(row.getId(), part.parentTournamentId(), part.name(), part.logoUrl(),
-                    part.competitionType(), part.status(), part.tier(), part.region(), part.startsOn(), part.endsOn());
+                    part.logoDarkUrl(), part.competitionType(), part.status(), part.tier(), part.region(),
+                    part.startsOn(), part.endsOn());
         }).toList();
     }
 
@@ -262,7 +264,7 @@ public class CompetitionDirectory {
         }
 
         var team = row.getContent();
-        return new TeamRef(row.getId(), team.name(), team.shortName(), team.logoUrl());
+        return new TeamRef(row.getId(), team.name(), team.shortName(), team.logoUrl(), team.logoDarkUrl());
     }
 
     private static TournamentRef tournamentRef(TournamentRecord row) {
@@ -271,7 +273,8 @@ public class CompetitionDirectory {
         }
 
         var tournament = row.getContent();
-        return new TournamentRef(row.getId(), tournament.name(), tournament.logoUrl(), tournament.tier(),
+        return new TournamentRef(row.getId(), tournament.name(), tournament.logoUrl(),
+                tournament.logoDarkUrl(), tournament.tier(),
                 tournament.year(), tournament.startsOn(), tournament.endsOn());
     }
 

@@ -35,19 +35,24 @@ export function StatusBadge({
   ) : null
 }
 
-/** A competition's mark on a tile; one without artwork gets its initials on a colour taken from its name. */
+/**
+ * A competition's mark on a tile; one without artwork gets its initials on a colour taken from its name. The tile is
+ * dark in both themes, so the logo drawn for dark backgrounds comes first.
+ */
 export function CompetitionLogo({
   name,
   url,
+  darkUrl,
   className = "",
 }: {
   name: string
   url?: string | null
+  darkUrl?: string | null
   className?: string
 }) {
   return (
     <span className={`tn-logo hub-art ${className}`} style={hue(name)}>
-      {url ? <img src={url} alt="" loading="lazy" /> : <b>{monogram(name)}</b>}
+      {darkUrl || url ? <img src={(darkUrl || url)!} alt="" loading="lazy" /> : <b>{monogram(name)}</b>}
     </span>
   )
 }
@@ -83,7 +88,12 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
   const won = champion(tournament, teams)
   return (
     <Link className="tn-card" to={`/competitions/${entry.id}`} data-status={status ?? undefined}>
-      <CompetitionLogo name={tournament.name} url={tournament.logoUrl} className="tn-card-logo" />
+      <CompetitionLogo
+        name={tournament.name}
+        url={tournament.logoUrl}
+        darkUrl={tournament.logoDarkUrl}
+        className="tn-card-logo"
+      />
       <span className="tn-card-body">
         <strong title={tournament.name}>{seasonName(tournament.name, within)}</strong>
         <span className="tn-card-meta">
@@ -113,8 +123,8 @@ export function CompetitionFeature({ entry }: { entry: CompetitionView }) {
   return (
     <Link className="tn-feature" to={`/competitions/${entry.id}`}>
       <span className="tn-feature-art hub-art" style={hue(tournament.name)}>
-        {tournament.logoUrl ? (
-          <img src={tournament.logoUrl} alt="" loading="lazy" />
+        {tournament.logoUrl || tournament.logoDarkUrl ? (
+          <img src={(tournament.logoDarkUrl || tournament.logoUrl)!} alt="" loading="lazy" />
         ) : (
           <b>{monogram(tournament.name)}</b>
         )}

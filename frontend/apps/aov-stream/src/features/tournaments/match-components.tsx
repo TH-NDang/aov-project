@@ -10,6 +10,7 @@ import { matchUnderway } from "../../lib/competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "../../lib/match-model"
 import { matchRound, matchSides, type MatchSide } from "../../lib/match-schedule"
 import { seriesRound, seriesTeams, unbroken } from "../../lib/tournament-model"
+import { ThemedLogo } from "@/components/themed-logo"
 
 const clockTime: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" }
 
@@ -54,7 +55,7 @@ function FixtureTeam({ team }: { team: MatchSide }) {
       data-open={!team.known || undefined}
     >
       {team.known ? (
-        <StreamImage src={team.logoUrl} name={team.name} />
+        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} name={team.name} />
       ) : (
         <span className="tn-fixture-blank" aria-hidden="true" />
       )}
@@ -81,7 +82,7 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
     round,
     competition && (
       <>
-        {tournament.logoUrl && <img src={tournament.logoUrl} alt="" loading="lazy" />}
+        <ThemedLogo src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
         {tournament.name}
       </>
     ),
@@ -137,6 +138,7 @@ export type HeadTeam = {
   name: string
   shortName?: string
   logoUrl?: string | null
+  logoDarkUrl?: string | null
   score: number | null
   won: boolean
   lost: boolean
@@ -179,7 +181,7 @@ function DuelTeam({ team, side }: { team: HeadTeam; side: "a" | "b" }) {
       {open ? (
         <span className="tn-duel-blank" aria-hidden="true" />
       ) : (
-        <StreamImage src={team.logoUrl} name={team.name} />
+        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} name={team.name} />
       )}
       <span>
         {team.teamId && !open ? (

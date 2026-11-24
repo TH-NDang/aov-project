@@ -77,7 +77,9 @@ export function HomeCompetitions() {
             <li key={view.id}>
               <Link to={`/competitions/${view.id}`}>
                 <span className="tn-logo hub-art" style={{ "--hub-hue": hueOf(tournament.name) } as CSSProperties}>
-                  {tournament.logoUrl ? <img src={tournament.logoUrl} alt="" loading="lazy" /> : null}
+                  {tournament.logoDarkUrl || tournament.logoUrl ? (
+                    <img src={(tournament.logoDarkUrl || tournament.logoUrl)!} alt="" loading="lazy" />
+                  ) : null}
                 </span>
                 <span>
                   <strong>{tournament.name}</strong>

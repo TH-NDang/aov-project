@@ -134,7 +134,7 @@ export function editedRecordContent<T extends Content>(
 }
 
 export function registryFormIssue(kind: RegistryKind, values: Record<string, string>): string | null {
-  for (const key of ["sourceUrl", "logoUrl", "photoUrl", "result.sourceUrl"]) {
+  for (const key of ["sourceUrl", "logoUrl", "logoDarkUrl", "photoUrl", "result.sourceUrl"]) {
     if (values[key]?.trim() && !/^https?:\/\//i.test(values[key].trim()))
       return "Link ảnh hoặc nguồn kiểm chứng cần bắt đầu bằng https:// hoặc http://."
   }

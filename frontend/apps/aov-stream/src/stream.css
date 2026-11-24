@@ -96,6 +96,21 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 }
+/* A logo with a dark-background version (ThemedLogo): hide the one that does not suit the theme. */
+:root[data-theme="light"] .logo-dark,
+:root[data-theme="dark"] .logo-light {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .logo-light {
+    display: none;
+  }
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .logo-dark {
+    display: none;
+  }
+}
 @media (max-width: 899.98px) {
   :root {
     --hub-topbar: 48px;

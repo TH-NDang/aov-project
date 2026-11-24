@@ -49,13 +49,15 @@ public final class TournamentContent {
         SWAP
     }
 
+    /** {@code logoDarkUrl} is the logo drawn on a dark background; without it {@code logoUrl} serves both themes. */
     public record Team(
             String code,
             String name,
             String shortName,
             String country,
             String logoUrl,
-            List<String> aliases
+            List<String> aliases,
+            String logoDarkUrl
     ) {
         public Team {
             aliases = aliases == null
@@ -65,6 +67,11 @@ public final class TournamentContent {
 
         public Team(String code, String name, String shortName, String country, String logoUrl) {
             this(code, name, shortName, country, logoUrl, List.of());
+        }
+
+        public Team(String code, String name, String shortName, String country, String logoUrl,
+                List<String> aliases) {
+            this(code, name, shortName, country, logoUrl, aliases, null);
         }
     }
 
@@ -137,6 +144,7 @@ public final class TournamentContent {
     /**
      * {@code parentTournamentId} makes this tournament a part of a main event: its qualifier, wildcard, weekly stop or
      * show match. A part keeps its own teams, format, schedule and final table; a main event names no parent.
+     * {@code logoDarkUrl} is the logo drawn on a dark background; without it {@code logoUrl} serves both themes.
      */
     public record Tournament(
             String code,
@@ -159,7 +167,8 @@ public final class TournamentContent {
             List<TournamentLink> links,
             UUID parentTournamentId,
             List<CrewMember> broadcast,
-            List<StaffMember> staff
+            List<StaffMember> staff,
+            String logoDarkUrl
     ) {
         public Tournament {
             tier = tier == null ? TournamentTier.UNKNOWN : tier;
@@ -171,6 +180,17 @@ public final class TournamentContent {
             links = links == null ? List.of() : List.copyOf(links);
             broadcast = broadcast == null ? List.of() : List.copyOf(broadcast);
             staff = staff == null ? List.of() : List.copyOf(staff);
+        }
+
+        public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,
+                LocalDate endsOn, String sourceUrl, String note, String logoUrl, TournamentTier tier,
+                CompetitionType competitionType, VenueMode venueMode, TournamentStatus status,
+                TournamentResult result, String localCurrency, List<TournamentPlacement> placements,
+                List<TournamentAward> awards, List<TournamentLink> links, UUID parentTournamentId,
+                List<CrewMember> broadcast, List<StaffMember> staff) {
+            this(code, name, region, year, startsOn, endsOn, sourceUrl, note, logoUrl, tier, competitionType,
+                    venueMode, status, result, localCurrency, placements, awards, links, parentTournamentId, broadcast,
+                    staff, null);
         }
 
         public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,

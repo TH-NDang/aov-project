@@ -41,13 +41,20 @@ export function RegistryLogoField({
   onChange,
   onBusyChange,
   kind,
+  dark = false,
 }: {
   value: string
   name: string
   onChange: (url: string) => void
   onBusyChange: (busy: boolean) => void
   kind: "teams" | "tournaments" | "players"
+  /** The version drawn for a dark background, previewed on one; Stream shows it in its dark theme. */
+  dark?: boolean
 }) {
+  const what =
+    kind === "players"
+      ? "ảnh tuyển thủ"
+      : `logo ${kind === "teams" ? "đội tuyển" : "giải đấu"}${dark ? " nền tối" : ""}`
   const canUpload = useSession().actor?.capabilities.includes("media:write") ?? false
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -104,22 +111,22 @@ export function RegistryLogoField({
 
   return (
     <div className="tournament-logo-field">
-      <span>{kind === "players" ? "Ảnh tuyển thủ" : `Logo ${kind === "teams" ? "đội tuyển" : "giải đấu"}`}</span>
+      <span>{what.charAt(0).toUpperCase() + what.slice(1)}</span>
       <div className="tournament-logo-upload-row">
-        <RegistryLogo
-          url={value}
-          name={name || (kind === "teams" ? "Đội tuyển" : kind === "players" ? "Tuyển thủ" : "Giải đấu")}
-          portrait={kind === "players"}
-        />
+        <span className={dark ? "rounded-md bg-(--aov-wiki-night) p-1" : "contents"}>
+          <RegistryLogo
+            url={value}
+            name={name || (kind === "teams" ? "Đội tuyển" : kind === "players" ? "Tuyển thủ" : "Giải đấu")}
+            portrait={kind === "players"}
+          />
+        </span>
         <div>
           <input
             ref={input}
             type="file"
             hidden
             accept="image/png,image/jpeg,image/webp"
-            aria-label={
-              kind === "players" ? "Tải ảnh tuyển thủ" : `Tải logo ${kind === "teams" ? "đội tuyển" : "giải đấu"}`
-            }
+            aria-label={`Tải ${what}`}
             onChange={(event) => {
               const file = event.target.files?.[0]
               event.target.value = ""
@@ -172,7 +179,7 @@ export function RegistryLogoField({
         </div>
       )}
       <label>
-        {kind === "players" ? "Đường dẫn ảnh" : "Đường dẫn logo"}
+        {kind === "players" ? "Đường dẫn ảnh" : dark ? "Đường dẫn logo nền tối" : "Đường dẫn logo"}
         <Input
           type="url"
           value={value}

@@ -96,6 +96,7 @@ export type MatchSide = {
   name: string
   fullName: string
   logoUrl?: string
+  logoDarkUrl?: string | null
   /** False while the slot waits for a seed or for the result of another match. */
   known: boolean
   score: number | null
@@ -148,6 +149,7 @@ export function matchSides(entry: CompetitionMatch, locale = "vi-VN"): [MatchSid
       name: team?.shortName || team?.name || slotName(entry, match[key], english),
       fullName: team?.name || slotName(entry, match[key], english),
       logoUrl: team?.logoUrl,
+      logoDarkUrl: team?.logoDarkUrl,
       known: !!team,
       score: (key === "a" ? result?.scoreA : result?.scoreB) ?? null,
       won: winner === key,
