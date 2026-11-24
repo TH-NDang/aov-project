@@ -9,6 +9,7 @@ import { matchTitleText } from "@aov/community-contracts/match-titles"
 import { localeText } from "@aov/ui/lib/locale-text"
 import { currentTimeZone, dayKeyInZone, isValidTimeZone } from "@aov/ui/lib/time-zone"
 import { tournamentPodium, type PodiumTeam } from "@aov/ui/lib/tournament-podium"
+import { roundPart } from "./match-labels.ts"
 import { matchState, type CompetitionMatch } from "./match-model.ts"
 
 /** A match is treated as under way for this long after its start when no score has been entered yet. */
@@ -53,7 +54,8 @@ export function matchWinner(entry: CompetitionMatch): "a" | "b" | null {
 /**
  * A match label worth showing beside the teams, in `locale`. A name an editor typed wins; imported plans repeat the
  * stage and the two team codes in every name ("Playoffs · BAC vs ANK"), which says nothing the row does not already
- * show. A match without a name reads its title.
+ * show, and name their rounds in English ("Week 3"), which reads in the reader's language. A match without a name
+ * reads its title.
  */
 export function matchRoundLabel(match: PlannedMatch, stage?: Pick<CompetitionStage, "name"> | null, locale = "vi-VN") {
   const name = match.label?.trim()
@@ -62,6 +64,7 @@ export function matchRoundLabel(match: PlannedMatch, stage?: Pick<CompetitionSta
     .split("·")
     .map((part) => part.trim())
     .filter((part) => part && !/\bvs\.?\b/i.test(part) && part !== stage?.name)
+    .flatMap((part) => roundPart(part, locale) ?? [])
   return parts.join(" · ") || null
 }
 

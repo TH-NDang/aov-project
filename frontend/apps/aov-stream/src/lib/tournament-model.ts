@@ -9,6 +9,7 @@ import type {
 } from "@aov/community-contracts"
 import { matchTitleText } from "@aov/community-contracts/match-titles"
 import { localeText } from "@aov/ui/lib/locale-text"
+import { roundPart } from "./match-labels.ts"
 
 export type CatalogKind = "heroes" | "items" | "arcana" | "enchantments" | "spells"
 
@@ -120,6 +121,7 @@ export function seriesRound(series?: Pick<SeriesContent, "name" | "title"> | nul
     .split("·")
     .map((part) => part.trim())
     .filter((part) => part && !/\bvs\.?\b/i.test(part))
+    .flatMap((part) => roundPart(part, locale) ?? [])
   return parts.join(" · ") || null
 }
 
