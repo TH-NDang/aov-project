@@ -1,0 +1,68 @@
+/* Days with matches: the weekday, the date and how many matches, in one row that scrolls sideways. */
+.tn-days {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  margin: -3px;
+  padding: 3px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tn-days::-webkit-scrollbar {
+  display: none;
+}
+.tn-days > button {
+  display: grid;
+  min-width: 88px;
+  flex: 1 0 auto;
+  justify-items: center;
+  gap: 1px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 12px;
+  line-height: 16px;
+  transition:
+    background-color 120ms,
+    border-color 120ms;
+}
+.tn-days > button:hover {
+  background: var(--hub-hover);
+}
+.tn-days > button > b {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-days > button > span,
+.tn-days > button > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.tn-days > button[data-past] > b {
+  color: var(--hub-muted);
+  font-weight: 600;
+}
+.tn-days > button[aria-pressed="true"] {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent-soft);
+}
+.tn-days > button[aria-pressed="true"] > :is(b, span, small) {
+  color: var(--hub-accent-strong);
+}
+@media (max-width: 899.98px) {
+  .tn-days {
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding-inline: var(--hub-gutter);
+  }
+  .tn-days > button {
+    min-width: 76px;
+    padding-inline: 8px;
+  }
+}

@@ -1,0 +1,22 @@
+/* A hero, an item or a spell: its picture, or two letters of its name where the picture is missing. */
+.reference-art {
+  display: inline-flex;
+  width: var(--reference-size, 32px);
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--reference-radius, var(--aov-radius-control));
+  aspect-ratio: 1;
+  vertical-align: middle;
+}
+.reference-art-initials {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: inherit;
+  background: var(--hub-sunken);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}

@@ -1,0 +1,209 @@
+/* A match on a line of a schedule. */
+.tn-fixtures {
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-fixture {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 84px minmax(0, 1fr) minmax(0, 0.9fr) auto;
+  grid-template-areas: "time a score b meta format";
+  align-items: center;
+  gap: 2px 14px;
+  min-height: 60px;
+  padding: 8px 18px;
+  color: var(--hub-text);
+  font-size: 15px;
+  line-height: 20px;
+  transition: background-color 120ms;
+}
+.tn-fixture + .tn-fixture {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-fixture:hover,
+.tn-fixture:focus-visible {
+  background: var(--hub-hover);
+}
+/* The list clips its corners, so the ring is drawn inside the row. */
+.tn-fixture:focus-visible {
+  outline-offset: -2px;
+}
+.tn-fixture[data-live] {
+  box-shadow: inset 3px 0 0 var(--hub-red);
+}
+.tn-fixture-time {
+  grid-area: time;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-fixture[data-live] > .tn-fixture-time {
+  color: var(--hub-red);
+  font-weight: 700;
+}
+.tn-fixture-team {
+  --stream-image-size: 36px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+.tn-fixture-team[data-side="a"] {
+  grid-area: a;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.tn-fixture-team[data-side="b"] {
+  grid-area: b;
+}
+.tn-fixture-blank {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: var(--aov-radius-control);
+}
+.tn-fixture-team > strong {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.tn-fixture-team[data-won] > strong {
+  font-weight: 700;
+}
+.tn-fixture-team:is([data-lost], [data-open]) {
+  color: var(--hub-muted);
+}
+.tn-fixture-team:is([data-lost], [data-open]) > strong {
+  font-weight: 500;
+}
+.tn-fixture-team[data-open] > strong {
+  font-size: 14px;
+}
+/* A name written twice: the longer form shows on a wide screen, the shorter one on a narrow screen. */
+.tn-name-compact {
+  display: none;
+}
+.tn-fixture-score {
+  display: grid;
+  grid-area: score;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding-block: 4px;
+  border-radius: var(--aov-radius-control);
+  font-size: 18px;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.tn-fixture-score[data-scored] {
+  background: var(--hub-raised);
+}
+.tn-fixture:is(:hover, :focus-visible) > .tn-fixture-score[data-scored] {
+  background: var(--hub-surface);
+}
+.tn-fixture-score > b {
+  color: var(--hub-muted);
+  font-weight: 600;
+}
+.tn-fixture-score > b[data-won] {
+  color: var(--hub-accent-strong);
+  font-weight: 700;
+}
+.tn-fixture-score > i {
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-style: normal;
+}
+.tn-fixture-score > i:only-child {
+  grid-column: 1 / -1;
+}
+.tn-fixture-meta {
+  display: grid;
+  min-width: 0;
+  grid-area: meta;
+  padding-left: 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-fixture-meta > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-fixture-meta > em {
+  color: var(--hub-text-soft);
+  font-style: normal;
+  font-weight: 600;
+}
+.tn-fixture-event > img {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  object-fit: contain;
+  vertical-align: -3px;
+}
+.tn-fixture-format {
+  min-width: 34px;
+  grid-area: format;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+@media (max-width: 899.98px) {
+  .tn-name-wide {
+    display: none;
+  }
+  .tn-name-compact {
+    display: inline;
+  }
+  /* Two lines: where and when the match is, then the pairing. */
+  .tn-fixture {
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+    grid-template-areas:
+      "top top top"
+      "a score b";
+    gap: 6px 8px;
+    padding: 10px 12px 12px;
+  }
+  .tn-fixture-time,
+  .tn-fixture-meta,
+  .tn-fixture-format {
+    grid-area: top;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .tn-fixture-time,
+  .tn-fixture-format {
+    align-self: start;
+  }
+  .tn-fixture-time {
+    justify-self: start;
+  }
+  .tn-fixture-format {
+    justify-self: end;
+  }
+  .tn-fixture-meta {
+    padding-inline: 48px;
+    text-align: center;
+  }
+  .tn-fixture-team,
+  .tn-fixture-team[data-side="a"] {
+    gap: 8px;
+  }
+  .tn-fixture-team {
+    --stream-image-size: 32px;
+  }
+  .tn-fixture-blank {
+    width: 32px;
+    height: 32px;
+  }
+}

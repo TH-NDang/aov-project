@@ -21,7 +21,6 @@ export const LANE_NAMES = {
   DRAGON: ["Đường Rồng", "Abyssal Dragon lane"],
   SUPPORT: ["Hỗ trợ", "Support"],
 } as const
-export const LANE_SHORT = { TOP: "DSL", JUNGLE: "JUG", MID: "MID", DRAGON: "ADL", SUPPORT: "SUP" } as const
 /** How much of a loadout the source showed, in Vietnamese and in English. */
 export const OBSERVATION_NAMES = {
   UNKNOWN: ["Chưa thu thập", "Not collected"],

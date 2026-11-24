@@ -1,0 +1,11 @@
+.tn-directory-skeleton {
+  display: grid;
+  gap: 24px;
+}
+.tn-directory-skeleton > [data-shape="stage"] {
+  height: 260px;
+  border-radius: var(--hub-radius);
+}
+.tn-directory-skeleton > [data-shape="rows"] {
+  height: 220px;
+}

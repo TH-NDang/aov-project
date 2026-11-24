@@ -1,0 +1,159 @@
+/* An elimination stage: cards placed by column and row, tied by connectors. */
+.tn-bracket {
+  margin: -6px;
+  padding: 6px 6px 12px;
+  overflow-x: auto;
+  container-type: inline-size;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.tn-bracket-plan {
+  --bracket-card: clamp(172px, calc((100cqw - 12px + 36px) / var(--bracket-columns) - 36px), 260px);
+  position: relative;
+  width: calc(var(--bracket-columns) * (var(--bracket-card) + 36px) - 36px);
+}
+.tn-bracket-title {
+  position: absolute;
+  width: var(--bracket-card);
+  margin: 0;
+  overflow: hidden;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-bracket-title[data-final] {
+  color: var(--hub-accent-strong);
+  font-weight: 700;
+}
+.tn-node {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  width: var(--bracket-card);
+  height: 94px;
+  grid-template-rows: 24px 1fr 1fr;
+  overflow: hidden;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition:
+    border-color 160ms,
+    opacity 160ms;
+}
+.tn-node:is(:hover, :focus-visible) {
+  border-color: var(--hub-accent);
+}
+.tn-node[data-live] {
+  border-color: var(--hub-red);
+}
+.tn-node[data-final] {
+  border-color: var(--hub-accent-border);
+}
+.tn-node-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 12px 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.tn-node-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: 5px;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-node-team + .tn-node-team {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-node-blank {
+  width: 24px;
+  height: 24px;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: 5px;
+}
+.tn-node-team > span:nth-child(2) {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-node-team > b {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-node-team[data-won] > :is(span:nth-child(2), b) {
+  font-weight: 700;
+}
+.tn-node-team[data-won] > b {
+  color: var(--hub-accent-strong);
+}
+.tn-node-team:is([data-lost], [data-open]) {
+  color: var(--hub-muted);
+}
+.tn-node-team:is([data-lost], [data-open]) > :is(span:nth-child(2), b) {
+  font-weight: 500;
+}
+.tn-node-team[data-open] > span:nth-child(2) {
+  font-size: 13px;
+}
+.tn-link,
+.tn-link-run {
+  position: absolute;
+  pointer-events: none;
+  transition: opacity 160ms;
+}
+.tn-link {
+  overflow: visible;
+  fill: none;
+  stroke: var(--hub-border-strong);
+  stroke-width: 1.5;
+}
+.tn-link-run {
+  height: 0;
+  border-top: 1.5px solid var(--hub-border-strong);
+  transform: translateY(-0.75px);
+}
+/* Following one team: its cards and its way stay, the others step back. */
+.tn-bracket-plan[data-follow] > .tn-node:not([data-on]) {
+  opacity: 0.42;
+}
+.tn-bracket-plan[data-follow] > :is(.tn-link, .tn-link-run):not([data-on]) {
+  opacity: 0.35;
+}
+.tn-link[data-on] {
+  stroke: var(--hub-accent);
+  stroke-width: 2.5;
+}
+.tn-link-run[data-on] {
+  border-color: var(--hub-accent);
+  border-width: 2.5px;
+}
+.tn-node-team[data-active] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-text);
+}
+@media (max-width: 899.98px) {
+  .tn-bracket {
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding-inline: var(--hub-gutter);
+    scrollbar-width: none;
+  }
+  .tn-bracket-plan {
+    --bracket-card: 188px;
+  }
+}

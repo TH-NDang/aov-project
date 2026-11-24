@@ -1,0 +1,128 @@
+/* Heroes by player and game, one table per team. */
+.tn-pools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: 16px;
+}
+.tn-pool {
+  min-width: 0;
+  padding: 6px 16px 12px;
+  overflow-x: auto;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-pool table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tn-pool caption {
+  padding: 10px 0 4px;
+  text-align: left;
+}
+.tn-pool caption > span {
+  --stream-image-size: 32px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.tn-pool thead a {
+  display: grid;
+  justify-items: center;
+  padding: 4px 2px 8px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-pool thead a:hover {
+  color: var(--hub-accent-strong);
+}
+.tn-pool thead small {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.tn-pool thead th[data-won] a {
+  color: var(--hub-success);
+}
+.tn-pool thead th[data-won] small {
+  color: var(--hub-success);
+  font-weight: 600;
+}
+.tn-pool tbody th {
+  padding: 4px 12px 4px 0;
+  font-weight: 600;
+  text-align: left;
+}
+.tn-pool-player {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-pool-player > span:first-child {
+  display: grid;
+  flex: none;
+  color: var(--hub-muted);
+}
+.tn-pool-player a:hover {
+  color: var(--hub-accent-strong);
+}
+.tn-pool td {
+  padding: 4px 3px;
+  text-align: center;
+}
+.tn-pool-cell {
+  --reference-size: 44px;
+  position: relative;
+  display: inline-block;
+}
+.tn-pool td[data-lost] > .tn-pool-cell {
+  opacity: 0.5;
+}
+.tn-pool-mvp {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+@media (max-width: 899.98px) {
+  .tn-pool {
+    padding: 4px 12px 10px;
+  }
+  .tn-pool-cell {
+    --reference-size: 29px;
+  }
+  .tn-pool tbody th {
+    padding-right: 6px;
+  }
+  .tn-pool td {
+    padding: 3px 1px;
+  }
+  .tn-pool thead small {
+    display: none;
+  }
+  .tn-pool-player {
+    gap: 5px;
+    font-size: 12px;
+  }
+  .tn-pool-player > span:first-child > svg {
+    width: 15px;
+    height: 15px;
+  }
+}

@@ -1,11 +1,12 @@
 import { Link } from "react-router"
-import type { CSSProperties } from "react"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionStatus, matchStrip } from "../../../lib/competition-model"
+import { CompetitionLogo } from "../../../components/competition-card"
 import { MatchCard } from "../../../components/match-card"
+import { aheadCompetitions } from "../../../lib/directory-model"
 import { competitionMatches } from "../../../lib/match-model"
-import { competitionStatusLabels, dayRange, hueOf, useFeaturedCompetitions } from "../../../components/community-ui"
+import { competitionStatusLabels, dayRange, useFeaturedCompetitions } from "../../../components/community-ui"
 
 /**
  * The first thing on the home page: matches on now, the next ones, then the latest results, in one row that scrolls
@@ -19,7 +20,7 @@ export function HomeMatches() {
       <div className="tn-strip" role="status" aria-label={text("Đang tải trận đấu", "Loading matches")}>
         <div className="tn-strip-row">
           {Array.from({ length: 4 }, (_, index) => (
-            <span key={index} className="tn-match hub-skeleton tn-strip-skeleton" />
+            <span key={index} className="hub-skeleton tn-strip-skeleton" />
           ))}
         </div>
       </div>
@@ -53,11 +54,7 @@ export function HomeMatches() {
 export function HomeCompetitions() {
   const { text } = useStreamLocale()
   const competitions = useFeaturedCompetitions()
-  const order = ["ONGOING", "UPCOMING", "ANNOUNCED"]
-  const items = (competitions.data?.items ?? [])
-    .filter((view) => order.includes(competitionStatus(view.content) ?? ""))
-    .sort((a, b) => order.indexOf(competitionStatus(a.content)!) - order.indexOf(competitionStatus(b.content)!))
-    .slice(0, 5)
+  const items = aheadCompetitions(competitions.data?.items ?? []).slice(0, 5)
   if (!items.length) return null
   return (
     <section className="hub-card hub-card-padded" aria-labelledby="home-competitions">
@@ -76,11 +73,7 @@ export function HomeCompetitions() {
           return (
             <li key={view.id}>
               <Link to={`/competitions/${view.id}`}>
-                <span className="tn-logo hub-art" style={{ "--hub-hue": hueOf(tournament.name) } as CSSProperties}>
-                  {tournament.logoDarkUrl || tournament.logoUrl ? (
-                    <img src={(tournament.logoDarkUrl || tournament.logoUrl)!} alt="" loading="lazy" />
-                  ) : null}
-                </span>
+                <CompetitionLogo name={tournament.name} url={tournament.logoUrl} darkUrl={tournament.logoDarkUrl} />
                 <span>
                   <strong>{tournament.name}</strong>
                   <small>

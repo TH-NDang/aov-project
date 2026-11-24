@@ -1,0 +1,44 @@
+.tn-games {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 18px;
+}
+.tn-games-bar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.tn-games-search {
+  display: flex;
+  max-width: 480px;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+.tn-games-search > label {
+  flex: 1;
+  margin: 0;
+}
+.tn-games-bar > .tn-games-select {
+  max-width: 46%;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.tn-series-list {
+  display: grid;
+  min-width: 0;
+  gap: 32px;
+}
+.tn-series-skeleton {
+  display: block;
+  height: 280px;
+}
+@media (max-width: 899.98px) {
+  .tn-games-search {
+    max-width: none;
+  }
+  .tn-series-list {
+    gap: 24px;
+  }
+}

@@ -1,0 +1,82 @@
+/* The stages of a competition as the foot of its head: done, on now, or still to come. */
+.tn-rail {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgb(255 255 255 / 12%);
+  background: rgb(18 18 32 / 46%);
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tn-rail > li {
+  position: relative;
+  min-width: 0;
+  flex: 1 1 0;
+}
+.tn-rail > li + li {
+  border-left: 1px solid rgb(255 255 255 / 12%);
+}
+.tn-rail button {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: 14px 24px 16px;
+  border: 0;
+  background: none;
+  color: rgb(255 255 255 / 78%);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  transition: background-color 120ms;
+}
+.tn-rail button:hover {
+  background: rgb(255 255 255 / 7%);
+}
+.tn-rail button:focus-visible {
+  outline-offset: -3px;
+}
+.tn-rail strong {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-rail button > span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 14px;
+}
+/* The bar at the foot of a stage: full once it is over, lit while it is on. */
+.tn-rail > li::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgb(255 255 255 / 26%);
+}
+.tn-rail > li[data-state="NOW"]::after {
+  background: var(--hub-accent);
+}
+.tn-rail > li[data-state="NEXT"]::after {
+  background: transparent;
+}
+.tn-rail > li[data-state="NEXT"] strong {
+  color: rgb(255 255 255 / 82%);
+  font-weight: 600;
+}
+@media (max-width: 899.98px) {
+  .tn-rail > li {
+    flex: 1 0 44%;
+  }
+  .tn-rail button {
+    padding: 10px 16px 13px;
+  }
+  .tn-rail button > span {
+    display: grid;
+    font-size: 12px;
+    line-height: 16px;
+  }
+}

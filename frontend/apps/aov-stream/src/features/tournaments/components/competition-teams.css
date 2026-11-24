@@ -1,0 +1,102 @@
+/* The teams of a competition: columns that fill the row, each as tall as its own roster. */
+.tn-squads {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  align-items: start;
+  gap: 16px;
+}
+/* Four to a row where the teams fill such rows; nine go three by three. */
+@media (min-width: 1180px) {
+  .tn-squads:has(> :nth-child(4n):last-child) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.tn-squad {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+}
+.tn-squad-head {
+  --stream-image-size: 76px;
+  --stream-image-plate: transparent;
+  --stream-image-ink: rgb(255 255 255 / 82%);
+  --stream-image-initials: 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 0;
+}
+.tn-squad-head > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  color: rgb(255 255 255 / 84%);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-squad-head > div > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.tn-squad-head h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+  text-wrap: balance;
+}
+.tn-squad a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-squad-roster {
+  margin: 0;
+  padding: 6px 18px 10px;
+  list-style: none;
+}
+.tn-squad-roster > li {
+  display: grid;
+  /* The name keeps its width; a long standing wraps at the end of the row instead of running over it. */
+  grid-template-columns: 24px minmax(min-content, 1fr) minmax(0, max-content);
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.tn-squad-roster > li + li {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-squad-roster small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.tn-squad-roster > li[data-bench] {
+  color: var(--hub-text-soft);
+  font-weight: 500;
+}
+.tn-squad-lane {
+  display: grid;
+  place-items: center;
+  color: var(--hub-accent-strong);
+}
+.tn-squad-roster > li[data-bench] > .tn-squad-lane {
+  color: var(--hub-muted);
+}
+@media (max-width: 899.98px) {
+  .tn-squad-head {
+    --stream-image-size: 60px;
+    padding: 14px;
+  }
+  .tn-squad-roster {
+    padding-inline: 14px;
+  }
+}

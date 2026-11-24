@@ -1,0 +1,50 @@
+.tn-summary {
+  display: grid;
+  min-width: 0;
+  gap: 40px;
+}
+/* The match on now beside the next ones: two by two, so the stage and the cards are as tall as each other. */
+.tn-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.tn-now:not(:has(> .tn-now-cards)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.tn-now-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.tn-now-cards > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.tn-results {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1079.98px) {
+  .tn-now {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tn-now-cards > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .tn-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-summary {
+    gap: 28px;
+  }
+}
+/* Two small cards to a row on a phone: a short name, its logo and its score fit half of it. */
+@media (max-width: 479.98px) {
+  .tn-now-cards,
+  .tn-results {
+    gap: 8px;
+  }
+}

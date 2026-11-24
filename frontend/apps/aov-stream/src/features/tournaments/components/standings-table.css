@@ -1,0 +1,133 @@
+/* Tables of a stage: one, or a pair of columns of groups. */
+.tn-tables {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+.tn-tables[data-groups] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+}
+.tn-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-table > caption {
+  padding: 14px 16px 2px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: left;
+}
+.tn-table th,
+.tn-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--hub-border);
+  text-align: right;
+  white-space: nowrap;
+}
+.tn-table :is(th, td):last-child {
+  padding-right: 20px;
+}
+.tn-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.tn-table thead th {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+.tn-table abbr {
+  text-decoration: none;
+}
+.tn-table tbody tr:not(.tn-table-line):hover {
+  background: var(--hub-hover);
+}
+.tn-table :is(th, td).tn-rank {
+  width: 52px;
+  padding-inline: 16px 4px;
+  color: var(--hub-muted);
+  text-align: center;
+}
+.tn-table tbody .tn-rank {
+  font-weight: 700;
+}
+.tn-table tr[data-qualified] .tn-rank {
+  color: var(--hub-success);
+}
+.tn-table :is(thead th:nth-child(2), tbody th) {
+  text-align: left;
+}
+.tn-table tbody th {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.tn-table td > strong {
+  font-size: 17px;
+  font-weight: 700;
+}
+.tn-team {
+  --stream-image-size: 36px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+.tn-team a:hover {
+  color: var(--hub-accent-strong);
+}
+/* The line between the places that go on and the others, with what it means written on it. */
+.tn-table .tn-table-line > td {
+  padding: 0;
+  border-bottom: 0;
+  text-align: left;
+}
+.tn-table-line span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -1px;
+  padding: 4px 0 4px 16px;
+  color: var(--hub-success);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.tn-table-line span::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--hub-success);
+}
+@media (max-width: 899.98px) {
+  .tn-wide-only {
+    display: none;
+  }
+  .tn-table {
+    font-size: 14px;
+  }
+  .tn-table th,
+  .tn-table td {
+    padding: 10px 6px;
+  }
+  .tn-table :is(th, td):last-child {
+    padding-right: 14px;
+  }
+  .tn-table :is(th, td).tn-rank {
+    width: 34px;
+    padding-inline: 10px 2px;
+  }
+  .tn-team {
+    --stream-image-size: 30px;
+    gap: 10px;
+  }
+}

@@ -1,0 +1,61 @@
+.tn-events {
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-events > summary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.tn-events > summary::-webkit-details-marker {
+  display: none;
+}
+.tn-events > summary > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.tn-events > p {
+  margin: 0;
+  padding: 0 20px 8px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-events > ol {
+  max-height: 320px;
+  margin: 0;
+  padding: 0 20px 8px;
+  overflow-y: auto;
+  list-style: none;
+}
+.tn-events li {
+  --reference-size: 26px;
+  display: flex;
+  min-height: 42px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--hub-border);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-events time {
+  min-width: 40px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-events strong {
+  color: var(--hub-text);
+  font-weight: 600;
+}

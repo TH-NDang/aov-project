@@ -1,0 +1,141 @@
+/* A circuit's seasons as lines of one list: the season, its champion, its size. */
+.tn-circuit-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.tn-circuit-name > svg {
+  flex: none;
+  color: var(--hub-muted);
+}
+.tn-seasons {
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-season {
+  --stream-image-size: 40px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1.1fr) 64px 16px;
+  grid-template-areas: "logo name champion size go";
+  align-items: center;
+  gap: 4px 16px;
+  min-height: 72px;
+  padding: 10px 16px;
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.tn-season + .tn-season {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-season:hover,
+.tn-season:focus-visible {
+  background: var(--hub-hover);
+}
+/* The list clips its corners, so the ring is drawn inside the line. */
+.tn-season:focus-visible {
+  outline-offset: -2px;
+}
+/* A part of the season above it is a quieter line; its champion stays in the column of the others. */
+.tn-season[data-part] {
+  --stream-image-size: 28px;
+  min-height: 52px;
+  padding-block: 6px;
+}
+.tn-season[data-part] > :first-child {
+  width: 32px;
+  height: 32px;
+  justify-self: end;
+}
+.tn-season-name,
+.tn-season-champion > span {
+  display: grid;
+  min-width: 0;
+}
+.tn-season-name {
+  grid-area: name;
+}
+.tn-season-name > strong {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.tn-season[data-part] .tn-season-name > strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-season-name > span,
+.tn-season-size {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-season-champion {
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  grid-area: champion;
+  align-items: center;
+  gap: 12px;
+}
+.tn-season-champion b {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-season-champion small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-season-state {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: champion;
+  align-items: center;
+  gap: 4px 10px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-season-size {
+  grid-area: size;
+  text-align: right;
+  white-space: nowrap;
+}
+.tn-season > svg {
+  grid-area: go;
+  color: var(--hub-muted);
+}
+@media (max-width: 899.98px) {
+  .tn-season {
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-areas:
+      "logo name"
+      "champion champion";
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px;
+  }
+  .tn-season-champion {
+    --stream-image-size: 28px;
+    padding-left: 60px;
+    gap: 8px;
+  }
+  .tn-season-champion > span {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 6px;
+  }
+  .tn-season-champion b {
+    font-size: 14px;
+  }
+  .tn-season-state {
+    padding-left: 60px;
+  }
+  .tn-season-size,
+  .tn-season > svg {
+    display: none;
+  }
+}

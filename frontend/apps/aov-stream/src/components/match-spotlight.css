@@ -1,0 +1,118 @@
+/* One match on its stage: both teams large, what matters about the time between them. */
+.tn-spot {
+  display: block;
+  border-radius: var(--hub-radius);
+}
+.tn-spot-stage {
+  --stage-light-left: 20%;
+  --stage-light-right: 80%;
+  display: grid;
+  height: 100%;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas:
+    "meta meta meta"
+    "a when b";
+  align-content: center;
+  align-items: center;
+  gap: 16px 12px;
+  padding: 20px 16px 22px;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  transition: outline-color 160ms;
+}
+.tn-spot:hover > .tn-spot-stage {
+  outline-color: rgb(255 255 255 / 34%);
+}
+.tn-spot[data-live] > .tn-spot-stage {
+  outline-color: var(--hub-red);
+}
+.tn-spot-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 12px;
+  grid-area: meta;
+  color: rgb(255 255 255 / 78%);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-spot-team {
+  --stream-image-size: 72px;
+  --stream-image-plate: transparent;
+  --stream-image-ink: rgb(255 255 255 / 82%);
+  --stream-image-initials: 20px;
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.tn-spot-team[data-side="a"] {
+  grid-area: a;
+}
+.tn-spot-team[data-side="b"] {
+  grid-area: b;
+}
+.tn-spot-team > strong {
+  max-width: 100%;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.tn-spot-team[data-open] > strong {
+  color: rgb(255 255 255 / 76%);
+  font-size: 14px;
+  font-weight: 500;
+}
+.tn-spot-blank {
+  width: 72px;
+  height: 72px;
+  border: 1px dashed rgb(255 255 255 / 40%);
+  border-radius: var(--hub-radius);
+}
+.tn-spot-when {
+  display: grid;
+  grid-area: when;
+  justify-items: center;
+  gap: 4px;
+  color: rgb(255 255 255 / 80%);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+}
+.tn-spot-when > b {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 28px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.tn-spot-when > :first-child:not(b) {
+  font-size: 15px;
+}
+@media (max-width: 899.98px) {
+  .tn-spot-team {
+    --stream-image-size: 56px;
+  }
+  .tn-spot-blank {
+    width: 56px;
+    height: 56px;
+  }
+  .tn-spot-team > strong {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .tn-spot-when {
+    max-width: 34vw;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .tn-spot-when > b {
+    font-size: 17px;
+    line-height: 22px;
+  }
+}

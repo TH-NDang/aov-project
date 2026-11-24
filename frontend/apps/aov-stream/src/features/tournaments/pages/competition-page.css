@@ -1,0 +1,29 @@
+.tn-comp {
+  gap: 20px;
+}
+.tn-info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  align-items: start;
+  gap: 16px;
+}
+.tn-comp-skeleton {
+  display: grid;
+  gap: 20px;
+}
+.tn-comp-skeleton > [data-shape="stage"] {
+  height: 236px;
+  border-radius: var(--hub-radius);
+}
+.tn-comp-skeleton > [data-shape="tabs"] {
+  width: min(100%, 520px);
+  height: 40px;
+}
+.tn-comp-skeleton > [data-shape="rows"] {
+  height: 320px;
+}
+@media (max-width: 899.98px) {
+  .tn-comp {
+    gap: 14px;
+  }
+}

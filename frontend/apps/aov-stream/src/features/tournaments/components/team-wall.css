@@ -1,0 +1,39 @@
+.tn-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-wall > li {
+  --stream-image-size: 72px;
+  --stream-image-radius: var(--hub-radius);
+  --stream-image-initials: 20px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 16px 8px 14px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  text-wrap: balance;
+}
+.tn-wall a:hover {
+  color: var(--hub-accent-strong);
+}
+@media (max-width: 899.98px) {
+  .tn-wall {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .tn-wall > li {
+    --stream-image-size: 56px;
+    padding: 12px 6px 10px;
+    font-size: 13px;
+  }
+}

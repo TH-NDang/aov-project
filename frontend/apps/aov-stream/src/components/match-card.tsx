@@ -1,57 +1,58 @@
 import { Link } from "react-router"
-import { LocalTime } from "@aov/ui/components/local-time"
+import { MatchTime } from "./match-time"
 import { StreamImage } from "./stream-image"
 import { useStreamLocale } from "./stream-locale"
+import { ThemedLogo } from "./themed-logo"
 import { matchUnderway } from "../lib/competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "../lib/match-model"
-import { matchRound, matchSides } from "../lib/match-schedule"
-import { ThemedLogo } from "@/components/themed-logo"
+import { matchRound, matchSides, type MatchSide } from "../lib/match-schedule"
+import { useNow } from "../lib/use-now"
+import "./match-card.css"
 
-const when: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }
+/** Where a match stands: on now, when it starts, or that its result is still to come. */
+export function MatchStatus({ entry }: { entry: CompetitionMatch }) {
+  const { text } = useStreamLocale()
+  const now = useNow()
+  if (matchUnderway(entry, now)) return <span className="tn-live">{text("Đang diễn ra", "Live")}</span>
+  if (matchState(entry, now) === "PENDING") return <span>{text("Chờ kết quả", "Awaiting result")}</span>
+  return <MatchTime entry={entry} />
+}
 
-/**
- * What a match says about itself in a few words: on now, done, waiting for its result or for a date. `brief` leaves
- * out "finished", which the score already shows, for narrow places such as a bracket.
- */
-function MatchStatus({ entry, brief = false }: { entry: CompetitionMatch; brief?: boolean }) {
-  const { text, languageTag } = useStreamLocale()
-  const { match, competition } = entry
-  const state = matchState(entry)
-  if (matchUnderway(entry)) return <span className="tn-live">{text("Đang diễn ra", "Ongoing")}</span>
-  if (state === "UNSCHEDULED") return <span>{text("Chờ lịch", "To be scheduled")}</span>
-  const time = (
-    <LocalTime
-      value={match.scheduledAt}
-      sourceTimeZone={competition.content.plan.timezone}
-      format={when}
-      locale={languageTag}
-    />
-  )
-  if (state === "UPCOMING" || (brief && state !== "PENDING")) return time
+/** One side of a card: its logo, its short name and its score, the winner in full strength. */
+export function MatchCardSide({ team }: { team: MatchSide }) {
   return (
-    <span>
-      {state === "PENDING" ? text("Chờ kết quả", "Awaiting result") : text("Đã kết thúc", "Finished")} · {time}
+    <span
+      className="tn-match-team"
+      data-won={team.won || undefined}
+      data-lost={team.lost || undefined}
+      data-open={!team.known || undefined}
+    >
+      {team.known ? (
+        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
+      ) : (
+        <span className="tn-match-blank" aria-hidden="true" />
+      )}
+      <strong title={team.fullName}>{team.brief}</strong>
+      {team.score != null && <b>{team.score}</b>}
     </span>
   )
 }
 
 /**
- * One match as two rows of team and score, the winner in full strength. `context` names the competition above the
- * teams, for lists that mix several; inside a competition's own page the round label takes that line.
+ * One match as two rows of team and score. `context` names the competition under the teams, for lists that mix
+ * several; inside a competition's own page the round alone takes that line, and `brief` leaves it out.
  */
 export function MatchCard({
   entry,
   context = false,
   brief = false,
-  final = false,
 }: {
   entry: CompetitionMatch
   context?: boolean
   brief?: boolean
-  /** The final of a bracket, drawn in the accent's outline. */
-  final?: boolean
 }) {
   const { languageTag } = useStreamLocale()
+  const now = useNow()
   const { competition, match } = entry
   const { tournament } = competition.content
   const round = matchRound(entry, languageTag)
@@ -59,41 +60,26 @@ export function MatchCard({
     <Link
       className="tn-match"
       to={competitionMatchHref(competition.id, match.key)}
-      data-live={matchUnderway(entry) || undefined}
-      data-final={final || undefined}
+      data-live={matchUnderway(entry, now) || undefined}
     >
+      <span className="tn-match-head">
+        <MatchStatus entry={entry} />
+        <span>BO{match.bestOf}</span>
+      </span>
+      {matchSides(entry, languageTag).map((team) => (
+        <MatchCardSide key={team.side} team={team} />
+      ))}
       {context ? (
-        <span className="tn-match-meta" data-context="">
+        <span className="tn-match-foot" data-context="">
           <ThemedLogo src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
           <span>
             <span className="tn-match-competition">{tournament.name}</span>
-            {round && <span className="tn-match-round">{round}</span>}
+            {round && <span>{round}</span>}
           </span>
         </span>
       ) : (
-        (round || !brief) && (
-          <span className="tn-match-meta">
-            <span>{round}</span>
-          </span>
-        )
+        !brief && round && <span className="tn-match-foot">{round}</span>
       )}
-      {matchSides(entry, languageTag).map((team) => (
-        <span
-          key={team.side}
-          className="tn-match-team"
-          data-won={team.won || undefined}
-          data-lost={team.lost || undefined}
-          data-open={!team.known || undefined}
-        >
-          <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
-          <strong title={team.fullName}>{team.name}</strong>
-          <b>{team.score ?? "–"}</b>
-        </span>
-      ))}
-      <span className="tn-match-foot">
-        <MatchStatus entry={entry} brief={brief} />
-        <span>BO{match.bestOf}</span>
-      </span>
     </Link>
   )
 }

@@ -1,0 +1,160 @@
+/* Five picks in lane order, underlined in the colour of the side the team played on. */
+.tn-picks {
+  --side: var(--hub-blue);
+  --reference-size: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, var(--pick, 40px));
+  gap: 4px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--side);
+}
+.tn-picks[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-picks[data-lost] > * {
+  opacity: 0.62;
+}
+.tn-win {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* The games of one match lie in one list: a rule between them, no box of their own. */
+.tn-game-list {
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-game-list > .tn-game-skeleton {
+  display: block;
+  height: 72px;
+  border-radius: 0;
+}
+.tn-game-list > .tn-game-skeleton + .tn-game-skeleton {
+  margin-top: 1px;
+}
+.tn-game {
+  --pick: clamp(36px, 3.6vw, 50px);
+  display: grid;
+  min-width: 0;
+  min-height: 76px;
+  grid-template-columns: 72px minmax(0, 1fr) auto auto minmax(0, 1fr) 16px;
+  grid-template-areas: "title a picks-a picks-b b go";
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.tn-game + .tn-game {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-game:hover,
+.tn-game:focus-visible {
+  background: var(--hub-hover);
+}
+.tn-game:focus-visible {
+  outline-offset: -2px;
+}
+.tn-game-title {
+  display: grid;
+  min-width: 0;
+  grid-area: title;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-game-title > b {
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-game-team {
+  --stream-image-size: 32px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 20px;
+}
+.tn-game-team[data-slot="a"] {
+  flex-direction: row-reverse;
+  grid-area: a;
+  text-align: right;
+}
+.tn-game-team[data-slot="b"] {
+  grid-area: b;
+}
+.tn-game-team > strong {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-game-team[data-lost] {
+  color: var(--hub-muted);
+}
+.tn-game-team[data-lost] > strong {
+  font-weight: 500;
+}
+.tn-picks[data-slot="a"] {
+  grid-area: picks-a;
+}
+.tn-picks[data-slot="b"] {
+  margin-left: 10px;
+  grid-area: picks-b;
+}
+.tn-game > svg {
+  grid-area: go;
+  color: var(--hub-muted);
+}
+/* Between the two layouts the picks take most of a row: the cup alone marks the winner. */
+@media (max-width: 1099.98px) {
+  .tn-win > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-game {
+    --pick: clamp(30px, 9.2vw, 40px);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title title"
+      "a picks-a"
+      "b picks-b";
+    gap: 8px 10px;
+    padding: 12px;
+  }
+  .tn-game-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .tn-game-team[data-slot="a"] {
+    flex-direction: row;
+    text-align: left;
+  }
+  .tn-picks[data-slot="b"] {
+    margin-left: 0;
+  }
+  .tn-game > svg {
+    display: none;
+  }
+}
