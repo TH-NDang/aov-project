@@ -27,6 +27,7 @@ public record CompetitionSnapshot(
 ) {
     /** Snapshots taken before ADR-032 have no people; they read as none. */
     public CompetitionSnapshot {
+        players = Player.published(players);
         people = people == null ? Map.of() : Map.copyOf(people);
     }
 

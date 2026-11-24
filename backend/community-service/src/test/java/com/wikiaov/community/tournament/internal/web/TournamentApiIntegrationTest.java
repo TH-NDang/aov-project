@@ -1108,6 +1108,26 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aPublishedGameNamesItsPlayersByNicknameOnly() throws Exception {
+        var fixture = fixture();
+        var seat = fixture.game().sides().getFirst().participants().getFirst();
+        var content = new Player("player-" + UUID.randomUUID(), "Nickname", "Private full name", "VN", null, List.of(),
+                LocalDate.parse("2002-03-04"), null, null, null);
+        write(put(ADMIN + "/players/" + seat.playerId()), Map.of("version", 0, "content", content));
+        var draft = create("games", fixture.game());
+
+        write(post(ADMIN + "/games/" + draft.get("id") + "/publish"), Map.of("version", version(draft)));
+
+        String body = mvc.perform(get(PUBLIC + "/games/" + draft.get("id"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.players['" + seat.playerId() + "'].nickname").value("Nickname"))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(body).doesNotContain("Private full name", "2002-03-04");
+        mvc.perform(authorized(get(ADMIN + "/players/" + seat.playerId())))
+                .andExpect(jsonPath("$.content.fullName").value("Private full name"))
+                .andExpect(jsonPath("$.content.birthDate").value("2002-03-04"));
+    }
+
+    @Test
     void publicationAndWithdrawalHistoryPermanentlyProtectIdentityWithoutChangingTheSnapshot() throws Exception {
         var fixture = fixture();
         var draft = create("games", fixture.game());
