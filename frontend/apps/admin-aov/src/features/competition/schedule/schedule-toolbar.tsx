@@ -3,38 +3,6 @@ import { cn } from "@aov/ui/lib/utils"
 import { MATCH_FILTERS, MATCH_FILTER_LABELS, type MatchFilter } from "../model/schedule-model"
 import type { Workspace } from "../workspace/parts"
 
-/** One of a few views of the same list; the pressed one is the one on screen. */
-export function Segmented<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: T
-  options: readonly (readonly [T, string])[]
-  onChange: (value: T) => void
-}) {
-  return (
-    <div className="flex rounded-md border bg-card p-0.5" role="group" aria-label={label}>
-      {options.map(([option, text]) => (
-        <button
-          key={option}
-          type="button"
-          aria-pressed={value === option}
-          onClick={() => onChange(option)}
-          className={cn(
-            "type-label h-8 rounded px-3 whitespace-nowrap",
-            value === option ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {text}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 /** Whose matches are listed and what they still need. A filter with nothing in it is left out. */
 export function ScheduleToolbar({
   ws,

@@ -38,7 +38,7 @@ import { PageLeaveGuard } from "@/components/page-leave-guard"
 import { useReferenceCatalog } from "./catalog"
 import { saveSettings, loadLegacySettings, referenceSettingsKeys } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
-import { ReferencePreviewWorkspace } from "./reference-preview-workspace"
+import { ReferencePreviewWorkspace, type TextKind } from "./reference-preview-workspace"
 import { AdminDescriptionField } from "./rich-text-field"
 import { useSkillReferences } from "./use-skill-references"
 import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
@@ -95,6 +95,9 @@ export function TerminologyPage() {
   // The language of the translations lives in the URL, so a reload or a shared link keeps it.
   const [locale, setLocale] = useSearchParam("locale", "vi-VN")
   const [preview, setPreview] = useState("")
+  const [streamPreview, setStreamPreview] = useState("")
+  const [textParam, setTextParam] = useSearchParam("text", "game")
+  const textKind: TextKind = textParam === "stream" ? "STREAM" : "GAME"
   const [message, setMessage] = useState("")
   const [saving, setSaving] = useState(false)
   const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
@@ -724,8 +727,10 @@ export function TerminologyPage() {
         </Sheet>
         {view === "preview" && (
           <ReferencePreviewWorkspace
-            value={preview}
-            onChange={setPreview}
+            kind={textKind}
+            onKindChange={(kind) => setTextParam(kind === "STREAM" ? "stream" : null)}
+            value={textKind === "STREAM" ? streamPreview : preview}
+            onChange={textKind === "STREAM" ? setStreamPreview : setPreview}
             entities={previewEntities}
             locale={locale}
             onLocaleChange={setLocale}

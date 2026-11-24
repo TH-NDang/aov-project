@@ -40,8 +40,11 @@ export interface EntityRichTextProps {
 const emptyEntities: EntityReference[] = []
 const hexColor = /^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i
 
-export type EntityIconResolver = ((entity: EntityReference) => Promise<string | null | undefined>) & {
-  subscribe?: (entity: EntityReference, update: (url: string | null | undefined) => void) => () => void
+/** A picture that fills its square, or a logo shown whole, on the plate it was drawn for when the theme is not it. */
+export type EntityIcon = string | { url: string; plate?: "light" | "dark" }
+
+export type EntityIconResolver = ((entity: EntityReference) => Promise<EntityIcon | null | undefined>) & {
+  subscribe?: (entity: EntityReference, update: (icon: EntityIcon | null | undefined) => void) => () => void
 }
 
 type ReferenceIconProps = {
@@ -70,7 +73,7 @@ function DeferredReferenceIcon(props: ReferenceIconProps) {
 }
 
 function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: ReferenceIconProps) {
-  const [resolved, setResolved] = React.useState<string | undefined>(undefined)
+  const [resolved, setResolved] = React.useState<EntityIcon | null | undefined>(undefined)
   const [failed, setFailed] = React.useState<string | null>(null)
   // The entity object can be rebuilt on every render; its id, kind and icon decide when the icon is looked up again.
   const currentEntity = React.useEffectEvent(() => entity)
@@ -78,11 +81,11 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
     setResolved(undefined)
     const target = currentEntity()
     if (!resolveIcon || !target.iconAssetId) return
-    if (resolveIcon.subscribe) return resolveIcon.subscribe(target, (url) => setResolved(safeEntityIconUrl(url)))
+    if (resolveIcon.subscribe) return resolveIcon.subscribe(target, setResolved)
     let active = true
     void resolveIcon(target).then(
       (value) => {
-        if (active) setResolved(safeEntityIconUrl(value))
+        if (active) setResolved(value)
       },
       () => {},
     )
@@ -90,7 +93,9 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
       active = false
     }
   }, [entity.id, entity.kind, entity.iconAssetId, resolveIcon])
-  const icon = safeEntityIconUrl(entity.icon) ?? resolved
+  const own = safeEntityIconUrl(entity.icon)
+  const logo = !own && typeof resolved === "object" ? resolved : undefined
+  const icon = own ?? safeEntityIconUrl(logo ? logo.url : resolved)
   const Fallback = entityKindIcons[entity.kind]
   if (entity.kind === "country") {
     const flag = countryReferenceFlag(entity.id)
@@ -120,7 +125,8 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
       aria-hidden="true"
       loading="lazy"
       decoding="async"
-      className={`inline shrink-0 rounded-sm bg-muted object-cover align-text-bottom ${className}`}
+      data-logo-plate={logo?.plate}
+      className={`inline shrink-0 rounded-sm align-text-bottom ${logo ? "object-contain" : "bg-muted object-cover"} ${className}`}
       onError={() => setFailed(icon)}
     />
   ) : (
