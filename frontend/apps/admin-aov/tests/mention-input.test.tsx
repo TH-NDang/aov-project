@@ -57,6 +57,20 @@ async function field(props: { initial?: string; chat?: boolean } = {}) {
   return { state, type, key, options }
 }
 
+test("the names a text marks are the ones it will link: each once a paragraph, a player beside their team", async () => {
+  const { passiveReferenceHighlights } = await import("@aov/ui/lib/reference-input-recognition")
+  const root = document.createElement("div")
+  root.append("Box Gaming và Kaisa, Box Gaming lại thắng.\n\nKaisa nghỉ, RPL chờ.")
+  const index = createEntityIndex(entities, "vi-VN", "vi-VN", { scope: "all" })
+
+  const marks = passiveReferenceHighlights(root, index, { markup: "references", firstOccurrenceOnly: true })
+
+  assert.deepEqual(
+    marks.map(({ range }) => range.toString()),
+    ["Box Gaming", "Kaisa", "RPL"],
+  )
+})
+
 test("an at sign lists what it can name, the closest first, and Enter puts the choice in the text", async () => {
   const { state, type, key, options } = await field()
 
