@@ -47,7 +47,7 @@ const SECTIONS: Section[] = [
     id: "wiki",
     product: "Wiki",
     label: SITE_NAME,
-    description: "Tra cứu tướng, trang bị, phù hiệu",
+    description: "Tra cứu thông tin game",
     image: WIKI_LOGO_URL,
     href: "/",
   },
@@ -55,7 +55,7 @@ const SECTIONS: Section[] = [
     id: "stream",
     product: "Stream",
     label: "AOV Stream",
-    description: "Khám phá giải đấu, ván đấu và cộng đồng",
+    description: "Giải đấu, cộng đồng người chơi",
     image: "/icons/stream-owl.svg",
     href: STREAM_URL,
   },
@@ -71,7 +71,7 @@ function SectionItemBody({ section }: { section: Section }) {
       description={wikiText(
         locale,
         section.description,
-        section.id === "wiki" ? "Explore the Arena of Valor wiki" : "Explore tournaments, games and the community",
+        section.id === "wiki" ? "Look up game information" : "Tournaments and the player community",
       )}
       current={section.id === CURRENT_SECTION}
       currentLabel={wikiText(locale, "Đang xem", "Current")}

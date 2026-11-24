@@ -59,7 +59,7 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
             <PublicAppOptionBody
               product="Wiki"
               image={wikiLogoUrl}
-              description={text("Tra cứu tướng, trang bị, phù hiệu", "Look up heroes, equipment and enchantments")}
+              description={text("Tra cứu thông tin game", "Look up game information")}
             />
           </a>
         </DropdownMenuItem>
@@ -68,10 +68,7 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
             <PublicAppOptionBody
               product="Stream"
               image={owlMark}
-              description={text(
-                "Khám phá giải đấu, ván đấu và cộng đồng",
-                "Explore tournaments, games and the community",
-              )}
+              description={text("Giải đấu, cộng đồng người chơi", "Tournaments and the player community")}
               current
               currentLabel={text("Đang xem", "Current")}
             />
