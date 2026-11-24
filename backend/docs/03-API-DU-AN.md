@@ -2449,6 +2449,16 @@ patch:{code,translations:[{locale,title,summary,description?}]}, trả id của 
 Quyền tạo mùa/patch/lịch mùa là patch:write, phát hành patch vẫn cần patch:publish.
 Publication overview trả seasons chung, seasonSchedules riêng và variants.seasonId.
 
+Gắn mùa cho patch đã có (24/11/2026): PUT admin/patch-variants/{id}/season nhận `{seasonId}`,
+quyền patch:write và patch:publish, trả 204. Dùng cho patch tạo trước khi có mùa (nhóm
+"Chưa gắn mùa"); không đổi ordinal hay nội dung patch. Backend khóa ruleset rồi variant và kiểm tra:
+patch chưa gắn mùa hoặc đã ở đúng mùa đó (gọi lại là idempotent, không ghi audit); patch đã ở
+mùa khác trả 409. Thứ tự mùa không được đảo theo ruleset: mọi patch đã gắn mùa đứng trước phải
+có mùa không sau mùa đích, mọi patch đứng sau phải có mùa không trước mùa đích; vi phạm trả 422.
+Mọi release chưa hủy của patch phải chưa gắn mùa hoặc gắn đúng mùa đích, và nằm trong lịch mùa
+của thị trường đó nếu lịch đã có (ngày effectiveOn nếu có, nếu không thì effectiveAt); release
+chưa gắn mùa được gắn mùa đích. Thành công ghi audit PATCH_VARIANT_SEASON_ASSIGNED.
+
 Nhập/tạo tướng chọn mùa và patch, không bắt chọn thị trường hay lịch phát hành.
 GET admin/heroes/import/contexts?seasonId= trả context của variant DRAFT/PUBLISHED.
 Request dùng contextId; alias releaseId và lookup lịch cũ được giữ cho job đã nhận trước
