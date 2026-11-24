@@ -50,6 +50,7 @@ export const teamViewOf = (id: string, content?: TeamContent): TeamView =>
         name: content.name,
         shortName: content.shortName || initials(content.name),
         logoUrl: content.logoUrl,
+        logoDarkUrl: content.logoDarkUrl,
         country: content.country,
       }
     : { id, name: "Chưa xác định", shortName: "TBD" }

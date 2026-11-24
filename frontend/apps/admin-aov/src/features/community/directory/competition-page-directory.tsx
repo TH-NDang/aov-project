@@ -68,6 +68,7 @@ const LatestTournament = ({ stats }: { stats?: CompetitionPageEntry }) =>
     >
       <Monogram
         url={stats.latestTournament.logoUrl}
+        darkUrl={stats.latestTournament.logoDarkUrl}
         label={`Logo ${stats.latestTournament.name}`}
         text={initials(stats.latestTournament.name).slice(0, 3)}
         size={28}

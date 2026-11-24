@@ -236,6 +236,7 @@ function PlayerRow({
           <span className="flex min-w-0 items-center gap-2">
             <Monogram
               url={player.latestTeam.logoUrl}
+              darkUrl={player.latestTeam.logoDarkUrl}
               label={`Logo ${player.latestTeam.name}`}
               text={player.latestTeam.shortName || initials(player.latestTeam.name).slice(0, 3)}
               size={24}

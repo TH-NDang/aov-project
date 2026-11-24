@@ -58,6 +58,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
+/** The theme in effect, light outside a ThemeProvider (as in component tests), for what only draws differently. */
+export function useResolvedTheme(): "light" | "dark" {
+  return useContext(ThemeContext)?.resolvedTheme ?? "light"
+}
+
 export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext)
   if (!context) throw new Error("useTheme must be used inside ThemeProvider")

@@ -18,3 +18,18 @@
   background-color: var(--card);
   color: var(--card-foreground);
 }
+
+/* A logo shown on the other background than the one it was drawn for sits on a plate of its own colour (lib/themed-logo.ts). */
+:root img[data-logo-plate="light"] {
+  background-color: var(--aov-stream-mist);
+}
+:root img[data-logo-plate="dark"] {
+  background-color: var(--aov-wiki-night);
+}
+/* The dark logo field previews its logo on a dark background whatever the theme. */
+.tournament-registry-logo[data-surface="dark"] {
+  background: var(--aov-wiki-night);
+}
+.tournament-registry-logo[data-surface="dark"] > img:not([data-logo-plate]) {
+  background: transparent;
+}
