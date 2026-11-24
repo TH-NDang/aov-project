@@ -332,6 +332,56 @@ class PatchReleaseWorkflowTests {
         verifyNoInteractions(audit);
     }
 
+    @Test
+    void adoptingASeasonChecksEachReleaseAgainstItsScheduleAndTagsUnseasonedReleases() {
+        var dated = existingRelease(null, PatchReleaseStatus.DRAFT);
+        dated.setEffectiveOn(LOCAL_TODAY);
+        var exact = existingRelease(seasonId, PatchReleaseStatus.SCHEDULED);
+        exact.setEffectiveAt(NOW);
+        when(releases.lockVariantReleases(variantId)).thenReturn(List.of(dated, exact));
+
+        workflow.adoptSeason(variantId, seasonId);
+
+        verify(seasons).requireReleaseDate(seasonId, regionId, LOCAL_TODAY);
+        verify(seasons).requireRelease(seasonId, regionId, NOW);
+        assertThat(dated.getSeasonId()).isEqualTo(seasonId);
+        assertThat(exact.getSeasonId()).isEqualTo(seasonId);
+    }
+
+    @Test
+    void adoptingASeasonRejectsAReleaseInAnotherSeason() {
+        var other = existingRelease(UUID.randomUUID(), PatchReleaseStatus.SCHEDULED);
+        other.setEffectiveAt(NOW);
+        when(releases.lockVariantReleases(variantId)).thenReturn(List.of(other));
+
+        assertInvalid(() -> workflow.adoptSeason(variantId, seasonId),
+                "A release of this patch belongs to another season.");
+        verifyNoInteractions(seasons);
+    }
+
+    @Test
+    void adoptingASeasonKeepsTheScheduleErrorAndIgnoresCancelledReleases() {
+        var cancelled = existingRelease(UUID.randomUUID(), PatchReleaseStatus.CANCELLED);
+        var outside = existingRelease(null, PatchReleaseStatus.DRAFT);
+        outside.setEffectiveOn(LOCAL_TODAY);
+        when(releases.lockVariantReleases(variantId)).thenReturn(List.of(cancelled, outside));
+        doThrow(new ApiException(PatchErrorCode.PATCH_INVALID, "The release date must overlap its market season."))
+                .when(seasons).requireReleaseDate(seasonId, regionId, LOCAL_TODAY);
+
+        assertInvalid(() -> workflow.adoptSeason(variantId, seasonId),
+                "The release date must overlap its market season.");
+        assertThat(cancelled.getSeasonId()).isNotEqualTo(seasonId);
+    }
+
+    private PatchRelease existingRelease(UUID releaseSeasonId, PatchReleaseStatus status) {
+        var release = new PatchRelease();
+        release.setId(UUID.randomUUID());
+        release.setRegionId(regionId);
+        release.setSeasonId(releaseSeasonId);
+        release.setStatus(status);
+        return release;
+    }
+
     private void prepareScheduling(UUID variantSeasonId) {
         var variant = new PatchVariant();
         variant.setSeasonId(variantSeasonId);

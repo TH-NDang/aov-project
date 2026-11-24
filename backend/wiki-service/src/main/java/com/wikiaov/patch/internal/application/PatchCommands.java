@@ -77,6 +77,11 @@ public final class PatchCommands {
     ) {
     }
 
+    public record VariantSeason(
+            @NotNull UUID seasonId
+    ) {
+    }
+
     public record Release(
             @NotNull UUID regionId,
             Instant effectiveAt,

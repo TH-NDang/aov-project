@@ -83,6 +83,29 @@ public class PatchReleaseWorkflow {
         record("PATCH_RELEASE_CONFIRMED", releaseId);
     }
 
+    /**
+     * Moves the releases of a patch that just joined a season into that season. The caller holds the ruleset and
+     * variant locks; every release that is not cancelled must be unseasoned or already in the season and fall within
+     * its market's schedule of that season.
+     */
+    public void adoptSeason(UUID variantId, UUID seasonId) {
+        for (var release : releases.lockVariantReleases(variantId)) {
+            if (release.getStatus() == PatchReleaseStatus.CANCELLED) {
+                continue;
+            }
+            if (release.getSeasonId() != null && !release.getSeasonId().equals(seasonId)) {
+                throw invalid("A release of this patch belongs to another season.");
+            }
+            if (release.getEffectiveOn() != null) {
+                seasons.requireReleaseDate(seasonId, release.getRegionId(), release.getEffectiveOn());
+            } else {
+                seasons.requireRelease(seasonId, release.getRegionId(), release.getEffectiveAt());
+            }
+
+            release.setSeasonId(seasonId);
+        }
+    }
+
     private UUID resolveReleaseSeason(PatchVariant variant, UUID requestedSeason) {
         UUID seasonId = variant.getSeasonId() == null ? requestedSeason : variant.getSeasonId();
         if (requestedSeason != null && !requestedSeason.equals(seasonId)) {

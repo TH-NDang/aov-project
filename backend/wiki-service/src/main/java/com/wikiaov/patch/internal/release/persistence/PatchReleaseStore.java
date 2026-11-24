@@ -11,6 +11,7 @@ import com.wikiaov.patch.internal.ruleset.persistence.RulesetAssignmentRepositor
 import com.wikiaov.patch.internal.ruleset.persistence.entity.Region;
 import com.wikiaov.platform.ApiException;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
@@ -79,6 +80,10 @@ public class PatchReleaseStore {
 
     public PatchRelease lockRelease(UUID releaseId) {
         return releases.lockById(releaseId).orElseThrow(PatchReleaseStore::notFound);
+    }
+
+    public List<PatchRelease> lockVariantReleases(UUID variantId) {
+        return releases.lockByPatchVariantId(variantId);
     }
 
     public boolean regionUsesRulesetAt(UUID regionId, UUID rulesetId, Instant effectiveAt) {

@@ -865,6 +865,51 @@ class DomainCoreIntegrationTest {
         send(post(ROOT + "/admin/patch-variants/" + next + "/hero-changes"), observedBefore, 422);
     }
 
+    @Test
+    void anExistingPatchJoinsASeasonThatFitsItsOrderAndReleaseDates() throws Exception {
+        UUID earlier = id(send(post(ROOT + "/admin/seasons"), Map.of("code", "joined-a", "displayName", "A"), 201));
+        UUID later = id(send(post(ROOT + "/admin/seasons"), Map.of("code", "joined-b", "displayName", "B"), 201));
+        send(post(ROOT + "/admin/seasons/" + earlier + "/schedules"), Map.of("regionId", VN,
+                "startsAt", "2026-02-01T00:00:00Z", "endsAt", "2026-03-01T00:00:00Z"), 201);
+        send(post(ROOT + "/admin/seasons/" + later + "/schedules"), Map.of("regionId", VN,
+                "startsAt", "2026-03-01T00:00:00Z"), 201);
+        UUID first = unseasonedPatch("joined-first", 10);
+        UUID second = unseasonedPatch("joined-second", 11);
+        UUID third = unseasonedPatch("joined-third", 12);
+        UUID release = id(send(post(ROOT + "/admin/patch-variants/" + first + "/releases"),
+                Map.of("regionId", VN, "effectiveOn", "2026-02-10"), 201));
+
+        send(put(ROOT + "/admin/patch-variants/" + first + "/season"), Map.of("seasonId", later), 422);
+        send(put(ROOT + "/admin/patch-variants/" + first + "/season"), Map.of("seasonId", earlier), 204);
+        send(put(ROOT + "/admin/patch-variants/" + first + "/season"), Map.of("seasonId", earlier), 204);
+        send(put(ROOT + "/admin/patch-variants/" + first + "/season"), Map.of("seasonId", later), 409);
+        send(put(ROOT + "/admin/patch-variants/" + second + "/season"), Map.of("seasonId", later), 204);
+        send(put(ROOT + "/admin/patch-variants/" + third + "/season"), Map.of("seasonId", earlier), 422);
+
+        assertThat(variantSeason(first)).isEqualTo(earlier);
+        assertThat(variantSeason(second)).isEqualTo(later);
+        assertThat(variantSeason(third)).isNull();
+        assertThat(jdbc.sql("SELECT season_id FROM patch.patch_release WHERE id=?").param(release)
+                .query(UUID.class).single()).isEqualTo(earlier);
+        assertThat(jdbc.sql("SELECT count(*) FROM access.audit_event WHERE aggregate_id IN (?,?,?) AND "
+                + "action='PATCH_VARIANT_SEASON_ASSIGNED'").params(first, second, third).query(Long.class).single())
+                .isEqualTo(2L);
+    }
+
+    private UUID unseasonedPatch(String code, long ordinal) throws Exception {
+        UUID created = id(send(post(ROOT + "/admin/patches"), Map.of("code", code, "translations",
+                List.of(Map.of("locale", "vi-VN", "title", code, "summary", ""))), 201));
+        UUID variantId = id(send(post(ROOT + "/admin/patches/" + created + "/variants"),
+                Map.of("rulesetId", ruleset, "variantCode", code, "rulesetOrdinal", ordinal), 201));
+        send(post(ROOT + "/admin/patch-variants/" + variantId + "/publish"), null, 204);
+        return variantId;
+    }
+
+    private UUID variantSeason(UUID variantId) {
+        return jdbc.sql("SELECT season_id FROM patch.patch_variant WHERE id=?").param(variantId)
+                .query((row, number) -> row.getObject(1, UUID.class)).list().getFirst();
+    }
+
     private Map<String, Object> notes(UUID hero, List<Map<String, Object>> changes) {
         return Map.of("heroId", hero, "sourceKind", "PATCH_NOTES", "sourceUrl", "https://example.org/patch-notes",
                 "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Theo ghi chú cập nhật")),

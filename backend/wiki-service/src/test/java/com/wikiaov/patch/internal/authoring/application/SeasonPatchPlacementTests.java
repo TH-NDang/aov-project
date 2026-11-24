@@ -137,6 +137,56 @@ class SeasonPatchPlacementTests {
                 .isInstanceOf(ArithmeticException.class);
     }
 
+    @Test
+    void acceptsASeasonThatFitsBetweenTheSeasonsOfEarlierAndLaterPatches() {
+        var existing = existing(5);
+        when(variants.orderedSeasonVariants(rulesetId)).thenReturn(List.of(
+                new SeasonVariant(UUID.randomUUID(), 3, 1L),
+                new SeasonVariant(UUID.randomUUID(), 4, 2L),
+                new SeasonVariant(existing.getId(), 5, null),
+                new SeasonVariant(UUID.randomUUID(), 6, null),
+                new SeasonVariant(UUID.randomUUID(), 7, 2L),
+                new SeasonVariant(UUID.randomUUID(), 8, 3L)));
+
+        placement.requireSeasonOrder(existing, seasonId);
+
+        verify(seasons).require(seasonId);
+    }
+
+    @Test
+    void rejectsASeasonEarlierThanTheSeasonOfAPatchBeforeIt() {
+        var existing = existing(5);
+        when(variants.orderedSeasonVariants(rulesetId)).thenReturn(List.of(
+                new SeasonVariant(UUID.randomUUID(), 4, 3L),
+                new SeasonVariant(existing.getId(), 5, null)));
+
+        assertSeasonOrderRejected(existing);
+    }
+
+    @Test
+    void rejectsASeasonLaterThanTheSeasonOfAPatchAfterIt() {
+        var existing = existing(5);
+        when(variants.orderedSeasonVariants(rulesetId)).thenReturn(List.of(
+                new SeasonVariant(existing.getId(), 5, null),
+                new SeasonVariant(UUID.randomUUID(), 6, 1L)));
+
+        assertSeasonOrderRejected(existing);
+    }
+
+    private PatchVariant existing(long ordinal) {
+        var variant = anchor(rulesetId, null);
+        variant.setId(UUID.randomUUID());
+        variant.setRulesetOrdinal(ordinal);
+        return variant;
+    }
+
+    private void assertSeasonOrderRejected(PatchVariant existing) {
+        assertThatThrownBy(() -> placement.requireSeasonOrder(existing, seasonId))
+                .isInstanceOfSatisfying(ApiException.class,
+                        exception -> assertThat(exception.getErrorCode()).isEqualTo(PatchErrorCode.PATCH_INVALID))
+                .hasMessage("The season would break the season order of the ruleset's patches.");
+    }
+
     private SeasonPatch input(UUID beforeVariantId) {
         return new SeasonPatch(seasonId, rulesetId, beforeVariantId, new Patch("new-patch", List.of()));
     }

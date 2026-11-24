@@ -17,6 +17,10 @@ public interface PatchReleaseRepository extends JpaRepository<PatchRelease, UUID
 
     List<PatchRelease> findBySeasonIdAndRegionId(UUID seasonId, UUID regionId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select e from PatchRelease e where e.patchVariantId = :variantId order by e.id")
+    List<PatchRelease> lockByPatchVariantId(UUID variantId);
+
     List<PatchRelease> findByPatchVariantIdOrderByEffectiveAtAsc(UUID patchVariantId);
 
     @Query("select r.regionId as regionId,r.patchVariantId as variantId from PatchRelease r where r.id=:id")
