@@ -184,6 +184,8 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
 
     Page<CompetitionPlanRecord> findByPublishedAtIsNotNullOrderByPublishedAtDesc(Pageable pageable);
 
+    boolean existsByIdAndPublishedAtIsNotNull(UUID id);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from CompetitionPlanRecord p where p.id = :id")
     Optional<CompetitionPlanRecord> lock(UUID id);

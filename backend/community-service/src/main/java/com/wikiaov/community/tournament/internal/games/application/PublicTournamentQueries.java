@@ -10,6 +10,7 @@ import com.wikiaov.community.tournament.internal.games.persistence.GameRepositor
 import com.wikiaov.community.tournament.internal.games.persistence.PublishedOverviewRepository;
 import java.util.Objects;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,13 +37,12 @@ public class PublicTournamentQueries {
         this.series = json.readerFor(Series.class).without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
+    /** The published games, narrowed to a tournament, a series and a hero a participant picked; null leaves one out. */
     @Transactional(readOnly = true)
-    public PageSlice<PublishedGame> games(UUID tournamentId, UUID seriesId, Pageable page) {
-        return PageSlice
-                .from(games
-                        .findPublic(tournamentId == null ? null : tournamentId.toString(),
-                                seriesId == null ? null : seriesId.toString(), page)
-                        .map(GameRecord::getPublishedSnapshot));
+    public PageSlice<PublishedGame> games(@Nullable UUID tournamentId, @Nullable UUID seriesId, @Nullable UUID heroId,
+            Pageable page) {
+        return PageSlice.from(games.findPublic(text(tournamentId), text(seriesId), text(heroId), page)
+                .map(GameRecord::getPublishedSnapshot));
     }
 
     @Transactional(readOnly = true)
@@ -71,5 +71,10 @@ public class PublicTournamentQueries {
                 PageRequest.of(page.getPageNumber(), page.getPageSize()));
         return PageSlice.from(rows.map(row -> new Summary<>(row.getId(),
                 series.<Series>readValue(row.getContentJson()), row.getGameCount())));
+    }
+
+    /** Ids stand as text in the snapshots. */
+    private static @Nullable String text(@Nullable UUID id) {
+        return id == null ? null : id.toString();
     }
 }

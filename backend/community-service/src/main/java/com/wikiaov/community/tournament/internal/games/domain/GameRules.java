@@ -701,7 +701,8 @@ public final class GameRules {
         return selection != null && selection.present();
     }
 
-    private static String identity(Selection selection) {
+    /** What makes two selections the same one: the id, or the name, in any case, of one recorded without an id. */
+    public static String identity(Selection selection) {
         return selection.id() != null
                 ? selection.id().toString()
                 : Normalizer.normalize(selection.name().trim().toLowerCase(Locale.ROOT), Normalizer.Form.NFKC);
