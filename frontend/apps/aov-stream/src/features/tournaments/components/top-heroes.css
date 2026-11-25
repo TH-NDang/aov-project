@@ -1,0 +1,44 @@
+/* One line of heroes; on a phone it scrolls sideways. */
+.tn-top-heroes {
+  --portrait: 100%;
+  display: grid;
+  grid-auto-columns: minmax(76px, 1fr);
+  grid-auto-flow: column;
+  overflow-x: auto;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  scrollbar-width: none;
+}
+.tn-top-heroes::-webkit-scrollbar {
+  display: none;
+}
+.tn-top-heroes a {
+  display: grid;
+  min-width: 0;
+  color: var(--hub-text);
+}
+.tn-top-heroes a > :first-child {
+  height: auto;
+  margin-bottom: 8px;
+  aspect-ratio: 1;
+  transition: filter 140ms;
+}
+.tn-top-heroes a:hover > :first-child {
+  filter: brightness(1.14);
+}
+.tn-top-heroes strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-top-heroes a > span:last-child {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}

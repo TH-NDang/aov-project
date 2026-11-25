@@ -1,33 +1,35 @@
 /* Explore: live channels, new videos and the page directory, or what a search found. */
 .cp-container.ex-page {
-  gap: 32px;
+  gap: 40px;
 }
 /* The page head stands a little closer to the first section than the sections do to each other. */
 .ex-page > .ex-page-head {
   margin-bottom: -8px;
 }
-.ex-page > .ex-back {
-  margin-bottom: -20px;
+/* What is on and new, above the directory. */
+.ex-lead {
+  display: grid;
+  gap: 40px;
+}
+.ex-lead:empty {
+  display: none;
 }
 
 /* New videos: four across, two on a compact layout, so a row is always full. */
 .ex-video-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 18px;
 }
 .ex-video {
   display: grid;
-  grid-template-rows: auto 1fr;
   min-width: 0;
-  overflow: hidden;
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
+  grid-template-rows: auto 1fr;
+  gap: 10px;
   color: var(--hub-text);
-  transition: background-color 120ms;
 }
-.ex-video:hover {
-  background: var(--hub-hover);
+.ex-video:hover .ex-video-body > strong {
+  color: var(--hub-accent-strong);
 }
 /* The picture fills the 16:9 box whatever its own shape. */
 .ex-video-thumb {
@@ -36,6 +38,7 @@
   overflow: hidden;
   aspect-ratio: 16 / 9;
   place-items: center;
+  border-radius: var(--hub-radius);
   background: var(--hub-sunken);
   color: var(--hub-muted);
 }
@@ -51,14 +54,13 @@
   min-width: 0;
   align-content: start;
   gap: 4px;
-  padding: 10px 12px 12px;
 }
 /* Titles of one series differ at their end, so a title gets the lines it needs before it is cut. */
 .ex-video-body > strong {
   display: -webkit-box;
   overflow: hidden;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   line-height: 20px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -96,26 +98,19 @@
 }
 /* Posts keep the width they have in the home feed. */
 .ex-posts {
-  max-width: 760px;
+  max-width: 864px;
 }
 
 @media (max-width: 899.98px) {
-  .cp-container.ex-page {
+  .cp-container.ex-page,
+  .ex-lead {
     gap: 28px;
   }
   .ex-video-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
-  .ex-video-body {
-    padding: 8px 10px 10px;
-  }
   .ex-video-body > strong {
     -webkit-line-clamp: 4;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ex-video {
-    transition: none;
   }
 }

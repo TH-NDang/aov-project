@@ -7,16 +7,19 @@ export type StageLight = { src?: string | null; darkSrc?: string | null; at: "le
 /**
  * The dark stage a competition or a match stands on. It is lit by the logos of whoever is on it: each logo, blurred
  * to its colours, shines from its own end. Without a logo the light takes a hue from `tint`, the subject's name. The
- * stage is dark in both themes, so a logo drawn for dark backgrounds comes first.
+ * stage is dark in both themes, so a logo drawn for dark backgrounds comes first. A head is a stage that `bleeds` from
+ * one edge of the window to the other, flush with the bar above it.
  */
 export function Stage({
   tint,
   lights = [],
+  bleeds = false,
   className = "",
   children,
 }: {
   tint: string
   lights?: StageLight[]
+  bleeds?: boolean
   className?: string
   children: ReactNode
 }) {
@@ -28,6 +31,7 @@ export function Stage({
     <div
       className={`tn-stage ${className}`}
       data-lit={lit.length > 0 || undefined}
+      data-bleeds={bleeds || undefined}
       style={{ "--stage-hue": hueOf(tint) } as CSSProperties}
     >
       <span className="tn-stage-lights" aria-hidden="true">

@@ -38,7 +38,7 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
   `--aov-accent` và `--aov-accent-strong`. Bảng nổi (popover, menu, sheet, drawer) lấy `--aov-raised` làm nền, nên mục
   được đánh dấu bên trong lên thêm một bậc (`--aov-wiki-panel-high`).
 - Stream đặt tên lại các token chung thành `--hub-*` ở đầu `stream.css` và chạy được ở cả giao diện sáng lẫn tối. Thanh
-  trên và chân trang theo giao diện. Logo đội và giải nằm trên ô `--hub-plate`, đổi theo giao diện: nhạt ở giao diện
+  trên và chân trang theo giao diện; thanh ngay dưới thanh trên dùng `--hub-subbar` (oải hương nhạt ở giao diện sáng). Logo đội và giải nằm trên ô `--hub-plate`, đổi theo giao diện: nhạt ở giao diện
   sáng, chàm đêm ở giao diện tối. `ThemedLogo` chọn bản logo vẽ cho nền đó.
 - Chữ AOV WiKi và AOV Stream trong menu chuyển ứng dụng giữ màu riêng của từng sản phẩm ở mọi app: `--aov-brand-wiki-*`,
   `--aov-brand-stream-*` trong `tokens.css`. Các thành phần dùng chung trong `packages/ui` chỉ đọc token, không gõ màu.
@@ -53,8 +53,9 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
   (14/20 đậm vừa), `--wiki-type-body` (15/24), `--wiki-type-prose` (16px, dòng 1.7, cho phần đọc dài),
   `--wiki-type-meta` (13/18). Trên compact tiêu đề mục và tên mục nhỏ đi một chút.
 - Stream: 28/36 cho tiêu đề trang (22/28 trên compact), 22/28 cho tiêu đề mục (18/24 trên compact), 17/24 cho tiêu đề
-  thẻ ở cột phụ, 14/20 cho nội dung, 15/20 cho tên trong hàng, 13/18 cho chữ phụ, 12/16 cho nhãn. Trên sân khấu của một
-  giải hay một trận: tên giải 34/42, tên đội 28/34, tỷ số 76/80 (22/28, 15/20 và 48/56 trên compact).
+  thẻ ở cột phụ, 14/20 cho nội dung, 15/20 cho tên trong hàng, 13/18 cho chữ phụ, 12/16 cho nhãn. Bài đăng: chữ 15/25,
+  tiêu đề 20/27, tin tức 26/33, lời nhắn ngắn 22/31, số ngày 44/46 (18/25, 21/28, 19/27 và 20/26 trên compact). Trên sân
+  khấu: tên trang 42/48, tên giải 34/42, tên đội 28/34, tỷ số 76/80 (25/30, 22/28, 15/20 và 48/56 trên compact).
 - Không có chữ nào nhỏ hơn 12px. Số cần thẳng hàng dùng `font-variant-numeric: tabular-nums`.
 - Admin giữ thang 12/14/16/24 và các lớp `type-*` theo `AGENTS.md`.
 
@@ -66,10 +67,12 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Một mục gồm tiêu đề và nội dung nằm thẳng trên nền trang; chỉ thứ bấm được hoặc nhóm cần
   tách biệt mới là thẻ. Bên trong một thẻ, các phần ngăn nhau bằng khoảng trống hoặc đường kẻ mảnh, không bằng thẻ khác.
 - Thẻ dùng màu nền `--aov-surface`, không thêm viền và bóng. Trạng thái rê chuột dùng `--aov-raised`. Thẻ đang chọn có
-  viền 1px màu nhấn và nền nhấn rất nhạt. Riêng thẻ trận nhỏ của Stream (`.tn-match`) và ô trận trong nhánh đấu
-  (`.tn-node`) giữ viền mảnh vì nằm dày đặc.
+  viền 1px màu nhấn và nền nhấn rất nhạt. Riêng ô trận trong nhánh đấu của Stream (`.tn-node`) giữ viền mảnh vì nằm
+  dày đặc; một trận trong lưới (`.tn-match`) không khung, chỉ có vạch phía trên cho biết sức nặng của vòng.
 - Các hàng của một danh sách ngăn nhau bằng đường 1px `--aov-line`.
-- Không dùng góc vàng, khung trang trí, vạch vàng trên đầu, họa tiết hay dải màu phía sau chữ và dữ liệu.
+- Không dùng góc vàng, khung trang trí, vạch vàng trên đầu, họa tiết hay dải màu phía sau chữ và dữ liệu. Trên Stream,
+  vàng dành cho nhà vô địch và chung kết tổng: viền huy hiệu đội (`Crest`), cờ của đương kim vô địch, cúp trên kệ
+  (`TitleShelf`; năm bậc vàng của `Trophy` pha từ `--aov-medal-gold`, thủy tinh và men pha từ oải hương và đêm), số lần vô địch ở đầu trang và vạch của trận chung kết tổng.
 - Thanh trên và trang nằm trong cùng một cột: rộng tối đa `--aov-page-max` (1280px), lề `--aov-gutter` mỗi bên, nên logo
   và nội dung bắt đầu trên cùng một đường. Thanh trên cao `--aov-topbar` (56px), 48px trên compact. Đoạn văn dài có thể
   hẹp hơn, tối đa 72ch.
@@ -79,8 +82,8 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Mỗi trang danh sách mở bằng tiêu đề, tối đa một dòng chữ mờ bên dưới và tối đa một nút bên phải; không có banner, linh
   vật hay ảnh phía sau tiêu đề. Wiki dùng `CatalogHeading` (`apps/aov-wiki/src/layout/catalog-heading.tsx`), Stream dùng
   `.tn-page-head`.
-- Trên Stream, một giải, một trận, một nhà vô địch và đầu thẻ một đội đứng trên sân khấu (`Stage`,
-  `components/stage.tsx`): nền đêm ở cả hai giao diện, được chiếu sáng bằng chính logo của ai đứng trên đó, làm nhòe
+- Trên Stream, một giải, một trận, một nhà vô địch, đầu trang hồ sơ, bài tin tức, kệ cúp và các tướng dẫn đầu một giải đứng
+  trên sân khấu (`Stage`, `components/stage.tsx`). Đầu trang là sân khấu tràn hai mép cửa sổ (`bleeds`). Sân khấu nền đêm ở cả hai giao diện, được chiếu sáng bằng chính logo của ai đứng trên đó, làm nhòe
   thành màu. Không có logo thì ánh sáng lấy màu sinh từ tên. Sân khấu chỉ dành cho thứ người xem tìm đến; hàng, bảng và
   thẻ nhỏ đứng trên nền thẻ thường. Logo chỉ có bản cho nền kia thì mang theo nền của bản đó (ô nhạt ở giao diện tối và trên sân khấu), như Admin.
   `.hub-art` (màu sinh từ tên) còn dùng cho ô chữ cái của giải chưa có logo và ảnh bìa của trang hồ sơ.

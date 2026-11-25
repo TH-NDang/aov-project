@@ -1,23 +1,33 @@
 import type { ReactNode } from "react"
+import { Link } from "react-router"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { useUserTimeZone } from "@aov/ui/lib/time-zone"
+import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { ThemedLogo } from "../../../components/themed-logo"
 import type { CompetitionMatch } from "../../../lib/match-model"
-import { dayHeading, scheduleGroups, type ScheduleGroup, type ScheduleScope } from "../../../lib/match-schedule"
+import {
+  dayHeading,
+  scheduleGroups,
+  undecidedMatches,
+  type ScheduleGroup,
+  type ScheduleScope,
+} from "../../../lib/match-schedule"
+import { shortCompetitionName } from "../../../lib/season-name"
 import { useNow } from "../../../lib/use-now"
 import { MatchRow } from "./match-row"
 
 /** Matches shown before the reader scrolls for more. */
 const STEP = 40
 
-/** A filter that came with the address and has no control of its own: said in words, with the way out beside it. */
-export function ScheduleNote({ filters, onClear }: { filters: string[]; onClear: () => void }) {
+/** The day a schedule is narrowed to, said in words with the way out beside it. */
+export function ScheduleNote({ day, onClear }: { day: string | null; onClear: () => void }) {
   const { text } = useStreamLocale()
-  if (!filters.length) return null
+  if (!day) return null
   return (
     <p className="tn-schedule-note">
-      <span>{text(`Đang xem ${filters.join(", ")}.`, `Showing ${filters.join(", ")}.`)}</span>
+      <span>{text(`Đang xem ${day}.`, `Showing ${day}.`)}</span>
       <button type="button" onClick={onClear}>
         {text("Xem tất cả", "See all")}
       </button>
@@ -81,6 +91,36 @@ export function ScheduleDays({
   ))
 }
 
+/** Matches that name neither a team nor a day, a line for each competition, under a heading of their own. */
+function Undecided({ matches }: { matches: { entry: CompetitionMatch; count: number }[] }) {
+  const { text } = useStreamLocale()
+  if (!matches.length) return null
+  return (
+    <div className="tn-day">
+      <h3 className="tn-day-title">{text("Chờ xếp đội và giờ đấu", "Waiting for teams and times")}</h3>
+      <div className="tn-fixtures">
+        {matches.map(({ entry, count }) => (
+          <UndecidedRow key={entry.competition.id} entry={entry} count={count} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** The matches of a competition whose teams and days are still open, as one line that opens its schedule. */
+function UndecidedRow({ entry, count }: { entry: CompetitionMatch; count: number }) {
+  const { text } = useStreamLocale()
+  const { tournament } = entry.competition.content
+  return (
+    <Link className="tn-fixture-undecided" to={`/competitions/${entry.competition.id}?tab=matches`}>
+      <ThemedLogo src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
+      <strong title={tournament.name}>{shortCompetitionName(entry.competition)}</strong>
+      <span>{text(`${count} trận`, `${count} ${count === 1 ? "match" : "matches"}`)}</span>
+      <StreamIcon name="chevronRight" size={16} />
+    </Link>
+  )
+}
+
 /**
  * A schedule in reading order: what is on now and what comes next, then what was played from the newest back. Days
  * of the reader's zone are the headings and more rows come as the reader scrolls. `scope` keeps one part only;
@@ -103,19 +143,22 @@ export function ScheduleList({
   empty: ReactNode
 }) {
   const { text, languageTag } = useStreamLocale()
-  const ahead = scope === "results" ? [] : upcoming
+  // In a list of several competitions, matches that name nobody and no day are one line for each competition.
+  const open = competition ? undecidedMatches(upcoming) : { undecided: [], rest: upcoming }
+  const ahead = scope === "results" ? [] : open.rest
+  const undecided = scope === "results" ? [] : open.undecided
   const played = scope === "upcoming" ? [] : results
   const { rows, loader } = useRevealedRows([...ahead, ...played], `${listKey}:${scope}`, STEP)
-  if (!ahead.length && !played.length) return <>{empty}</>
+  if (!ahead.length && !undecided.length && !played.length) return <>{empty}</>
   const parts: [Part, number, CompetitionMatch[]][] = [
-    ["upcoming", ahead.length, rows.slice(0, ahead.length)],
+    ["upcoming", scope === "results" ? 0 : upcoming.length, rows.slice(0, ahead.length)],
     ["results", played.length, rows.slice(ahead.length)],
   ]
   return (
     <div className="tn-schedule">
       {parts.map(
         ([part, total, shown]) =>
-          shown.length > 0 && (
+          (shown.length > 0 || (part === "upcoming" && undecided.length > 0)) && (
             <section className="tn-schedule-part" key={part} aria-labelledby={`schedule-${part}`}>
               <div className="tn-heading" data-flush="">
                 <h2 id={`schedule-${part}`}>
@@ -129,6 +172,7 @@ export function ScheduleList({
                 </h2>
               </div>
               <ScheduleDays entries={shown} part={part} competition={competition} />
+              {part === "upcoming" && shown.length === ahead.length && <Undecided matches={undecided} />}
             </section>
           ),
       )}

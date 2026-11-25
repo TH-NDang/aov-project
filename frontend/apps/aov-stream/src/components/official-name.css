@@ -1,0 +1,9 @@
+.on-last {
+  white-space: nowrap;
+}
+.on-last > svg {
+  width: clamp(14px, 0.92em, 25px);
+  height: clamp(14px, 0.92em, 25px);
+  margin-left: 0.26em;
+  vertical-align: -0.06em;
+}

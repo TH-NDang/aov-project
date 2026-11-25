@@ -10,7 +10,7 @@
 .tn-moments > li {
   --side: var(--hub-border-strong);
   display: grid;
-  min-height: 48px;
+  min-height: 42px;
   grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr);
   align-items: center;
 }

@@ -1,0 +1,17 @@
+/* A hero's picture, as large as the place it stands in asks for. */
+.tn-portrait {
+  --stream-image-size: 100%;
+  display: grid;
+  overflow: hidden;
+  width: var(--portrait, 40px);
+  height: var(--portrait, 40px);
+  flex: none;
+  place-items: center;
+  border-radius: var(--portrait-radius, var(--aov-radius-control));
+  background: var(--hub-sunken);
+}
+.tn-portrait > b {
+  color: var(--hub-text-soft);
+  font-size: max(12px, calc(var(--portrait, 40px) * 0.34));
+  font-weight: 600;
+}

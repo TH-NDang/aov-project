@@ -9,13 +9,6 @@ export function gameWinner(game: Pick<PublishedGame, "content">): string | null 
   return sides.find((side) => side.side === winner)?.teamId ?? null
 }
 
-/** Games gathered by the match they belong to, matches in the order they first appear and games by number. */
-export function gamesBySeries(games: PublishedGame[]): PublishedGame[][] {
-  const groups = new Map<string, PublishedGame[]>()
-  for (const game of games) groups.set(game.content.seriesId, [...(groups.get(game.content.seriesId) ?? []), game])
-  return [...groups.values()].map((group) => group.sort((x, y) => x.content.number - y.content.number))
-}
-
 export type DraftCell = { game: PublishedGame; hero: Selection; won: boolean | null; mvp: boolean } | null
 export type DraftRow = {
   /** The player, or the lane while a game does not name who played it. */
@@ -92,4 +85,30 @@ export function timelineRows(game: Pick<PublishedGame, "content">): TimelineRow[
       if (event.kind === "KILL" && event.killer) kills[event.killer.side] += 1
       return { event, side, kills: { ...kills } }
     })
+}
+
+/** The room a mark of the track takes, as a share of the game's length. */
+const MARK = 0.046
+
+export type TrackMark = { event: TimelineEvent; share: number; level: number }
+
+/**
+ * The moments of each side along the length of a game. A mark that would meet the one before it steps to the next
+ * level, away from the line.
+ */
+export function trackLanes(rows: TimelineRow[], seconds: number) {
+  const lane = (side: Side) => {
+    const ends: number[] = []
+    const marks = rows
+      .filter((row) => row.side === side)
+      .map(({ event }): TrackMark => {
+        const share = Math.min(1, Math.max(0, event.atSeconds / seconds))
+        const free = ends.findIndex((end) => end <= share)
+        const level = free < 0 ? ends.length : free
+        ends[level] = share + MARK
+        return { event, share, level }
+      })
+    return { marks, levels: Math.max(1, ends.length) }
+  }
+  return { BLUE: lane("BLUE"), RED: lane("RED") }
 }

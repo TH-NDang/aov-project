@@ -12,29 +12,14 @@ import { MatchCard } from "./match-card"
 import { competitionMatches, type CompetitionMatch } from "../lib/match-model"
 import { competitionsFeedQuery, dayRange, profileCompetitionFilter } from "./community-ui"
 
-/**
- * The published competitions of a circuit (its seasons) or of an organizer, loading as the reader scrolls. `title`
- * heads the list where the tab around it does not already name it.
- */
-export function CompetitionList({ profile, title }: { profile: CommunityProfile; title?: string }) {
-  const { text, languageTag } = useStreamLocale()
+/** The published competitions of an organizer, loading as the reader scrolls. */
+export function CompetitionList({ profile }: { profile: CommunityProfile }) {
+  const { text } = useStreamLocale()
   const filter = profileCompetitionFilter(profile)
   const query = useInfiniteQuery({ ...competitionsFeedQuery(filter || {}), enabled: !!filter })
   const competitions = query.data?.pages.flatMap((page) => page.items) ?? []
-  const total = query.data?.pages[0]?.totalElements
-  const seasons = profile.kind === "CIRCUIT"
   return (
-    <section
-      aria-label={title ? undefined : text("Giải đấu", "Tournaments")}
-      aria-labelledby={title ? "profile-competitions" : undefined}
-    >
-      {title && (
-        <div className="tn-heading">
-          <h2 id="profile-competitions">
-            {title} {!!total && <small>{total.toLocaleString(languageTag)}</small>}
-          </h2>
-        </div>
-      )}
+    <section aria-label={text("Giải đấu", "Tournaments")}>
       {query.isPending ? (
         <div
           className="hub-skeleton-rows"
@@ -43,11 +28,7 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
         />
       ) : query.isLoadingError ? (
         <div className="hub-state" role="alert">
-          {title ? (
-            <h3>{text("Chưa tải được giải đấu", "Tournaments could not be loaded")}</h3>
-          ) : (
-            <h2>{text("Chưa tải được giải đấu", "Tournaments could not be loaded")}</h2>
-          )}
+          <h2>{text("Chưa tải được giải đấu", "Tournaments could not be loaded")}</h2>
           <p>{query.error.message}</p>
           <button type="button" className="cp-button" onClick={() => void query.refetch()}>
             {text("Thử lại", "Retry")}
@@ -55,20 +36,15 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
         </div>
       ) : !competitions.length ? (
         <p className="pf-note">
-          {seasons
-            ? text(
-                "Hệ thống giải này chưa có mùa nào được công bố.",
-                "No season of this circuit has been published yet.",
-              )
-            : text(
-                "Chưa có giải đấu nào của tổ chức được công bố.",
-                "No tournament of this organization has been published yet.",
-              )}
+          {text(
+            "Chưa có giải đấu nào của tổ chức được công bố.",
+            "No tournament of this organization has been published yet.",
+          )}
         </p>
       ) : (
         <div className="tn-card-grid">
           {competitions.map((entry) => (
-            <CompetitionCard key={entry.id} entry={entry} within={seasons ? profile.content?.name : null} />
+            <CompetitionCard key={entry.id} entry={entry} />
           ))}
         </div>
       )}

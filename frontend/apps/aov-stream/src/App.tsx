@@ -1,5 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from "react-router"
-import { GamesPage } from "./features/tournaments/pages/games-page"
+import { Navigate, Route, Routes, useLocation, useSearchParams, type Location } from "react-router"
 import { GamePage } from "./features/tournaments/pages/game-page"
 import { CommunityHome } from "./features/community/pages/community-home"
 import { CommunityExplore } from "./features/community/pages/community-explore"
@@ -10,6 +9,7 @@ import {
   CommunityInvitation,
 } from "./features/community/pages/community-account"
 import { CommunityLoginCallback } from "./components/community-session"
+import { Travel } from "./components/travel"
 import "./features/community/components/community.css"
 import { PublicCompetitionPage } from "./features/tournaments/pages/competition-page"
 import { CompetitionDirectory } from "./features/tournaments/pages/competition-directory-page"
@@ -21,8 +21,12 @@ import { CreditsPage } from "./features/tournaments/pages/credits-page"
 import "./features/tournaments/tournaments.css"
 import "./features/tournaments/components/schedule.css"
 export default function App() {
+  return <Travel>{(location) => <Pages location={location} />}</Travel>
+}
+
+function Pages({ location }: { location: Location }) {
   return (
-    <Routes>
+    <Routes location={location}>
       <Route path="/" element={<CommunityHome />} />
       <Route path="/competitions" element={<CompetitionDirectory />} />
       <Route path="/competitions/:id" element={<PublicCompetitionPage />} />
@@ -32,7 +36,7 @@ export default function App() {
       <Route path="/players/:id" element={<PlayerPage />} />
       <Route path="/people/:id" element={<PersonPage />} />
       <Route path="/credits" element={<CreditsPage />} />
-      <Route path="/games" element={<GamesPage />} />
+      <Route path="/games" element={<GamesRedirect />} />
       <Route path="/games/:id" element={<GamePage />} />
       <Route path="/explore" element={<CommunityExplore />} />
       <Route path="/pages" element={<ExploreRedirect />} />
@@ -44,6 +48,19 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
+}
+
+/** Games are read in their match, and counted on the statistics of their competition. */
+function GamesRedirect() {
+  const [params] = useSearchParams()
+  const series = params.get("series")
+  const competition = params.get("tournament")
+  const to = series
+    ? `/matches/${encodeURIComponent(series)}`
+    : competition
+      ? `/competitions/${encodeURIComponent(competition)}?tab=stats`
+      : "/competitions"
+  return <Navigate to={to} replace />
 }
 
 /** The page directory now lives on the explore page. */

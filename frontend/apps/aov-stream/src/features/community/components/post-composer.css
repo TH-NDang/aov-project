@@ -1,0 +1,157 @@
+/* Writing a post: one line beside the reader's mark, which opens into the form. */
+.pw {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+.pw-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+.pw-prompt {
+  min-width: 0;
+  height: 44px;
+  flex: 1;
+  padding: 0 18px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  background: var(--hub-surface);
+  color: var(--hub-muted);
+  font-size: 15px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pw-prompt:hover {
+  background: var(--hub-hover);
+  color: var(--hub-text-soft);
+}
+.pw-kind {
+  display: inline-flex;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--aov-radius-pill);
+  background: none;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+.pw-kind:hover {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.pw-kind[aria-pressed="true"] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.pw-form {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  padding: 10px 16px 16px;
+  border-radius: 4px 18px 18px;
+  background: var(--hub-surface);
+}
+.pw-kinds {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline: -8px;
+}
+.pw-close {
+  margin-left: auto;
+  border-color: transparent;
+}
+/* What is written reads as it will be posted: no box around the words. */
+.pw-form .pw-title,
+.pw-form .pw-body {
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.pw-form .pw-title {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 27px;
+}
+.pw-form .pw-body {
+  min-height: 84px;
+  field-sizing: content;
+  font-size: 15px;
+  line-height: 24px;
+  resize: none;
+}
+.pw-images {
+  display: flex;
+  gap: 6px;
+  overflow: hidden;
+}
+.pw-images > img {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-sunken);
+  object-fit: cover;
+}
+.pw-image-links summary {
+  width: fit-content;
+  padding: 4px 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pw-image-links summary:hover {
+  color: var(--hub-text);
+}
+.pw-image-links > :not(summary) {
+  margin-top: 8px;
+}
+.pw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hub-border);
+}
+.pw-send {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+@media (max-width: 899.98px) {
+  .pw {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pw-self {
+    display: none;
+  }
+  .pw-line > .pw-kind {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 0;
+  }
+  .pw-form {
+    border-radius: var(--hub-radius);
+  }
+  .pw-send {
+    flex: 1 0 100%;
+  }
+  .pw-send > button {
+    flex: 1;
+  }
+}

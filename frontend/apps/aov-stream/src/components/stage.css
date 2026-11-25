@@ -2,28 +2,38 @@
  * The dark stage of a competition or a match, lit by the logos of whoever stands on it. It sets the dark colour scheme
  * for everything on it, so the theme tokens inside read as on a dark page in both themes.
  */
-.tn-stage {
-  --stage-hue: 240;
+.tn-stage,
+.tn-night {
   /* The build turns light-dark() into values fixed at the root, so what the stage draws with is named dark again. */
   --hub-accent: var(--aov-stream-lavender);
   --hub-accent-strong: var(--aov-stream-lavender-bright);
   --hub-text: var(--aov-stream-cream);
   --hub-text-soft: var(--aov-stream-text-soft);
   --hub-muted: var(--aov-stream-text-muted);
+  --hub-hover: var(--aov-stream-indigo);
   --hub-plate: var(--aov-stream-indigo);
   --hub-on-plate: var(--aov-stream-text-muted);
   --hub-logo-light: none;
   --hub-logo-dark: inline-block;
   --hub-logo-paper: color-mix(in srgb, var(--aov-stream-mist) 84%, var(--aov-stream-indigo));
   --hub-logo-night: transparent;
+}
+.tn-stage {
+  --stage-hue: 240;
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border-radius: var(--hub-radius);
+  border-radius: var(--stage-radius, var(--hub-radius));
   background:
     radial-gradient(90% 120% at 50% -20%, hsl(var(--stage-hue) 32% 34% / 42%), transparent 62%), var(--aov-stream-dusk);
   color: var(--aov-stream-cream);
   color-scheme: dark;
+}
+/* As wide as the window, with the page's column as its own; what stands on it keeps to --stage-side. */
+.tn-stage[data-bleeds] {
+  --stage-side: max(var(--hub-gutter), calc(50vw - var(--aov-page-max) / 2 + var(--hub-gutter)));
+  --stage-radius: 0;
+  margin: calc(-1 * var(--hub-layout-gap)) calc(50% - 50vw) 0;
 }
 /* A white logo has no colour to give, so the product's own light stands under the lights. */
 .tn-stage[data-lit] {
@@ -58,8 +68,8 @@
   mix-blend-mode: color;
   object-fit: contain;
   filter: blur(18px) saturate(1.9) brightness(1.1);
-  transform: translate(-50%, -50%) scale(4.4);
-  animation: tn-stage-lit 1100ms ease-out;
+  transform: translate(-50%, -50%) scale(var(--stage-light-scale, 4.4));
+  animation: tn-stage-lit calc(1100ms * var(--entrance, 1)) ease-out;
 }
 .tn-stage-light[data-at="left"] {
   left: var(--stage-light-left, 10%);
@@ -77,6 +87,6 @@
 }
 @media (max-width: 899.98px) {
   .tn-stage-light {
-    transform: translate(-50%, -50%) scale(3);
+    transform: translate(-50%, -50%) scale(min(3, var(--stage-light-scale, 3)));
   }
 }

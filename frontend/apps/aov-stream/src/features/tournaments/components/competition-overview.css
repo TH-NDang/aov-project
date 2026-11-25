@@ -7,7 +7,7 @@
 .tn-now {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 12px;
+  gap: 24px;
 }
 .tn-now:not(:has(> .tn-now-cards)) {
   grid-template-columns: minmax(0, 1fr);
@@ -15,7 +15,8 @@
 .tn-now-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  align-content: space-between;
+  gap: 20px 24px;
 }
 .tn-now-cards > :last-child:nth-child(odd) {
   grid-column: 1 / -1;
@@ -23,7 +24,7 @@
 .tn-results {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 24px;
 }
 @media (max-width: 1079.98px) {
   .tn-now {
@@ -45,6 +46,6 @@
 @media (max-width: 479.98px) {
   .tn-now-cards,
   .tn-results {
-    gap: 8px;
+    gap: 18px 16px;
   }
 }

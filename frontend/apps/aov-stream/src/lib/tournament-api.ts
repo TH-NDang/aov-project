@@ -1,19 +1,17 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import type {
+  CompetitionStatistics,
   CompetitionView,
   CompetitionParticipant,
   PageSlice,
   PublishedGame,
-  TournamentContent,
 } from "@aov/community-contracts"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { communityGetAll, communityRequest } from "./stream-api"
 
-export interface PublishedSummary<T> {
-  id: string
-  content: T
-  gameCount: number
-}
+/** Published games of a competition in which a hero was picked; either may be left out. */
+type GamesFilter = { tournamentId?: string; heroId?: string }
+
 /** Every query key of tournaments; reads and invalidation both use these. */
 export const tournamentKeys = {
   catalog: ["competition-catalog"] as const,
@@ -21,11 +19,12 @@ export const tournamentKeys = {
   teamCompetitions: (id: string) => ["team-competitions", id] as const,
   playerCompetitions: (id: string) => ["player-competitions", id] as const,
   personCompetitions: (id: string) => ["person-competitions", id] as const,
+  circuitCompetitions: (id: string) => ["circuit-competitions", id] as const,
   participants: (kind: string, q: string, size: number) => ["participants", kind, q, size] as const,
   seriesGames: (seriesId: string | null | undefined) => ["match-games", seriesId] as const,
-  games: (filters: { tournamentId?: string; seriesId?: string }) => ["community", "games", filters] as const,
+  games: (filters: GamesFilter) => ["community", "games", filters] as const,
   game: (id: string) => ["community", "game", id] as const,
-  tournaments: ["community", "tournaments"] as const,
+  statistics: (id: string) => ["competition-statistics", id] as const,
 }
 
 const read = <T>(path: string, signal: AbortSignal) => communityRequest<T>(path, { signal })
@@ -59,6 +58,16 @@ export const teamCompetitionsQuery = (id: string) =>
     queryFn: ({ signal }) =>
       readPages<CompetitionView>(`/competitions?detail=LIST&teamId=${encodeURIComponent(id)}`, signal),
     staleTime: 60_000,
+    retry: 1,
+  })
+
+/** Every published competition of a circuit, as the lists show it. */
+export const circuitCompetitionsQuery = (id: string) =>
+  queryOptions({
+    queryKey: tournamentKeys.circuitCompetitions(id),
+    queryFn: ({ signal }) =>
+      readPages<CompetitionView>(`/competitions?detail=LIST&circuitPageId=${encodeURIComponent(id)}`, signal),
+    staleTime: 5 * 60_000,
     retry: 1,
   })
 
@@ -104,7 +113,16 @@ export const matchGamesQuery = (seriesId?: string | null) =>
     staleTime: 60_000,
     retry: 1,
   })
-export function gamesQuery(filters: { tournamentId?: string; seriesId?: string } = {}) {
+/** What the published games of a competition add up to; a competition without any answers with zeros. */
+export const statisticsQuery = (id: string) =>
+  queryOptions({
+    queryKey: tournamentKeys.statistics(id),
+    queryFn: ({ signal }) => read<CompetitionStatistics>(`/competitions/${encodeURIComponent(id)}/statistics`, signal),
+    staleTime: 5 * 60_000,
+    retry: 1,
+  })
+
+export function gamesQuery(filters: GamesFilter) {
   return infiniteQueryOptions({
     queryKey: tournamentKeys.games(filters),
     initialPageParam: 0,
@@ -113,7 +131,7 @@ export function gamesQuery(filters: { tournamentId?: string; seriesId?: string }
       for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value)
       return read<PageSlice<PublishedGame>>(`/games?${params}`, signal)
     },
-    getNextPageParam: (last) => ((last.page + 1) * last.size < last.totalElements ? last.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
     staleTime: 60_000,
     retry: 1,
   })
@@ -125,11 +143,3 @@ export const gameQuery = (id: string) =>
     staleTime: 60_000,
     retry: 1,
   })
-export const tournamentsQuery = queryOptions({
-  queryKey: tournamentKeys.tournaments,
-  queryFn: async ({ signal }) => ({
-    items: await readPages<PublishedSummary<TournamentContent>>("/tournaments", signal),
-  }),
-  staleTime: 60_000,
-  retry: 1,
-})

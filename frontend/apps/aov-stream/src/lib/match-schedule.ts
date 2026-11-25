@@ -61,6 +61,25 @@ export function scheduleGroups(entries: CompetitionMatch[], timeZone: string, no
   return groups
 }
 
+/**
+ * Matches that name neither a team nor a day, counted by competition, and the others. A bracket drawn before its teams
+ * are known holds dozens of them, each saying the same.
+ */
+export function undecidedMatches(entries: CompetitionMatch[]) {
+  const undecided = new Map<string, { entry: CompetitionMatch; count: number }>()
+  const rest: CompetitionMatch[] = []
+  for (const entry of entries) {
+    const open = Number.isNaN(startOf(entry)) && matchSides(entry).every((side) => !side.known)
+    if (!open) {
+      rest.push(entry)
+      continue
+    }
+    const counted = undecided.get(entry.competition.id)
+    undecided.set(entry.competition.id, { entry: counted?.entry ?? entry, count: (counted?.count ?? 0) + 1 })
+  }
+  return { undecided: [...undecided.values()], rest }
+}
+
 /** The day a match falls on for the reader, as an address carries it; "unscheduled" while it has no date. */
 export function scheduleDay(entry: CompetitionMatch, timeZone: string) {
   return dayKeyInZone(entry.match.scheduledAt, timeZone) || "unscheduled"

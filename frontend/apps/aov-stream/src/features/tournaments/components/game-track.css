@@ -1,0 +1,123 @@
+/* The objectives of a game along its time: one team's above the line, the other's below it. */
+.tn-objectives {
+  --track-head: 148px;
+  display: grid;
+  grid-template-areas:
+    "legend"
+    "above"
+    "line"
+    "below";
+}
+.tn-objectives-legend {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: legend;
+  gap: 4px 20px;
+  margin: 0 0 10px;
+  padding: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  list-style: none;
+}
+.tn-objectives-legend > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.tn-objectives-lane {
+  --side: var(--hub-blue);
+  display: grid;
+  min-width: 0;
+  grid-area: above;
+  grid-template-columns: var(--track-head) minmax(0, 1fr);
+}
+.tn-objectives-lane[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-objectives-lane[data-at="below"] {
+  grid-area: below;
+}
+.tn-objectives-lane > h3 {
+  --stream-image-size: 32px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: end;
+  align-items: center;
+  gap: 0 10px;
+  margin: 0;
+  padding: 10px 12px 10px 0;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-objectives-lane[data-at="below"] > h3 {
+  align-content: start;
+}
+.tn-objectives-lane > h3 > :first-child {
+  grid-row: 1 / 3;
+}
+.tn-objectives-lane > h3 > small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.tn-objectives-lane > ol {
+  position: relative;
+  min-height: calc(var(--levels) * 54px + 6px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* An objective: its mark nearest the line, its time away from it; the marks that would meet step outwards. */
+.tn-objectives-lane li {
+  position: absolute;
+  bottom: calc(6px + var(--level) * 54px);
+  left: calc(var(--at) * 100%);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 1px;
+  transform: translateX(-50%);
+}
+.tn-objectives-lane[data-at="below"] li {
+  top: calc(6px + var(--level) * 54px);
+  bottom: auto;
+  flex-direction: column;
+}
+.tn-objectives-lane li > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--side) 18%, var(--hub-bg));
+  color: var(--side);
+}
+.tn-objectives-lane li > time {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+/* The time of the game, between the two teams. */
+.tn-objectives-line {
+  position: relative;
+  height: 24px;
+  grid-area: line;
+  margin-left: var(--track-head);
+  border-block: 1px solid var(--hub-border);
+}
+.tn-objectives-line > span {
+  position: absolute;
+  top: 0;
+  left: calc(var(--at) * 100%);
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 22px;
+  transform: translateX(-50%);
+}

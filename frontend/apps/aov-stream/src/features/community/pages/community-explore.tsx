@@ -9,6 +9,7 @@ import {
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { PlaceTrail, useSections } from "../../../components/place-trail"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -96,11 +97,24 @@ function Browse() {
   return (
     <>
       <h1 className="sr-only">{text("Khám phá", "Explore")}</h1>
-      <LiveNow />
-      <NewVideos />
+      <div className="ex-lead" data-place-head="">
+        <LiveNow />
+        <NewVideos />
+      </div>
       <PageDirectory />
     </>
   )
+}
+
+/** Where the results of one kind stand: under everything the search found. */
+function ResultsTrail({ query }: { query: string }) {
+  const { text } = useStreamLocale()
+  const { explore } = useSections()
+  const results = {
+    to: `/explore?${new URLSearchParams({ q: query })}`,
+    name: text(`Kết quả cho “${query}”`, `Results for “${query}”`),
+  }
+  return <PlaceTrail places={[explore, results]} />
 }
 
 /** The teams, players or personnel whose name holds the search. */
@@ -108,15 +122,14 @@ function ParticipantResults({ query, kind }: { query: string; kind: CompetitionP
   const { text } = useStreamLocale()
   return (
     <>
-      <Link className="cp-back ex-back" to={`/explore?${new URLSearchParams({ q: query })}`}>
-        <StreamIcon name="back" size={16} />
-        {text("Tất cả kết quả", "All results")}
-      </Link>
+      <ResultsTrail query={query} />
       <h1 className="sr-only">{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
-      <div className="tn-heading">
-        <h2>{text(profileKindLabels[kind], profileKindEnglish[kind])}</h2>
-      </div>
-      <ParticipantList kind={kind} q={query} />
+      <section aria-labelledby="explore-results">
+        <div className="tn-heading">
+          <h2 id="explore-results">{text(profileKindLabels[kind], profileKindEnglish[kind])}</h2>
+        </div>
+        <ParticipantList kind={kind} q={query} />
+      </section>
     </>
   )
 }
@@ -387,16 +400,9 @@ function SearchResults({ query }: { query: string }) {
                 {text("Bài viết", "Posts")} <small>{totals.posts.toLocaleString(languageTag)}</small>
               </h2>
             </div>
-            <div className="cp-post-list">
+            <div className="ps-list">
               {postItems.map(({ post, page }) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  page={page}
-                  role=""
-                  represented={page.represented}
-                  following={following}
-                />
+                <PostCard key={post.id} post={post} page={page} role="" following={following} />
               ))}
             </div>
             <InfiniteScroll
@@ -440,15 +446,8 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
   const back = `/explore?${new URLSearchParams({ q: query })}`
   return (
     <>
-      <Link className="cp-back ex-back" to={back}>
-        <StreamIcon name="back" size={16} />
-        {text("Tất cả kết quả", "All results")}
-      </Link>
-      <header className="tn-page-head ex-page-head">
-        <div>
-          <h1>{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
-        </div>
-      </header>
+      <ResultsTrail query={query} />
+      <h1 className="sr-only">{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
       <section aria-labelledby="search-kind">
         <div className="tn-heading">
           <h2 id="search-kind">

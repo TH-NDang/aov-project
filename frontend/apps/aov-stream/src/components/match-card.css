@@ -1,6 +1,7 @@
 /*
- * A match as two rows of team and score. Positioned so the hidden copy LocalTime keeps of each time stays inside the
- * card: in a strip that scrolls sideways it would otherwise escape the scroller and widen the page on phones.
+ * A match as a column of the board around an arena: two rows of team and score under a rule, which takes the weight of
+ * the round. Positioned so the hidden copy LocalTime keeps of each time stays inside it: in a strip that scrolls
+ * sideways it would otherwise escape the scroller and widen the page on phones.
  */
 .tn-match {
   position: relative;
@@ -8,19 +9,26 @@
   min-width: 0;
   align-content: start;
   gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--hub-border);
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
+  padding: 11px 0 4px;
+  border-top: 2px solid var(--hub-border-strong);
   color: var(--hub-text);
   transition: border-color 160ms;
 }
-a.tn-match:hover,
-a.tn-match:focus-visible {
-  border-color: var(--hub-accent);
+.tn-match[data-weight="closing"] {
+  border-top-color: var(--hub-accent);
+}
+.tn-match[data-weight="final"] {
+  border-top-color: light-dark(var(--aov-game-gold), var(--aov-medal-gold));
 }
 .tn-match[data-live] {
-  border-color: color-mix(in srgb, var(--hub-red) 60%, var(--hub-border));
+  border-top-color: var(--hub-red);
+}
+a.tn-match:is(:hover, :focus-visible) {
+  border-top-color: var(--hub-text);
+}
+a.tn-match:hover .tn-match-team > strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .tn-match-head,
 .tn-match-foot {
@@ -42,8 +50,6 @@ a.tn-match:focus-visible {
 }
 .tn-match-foot[data-context] {
   align-items: flex-start;
-  padding-top: 8px;
-  border-top: 1px solid var(--hub-border);
 }
 .tn-match-foot > img {
   width: 18px;

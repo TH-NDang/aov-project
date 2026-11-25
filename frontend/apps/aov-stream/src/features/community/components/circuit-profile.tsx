@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link, useSearchParams } from "react-router"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import type { CommunityProfile } from "@aov/community-contracts"
+import { useQuery } from "@tanstack/react-query"
+import type { CommunityProfile, CompetitionView } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -9,17 +9,26 @@ import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { focusesFoldedLink } from "../../../lib/folded-text"
 import { pageReferenceKey } from "../../../lib/reference-model"
-import { competitionsFeedQuery, formatDay, regionKey, regionName } from "../../../components/community-ui"
+import { formatDay, regionKey, regionName } from "../../../components/community-ui"
 import { ReferenceText } from "../../../components/reference-text"
 import { RegionMark } from "../../../components/region-mark"
+import { useSections } from "../../../components/place-trail"
 import { ProfileHead } from "./profile-head"
 import { LiveBlock } from "./profile-home"
 import { ProfileOptions } from "./profile-options"
-import { HistoryRows, distinctHistory } from "./profile-records"
+import { HistoryRows } from "./profile-records"
+import { distinctHistory } from "../model/profile-records-model"
 import { ProfileSocials } from "./profile-socials"
-import { CompetitionList } from "../../../components/public-competitions"
+import { championBanners } from "../../../lib/season-map"
+import { competitionChampion } from "../../../lib/champion-model"
+import { seasonName } from "../../../lib/season-name"
+import { circuitIdOf } from "../../../lib/directory-model"
+import { competitionCatalogQuery } from "../../../lib/tournament-api"
+import { CircuitHonours } from "./circuit-honours"
+import { Crest } from "../../../components/crest"
 import "./community.css"
 import "./community-profile.css"
+import "./profile-aside.css"
 
 /**
  * A circuit's page: what it is, then its seasons, which are what a reader comes for. The facts stand beside them as
@@ -32,8 +41,9 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
   const history = distinctHistory(content.history)
   // The overview lists the seasons, so `?tab=seasons` and any other unknown tab open it.
   const tab = params.get("tab") === "history" && history.length ? "history" : "overview"
-  const seasons = useInfiniteQuery(competitionsFeedQuery({ circuitPageId: profile.id }))
-  const seasonCount = seasons.data?.pages[0]?.totalElements
+  const catalog = useQuery(competitionCatalogQuery)
+  const views = (catalog.data ?? []).filter((view) => circuitIdOf(view) === profile.id)
+  const seasonCount = views.filter((view) => !view.content.tournament.parentTournamentId).length
   const region = regionName(content.country, languageTag)
   const selectTab = (value: "overview" | "history") =>
     setParams((current) => {
@@ -42,71 +52,119 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
       else next.set("tab", value)
       return next
     })
+  const compact = usePageLayout() === "compact"
+  const { tournaments } = useSections()
+  const tabRow = history.length > 0 && (
+    <nav className="cp-tabs" aria-label={text("Nội dung hệ thống giải", "Tournament circuit content")}>
+      <button
+        type="button"
+        aria-current={tab === "overview" ? "page" : undefined}
+        onClick={() => selectTab("overview")}
+      >
+        {text("Tổng quan", "Overview")}
+      </button>
+      <button type="button" aria-current={tab === "history" ? "page" : undefined} onClick={() => selectTab("history")}>
+        {text("Lịch sử", "History")}
+      </button>
+    </nav>
+  )
   return (
     <article className="cp-container pf-page">
       <title>
         {text(`${content.name} — Hệ thống giải · AOV Stream`, `${content.name} — Tournament circuit · AOV Stream`)}
       </title>
-      <Link className="cp-back" to="/competitions">
-        <StreamIcon name="back" size={16} />
-        {text("Tất cả giải đấu", "All tournaments")}
-      </Link>
       <ProfileHead
         profile={profile}
+        places={[tournaments]}
         kicker={
           <>
             <Link to="/explore?kind=CIRCUIT">{text("Hệ thống giải", "Tournament circuit")}</Link>
             {region && (
               <>
                 {" · "}
-                <RegionMark code={regionKey(content.country)} size={16} /> {region}
+                <RegionMark code={regionKey(content.country)} size={18} /> {region}
               </>
             )}
           </>
         }
-        facts={[
-          content.shortName,
-          !!seasonCount &&
-            text(`${seasonCount} mùa giải`, `${seasonCount} ${seasonCount === 1 ? "season" : "seasons"}`),
-        ].filter((fact) => !!fact)}
+        figures={
+          seasonCount
+            ? [{ value: String(seasonCount), label: text("mùa giải", seasonCount === 1 ? "season" : "seasons") }]
+            : []
+        }
+        channels={content.links.length > 0 && <ProfileSocials links={content.links} />}
+        aside={<Holder views={views} name={content.name} />}
         actions={<ProfileOptions profile={profile} />}
+        tabs={!compact && tabRow}
       />
-      {history.length > 0 && (
-        <nav className="cp-tabs" aria-label={text("Nội dung hệ thống giải", "Tournament circuit content")}>
-          <button
-            type="button"
-            aria-current={tab === "overview" ? "page" : undefined}
-            onClick={() => selectTab("overview")}
-          >
-            {text("Tổng quan", "Overview")}
-          </button>
-          <button
-            type="button"
-            aria-current={tab === "history" ? "page" : undefined}
-            onClick={() => selectTab("history")}
-          >
-            {text("Lịch sử", "History")}
-          </button>
-        </nav>
-      )}
+      {compact && tabRow}
       {tab === "history" ? (
         <section aria-label={text("Lịch sử hệ thống giải", "Tournament circuit history")}>
           <HistoryRows items={history} about={pageReferenceKey(profile)} />
         </section>
       ) : (
-        <div className="tn-overview">
-          <div className="tn-overview-main">
+        <div className="pf-layout">
+          <div className="pf-main">
             {profile.live && <LiveBlock live={profile.live} name={content.name} />}
             {content.biography && <CircuitIntro text={content.biography} about={pageReferenceKey(profile)} />}
-            <CompetitionList profile={profile} title={text("Các mùa giải", "Seasons")} />
+            <CircuitSeasons query={catalog} views={views} name={content.name} />
           </div>
-          <aside className="tn-overview-side" aria-label={text("Thông tin tham khảo", "Reference information")}>
+          <aside className="pa" aria-label={text("Thông tin tham khảo", "Reference information")}>
             <CircuitFacts content={content} region={region} />
           </aside>
         </div>
       )}
     </article>
   )
+}
+
+/** The team that holds the circuit now, at the other end of its stage. */
+function Holder({ views, name }: { views: CompetitionView[]; name: string }) {
+  const { text } = useStreamLocale()
+  const [banner] = championBanners(views)
+  const won = banner && competitionChampion(banner.view)
+  if (!won) return null
+  return (
+    <Link className="pf-holder" to={`/competitions/${banner.view.id}`}>
+      <Crest team={won.winner} />
+      <span>
+        <span>{text("Đương kim vô địch", "Reigning champion")}</span>
+        <strong>{won.winner.name}</strong>
+        <span>{seasonName(banner.view.content.tournament.name, name)}</span>
+      </span>
+    </Link>
+  )
+}
+
+/** The seasons of a circuit once the catalog is read, or why there are none. */
+function CircuitSeasons({
+  query,
+  views,
+  name,
+}: {
+  query: { isPending: boolean; isError: boolean; refetch: () => unknown }
+  views: CompetitionView[]
+  name: string
+}) {
+  const { text } = useStreamLocale()
+  if (query.isPending)
+    return <div className="hub-skeleton-rows" role="status" aria-label={text("Đang tải mùa giải", "Loading seasons")} />
+  if (query.isError)
+    return (
+      <div className="hub-state" role="alert">
+        <h2>{text("Chưa tải được các mùa giải", "The seasons could not be loaded")}</h2>
+        <button type="button" className="cp-button" onClick={() => void query.refetch()}>
+          {text("Thử lại", "Retry")}
+        </button>
+      </div>
+    )
+  if (!views.length)
+    return (
+      <p className="pf-note">
+        {text("Hệ thống giải này chưa có mùa nào được công bố.", "No season of this circuit has been published yet.")}
+      </p>
+    )
+  return <CircuitHonours views={views} circuit={name} />
 }
 
 /** Introductions longer than this fold on a compact layout. */
@@ -141,7 +199,7 @@ function CircuitIntro({ text, about }: { text: string; about: string }) {
   )
 }
 
-/** Short name, region, official channels and sources, in the side card a competition's page uses for its facts. */
+/** Short name, region, shared channels and sources, in the column a competition's page uses for its facts. */
 function CircuitFacts({
   content,
   region,
@@ -151,9 +209,9 @@ function CircuitFacts({
 }) {
   const { text } = useStreamLocale()
   return (
-    <section className="tn-side-card pf-about">
+    <section>
       <h2>{text("Thông tin", "Information")}</h2>
-      <dl className="tn-facts" data-variant="about">
+      <dl className="pa-facts">
         {content.shortName && (
           <div>
             <dt>{text("Tên viết tắt", "Short name")}</dt>
@@ -162,21 +220,13 @@ function CircuitFacts({
         )}
         {region && (
           <div>
-            <dt>{text("Quốc gia / khu vực", "Country / region")}</dt>
+            <dt>{text("Khu vực", "Region")}</dt>
             <dd>{region}</dd>
-          </div>
-        )}
-        {content.links.length > 0 && (
-          <div>
-            <dt>{text("Kênh chính thức", "Official channels")}</dt>
-            <dd>
-              <ProfileSocials links={content.links} />
-            </dd>
           </div>
         )}
         {content.channelOrganizationId && (
           <div>
-            <dt>{text("Kênh dùng chung với tổ chức", "Channels shared with the organization")}</dt>
+            <dt>{text("Kênh dùng chung", "Shared channels")}</dt>
             <dd>
               <CircuitChannelOrganization id={content.channelOrganizationId} />
             </dd>
@@ -188,22 +238,18 @@ function CircuitFacts({
         </div>
       </dl>
       {content.sources.length > 0 && (
-        <ul className="tn-links">
+        <ul className="pa-links">
           {content.sources.map((source, index) => (
             <li key={index}>
-              <a
-                href={source.url}
-                target="_blank"
-                rel="noreferrer"
-                title={
-                  source.checkedOn
-                    ? text(`Đối chiếu ${formatDay(source.checkedOn)}`, `Checked on ${formatDay(source.checkedOn)}`)
-                    : undefined
-                }
-              >
-                {source.label || hostOf(source.url)}
+              <a href={source.url} target="_blank" rel="noreferrer">
+                <span>{source.label || hostOf(source.url)}</span>
                 <StreamIcon name="external" size={13} />
               </a>
+              {source.checkedOn && (
+                <small>
+                  {text("đối chiếu", "checked on")} {formatDay(source.checkedOn)}
+                </small>
+              )}
             </li>
           ))}
         </ul>

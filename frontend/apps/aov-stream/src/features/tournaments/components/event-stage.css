@@ -190,6 +190,50 @@
   height: 88px;
   object-fit: contain;
 }
+.tn-coming[data-alone] {
+  grid-column: 1 / -1;
+}
+.tn-coming[data-alone] > .tn-coming-stage {
+  grid-template-columns: 112px minmax(260px, 1fr) minmax(0, 1.4fr);
+  gap: 28px;
+  padding: 24px 28px;
+}
+.tn-coming[data-alone] .tn-coming-logo {
+  width: 112px;
+  height: 112px;
+}
+.tn-coming[data-alone] .tn-coming-text > strong {
+  font-size: 22px;
+  line-height: 28px;
+}
+/* Who plays: logos on lines of eight, each over its team's short name. */
+.tn-coming-teams {
+  --stream-image-size: 36px;
+  --stream-image-plate: transparent;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 12px 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-coming-teams > li {
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: 4px;
+}
+.tn-coming-teams > li > span:last-child {
+  overflow: hidden;
+  max-width: 100%;
+  color: rgb(255 255 255 / 82%);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .tn-coming-text {
   display: grid;
   min-width: 0;
@@ -254,10 +298,24 @@
   .tn-event-when {
     text-align: center;
   }
-  .tn-coming-stage {
+  .tn-coming-stage,
+  .tn-coming[data-alone] > .tn-coming-stage {
     grid-template-columns: 64px minmax(0, 1fr);
     gap: 14px;
     padding: 14px;
+  }
+  .tn-coming[data-alone] .tn-coming-logo {
+    width: 64px;
+    height: 64px;
+  }
+  .tn-coming[data-alone] .tn-coming-text > strong {
+    font-size: 17px;
+    line-height: 22px;
+  }
+  .tn-coming-teams {
+    --stream-image-size: 28px;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
   }
   .tn-coming-logo {
     width: 64px;

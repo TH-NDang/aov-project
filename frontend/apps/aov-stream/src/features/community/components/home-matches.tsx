@@ -57,7 +57,7 @@ export function HomeCompetitions() {
   const items = aheadCompetitions(competitions.data?.items ?? []).slice(0, 5)
   if (!items.length) return null
   return (
-    <section className="hub-card hub-card-padded" aria-labelledby="home-competitions">
+    <section className="hub-card" aria-labelledby="home-competitions">
       <div className="hub-card-heading">
         <h2 id="home-competitions" className="hub-card-title">
           {text("Giải đang và sắp diễn ra", "Current and upcoming tournaments")}

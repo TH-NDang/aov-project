@@ -4,6 +4,7 @@ import { RoundLabel } from "./round-label"
 import { StreamImage } from "./stream-image"
 import { useStreamLocale } from "./stream-locale"
 import { ThemedLogo } from "./themed-logo"
+import { bracketRoundOf, roundWeight } from "../lib/bracket-model"
 import { matchUnderway } from "../lib/competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "../lib/match-model"
 import { matchRound, matchSides, type MatchSide } from "../lib/match-schedule"
@@ -61,11 +62,13 @@ export function MatchCard({
   const { competition, match } = entry
   const { tournament } = competition.content
   const round = matchRound(entry, languageTag)
+  const stage = bracketRoundOf(entry)
   return (
     <Link
       className="tn-match"
       to={competitionMatchHref(competition.id, match.key)}
       data-live={matchUnderway(entry, now) || undefined}
+      data-weight={(stage && roundWeight(stage)) ?? undefined}
     >
       <span className="tn-match-head">
         <MatchStatus entry={entry} dayNamed={dayNamed} />

@@ -1,11 +1,14 @@
 import { useEffect, useRef } from "react"
-import { Link, useParams, useSearchParams } from "react-router"
+import { useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { PlaceBar, PlaceTrail, useSections, type Place } from "../../../components/place-trail"
 import { StreamShell } from "../../../components/stream-shell"
-import { StreamIcon } from "../../../components/stream-icon"
+import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionMatches } from "../../../lib/match-model"
-import { competitionQuery } from "../../../lib/tournament-api"
+import { seasonName } from "../../../lib/season-name"
+import { competitionQuery, statisticsQuery } from "../../../lib/tournament-api"
 import { CompetitionAwards } from "../components/competition-awards"
 import { CompetitionAbout } from "../components/competition-about"
 import { CompetitionFacts } from "../components/competition-facts"
@@ -15,7 +18,9 @@ import { CompetitionOverview, type CompetitionTab } from "../components/competit
 import { CompetitionCrew } from "../components/competition-people"
 import { CompetitionSchedule } from "../components/competition-schedule"
 import { CompetitionStandings } from "../components/competition-standings"
+import { CompetitionStatisticsTab } from "../components/competition-statistics"
 import { CompetitionTeams } from "../components/competition-teams"
+import { SeasonSwitch } from "../components/season-switch"
 import "./competition-page.css"
 
 /** The tabs of a competition, each named in Vietnamese and in English. */
@@ -23,12 +28,16 @@ const TABS: readonly [CompetitionTab, readonly [string, string]][] = [
   ["overview", ["Tổng quan", "Overview"]],
   ["matches", ["Lịch & kết quả", "Schedule & results"]],
   ["standings", ["BXH & nhánh đấu", "Standings & bracket"]],
+  ["stats", ["Thống kê", "Statistics"]],
   ["teams", ["Đội tham dự", "Teams"]],
   ["info", ["Thể thức & thông tin", "Format & info"]],
 ]
 
-/** Filters of the schedule, which belong to its tab only. */
-const SCHEDULE_KEYS = ["scope", "stage", "team", "date"]
+/** What else the address may hold, each belonging to one tab: the filters of the schedule and the hero opened. */
+const TAB_KEYS: Partial<Record<CompetitionTab, string[]>> = {
+  matches: ["scope", "stage", "team", "date"],
+  stats: ["hero"],
+}
 
 /** The tab in the address, and a way to open another one from the page, which then moves the focus to it. */
 function useTabs() {
@@ -42,18 +51,24 @@ function useTabs() {
       const updated = new URLSearchParams(current)
       if (next === "overview") updated.delete("tab")
       else updated.set("tab", next)
-      for (const key of SCHEDULE_KEYS) if (next !== "matches") updated.delete(key)
+      for (const [owner, keys] of Object.entries(TAB_KEYS))
+        if (owner !== next || owner === "stats") keys.forEach((key) => updated.delete(key))
       return updated
     })
   const openTab = (next: CompetitionTab) => {
     focus.current = next
     setTab(next)
   }
-  return { tab, setTab, openTab, focus }
+  return { tab, hero: params.get("hero"), setTab, openTab, focus }
 }
 
 /** The tabs of a competition in one row, which keeps the open one in view and takes the focus it is asked to. */
-function Tabs({ tab, setTab, focus }: Pick<ReturnType<typeof useTabs>, "tab" | "setTab" | "focus">) {
+function Tabs({
+  tab,
+  tabs,
+  setTab,
+  focus,
+}: Pick<ReturnType<typeof useTabs>, "tab" | "setTab" | "focus"> & { tabs: typeof TABS }) {
   const { text } = useStreamLocale()
   const row = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -64,25 +79,13 @@ function Tabs({ tab, setTab, focus }: Pick<ReturnType<typeof useTabs>, "tab" | "
     focus.current = null
   }, [tab, focus])
   return (
-    <div className="tn-sticky-tabs">
-      <nav ref={row} className="cp-tabs" data-flush="" aria-label={text("Nội dung giải đấu", "Tournament content")}>
-        {TABS.map(([key, label]) => (
-          <button key={key} aria-current={tab === key ? "page" : undefined} onClick={() => setTab(key)}>
-            {text(label[0], label[1])}
-          </button>
-        ))}
-      </nav>
-    </div>
-  )
-}
-
-function BackLink() {
-  const { text } = useStreamLocale()
-  return (
-    <Link className="cp-back" to="/competitions">
-      <StreamIcon name="back" size={16} />
-      {text("Tất cả giải đấu", "All tournaments")}
-    </Link>
+    <nav ref={row} className="cp-tabs" data-flush="" aria-label={text("Nội dung giải đấu", "Tournament content")}>
+      {tabs.map(([key, label]) => (
+        <button key={key} aria-current={tab === key ? "page" : undefined} onClick={() => setTab(key)}>
+          {text(label[0], label[1])}
+        </button>
+      ))}
+    </nav>
   )
 }
 
@@ -90,12 +93,16 @@ export function PublicCompetitionPage() {
   const { text } = useStreamLocale()
   const { id = "" } = useParams()
   const query = useQuery(competitionQuery(id))
-  const { tab, setTab, openTab, focus } = useTabs()
+  const statistics = useQuery(statisticsQuery(id))
+  const { tab: requested, hero, setTab, openTab, focus } = useTabs()
+  const { tournaments } = useSections()
+  const compact = usePageLayout() === "compact"
+  const head = useRef<HTMLDivElement>(null)
   if (!query.data)
     return (
       <StreamShell>
         <div className="cp-container">
-          <BackLink />
+          <PlaceTrail places={[tournaments]} />
           {query.isError ? (
             <div className="hub-state" role="alert">
               <h1>{query.error.message}</h1>
@@ -118,18 +125,56 @@ export function PublicCompetitionPage() {
       </StreamShell>
     )
   const view = query.data
-  const { tournament } = view.content
+  const { tournament, circuit } = view.content
+  const places: Place[] = [
+    tournaments,
+    ...(circuit ? [{ to: `/pages/${circuit.code}`, name: circuit.name, short: circuit.shortName }] : []),
+  ]
   const matches = competitionMatches([view])
+  // Statistics count published games; a competition without any has no such tab.
+  const counted = statistics.data && statistics.data.games > 0 ? statistics.data : null
+  const opening = requested === "stats" && statistics.isPending
+  const tabs = TABS.filter(([key]) => key !== "stats" || counted || opening)
+  const tab = requested === "stats" && !counted && !opening ? "overview" : requested
+  const tabRow = <Tabs tab={tab} tabs={tabs} setTab={setTab} focus={focus} />
   return (
     <StreamShell>
       <title>{`${tournament.name} — AOV Stream`}</title>
       <div className="cp-container tn-comp">
-        <BackLink />
-        <CompetitionHead view={view} openStages={() => openTab("standings")} />
-        <Tabs tab={tab} setTab={setTab} focus={focus} />
-        {tab === "overview" && <CompetitionOverview view={view} matches={matches} openTab={openTab} />}
+        <CompetitionHead
+          view={view}
+          head={head}
+          trail={<PlaceTrail places={places} current={<SeasonSwitch view={view} />} />}
+          openStages={() => openTab("standings")}
+        />
+        {compact ? (
+          <div className="tn-sticky-tabs">{tabRow}</div>
+        ) : (
+          <PlaceBar
+            head={head}
+            places={places}
+            name={circuit ? seasonName(tournament.name, circuit.name) : tournament.name}
+            mark={<StreamImage src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} logo name={tournament.name} />}
+            tabs={tabRow}
+          />
+        )}
+        {tab === "overview" && (
+          <CompetitionOverview view={view} matches={matches} statistics={counted} openTab={openTab} />
+        )}
         {tab === "matches" && <CompetitionSchedule entries={matches} />}
         {tab === "standings" && <CompetitionStandings view={view} />}
+        {tab === "stats" &&
+          (counted ? (
+            <CompetitionStatisticsTab view={view} statistics={counted} hero={hero} />
+          ) : (
+            <div
+              className="tn-comp-skeleton"
+              role="status"
+              aria-label={text("Đang tải thống kê…", "Loading statistics…")}
+            >
+              <span className="hub-skeleton" data-shape="rows" />
+            </div>
+          ))}
         {tab === "teams" && <CompetitionTeams view={view} />}
         {tab === "info" && (
           <div className="tn-stack">

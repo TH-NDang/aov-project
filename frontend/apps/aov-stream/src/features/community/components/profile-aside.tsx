@@ -1,27 +1,16 @@
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import {
-  isIndividualProfile,
-  profileKindLabels,
-  type CommunityProfile,
-  type ProfileLink,
-} from "@aov/community-contracts"
+import { profileKindLabels, type CommunityProfile, type ProfileLink } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
-import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
+import { ProfileMark } from "../../../components/page-mark"
 import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { pageReferenceKey } from "../../../lib/reference-model"
-import {
-  Avatar,
-  followersLabel,
-  formatDay,
-  profileKindEnglish,
-  regionKey,
-  regionName,
-} from "../../../components/community-ui"
+import { followersLabel, formatDay, profileKindEnglish, regionKey, regionName } from "../../../components/community-ui"
+import "./profile-aside.css"
 
 function linkName(link: ProfileLink) {
   if (link.label) return link.label
@@ -33,24 +22,36 @@ function linkName(link: ProfileLink) {
 }
 
 /**
- * What a page says about itself and where that comes from: introduction and facts, channels, sources and related
- * pages. A wide layout shows it as the column beside the content; a compact one as the content of its own tab,
- * where `channels` is off because the page head already carries them as icons.
+ * What a page says about itself and where that comes from: introduction and facts, sources and related pages, straight
+ * on the page. A wide layout shows it as the `column` beside the content, a compact one as the content of its own tab.
+ * `missing` names what the page does not record yet.
  */
-export function ProfileAside({ profile, channels = true }: { profile: CommunityProfile; channels?: boolean }) {
+export function ProfileAside({
+  profile,
+  missing,
+  column = false,
+}: {
+  profile: CommunityProfile
+  missing: string[]
+  column?: boolean
+}) {
   const { text, languageTag } = useStreamLocale()
   const content = profile.content!
   const region = regionName(content.country, languageTag)
   return (
-    <aside className="pf-side" aria-label={text("Giới thiệu và nguồn thông tin", "Introduction and sources")}>
-      <section className="tn-side-card pf-about">
-        <h2>{text("Thông tin chung", "General information")}</h2>
+    <aside
+      className="pa"
+      data-column={column || undefined}
+      aria-label={text("Giới thiệu và nguồn thông tin", "Introduction and sources")}
+    >
+      <section>
+        <h2>{text("Giới thiệu", "About")}</h2>
         {content.biography && (
-          <p className="pf-bio">
+          <p className="pa-bio">
             <ReferenceText text={content.biography} about={[pageReferenceKey(profile)]} />
           </p>
         )}
-        <dl className="tn-facts" data-variant="about">
+        <dl className="pa-facts">
           {content.shortName && (
             <div>
               <dt>{text("Tên viết tắt", "Short name")}</dt>
@@ -59,12 +60,12 @@ export function ProfileAside({ profile, channels = true }: { profile: CommunityP
           )}
           {region && (
             <div>
-              <dt>{text("Quốc gia / khu vực", "Country / region")}</dt>
+              <dt>{text("Khu vực", "Region")}</dt>
               <dd>{region}</dd>
             </div>
           )}
           <div>
-            <dt>{text("Quản lý trang", "Page management")}</dt>
+            <dt>{text("Quản lý trang", "Managed by")}</dt>
             <dd>
               {profile.represented ? (
                 <>
@@ -72,54 +73,41 @@ export function ProfileAside({ profile, channels = true }: { profile: CommunityP
                   <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
                 </>
               ) : (
-                text("AthaHub tổng hợp từ nguồn công khai", "Compiled by AthaHub from public sources")
+                text("AthaHub, từ nguồn công khai", "AthaHub, from public sources")
               )}
             </dd>
           </div>
         </dl>
-        {!profile.represented && (
-          <p className="cp-meta pf-about-note">
-            {text(
-              "Bạn là người đại diện? Chọn nút ⋯ ở đầu trang để gửi yêu cầu quản lý.",
-              "Are you a representative? Select the ⋯ button at the top of the page to send a request to manage it.",
-            )}
+        {(missing.length > 0 || !profile.represented) && (
+          <p className="pa-note">
+            {missing.length > 0 &&
+              text(
+                `Trang chưa ghi nhận ${missing.join(", ")}. `,
+                `This page has no ${missing.join(", ")} recorded yet. `,
+              )}
+            {!profile.represented &&
+              text(
+                "Bạn có thông tin hoặc là người đại diện? Chọn nút ⋯ ở đầu trang.",
+                "Know more, or represent this page? Choose the ⋯ button at the top.",
+              )}
           </p>
         )}
       </section>
-      {channels && content.links.length > 0 && (
-        <section className="tn-side-card">
-          <h2>{text("Kênh liên hệ", "Contact channels")}</h2>
-          <ul className="pf-links">
-            {content.links.map((link, index) => (
-              <li key={`${link.url}-${index}`}>
-                <a href={link.url} target="_blank" rel="noreferrer">
-                  <SocialPlatformIcon url={link.url} size={18} />
-                  <span>{linkName(link)}</span>
-                  {link.official && <OfficialBadge label={text("Kênh chính thức", "Official channel")} />}
-                  <StreamIcon name="external" size={14} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
       {content.sources.length > 0 && (
-        <section className="tn-side-card">
-          <h2>{text("Nguồn thông tin", "Sources")}</h2>
-          <ul className="pf-links">
+        <section>
+          <h2>{text("Nguồn", "Sources")}</h2>
+          <ul className="pa-links">
             {content.sources.map((source, index) => (
               <li key={`${source.url}-${index}`}>
                 <a href={source.url} target="_blank" rel="noreferrer">
-                  <span>
-                    {linkName(source)}
-                    {source.checkedOn && (
-                      <small>
-                        {text("Đối chiếu", "Checked on")} {formatDay(source.checkedOn)}
-                      </small>
-                    )}
-                  </span>
-                  <StreamIcon name="external" size={14} />
+                  <span>{linkName(source)}</span>
+                  <StreamIcon name="external" size={13} />
                 </a>
+                {source.checkedOn && (
+                  <small>
+                    {text("đối chiếu", "checked on")} {formatDay(source.checkedOn)}
+                  </small>
+                )}
               </li>
             ))}
           </ul>
@@ -148,7 +136,7 @@ function RelatedPages({ profile }: { profile: CommunityProfile }) {
     .slice(0, 4)
   if (!related.length) return null
   return (
-    <section className="tn-side-card pf-related">
+    <section>
       <h2>
         {text(
           `${profileKindLabels[profile.kind]} cùng khu vực`,
@@ -158,8 +146,8 @@ function RelatedPages({ profile }: { profile: CommunityProfile }) {
       <ul className="tn-mini-list">
         {related.map((page) => (
           <li key={page.id}>
-            <Link to={`/pages/${page.code}`} data-person={isIndividualProfile(page.kind) || undefined}>
-              <Avatar profile={page} />
+            <Link to={`/pages/${page.code}`}>
+              <ProfileMark profile={page} size={40} />
               <span>
                 <strong>{page.content?.name || page.code}</strong>
                 {page.followers > 0 && <small>{followersLabel(page.followers)}</small>}

@@ -36,8 +36,8 @@ export function videoEmbed(url: string): VideoEmbed | null {
 /**
  * The picture YouTube keeps for a video. `hqdefault` exists for every video; it is 4:3 with bars above and below a
  * 16:9 frame, which a 16:9 box with `object-fit: cover` crops away. `mqdefault` is smaller and 16:9 without bars,
- * for tiles of any shape.
+ * for tiles of any shape. `hq720` is sharp at the width of a feed, and missing for a video that is not in HD.
  */
-export function videoPoster(embed: VideoEmbed, size: "hqdefault" | "mqdefault" = "hqdefault") {
+export function videoPoster(embed: VideoEmbed, size: "hqdefault" | "mqdefault" | "hq720" = "hqdefault") {
   return embed.kind === "youtube" ? `https://i.ytimg.com/vi/${embed.src.split("/").pop()}/${size}.jpg` : null
 }

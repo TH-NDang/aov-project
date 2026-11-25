@@ -1,0 +1,328 @@
+/*
+ * The roof of the arena and the banners of the champions hung from it. It runs edge to edge and is dark in both themes;
+ * what it draws with is named dark again, because the build fixes light-dark() at the root.
+ */
+.tn-rafters {
+  --hub-accent: var(--aov-stream-lavender);
+  --hub-accent-strong: var(--aov-stream-lavender-bright);
+  --hub-text: var(--aov-stream-cream);
+  --hub-text-soft: var(--aov-stream-text-soft);
+  --hub-muted: var(--aov-stream-text-muted);
+  --hub-plate: var(--aov-stream-indigo);
+  --hub-on-plate: var(--aov-stream-text-muted);
+  --hub-logo-light: none;
+  --hub-logo-dark: inline-block;
+  --hub-logo-paper: color-mix(in srgb, var(--aov-stream-mist) 84%, var(--aov-stream-indigo));
+  --hub-logo-night: transparent;
+  --rafters-side: max(var(--hub-gutter), calc(50vw - var(--aov-page-max) / 2 + var(--hub-gutter)));
+  position: relative;
+  display: grid;
+  min-width: 0;
+  margin-inline: calc(50% - 50vw);
+  padding: 22px 0 44px;
+  background:
+    radial-gradient(
+      70% 110% at 50% -30%,
+      color-mix(in srgb, var(--aov-stream-periwinkle-deep) 34%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(to bottom, color-mix(in srgb, var(--aov-stream-night) 72%, #000), var(--aov-stream-night));
+  color: var(--aov-stream-cream);
+  color-scheme: dark;
+}
+.tn-rafters > h2 {
+  margin: 0 0 14px;
+  padding-inline: var(--rafters-side);
+  color: var(--hub-text);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+/* The truss the banners hang from: two rails and the struts between them. */
+.tn-rafters-truss {
+  position: absolute;
+  top: 64px;
+  right: 0;
+  left: 0;
+  height: 20px;
+  border-block: 2px solid color-mix(in srgb, var(--aov-stream-feather) 62%, transparent);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20'%3E%3Cpath d='M0 20 20 0 40 20' fill='none' stroke='%236b6b88' stroke-opacity='.5' stroke-width='1.5'/%3E%3C/svg%3E")
+    0 0 / 40px 100% repeat-x;
+}
+.tn-banners {
+  position: relative;
+  display: grid;
+  grid-auto-columns: minmax(0, 236px);
+  grid-auto-flow: column;
+  gap: 22px;
+  justify-content: space-between;
+  margin: 0;
+  /* The banners start at the lower rail. */
+  padding: 20px var(--rafters-side) 0;
+  list-style: none;
+}
+.tn-banners:has(> :nth-child(4):last-child) {
+  grid-auto-columns: minmax(0, 268px);
+}
+
+.tn-banner {
+  --crest: 108px;
+  --crest-ground: var(--aov-stream-night);
+  --crest-space: 16px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  justify-items: center;
+  margin-top: 26px;
+  padding: 22px 18px 56px;
+  text-align: center;
+  transform-origin: 50% -26px;
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tn-banner:hover {
+  transform: rotate(0.7deg);
+}
+.tn-banner:nth-child(even):hover {
+  transform: rotate(-0.7deg);
+}
+/* The two cords it hangs by. */
+.tn-banner::before {
+  content: "";
+  position: absolute;
+  top: -26px;
+  right: 16%;
+  left: 16%;
+  height: 28px;
+  border-inline: 2px solid color-mix(in srgb, var(--aov-stream-feather) 62%, transparent);
+}
+/* Cloth with a pointed tail: a strip of gold trim, then the cloth inside it. */
+.tn-banner-cloth {
+  --tail: 34px;
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--aov-medal-gold) 76%, var(--aov-stream-night)),
+    color-mix(in srgb, var(--aov-medal-gold) 46%, var(--aov-stream-night))
+  );
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--tail)), 50% 100%, 0 calc(100% - var(--tail)));
+}
+.tn-banner-cloth > span {
+  position: absolute;
+  inset: 0 3px 4px;
+  overflow: hidden;
+  background: linear-gradient(to bottom, hsl(var(--banner-hue) 30% 25%), hsl(var(--banner-hue) 24% 13%));
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--tail)), 50% 100%, 0 calc(100% - var(--tail)));
+}
+.tn-banner-cloth[data-dyed] > span {
+  background: linear-gradient(
+    to bottom,
+    var(--aov-stream-indigo),
+    color-mix(in srgb, var(--aov-stream-dusk) 80%, #000)
+  );
+}
+/* The logo's colours, blurred until only the dye is left. */
+.tn-banner-cloth img {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  width: 90px;
+  height: 90px;
+  opacity: 0.8;
+  mix-blend-mode: color;
+  object-fit: contain;
+  filter: blur(14px) saturate(1.7) brightness(1.1);
+  transform: translate(-50%, -50%) scale(5.4);
+}
+/* Folds of the cloth, and the shade of the roof at its top. */
+.tn-banner-cloth > span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgb(10 10 20 / 46%), transparent 24%, transparent 62%, rgb(10 10 20 / 38%)),
+    repeating-linear-gradient(
+      90deg,
+      rgb(255 255 255 / 5%) 0 1px,
+      transparent 1px 22px,
+      rgb(0 0 0 / 14%) 34px,
+      transparent 52px
+    );
+}
+
+.tn-banner-circuit {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.tn-banner-mark {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+.tn-banner-mark > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.tn-banner-circuit > :is(a, span[title]):not(.tn-banner-mark) {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-banner-circuit > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tn-titles {
+  min-height: 16px;
+  margin: 12px 0 0;
+  color: var(--aov-medal-gold);
+  font-size: 13px;
+  line-height: 16px;
+}
+.tn-titles > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.tn-titles b {
+  font-weight: 700;
+}
+.tn-banner > h3 {
+  margin: 8px 0 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+/* The whole banner opens the season; what else it links to lies above that area. */
+.tn-banner > h3 > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.tn-banner > h3 > a:focus-visible {
+  outline: none;
+}
+.tn-banner:has(> h3 > a:focus-visible) {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 4px;
+}
+.tn-banner-season {
+  margin: 2px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-banner-final {
+  --stream-image-size: 22px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 22px;
+}
+.tn-banner-final > b {
+  color: var(--hub-text);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tn-banner-final > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-banner-next {
+  position: relative;
+  z-index: 1;
+  margin: 12px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  line-height: 18px;
+}
+.tn-banner-next > a {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 8px;
+}
+.tn-banner-next > a:hover {
+  color: var(--hub-text);
+}
+
+/* Once, when the page opens, the banners come down one after the other. */
+@media (prefers-reduced-motion: no-preference) {
+  .tn-banner {
+    animation: tn-banner-down calc(620ms * var(--entrance, 1)) cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(var(--banner-at) * 70ms * var(--entrance, 1));
+  }
+  @keyframes tn-banner-down {
+    from {
+      clip-path: inset(-30px -20px 100%);
+      transform: translateY(-24px);
+    }
+    to {
+      clip-path: inset(-30px -20px -20px);
+      transform: none;
+    }
+  }
+}
+
+/* Compact: the roof goes on past the screen's edge and is walked along. */
+@media (max-width: 899.98px) {
+  .tn-rafters {
+    padding: 16px 0 26px;
+  }
+  .tn-rafters > h2 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    line-height: 24px;
+  }
+  .tn-rafters-truss {
+    top: 50px;
+    height: 16px;
+  }
+  .tn-banners,
+  .tn-banners:has(> :nth-child(4):last-child) {
+    grid-auto-columns: 172px;
+    gap: 14px;
+    justify-content: start;
+    padding: 16px var(--rafters-side) 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--rafters-side);
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .tn-banner {
+    --crest: 84px;
+    padding: 16px 12px 48px;
+    scroll-snap-align: start;
+  }
+  .tn-banner > h3 {
+    font-size: 16px;
+    line-height: 21px;
+  }
+}

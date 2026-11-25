@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import {
   isCommunityProfile,
-  isIndividualProfile,
   personRoleLabels,
   profileKindLabels,
   type CommunityProfile,
@@ -11,7 +10,6 @@ import {
 } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { gameIcon } from "@aov/ui/components/game-icons"
-import { OfficialBadge } from "@aov/ui/components/official-badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +18,8 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { OfficialName } from "../../../components/official-name"
+import { ProfileMark } from "../../../components/page-mark"
 import { RegionMark } from "../../../components/region-mark"
 import { StreamIcon } from "../../../components/stream-icon"
 import { ParticipantList } from "../../../components/participant-list"
@@ -28,8 +28,8 @@ import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { useFollowedIds, useFollowPage } from "../../../lib/community-queries"
 import { isParticipantKind } from "../../../lib/participant-model"
+import { DirectoryHub } from "./directory-hub"
 import {
-  Avatar,
   followersLabel,
   personRoleEnglish,
   profileKindEnglish,
@@ -100,9 +100,10 @@ function useChosenChipInView(choice: string) {
 }
 
 /**
- * Every published page, narrowed by kind and by region. Both filters live in the URL. The kind is asked of the
- * service; the region is applied here, to pages that keep loading in the background until the list is whole. That
- * download starts only when the regions are asked for, so a visit that does not filter by region stays light.
+ * Every published page: a wall of each kind until one is chosen, then the list, narrowed by kind and by region. Both
+ * filters live in the URL. The kind is asked of the service; the region is applied here, to pages that keep loading in
+ * the background until the list is whole. That download starts only when the regions are asked for, so a visit that
+ * does not filter by region stays light.
  */
 export function PageDirectory() {
   const { text, languageTag } = useStreamLocale()
@@ -119,6 +120,8 @@ export function PageDirectory() {
     getNextPageParam: nextPageOf,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    // The walls read what they show themselves; the whole directory is read once it is filtered.
+    enabled: !!kind || !!region || counting,
   })
   const { hasNextPage, isFetching, isFetchNextPageError, fetchNextPage } = query
   const total = query.data?.pages[0]?.totalElements ?? 0
@@ -132,6 +135,7 @@ export function PageDirectory() {
   const complete = !!query.data && !hasNextPage
   const regions = complete ? regionFacet(profiles, languageTag) : null
   const narrowed = scanned && !!region
+  const hub = !kind && !narrowed
   const rows = narrowed ? profiles.filter((profile) => regionOf(profile) === region) : profiles
   const revealed = useRevealedRows(rows, `${kind}|${narrowed ? region : ""}`, STEP)
   // The loaded pages are revealed first; after that the list waits for the service.
@@ -179,7 +183,7 @@ export function PageDirectory() {
             </button>
           ))}
         </div>
-        {scanned && !query.isError && query.data && (
+        {scanned && !query.isError && (
           <RegionMenu
             regions={regions}
             value={region}
@@ -189,7 +193,8 @@ export function PageDirectory() {
         )}
       </div>
       {isParticipantKind(kind) && !narrowed && <ParticipantList kind={kind} q={params.get("name")?.trim()} />}
-      {isParticipantKind(kind) && !narrowed && !rows.length ? null : query.isPending ||
+      {hub && <DirectoryHub />}
+      {hub || (isParticipantKind(kind) && !narrowed && !rows.length) ? null : query.isPending ||
         (!rows.length && !complete && !query.isError) ? (
         <div className="cp-grid" role="status" aria-label={text("Đang tải danh bạ", "Loading the directory")}>
           {Array.from({ length: 12 }, (_, index) => (
@@ -238,11 +243,13 @@ export function PageDirectory() {
           ))}
         </div>
       )}
-      <InfiniteScroll
-        query={more}
-        label={text("Đang tải thêm trang", "Loading more pages")}
-        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
-      />
+      {!hub && (
+        <InfiniteScroll
+          query={more}
+          label={text("Đang tải thêm trang", "Loading more pages")}
+          retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+        />
+      )}
     </section>
   )
 }
@@ -337,15 +344,12 @@ export function ProfileCard({
       : text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])
   const where = hideRegion ? null : regionName(profile.content?.country, languageTag)
   return (
-    <article className="pg-card" data-person={isIndividualProfile(profile.kind) || undefined}>
+    <article className="pg-card">
       <Link className="pg-card-link" to={`/pages/${profile.code}`} aria-label={name} />
-      <Avatar profile={profile} />
+      <ProfileMark profile={profile} size={52} />
       <div className="pg-card-body">
         <strong className="pg-card-name" title={name}>
-          {name}
-          {community && profile.represented && (
-            <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
-          )}
+          <OfficialName name={name} official={community && profile.represented} />
         </strong>
         {(what || where) && (
           <span className="pg-card-meta">

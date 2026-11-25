@@ -1,0 +1,98 @@
+/* The pictures of a post over the whole screen: dark in both themes, one slide per picture. */
+.pv {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgb(8 8 18 / 94%);
+  color: #fff;
+}
+.pv::backdrop {
+  background: none;
+}
+.pv-track {
+  display: flex;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  outline: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.pv-track > li {
+  display: grid;
+  min-width: 0;
+  flex: 0 0 100%;
+  place-items: center;
+  padding: 64px 84px;
+  scroll-snap-align: start;
+}
+.pv-track img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 128px);
+  border-radius: 6px;
+  object-fit: contain;
+}
+.pv-button {
+  position: absolute;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+.pv-button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 20%);
+}
+.pv-button:disabled {
+  opacity: 0.25;
+}
+.pv-close {
+  top: 14px;
+  right: 18px;
+}
+.pv-back,
+.pv-next {
+  top: calc(50% - 24px);
+}
+.pv-back {
+  left: 18px;
+}
+.pv-next {
+  right: 18px;
+}
+.pv-count {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  color: rgb(255 255 255 / 80%);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  pointer-events: none;
+}
+@media (max-width: 899.98px) {
+  .pv-track > li {
+    padding: 64px 0;
+  }
+  .pv-track img {
+    border-radius: 0;
+  }
+  .pv-back,
+  .pv-next {
+    display: none;
+  }
+}

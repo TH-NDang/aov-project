@@ -4,24 +4,27 @@ import { useQuery } from "@tanstack/react-query"
 import type { CompetitionView } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
+import { PlaceTrail, useSections } from "../../../components/place-trail"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionStatus } from "../../../lib/competition-model"
 import { aheadCompetitions, circuitGroups } from "../../../lib/directory-model"
+import { championBanners } from "../../../lib/season-map"
 import { competitionCatalogQuery } from "../../../lib/tournament-api"
-import { CircuitHall } from "../components/circuit-hall"
+import { ChampionRafters } from "../components/champion-rafters"
 import { CircuitSection } from "../components/circuit-section"
-import { DirectoryFilters, useDirectoryFilters, useDirectorySchedule } from "../components/directory-filters"
+import { MapRegions, ScheduleBar, useDirectoryFilters, useDirectorySchedule } from "../components/directory-filters"
 import { ComingEvent, EventStage } from "../components/event-stage"
 import { DirectorySkeleton } from "../components/directory-skeleton"
 import { DayStrip } from "../components/day-strip"
-import { MatchRibbon } from "../components/match-ribbon"
+import { ScoreRibbon } from "../components/score-ribbon"
+import { SeasonMap } from "../components/season-map"
+import { YearPills } from "../components/year-pills"
 import { ScheduleEmpty, ScheduleList, ScheduleNote } from "../components/schedule-list"
 import "./competition-directory-page.css"
 
-/** Circuits shown before the reader scrolls for more: cards, and lists of seasons once filters are on. */
-const HALLS = 12
+/** Circuits listed before the reader scrolls for more, once a search leaves lists of seasons. */
 const CIRCUITS = 6
 
 export function CompetitionDirectory() {
@@ -32,6 +35,7 @@ export function CompetitionDirectory() {
   const { update, clearFilters } = filters
   const schedule = useDirectorySchedule(query.data, filters)
   const whole = schedule.schedule
+  const { tournaments } = useSections()
   return (
     <StreamShell
       search={{
@@ -52,12 +56,7 @@ export function CompetitionDirectory() {
       </title>
       <div className="tn-directory cp-container">
         <h1 className="sr-only">{whole ? text("Lịch thi đấu", "Schedule") : text("Giải đấu", "Tournaments")}</h1>
-        {whole && (
-          <Link className="cp-back" data-flush="" to="/competitions">
-            <StreamIcon name="back" size={16} />
-            {text("Giải đấu", "Tournaments")}
-          </Link>
-        )}
+        {whole && <PlaceTrail places={[tournaments]} current={text("Lịch & kết quả", "Schedule & results")} />}
         {query.isPending ? (
           <DirectorySkeleton schedule={whole} />
         ) : query.isError && !query.data ? (
@@ -84,13 +83,19 @@ export function CompetitionDirectory() {
                 <button onClick={() => void query.refetch()}>{text("Thử lại", "Retry")}</button>
               </p>
             )}
-            {!whole &&
-              (filters.filtered ? (
-                !filters.search.trim() && <MatchRibbon items={filters.visible} />
-              ) : (
-                <DirectoryLead items={items} />
-              ))}
-            {items.length > 0 && <DirectoryFilters filters={filters} schedule={schedule} />}
+            {!whole && !filters.searching && <DirectoryLead items={items} />}
+            {!whole && items.length > 0 && (
+              <div className="tn-heading" data-flush="">
+                <h2>{text("Các mùa giải", "Seasons")}</h2>
+                <YearPills
+                  years={filters.years}
+                  value={filters.year}
+                  all={filters.searching}
+                  onChange={(year) => update("year", year)}
+                />
+              </div>
+            )}
+            {whole ? <ScheduleBar filters={filters} schedule={schedule} /> : <MapRegions filters={filters} />}
             {filters.search.trim() && (
               <Link className="tn-search-all" to={`/explore?${new URLSearchParams({ q: filters.search.trim() })}`}>
                 {text(
@@ -101,29 +106,27 @@ export function CompetitionDirectory() {
               </Link>
             )}
             {whole ? (
-              <>
-                <div className="tn-schedule-view">
-                  <DayStrip entries={schedule.near} value={schedule.day} onChange={(day) => update("date", day)} />
-                  <ScheduleNote filters={schedule.linked} onClear={schedule.clearLinked} />
-                  <ScheduleList
-                    upcoming={schedule.fixtures.upcoming}
-                    results={schedule.fixtures.results}
-                    scope={schedule.scope}
-                    competition
-                    listKey={schedule.listKey}
-                    empty={
-                      <ScheduleEmpty
-                        filtered={schedule.filtered || schedule.linked.length > 0 || schedule.scope !== "all"}
-                        onClear={schedule.linked.length ? undefined : clearFilters}
-                      />
-                    }
-                  />
-                </div>
-              </>
+              <div className="tn-schedule-view">
+                <DayStrip entries={schedule.near} value={schedule.day} onChange={(day) => update("date", day)} />
+                <ScheduleNote day={schedule.dayLabel} onClear={() => update("date", "")} />
+                <ScheduleList
+                  upcoming={schedule.fixtures.upcoming}
+                  results={schedule.fixtures.results}
+                  scope={schedule.scope}
+                  competition
+                  listKey={schedule.listKey}
+                  empty={
+                    <ScheduleEmpty
+                      filtered={schedule.filtered || !!schedule.day}
+                      onClear={schedule.day ? undefined : clearFilters}
+                    />
+                  }
+                />
+              </div>
             ) : (
-              <Circuits
+              <Seasons
                 visible={filters.visible}
-                filtered={filters.filtered}
+                year={filters.searching ? null : Number(filters.year)}
                 published={items.length}
                 listKey={filters.listKey}
                 onClear={clearFilters}
@@ -136,12 +139,16 @@ export function CompetitionDirectory() {
   )
 }
 
-/** What leads the directory: the events on now, the other matches in one line, then the events that start next. */
+/**
+ * What leads the directory: the events on now, the other matches in one line, the events that start next, then the
+ * champions of the circuits.
+ */
 function DirectoryLead({ items }: { items: CompetitionView[] }) {
   const { text } = useStreamLocale()
   const ahead = useMemo(() => aheadCompetitions(items), [items])
   const on = useMemo(() => ahead.filter((entry) => competitionStatus(entry.content) === "ONGOING"), [ahead])
   const coming = ahead.filter((entry) => !on.includes(entry))
+  const banners = useMemo(() => championBanners(items), [items])
   return (
     <>
       {on.length > 0 && (
@@ -154,7 +161,7 @@ function DirectoryLead({ items }: { items: CompetitionView[] }) {
           ))}
         </section>
       )}
-      <MatchRibbon items={items} staged={on} />
+      <ScoreRibbon items={items} staged={on} />
       {coming.length > 0 && (
         <section className="tn-directory-part" aria-labelledby="competitions-ahead">
           <div className="tn-heading" data-flush="">
@@ -162,35 +169,37 @@ function DirectoryLead({ items }: { items: CompetitionView[] }) {
           </div>
           <div className="tn-coming-grid">
             {coming.map((entry) => (
-              <ComingEvent key={entry.id} entry={entry} />
+              <ComingEvent key={entry.id} entry={entry} alone={coming.length === 1} />
             ))}
           </div>
         </section>
       )}
+      <ChampionRafters banners={banners} />
     </>
   )
 }
 
 /**
- * Every circuit: a card each, or the seasons the filters leave of it, listed. `published` counts every competition,
- * to tell an empty catalog from filters that match nothing.
+ * The seasons of a year as a map, or what a search finds in every year, listed by circuit. `published` counts every
+ * competition, to tell an empty catalog from a search that finds nothing.
  */
-function Circuits({
+function Seasons({
   visible,
-  filtered,
+  year,
   published,
   listKey,
   onClear,
 }: {
   visible: CompetitionView[]
-  filtered: boolean
+  /** The year of the map; null for lists. */
+  year: number | null
   published: number
   listKey: string
   onClear: () => void
 }) {
   const { text } = useStreamLocale()
   const groups = circuitGroups(visible)
-  const { rows, loader } = useRevealedRows(groups, listKey, filtered ? CIRCUITS : HALLS)
+  const { rows, loader } = useRevealedRows(groups, listKey, CIRCUITS)
   if (!groups.length)
     return (
       <div className="hub-state">
@@ -201,10 +210,10 @@ function Circuits({
         </h2>
         <p>
           {published
-            ? text("Thử khu vực, năm hoặc trạng thái khác.", "Try another region, year or status.")
+            ? text("Thử khu vực, năm hoặc từ khóa khác.", "Try another region, year or search.")
             : text("Các mùa giải và lịch thi đấu sẽ xuất hiện tại đây.", "Seasons and schedules will appear here.")}
         </p>
-        {published > 0 && filtered ? (
+        {published > 0 ? (
           <button type="button" className="cp-button" onClick={onClear}>
             {text("Xóa bộ lọc", "Clear filters")}
           </button>
@@ -215,19 +224,11 @@ function Circuits({
         )}
       </div>
     )
-  const halls = filtered ? [] : rows.filter((group) => !group.other)
-  const lists = filtered ? rows : rows.filter((group) => group.other)
+  if (year) return <SeasonMap views={visible} year={year} />
   return (
     <div className="tn-circuits">
-      {halls.length > 0 && (
-        <div className="tn-halls">
-          {halls.map((group) => (
-            <CircuitHall key={group.key} group={group} />
-          ))}
-        </div>
-      )}
-      {lists.map((group) => (
-        <CircuitSection key={group.key} group={group} open={filtered} />
+      {rows.map((group) => (
+        <CircuitSection key={group.key} group={group} open />
       ))}
       <InfiniteScroll
         query={loader}

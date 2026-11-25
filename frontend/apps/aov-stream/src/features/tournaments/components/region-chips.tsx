@@ -3,24 +3,18 @@ import { RegionMark } from "../../../components/region-mark"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionRegionName } from "../../../lib/competition-filters"
 
-/**
- * The regions of a list as chips with their flags and how many each holds, the largest first. The row scrolls
- * sideways and keeps the chosen region in view.
- */
+/** The regions of a list as chips with their flags. The row scrolls sideways and keeps the chosen region in view. */
 export function RegionChips({
   regions,
   value,
   onChange,
   className,
-  counted = true,
 }: {
-  regions: [code: string, count: number][]
+  regions: string[]
   /** The chosen region, or "all". */
   value: string
   onChange: (region: string) => void
   className?: string
-  /** Whether each chip says how many the list holds. */
-  counted?: boolean
 }) {
   const { text, languageTag } = useStreamLocale()
   const row = useRef<HTMLDivElement>(null)
@@ -36,14 +30,13 @@ export function RegionChips({
       className={className ? `hub-pills ${className}` : "hub-pills"}
       role="group"
       aria-label={text("Khu vực", "Region")}
-      data-counts="plain"
       data-padded=""
     >
       <button type="button" aria-pressed={value === "all"} onClick={() => onChange("all")}>
         <RegionMark code="GLOBAL" size={16} />
         {text("Mọi khu vực", "All regions")}
       </button>
-      {regions.map(([code, count]) => (
+      {regions.map((code) => (
         <button
           key={code}
           type="button"
@@ -52,7 +45,6 @@ export function RegionChips({
         >
           <RegionMark code={code} size={18} />
           {competitionRegionName(code, languageTag)}
-          {counted && <small>{count.toLocaleString(languageTag)}</small>}
         </button>
       ))}
     </div>

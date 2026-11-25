@@ -1,9 +1,10 @@
+import type { ReactNode, RefObject } from "react"
 import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import type { CompetitionView } from "@aov/community-contracts"
 import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { dayRange } from "../../../components/community-ui"
 import { CompetitionClock, CompetitionLogo, StatusBadge } from "../../../components/competition-card"
-import { EntityPageLink, GoLink } from "../../../components/go-link"
+import { EntityPageLink } from "../../../components/go-link"
 import { RegionMark } from "../../../components/region-mark"
 import { Stage } from "../../../components/stage"
 import { StreamIcon } from "../../../components/stream-icon"
@@ -60,79 +61,95 @@ function ClockMark({ view }: { view: CompetitionView }) {
   )
 }
 
-/** The head of a competition: its logo, what it is and when, its champion or its clock, and its stages in order. */
-export function CompetitionHead({ view, openStages }: { view: CompetitionView; openStages: () => void }) {
+/**
+ * The head of a competition: where it stands, its logo, what it is and when, its champion or its clock, and its stages
+ * in order.
+ */
+export function CompetitionHead({
+  view,
+  trail,
+  head,
+  openStages,
+}: {
+  view: CompetitionView
+  trail: ReactNode
+  head: RefObject<HTMLDivElement | null>
+  openStages: () => void
+}) {
   const { text, languageTag } = useStreamLocale()
-  const { tournament, plan, circuit } = view.content
+  const { tournament, plan } = view.content
   const won = competitionChampion(view)
   const status = competitionStatus(view.content)
   const tier = codeName(TIER_NAMES, tournament.tier, text)
   return (
-    <Stage
-      tint={tournament.name}
-      lights={[
-        { src: tournament.logoUrl, darkSrc: tournament.logoDarkUrl, at: "left" },
-        ...(won ? [{ src: won.winner.logoUrl, darkSrc: won.winner.logoDarkUrl, at: "right" as const }] : []),
-      ]}
-      className="tn-head"
-    >
-      <header className="tn-head-main">
-        <CompetitionLogo name={tournament.name} url={tournament.logoUrl} darkUrl={tournament.logoDarkUrl} size="head" />
-        <div className="tn-head-title">
-          <p className="tn-head-place">
-            {circuit ? (
-              <GoLink className="hub-go-pill" to={`/pages/${circuit.code}`}>
-                {circuit.shortName && <abbr className="tn-head-short">{circuit.shortName}</abbr>}
-                {circuit.name}
-              </GoLink>
-            ) : (
-              plan.circuit && <span>{plan.circuit}</span>
-            )}
-            {tournament.region && (
-              <span className="tn-head-tier">
-                <RegionMark code={tournament.region} />
-                {competitionRegionName(tournament.region, languageTag)}
-              </span>
-            )}
-            {tier && (
-              <span className="tn-head-tier">
-                <TierEmblem tier={tournament.tier} size={20} label={tier} />
-                <span aria-hidden="true">{tier}</span>
-              </span>
-            )}
-          </p>
-          <h1>{tournament.name}</h1>
-          <div className="tn-head-facts">
-            <StatusBadge status={status} tone="banner" />
-            <span>
-              <StreamIcon name="calendar" size={15} />
-              {dayRange(tournament.startsOn, tournament.endsOn)}
-            </span>
-            {plan.entrants.length > 0 && (
+    <div ref={head} data-place-head="">
+      <Stage
+        tint={tournament.name}
+        lights={[
+          { src: tournament.logoUrl, darkSrc: tournament.logoDarkUrl, at: "left" },
+          ...(won ? [{ src: won.winner.logoUrl, darkSrc: won.winner.logoDarkUrl, at: "right" as const }] : []),
+        ]}
+        bleeds
+        className="tn-head"
+      >
+        <div className="tn-head-trail">{trail}</div>
+        <header className="tn-head-main">
+          <span data-place-mark="">
+            <CompetitionLogo
+              name={tournament.name}
+              url={tournament.logoUrl}
+              darkUrl={tournament.logoDarkUrl}
+              size="head"
+            />
+          </span>
+          <div className="tn-head-title">
+            <p className="tn-head-place">
+              {tournament.region && (
+                <span className="tn-head-tier">
+                  <RegionMark code={tournament.region} />
+                  {competitionRegionName(tournament.region, languageTag)}
+                </span>
+              )}
+              {tier && (
+                <span className="tn-head-tier">
+                  <TierEmblem tier={tournament.tier} size={20} label={tier} />
+                  <span aria-hidden="true">{tier}</span>
+                </span>
+              )}
+            </p>
+            <h1>{tournament.name}</h1>
+            <div className="tn-head-facts">
+              <StatusBadge status={status} tone="banner" />
               <span>
-                <StreamIcon name="users" size={15} />
-                {text(
-                  `${plan.entrants.length} đội`,
-                  `${plan.entrants.length} ${plan.entrants.length === 1 ? "team" : "teams"}`,
-                )}
+                <StreamIcon name="calendar" size={15} />
+                {dayRange(tournament.startsOn, tournament.endsOn)}
               </span>
-            )}
-            {plan.prizePool && (
-              <span>
-                <StreamIcon name="trophy" size={15} />
-                <LocalPrizeText
-                  text={plan.prizePool}
-                  currency={plan.currency}
-                  on={tournament.endsOn ?? tournament.startsOn}
-                  locale={languageTag}
-                />
-              </span>
-            )}
+              {plan.entrants.length > 0 && (
+                <span>
+                  <StreamIcon name="users" size={15} />
+                  {text(
+                    `${plan.entrants.length} đội`,
+                    `${plan.entrants.length} ${plan.entrants.length === 1 ? "team" : "teams"}`,
+                  )}
+                </span>
+              )}
+              {plan.prizePool && (
+                <span>
+                  <StreamIcon name="trophy" size={15} />
+                  <LocalPrizeText
+                    text={plan.prizePool}
+                    currency={plan.currency}
+                    on={tournament.endsOn ?? tournament.startsOn}
+                    locale={languageTag}
+                  />
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-        {won ? <ChampionMark won={won} /> : status !== "FINISHED" && <ClockMark view={view} />}
-      </header>
-      <StageRail view={view} open={openStages} />
-    </Stage>
+          {won ? <ChampionMark won={won} /> : status !== "FINISHED" && <ClockMark view={view} />}
+        </header>
+        <StageRail view={view} open={openStages} />
+      </Stage>
+    </div>
   )
 }

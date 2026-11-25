@@ -1,0 +1,242 @@
+/*
+ * The head of a page: a stage from one edge of the window to the other, flush with the bar above it, in the colours of
+ * the page's own picture. What stands on it is drawn for a dark ground in both themes.
+ */
+.ph {
+  --ph-mark: 132px;
+  --ph-space: 36px;
+  min-width: 0;
+}
+.ph-stage {
+  --hub-on-accent: var(--aov-stream-night);
+  --hub-surface: rgb(255 255 255 / 8%);
+  --hub-hover: rgb(255 255 255 / 15%);
+  --hub-border-strong: rgb(255 255 255 / 30%);
+  --hub-logo-paper: color-mix(in srgb, var(--aov-stream-mist) 76%, var(--aov-stream-indigo));
+  --stage-light-left: calc(var(--stage-side) + var(--ph-mark) / 2);
+  --stage-light-scale: 5.6;
+}
+/* A cover lights the whole stage with its own colours. */
+.ph[data-cover] .ph-stage {
+  --stage-light-scale: 16;
+}
+.ph-inner {
+  display: grid;
+  min-width: 0;
+  padding: 14px var(--stage-side) 0;
+}
+/* The trail stands close above what it leads to. */
+.ph-inner > :first-child {
+  margin-bottom: 12px;
+}
+/* A page without tabs or figures ends as far from its edge as it begins. */
+.ph-inner > .ph-identity:last-child {
+  padding-bottom: var(--ph-space);
+}
+.ph-cover {
+  display: block;
+  width: 100%;
+  height: clamp(140px, 21vw, 292px);
+  border-radius: var(--hub-radius);
+  background: rgb(0 0 0 / 24%);
+  object-fit: cover;
+}
+
+.ph-identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 28px;
+}
+.ph[data-cover] .ph-identity {
+  align-items: flex-end;
+}
+.ph-mark {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+/* The picture stands over the edge of the cover, cut out of it. */
+.ph[data-cover] .ph-mark {
+  margin: -60px 0 0 22px;
+  border-radius: 24%;
+  box-shadow: 0 0 0 5px var(--aov-stream-dusk);
+}
+.ph[data-cover] .ph-title {
+  padding-top: 16px;
+}
+.ph-mark[data-live]::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border: 3px solid var(--hub-red);
+  border-radius: 26%;
+  pointer-events: none;
+}
+.ph-title {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+.ph-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 12px;
+  margin: 0;
+  color: rgb(255 255 255 / 80%);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+}
+.ph-kicker a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ph-title > h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 48px;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+/* What stands under the name: a team, a run of results. */
+.ph-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 2px 0 0;
+  color: rgb(255 255 255 / 80%);
+  font-size: 14px;
+  line-height: 20px;
+}
+.ph-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+.ph-actions > button {
+  min-height: 42px;
+}
+
+/* Figures on one side, channels on the other, over a rule of the stage's own light. */
+.ph-foot {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  margin-top: 26px;
+  padding: 18px 0;
+  border-top: 1px solid rgb(255 255 255 / 12%);
+}
+.ph-figures {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px 36px;
+  margin: 0;
+}
+.ph-figures > div {
+  display: grid;
+}
+.ph-figures dt {
+  grid-row: 2;
+  color: rgb(255 255 255 / 66%);
+  font-size: 13px;
+  line-height: 18px;
+}
+.ph-figures dd {
+  margin: 0;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 30px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.ph-figures > [data-title] > dd {
+  color: var(--aov-medal-gold);
+}
+
+@media (max-width: 1099.98px) {
+  .ph {
+    --ph-space: 28px;
+  }
+  .ph-title > h1 {
+    font-size: 34px;
+    line-height: 40px;
+  }
+}
+@media (max-width: 899.98px) {
+  .ph {
+    --ph-mark: 72px;
+    --ph-space: 20px;
+  }
+  .ph-inner {
+    padding-top: 4px;
+  }
+  .ph-inner > :first-child {
+    margin-bottom: 6px;
+  }
+  .ph-cover {
+    width: calc(100% + 2 * var(--stage-side));
+    max-width: none;
+    height: 148px;
+    margin-inline: calc(-1 * var(--stage-side));
+    border-radius: 0;
+  }
+  .ph-identity {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+  }
+  .ph[data-cover] .ph-identity {
+    align-items: flex-end;
+  }
+  .ph[data-cover] .ph-mark {
+    margin: -28px 0 0;
+    box-shadow: 0 0 0 4px var(--aov-stream-dusk);
+  }
+  .ph[data-cover] .ph-title {
+    padding-top: 12px;
+  }
+  .ph-kicker {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .ph-title > h1 {
+    font-size: 25px;
+    line-height: 30px;
+  }
+  /*
+   * Several buttons take a row of their own, the main one as wide as a phone allows; one alone stays beside the name.
+   */
+  .ph-actions:has(> :nth-child(2)) {
+    flex: 1 0 100%;
+  }
+  .ph-actions:has(> :nth-child(2)) > :first-child {
+    max-width: 420px;
+    flex: 1;
+  }
+  .ph-foot {
+    gap: 14px 24px;
+    margin-top: 16px;
+    padding: 14px 0 16px;
+  }
+  .ph-figures {
+    gap: 8px 26px;
+  }
+  .ph-figures dd {
+    font-size: 20px;
+    line-height: 26px;
+  }
+}

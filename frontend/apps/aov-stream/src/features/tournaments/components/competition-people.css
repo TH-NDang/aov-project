@@ -54,7 +54,7 @@
 
 /* A team's staff under its roster, in the rows of the roster; right under the team's name when it has no roster. */
 .tn-staff {
-  padding: 12px 18px 16px;
+  padding: 12px var(--staff-side, 18px) 16px;
   border-top: 1px solid var(--hub-border);
 }
 .tn-staff > ul {

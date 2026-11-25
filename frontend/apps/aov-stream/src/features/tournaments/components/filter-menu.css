@@ -94,14 +94,6 @@
   background: var(--hub-accent);
   color: var(--hub-on-accent);
 }
-.tn-filter-groups button > small {
-  color: var(--hub-muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.tn-filter-groups button[aria-pressed="true"] > small {
-  color: inherit;
-}
 .tn-filter-foot {
   position: sticky;
   bottom: 0;

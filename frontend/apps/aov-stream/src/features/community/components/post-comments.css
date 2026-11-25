@@ -1,0 +1,133 @@
+/* Comments as a conversation: each in a bubble beside its author, the page's own in the accent's tint. */
+.pc {
+  display: grid;
+  width: 100%;
+  max-width: 620px;
+  gap: 16px;
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hub-border);
+}
+.pc > p {
+  margin: 0;
+}
+.pc-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pc-comment {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+}
+.pc-comment > div {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+}
+.pc-bubble {
+  max-width: 100%;
+  padding: 9px 14px 11px;
+  border-radius: 4px 16px 16px;
+  background: var(--hub-surface);
+}
+.pc-comment[data-page] .pc-bubble {
+  background: var(--hub-accent-soft);
+}
+.pc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.pc-head > strong {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+.pc-comment[data-page] .pc-head > span {
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.pc-text {
+  margin: 1px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 21px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.pc-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 14px;
+  margin: 0;
+  padding: 0 14px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.pc-tools > button {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pc-tools > button:hover {
+  color: var(--hub-text);
+}
+.pc-reply {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 40px;
+  align-items: end;
+  gap: 8px 10px;
+}
+.pc-self {
+  margin-bottom: 5px;
+}
+.pc-field > textarea {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  max-height: 200px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 21px;
+  background: var(--hub-surface);
+  field-sizing: content;
+  resize: none;
+}
+.pc-send {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  margin-bottom: 1px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+.pc-send:disabled {
+  background: var(--hub-surface);
+  color: var(--hub-muted);
+  opacity: 1;
+}
+.pc-as {
+  grid-column: 2 / -1;
+}
+.pc-prompt {
+  justify-self: start;
+}

@@ -2,6 +2,8 @@ import { Link, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { MatchTime } from "../../../components/match-time"
+import { PlaceSteps, PlaceTrail, useSections, type Place, type Step } from "../../../components/place-trail"
+import { competitionMark } from "../components/competition-mark"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -16,6 +18,8 @@ import {
   type CompetitionMatch,
 } from "../../../lib/match-model"
 import { matchSides, scheduleParts } from "../../../lib/match-schedule"
+import { matchNeighbours } from "../../../lib/neighbours"
+import { shortCompetitionName } from "../../../lib/season-name"
 import { competitionQuery, matchGamesQuery } from "../../../lib/tournament-api"
 import { plainNote } from "../../../lib/tournament-model"
 import { useNow } from "../../../lib/use-now"
@@ -198,15 +202,31 @@ export function MatchPage() {
   // The competition names the MVP of each match; a match opened without it finds the player among its games.
   const mvp = mvpOf(series?.mvpPlayerId, entry?.competition.content.players, ...list.map((game) => game.players))
   const scored = head?.teams.every((team) => team.score != null)
-  const back = (
-    <Link
-      className="cp-back"
-      data-flush=""
-      to={tournamentId ? `/competitions/${tournamentId}?tab=matches` : "/competitions?tab=schedule"}
-    >
-      <StreamIcon name="back" size={16} />
-      {competitionName || text("Lịch & kết quả", "Schedule & results")}
-    </Link>
+  const { tournaments } = useSections()
+  const competition = entry?.competition
+  const places: Place[] = [
+    tournaments,
+    tournamentId
+      ? {
+          to: `/competitions/${tournamentId}?tab=matches`,
+          name: competitionName || text("Giải đấu", "Tournament"),
+          short: competition && shortCompetitionName(competition),
+          mark: competition && competitionMark(competition.content.tournament),
+        }
+      : { to: "/competitions?tab=schedule", name: text("Lịch & kết quả", "Schedule & results") },
+  ]
+  const beside = entry ? matchNeighbours(competitionMatches([entry.competition]), entry.match.key) : null
+  const step = (other: CompetitionMatch | null): Step | null => {
+    if (!other) return null
+    const [a, b] = matchSides(other, languageTag)
+    return { to: competitionMatchHref(other.competition.id, other.match.key), name: `${a.name} – ${b.name}` }
+  }
+  const steps = beside && (
+    <PlaceSteps
+      label={text("Trận liền kề", "Matches before and after")}
+      before={step(beside.before)}
+      after={step(beside.after)}
+    />
   )
   return (
     <StreamShell>
@@ -239,9 +259,10 @@ export function MatchPage() {
         ) : (
           <>
             <div className="tn-match-top">
-              {back}
               <MatchHead
                 head={head}
+                trail={<PlaceTrail places={places} steps={steps} />}
+                bar={{ places, steps }}
                 center={entry && <MatchClock entry={entry} />}
                 facts={
                   scored && (scheduledAt || mvp) ? (

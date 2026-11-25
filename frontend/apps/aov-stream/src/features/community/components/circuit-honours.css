@@ -1,0 +1,136 @@
+/* The teams that won a circuit most: a crest each, the first one larger. */
+.tn-titles-row {
+  --crest: 60px;
+  display: flex;
+  overflow-x: auto;
+  align-items: flex-end;
+  gap: 20px 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  scrollbar-width: none;
+}
+.tn-titles-row::-webkit-scrollbar {
+  display: none;
+}
+.tn-titles-row > li {
+  display: grid;
+  min-width: 72px;
+  flex: none;
+  justify-items: center;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-titles-row > li:first-child {
+  --crest: 88px;
+}
+.tn-titles-row strong {
+  margin-top: 8px;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-titles-row > li:first-child > span:last-child {
+  color: light-dark(var(--aov-game-gold), var(--aov-medal-gold));
+  font-weight: 700;
+}
+
+/* Every season: its year at the left, then what was played in it side by side. */
+.tn-honours,
+.tn-honours ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-honours > li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  padding: 18px 0;
+  border-top: 1px solid var(--hub-border);
+}
+.tn-honours h3 {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 44px;
+}
+.tn-honours ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 18px 24px;
+}
+.tn-honour {
+  --crest: 44px;
+  min-width: 0;
+}
+.tn-honour > a {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  color: var(--hub-text);
+}
+.tn-honour > a > span:last-child {
+  display: grid;
+  min-width: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-honour strong {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--hub-text);
+}
+.tn-honour > a:hover strong,
+.tn-honour > a:not(:has(strong)):hover .tn-honour-season,
+.tn-honour > p > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* A season without a champion yet: the outline of a crest. */
+.tn-honour-open {
+  width: var(--crest);
+  height: calc(var(--crest) * 1.12);
+  flex: none;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: 8px 8px 22px 22px;
+}
+.tn-honour-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+}
+.tn-honour > p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 6px 0 0 58px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+@media (max-width: 899.98px) {
+  .tn-titles-row {
+    --crest: 48px;
+    gap: 18px;
+  }
+  .tn-titles-row > li:first-child {
+    --crest: 68px;
+  }
+  .tn-honours > li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 14px 0;
+  }
+  .tn-honours h3 {
+    font-size: 16px;
+    line-height: 22px;
+  }
+}

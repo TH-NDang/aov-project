@@ -28,7 +28,7 @@ function Groups({ groups, onChange }: { groups: FilterGroup[]; onChange: Change 
         <section key={group.key} role="group" aria-label={group.label}>
           <h3>{group.label}</h3>
           <div>
-            {group.options.map(([value, name, mark, count]) => (
+            {group.options.map(([value, name, mark]) => (
               <button
                 key={value}
                 type="button"
@@ -37,7 +37,6 @@ function Groups({ groups, onChange }: { groups: FilterGroup[]; onChange: Change 
               >
                 {mark}
                 {name}
-                {count != null && <small>{count}</small>}
               </button>
             ))}
           </div>

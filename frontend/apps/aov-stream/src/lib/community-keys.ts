@@ -11,6 +11,7 @@ export const communityKeys = {
   publicPageAll: ["public-page"] as const,
   publicPage: (idOrCode: string) => ["public-page", idOrCode] as const,
   pageDirectory: (kind: string | null | undefined) => ["public-pages", kind] as const,
+  pageWall: (kind: string) => ["page-wall", kind] as const,
   pageTeams: (pageId: string) => ["public-page-teams", pageId] as const,
   organizationTeams: (organizationId: string, size: number) => ["organization-teams", organizationId, size] as const,
   entityPage: (kind: string, entityId: string) => ["entity-page", kind, entityId] as const,

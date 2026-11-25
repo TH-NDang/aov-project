@@ -106,7 +106,7 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
         </div>
       )}
       <DayStrip entries={narrowed} value={day} onChange={(value) => update("date", value)} />
-      <ScheduleNote filters={day ? [scheduleDayLabel(day, languageTag)] : []} onClear={() => update("date", "")} />
+      <ScheduleNote day={day && scheduleDayLabel(day, languageTag)} onClear={() => update("date", "")} />
       <ScheduleList
         upcoming={shown.upcoming}
         results={shown.results}

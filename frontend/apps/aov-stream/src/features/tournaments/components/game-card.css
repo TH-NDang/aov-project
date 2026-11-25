@@ -14,6 +14,15 @@
 .tn-picks[data-lost] > * {
   opacity: 0.62;
 }
+/* The hero a list is about stands out of the ten. */
+.tn-picks:has(.tn-pick-marked) > :not(.tn-pick-marked) {
+  opacity: 0.5;
+}
+.tn-picks > .tn-pick-marked {
+  opacity: 1;
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
 .tn-win {
   display: inline-flex;
   flex: none;
@@ -52,6 +61,17 @@
   padding: 10px 18px;
   color: var(--hub-text);
   transition: background-color 120ms;
+}
+/* In a hero's list: who played it, the round and the day come first. */
+@media (min-width: 900px) {
+  .tn-game[data-placed] {
+    grid-template-columns: 200px minmax(0, 1fr) auto auto minmax(0, 1fr) 16px;
+  }
+}
+.tn-game-when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
 }
 .tn-game + .tn-game {
   border-top: 1px solid var(--hub-border);
@@ -144,8 +164,10 @@
   }
   .tn-game-title {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
+    gap: 0 12px;
   }
   .tn-game-team[data-slot="a"] {
     flex-direction: row;

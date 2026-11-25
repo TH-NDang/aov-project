@@ -1,0 +1,66 @@
+/*
+ * Going in and out. The bar of the app stays; the page that is entered rises into place, the one that is left sinks
+ * away, and the picture of what is opened travels between its row and the head of its page.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(root),
+  ::view-transition-group(stream-bar) {
+    animation-duration: 260ms;
+  }
+  ::view-transition-old(root) {
+    animation: 130ms ease-in both tr-leave;
+  }
+  ::view-transition-new(root) {
+    animation: 260ms cubic-bezier(0.2, 0.8, 0.2, 1) 50ms both tr-enter;
+  }
+  html[data-way="in"]::view-transition-new(root) {
+    animation-name: tr-rise;
+  }
+  html[data-way="out"]::view-transition-old(root) {
+    animation: 170ms ease-in both tr-sink;
+  }
+  ::view-transition-group(place) {
+    animation-duration: 340ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  ::view-transition-old(place),
+  ::view-transition-new(place) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  @keyframes tr-leave {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes tr-enter {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes tr-rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+  @keyframes tr-sink {
+    to {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+}
+/* A page gone back to stands as it was left: what it does when it is opened is not done again. */
+html[data-returning] {
+  --entrance: 0;
+}
+/* The row the reader comes back to is ringed for a moment; the colours are animated beside its own animations. */
+[data-returned] {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+:where([data-returned]) {
+  border-radius: var(--hub-radius-sm);
+}

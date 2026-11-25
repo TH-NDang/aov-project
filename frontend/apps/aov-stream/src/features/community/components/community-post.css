@@ -1,0 +1,316 @@
+/*
+ * Posts. Beside the words a margin keeps who posted (a feed of several pages) or which day (a page's own journal), so
+ * the words and pictures take one column from top to bottom. The list measures itself: where it is narrow the margin
+ * becomes the first line of the post.
+ */
+.ps-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  container: post-list / inline-size;
+}
+.ps-post {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  padding: 24px 0;
+  border-top: 1px solid var(--hub-border);
+}
+.ps-list > .ps-post:first-child {
+  padding-top: 4px;
+  border-top: 0;
+}
+.ps-skeleton {
+  height: 220px;
+  margin: 16px 0;
+}
+.ps-margin {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+}
+.ps-main {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  justify-items: start;
+  gap: 12px;
+}
+.ps-main > * {
+  max-width: 100%;
+}
+.ps-main > :is(.ps-news, .ps-actions) {
+  width: 100%;
+}
+
+/* ---------- The margin ---------- */
+.ps-author {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+}
+.ps-author-mark {
+  flex: none;
+}
+.ps-author-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+}
+.ps-author-text > strong {
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.ps-author-text > strong > a:hover {
+  color: var(--hub-accent-strong);
+}
+.ps-author-text > span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.ps-day {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.ps-day > p {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+.ps-day b {
+  color: var(--hub-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 26px;
+  font-variant-numeric: tabular-nums;
+}
+.ps-day > p > span {
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+.ps-day small {
+  margin-left: 5px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+.ps-pinned {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.ps-member {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.ps-member > strong {
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ---------- The words ---------- */
+.ps-title {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 27px;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+.ps-title + .ps-body {
+  margin-top: -6px;
+}
+.ps-body {
+  max-width: 68ch;
+  margin: 0;
+  font-size: 15px;
+  line-height: 25px;
+}
+.ps-body[data-folded] {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+.ps-fold {
+  margin-top: -8px;
+  padding: 4px 0;
+}
+/* A short message with nothing else is said out loud. */
+.ps-post[data-form="statement"] .ps-body {
+  max-width: 34ch;
+  color: var(--hub-text);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 31px;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+/* News on the stage of the page it is about: its picture to the edges, then the headline and the words. */
+.ps-news {
+  --post-media-radius: 0;
+  display: grid;
+}
+.ps-news-words {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+  gap: 12px;
+  padding: 26px 28px 28px;
+}
+.ps-news .ps-title {
+  color: #fff;
+  font-size: 26px;
+  line-height: 33px;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.ps-news .ps-body {
+  color: rgb(255 255 255 / 84%);
+}
+.ps-news-words > .ps-title + .ps-body {
+  margin-top: -2px;
+}
+
+/* ---------- Like, comment and the other actions: quiet until used ---------- */
+.ps-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -2px 0 -6px -10px;
+}
+.ps-action {
+  display: inline-flex;
+  min-width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--aov-radius-pill);
+  background: transparent;
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 140ms,
+    color 140ms;
+}
+.ps-action:hover:not(:disabled),
+.ps-action[aria-expanded="true"] {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.ps-more {
+  margin-right: -10px;
+  margin-left: auto;
+}
+.ps-like[aria-pressed="true"] {
+  color: var(--hub-accent-strong);
+}
+.ps-like[aria-pressed="true"] svg {
+  fill: currentColor;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-like[aria-pressed="true"] svg {
+    animation: ps-liked 320ms cubic-bezier(0.2, 1.4, 0.4, 1);
+  }
+  @keyframes ps-liked {
+    from {
+      transform: scale(0.6);
+    }
+  }
+}
+
+/* ---------- Where the list has room: the margin beside the words, following them down a long post ---------- */
+@container post-list (min-width: 680px) {
+  .ps-post {
+    grid-template-columns: 152px minmax(0, 1fr);
+    gap: 32px;
+    padding: 36px 0;
+  }
+  .ps-margin {
+    position: sticky;
+    top: calc(var(--hub-stack) + 20px);
+    display: grid;
+    align-self: start;
+    gap: 10px;
+  }
+  .ps-author {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ps-author-text {
+    width: 100%;
+    flex: none;
+  }
+  .ps-author-text > span {
+    flex-direction: column;
+  }
+  .ps-day {
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+  }
+  .ps-day > p {
+    display: grid;
+    gap: 0;
+  }
+  .ps-day b {
+    font-size: 44px;
+    line-height: 46px;
+    letter-spacing: -0.03em;
+  }
+  .ps-day[data-same] {
+    padding-top: 3px;
+  }
+}
+@media (max-width: 899.98px) {
+  .ps-title {
+    font-size: 18px;
+    line-height: 25px;
+  }
+  .ps-post[data-form="statement"] .ps-body {
+    font-size: 19px;
+    line-height: 27px;
+  }
+  .ps-news-words {
+    padding: 20px 18px 22px;
+  }
+  .ps-news .ps-title {
+    font-size: 21px;
+    line-height: 28px;
+  }
+}

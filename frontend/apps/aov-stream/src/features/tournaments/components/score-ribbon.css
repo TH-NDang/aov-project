@@ -1,0 +1,164 @@
+/* The board of scores: one flat line between two rules, parted by hairlines, that scrolls sideways. */
+.tn-ribbon {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  border-block: 1px solid var(--hub-border);
+}
+.tn-ribbon-row {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  /* The last score fades out, so the line reads as going on. */
+  mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+}
+.tn-ribbon-row:focus-visible {
+  outline-offset: -2px;
+}
+.tn-ribbon-day {
+  position: relative;
+  display: flex;
+  flex: none;
+  padding-top: 32px;
+}
+.tn-ribbon-day + .tn-ribbon-day {
+  border-left: 1px solid var(--hub-border);
+}
+/* The day stays at the left edge while its matches pass under it. */
+.tn-ribbon-day > h3 {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  left: 16px;
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.tn-ribbon-day:first-child > h3 {
+  left: 0;
+}
+.tn-score {
+  display: grid;
+  width: 178px;
+  flex: none;
+  align-content: start;
+  gap: 5px;
+  padding: 0 16px 12px;
+  color: var(--hub-text);
+}
+.tn-ribbon-day:first-child > .tn-score:nth-child(2) {
+  padding-left: 0;
+}
+.tn-score + .tn-score {
+  position: relative;
+}
+.tn-score + .tn-score::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 14px;
+  left: 0;
+  border-left: 1px solid var(--hub-border);
+}
+.tn-score-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.tn-score-event > img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+.tn-score-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 24px;
+}
+.tn-score-team > i {
+  width: 24px;
+  height: 24px;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: var(--aov-radius-control);
+}
+.tn-score-team > strong {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-score-team > b {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.tn-score-team:is([data-lost], [data-open]) {
+  color: var(--hub-muted);
+}
+.tn-score-team:is([data-lost], [data-open]) > :is(strong, b) {
+  font-weight: 500;
+}
+.tn-score-team[data-open] > strong {
+  font-size: 13px;
+}
+.tn-score-round {
+  overflow: hidden;
+  min-height: 16px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-score:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-ribbon-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 20px;
+  border-left: 1px solid var(--hub-border);
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-ribbon-all:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 899.98px) {
+  .tn-ribbon {
+    grid-template-columns: minmax(0, 1fr);
+    border-bottom: 0;
+  }
+  .tn-ribbon-row {
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding-left: var(--hub-gutter);
+  }
+  .tn-score {
+    width: 162px;
+  }
+  .tn-ribbon-all {
+    justify-content: space-between;
+    padding: 10px 0;
+    border-left: 0;
+    border-block: 1px solid var(--hub-border);
+  }
+}

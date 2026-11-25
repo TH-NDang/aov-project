@@ -1,11 +1,11 @@
 import type { ReactNode } from "react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { useStreamLocale } from "../../../components/stream-locale"
 import type { ScheduleScope } from "../../../lib/match-schedule"
+import "./schedule-controls.css"
 
 /** Each part of a schedule, with its name in Vietnamese and in English. */
-export const SCOPES: [ScheduleScope, readonly [string, string]][] = [
+const SCOPES: [ScheduleScope, readonly [string, string]][] = [
   ["all", ["Tất cả", "All"]],
   ["upcoming", ["Lịch đấu", "Schedule"]],
   ["results", ["Kết quả", "Results"]],
@@ -36,7 +36,7 @@ export function ScheduleScopePills({
   const { text } = useStreamLocale()
   return (
     <div
-      className={className ? `hub-pills ${className}` : "hub-pills"}
+      className={className ? `tn-scope ${className}` : "tn-scope"}
       role="group"
       aria-label={text("Trạng thái trận đấu", "Match status")}
     >
@@ -49,41 +49,5 @@ export function ScheduleScopePills({
   )
 }
 
-/** One choice of a filter: its value, its name, the picture that goes with it and how many results it would leave. */
-export type FilterOption = readonly [value: string, name: string, mark?: ReactNode, count?: string]
-
-/** A filter with an "all" choice first. `className` places it in the bar that holds it. */
-export function FilterSelect({
-  label,
-  value,
-  onChange,
-  all,
-  options,
-  className,
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  all: string
-  options: string[][]
-  className?: string
-}) {
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        aria-label={label}
-        className={className ? `competition-select ${className}` : "competition-select"}
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent drawerTitle={label}>
-        <SelectItem value="all">{all}</SelectItem>
-        {options.map(([key, text]) => (
-          <SelectItem key={key} value={key!}>
-            {text}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
+/** One choice of a filter: its value, its name and the picture that goes with it. */
+export type FilterOption = readonly [value: string, name: string, mark?: ReactNode]

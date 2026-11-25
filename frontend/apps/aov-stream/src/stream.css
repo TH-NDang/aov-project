@@ -60,6 +60,8 @@
   /* The top bar and the footer: white over the light page, a step darker than the page in the dark theme. */
   --hub-bar: light-dark(#fff, var(--aov-stream-night));
   --hub-bar-line: var(--aov-line);
+  /* What stands right under the top bar, such as the head of a page once it is scrolled away. */
+  --hub-subbar: light-dark(color-mix(in srgb, var(--aov-stream-lavender) 18%, #fff), var(--aov-stream-dusk));
   /* The soft round fill of the bar's search and buttons. */
   --hub-bar-fill: color-mix(in srgb, var(--aov-text) 6%, transparent);
   --hub-bar-fill-hover: color-mix(in srgb, var(--aov-text) 10%, transparent);
@@ -227,9 +229,14 @@ button:disabled {
 
 /* ---------- Shell: top bar, page column ---------- */
 .hub-shell {
+  /* What stands pinned at the top of the window: the bar, and the head of a page once it is scrolled away. */
+  --hub-stuck: var(--hub-topbar);
+  --hub-stack: var(--hub-topbar);
   display: flex;
   flex-direction: column;
   min-height: 100svh;
+  /* A part that runs edge to edge is as wide as the window with its scrollbar. */
+  overflow-x: clip;
 }
 .hub-topbar {
   position: sticky;
@@ -238,6 +245,8 @@ button:disabled {
   border-bottom: 1px solid var(--hub-bar-line);
   background: var(--hub-bar);
   color: var(--hub-text);
+  /* It stays while one page gives way to another (components/travel.css). */
+  view-transition-name: stream-bar;
 }
 .hub-topbar-inner {
   display: flex;
@@ -381,7 +390,7 @@ button:disabled {
 }
 /* The search of the bar folds behind a button where the bar is short of room. */
 .hub-topbar .hub-search-link,
-.hub-topbar .hub-search-back {
+.hub-search-close {
   display: none;
 }
 .hub-bell {
@@ -393,14 +402,14 @@ button:disabled {
 }
 .hub-badge {
   position: absolute;
-  top: -4px;
-  right: -6px;
+  top: -5px;
+  right: -7px;
   display: grid;
   place-items: center;
   box-sizing: content-box;
-  min-width: 18px;
+  min-width: 10px;
   height: 18px;
-  padding: 0 5px;
+  padding: 0 4px;
   border: 2px solid var(--hub-bar);
   border-radius: var(--aov-radius-pill);
   background: var(--hub-accent);
@@ -427,20 +436,33 @@ button:disabled {
 }
 .hub-content-split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 304px;
   align-items: start;
-  gap: var(--hub-layout-gap);
+  gap: 48px;
 }
 /* The right column only takes space when it has something to show. */
 .hub-content-split:not(:has(.hub-aside > *)) {
   grid-template-columns: minmax(0, 1fr);
 }
+/* The column stays in reach while the content beside it scrolls; taller than the window, it scrolls by itself. */
 .hub-aside {
+  position: sticky;
+  top: calc(var(--hub-stack) + var(--hub-layout-gap));
   display: flex;
+  max-height: calc(100dvh - var(--hub-stack) - var(--hub-layout-gap));
   flex-direction: column;
-  gap: var(--hub-layout-gap);
+  gap: 32px;
+  margin-inline: -10px;
+  padding: 0 10px var(--hub-layout-gap);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
+@media (min-width: 900px) {
+  .hub-shell:has(.wy-bar) {
+    --hub-stack: calc(var(--hub-topbar) + 48px);
+  }
+}
 /* Wide layouts short of room for the side column and the full search field. */
 @media (max-width: 1099.98px) {
   .hub-content-split {
@@ -462,11 +484,16 @@ button:disabled {
   .hub-search-open .hub-topnav {
     display: none;
   }
-  .hub-search-open .hub-search-back {
-    display: inline-grid;
-    width: 40px;
-    height: 40px;
-    border: 0;
+  .hub-search-open .hub-search-close {
+    display: inline-flex;
+    height: 44px;
+    flex: none;
+    align-items: center;
+    margin-right: -8px;
+    padding: 0 8px;
+    color: var(--hub-accent-strong);
+    font-size: 14px;
+    font-weight: 600;
   }
   .hub-search-open .hub-search {
     display: flex;
@@ -548,6 +575,7 @@ button:disabled {
     --hub-tabs: 42px;
     /* Where the tabs of a page pin: under the row and its line. */
     --hub-pinned: 43px;
+    --hub-stuck: 37px;
   }
   .hub-shell[data-scrolled] {
     --hub-tabs: 36px;
@@ -606,14 +634,9 @@ button:disabled {
     height: 32px;
   }
 }
-/* ---------- Side column cards: a title with at most one link, then rows ---------- */
+/* ---------- Side column parts: a title with at most one link, then rows ---------- */
 .hub-card {
   min-width: 0;
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
-}
-.hub-card-padded {
-  padding: var(--hub-panel-padding);
 }
 .hub-card-heading {
   display: flex;
@@ -645,22 +668,8 @@ button:disabled {
   font-size: 13px;
   line-height: 20px;
 }
-/* In a card that spaces its parts with a gap, the text keeps no margin of its own. */
-.hub-card-text[data-flush] {
-  margin: 0;
-}
 
 /* ---------- Small shared marks ---------- */
-.hub-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--hub-accent-strong);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 /* A competition's or a match's state, in its colour of meaning. */
 .hub-status {
   display: inline-flex;
@@ -784,18 +793,6 @@ button:disabled {
 .hub-pills > [aria-pressed="true"] small,
 .hub-pills > [aria-current] small {
   background: color-mix(in srgb, var(--hub-on-accent) 18%, transparent);
-  color: inherit;
-}
-/* A row whose counts read as part of each chip's label: no badge, the chip's own colour once chosen. */
-.hub-pills[data-counts="plain"] > button > small {
-  min-width: 0;
-  padding: 0;
-  background: none;
-  color: var(--hub-muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.hub-pills[data-counts="plain"] > [aria-pressed="true"] > small {
   color: inherit;
 }
 

@@ -1,18 +1,18 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { PublishedGame } from "@aov/community-contracts"
-import { draftPhases, draftRows, gamesBySeries, laneDuels, timelineRows } from "../src/lib/series-model.ts"
+import { draftPhases, draftRows, laneDuels, timelineRows, trackLanes } from "../src/lib/series-model.ts"
 
 const seat = (lane: string, playerId: string | null, hero: string) => ({
   lane,
   playerId,
   hero: { id: hero, name: hero },
 })
-const game = (number: number, winner: "BLUE" | "RED", blue: object[], extra: object = {}, seriesId = "series") =>
+const game = (number: number, winner: "BLUE" | "RED", blue: object[], extra: object = {}) =>
   ({
-    id: `${seriesId}-${number}`,
+    id: `series-${number}`,
     content: {
-      seriesId,
+      seriesId: "series",
       number,
       winner,
       sides: [
@@ -48,17 +48,20 @@ test("heroes are listed by player in lane order, a cell for each game", () => {
   )
 })
 
-test("games are gathered by match in the order the matches first appear", () => {
-  const groups = gamesBySeries([
-    game(2, "RED", [], {}, "new"),
-    game(1, "RED", [], {}, "old"),
-    game(1, "RED", [], {}, "new"),
-  ])
+test("marks of a side that would meet step away from the line, and those apart stay on it", () => {
+  const event = (id: string, atSeconds: number, side: string) => ({ id, atSeconds, side, kind: "OBJECTIVE" })
+  const events = [event("a", 60, "BLUE"), event("b", 70, "BLUE"), event("c", 70, "RED"), event("d", 500, "BLUE")]
+  const lanes = trackLanes(timelineRows(game(1, "BLUE", [], { timeline: { events } })), 1000)
 
   assert.deepEqual(
-    groups.map((group) => group.map((item) => item.id)),
-    [["new-1", "new-2"], ["old-1"]],
+    lanes.BLUE.marks.map((mark) => [mark.event.id, mark.share, mark.level]),
+    [
+      ["a", 0.06, 0],
+      ["b", 0.07, 1],
+      ["d", 0.5, 0],
+    ],
   )
+  assert.deepEqual([lanes.BLUE.levels, lanes.RED.levels], [2, 1])
 })
 
 test("lanes nobody is recorded in are left out of the duels", () => {

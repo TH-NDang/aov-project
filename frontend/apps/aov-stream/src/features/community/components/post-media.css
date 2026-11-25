@@ -1,0 +1,184 @@
+/* The media of a post, as wide as its column. A post that brings its own frame sets --post-media-radius. */
+.cp-post-video,
+.cp-post-images,
+.cp-post-video-link {
+  width: 100%;
+  min-width: 0;
+}
+.cp-post-video {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--post-media-radius, var(--hub-radius));
+  background: var(--hub-sunken);
+}
+.cp-post-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+/* The video's own picture with a play mark; the player loads when it is pressed. */
+.cp-video-poster {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--hub-sunken);
+}
+.cp-video-poster > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.cp-video-poster:hover > img {
+  transform: scale(1.02);
+}
+.cp-video-poster:focus-visible {
+  outline: 3px solid var(--hub-accent);
+  outline-offset: -3px;
+}
+/* The controls stand together at the foot of the picture, as on a player: the picture itself stays clear. */
+.cp-video-poster::after {
+  content: "";
+  position: absolute;
+  inset: 55% 0 0;
+  background: linear-gradient(to top, rgb(8 8 18 / 78%), transparent);
+}
+.cp-video-play {
+  position: absolute;
+  z-index: 1;
+  bottom: 14px;
+  left: 14px;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--aov-stream-night);
+  transition: background-color 160ms;
+}
+.cp-video-play svg {
+  margin-left: 3px;
+  fill: currentColor;
+}
+.cp-video-poster:hover .cp-video-play {
+  background: var(--aov-stream-lavender);
+}
+.cp-video-source {
+  position: absolute;
+  z-index: 1;
+  bottom: 28px;
+  left: 74px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.cp-post-video-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+}
+.cp-post-video-link:hover {
+  background: var(--hub-hover);
+}
+.cp-post-video-link > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.cp-post-video-link strong,
+.cp-post-video-link small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-post-video-link small {
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+.cp-post-video-play {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+.cp-post-video-play svg {
+  margin-left: 2px;
+  fill: currentColor;
+}
+
+.cp-post-images {
+  display: grid;
+  overflow: hidden;
+  gap: 3px;
+  border-radius: var(--post-media-radius, var(--hub-radius));
+}
+.cp-post-images > button {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: var(--hub-sunken);
+  cursor: zoom-in;
+}
+.cp-post-images > button:focus-visible {
+  outline: 3px solid var(--hub-accent);
+  outline-offset: -3px;
+}
+.cp-post-images img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cp-post-images[data-count="1"] img {
+  height: auto;
+  max-height: 640px;
+}
+.cp-post-images[data-count="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.cp-post-images[data-count="2"] > button {
+  aspect-ratio: 1;
+}
+.cp-post-images[data-count="3"],
+.cp-post-images[data-count="4"] {
+  aspect-ratio: 8 / 5;
+}
+.cp-post-images[data-count="3"] {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.cp-post-images[data-count="4"] {
+  grid-template-columns: 3fr 1fr;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.cp-post-images[data-count="3"] > button:first-child {
+  grid-row: span 2;
+}
+.cp-post-images[data-count="4"] > button:first-child {
+  grid-row: span 3;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-video-poster:hover > img {
+    transform: none;
+  }
+}

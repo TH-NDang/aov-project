@@ -12,7 +12,6 @@ import { codeName, competitionStatus, TIER_NAMES, type CompetitionStatus } from 
 import { daysUntil } from "../lib/countdown"
 import { competitionProgress } from "../lib/stage-phases"
 import { useNow } from "../lib/use-now"
-import { seasonName } from "../lib/season-name"
 import "./competition-card.css"
 
 const monogram = (name: string) =>
@@ -88,9 +87,9 @@ export function CompetitionClock({ entry }: { entry: CompetitionView }) {
 
 /**
  * A competition in a grid: its mark, name and dates, and on the last line its champion or, until it has one, where it
- * stands. `within` names the circuit the card is listed under.
+ * stands.
  */
-export function CompetitionCard({ entry, within }: { entry: CompetitionView; within?: string | null }) {
+export function CompetitionCard({ entry }: { entry: CompetitionView }) {
   const { text } = useStreamLocale()
   const { tournament } = entry.content
   const status = competitionStatus(entry.content)
@@ -100,7 +99,7 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
     <Link className="tn-card" to={`/competitions/${entry.id}`}>
       <CompetitionLogo name={tournament.name} url={tournament.logoUrl} darkUrl={tournament.logoDarkUrl} size="card" />
       <span className="tn-card-body">
-        <strong title={tournament.name}>{seasonName(tournament.name, within)}</strong>
+        <strong title={tournament.name}>{tournament.name}</strong>
         <span className="tn-card-meta">
           {tier && <TierEmblem tier={tournament.tier} size={18} label={tier} />}
           {dayRange(tournament.startsOn, tournament.endsOn, text("Chờ lịch", "To be scheduled"))}
