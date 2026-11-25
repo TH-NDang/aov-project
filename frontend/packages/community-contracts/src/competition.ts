@@ -164,6 +164,31 @@ export type CompetitionSnapshot = {
   people?: Record<string, CompetitionPerson>
 }
 export type CompetitionView = { id: string; version: number; publishedAt?: string | null; content: CompetitionSnapshot }
+/**
+ * A hero over the published games of a competition; one without an id was recorded by its name only. `wins` are the
+ * picks of the side that won.
+ */
+export type HeroCount = {
+  id?: string | null
+  code?: string | null
+  name: string
+  iconUrl?: string | null
+  picks: number
+  wins: number
+  bans: number
+  bluePicks: number
+}
+/** What the published games of a competition add up to; the lengths are absent while no game has one. */
+export type CompetitionStatistics = {
+  games: number
+  decided: number
+  blueWins: number
+  averageSeconds?: number | null
+  longest?: { id: string; seconds: number } | null
+  shortest?: { id: string; seconds: number } | null
+  heroes: HeroCount[]
+  mvps: { playerId: string; games: number }[]
+}
 /** One entry of a plan's history, without the plan itself. */
 export type CompetitionRevision = {
   id: string
