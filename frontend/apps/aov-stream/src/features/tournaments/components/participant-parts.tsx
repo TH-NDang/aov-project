@@ -6,6 +6,7 @@ import { CompetitionLogo } from "../../../components/competition-card"
 import { dayRange } from "../../../components/community-ui"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import type { TitleEntry } from "../../../lib/title-model"
 import "./participant-parts.css"
 
 /** A titled part of a team's or a player's page. */
@@ -19,6 +20,30 @@ export function Part({ title, note, children }: { title: string; note?: ReactNod
       </div>
       {children}
     </section>
+  )
+}
+
+/** The titles among the seasons of a team or a player, drawn by `children`; nothing while there are none. */
+export function ShelfPart({
+  titles,
+  children,
+}: {
+  titles: { view: CompetitionView }[]
+  children: (shelf: TitleEntry[]) => ReactNode
+}) {
+  const { text } = useStreamLocale()
+  if (!titles.length) return null
+  return (
+    <Part title={text("Danh hiệu", "Titles")} note={text("trong các giải đã công bố", "in the published tournaments")}>
+      {children(
+        titles.map(({ view }) => ({
+          key: view.id,
+          title: view.content.tournament.name,
+          date: view.content.tournament.endsOn ?? view.content.tournament.startsOn,
+          competitionId: view.id,
+        })),
+      )}
+    </Part>
   )
 }
 

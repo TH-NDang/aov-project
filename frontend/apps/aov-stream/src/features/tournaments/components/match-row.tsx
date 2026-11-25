@@ -99,7 +99,7 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
     competition && (
       <span key="competition" className="tn-fixture-event" title={tournament.name}>
         <ThemedLogo src={tournament.logoUrl} darkSrc={tournament.logoDarkUrl} />
-        {shortCompetitionName(view)}
+        <span>{shortCompetitionName(view)}</span>
       </span>
     ),
   ]

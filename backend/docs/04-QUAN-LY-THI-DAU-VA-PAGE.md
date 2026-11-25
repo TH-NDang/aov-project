@@ -865,6 +865,41 @@ Quy tắc viết trong `packages/ui/src/lib/reference-names.ts`, danh sách từ
   dùng ở ô thử của Admin; trên Stream chưa gắn vào màn hình nào, vì bài viết, bình luận và trò chuyện công khai chưa được mở
   trong đợt này.
 
+## Thống kê tướng của giải (25/11/2026)
+
+`GET /competitions/{id}/statistics` đếm các ván đã công bố của một giải cho Stream: số ván và bên thắng, thời lượng, lượt
+chọn và cấm của từng tướng, tuyển thủ được MVP nhiều nhất. Không nhận tham số. Giải chưa công bố hoặc đã thu hồi thì 404
+`TOURNAMENT_RECORD_NOT_FOUND`.
+
+Chỉ đếm ván đã công bố, vì người xem phải mở được từng ván đứng sau con số, còn bản nháp có thể thiếu hoặc sai. Ván thuộc
+giải theo snapshot lúc công bố, đúng như bộ lọc `tournamentId` của `GET /games`; ván đã thu hồi không tính, và ván đang
+công bố không đưa vào thùng rác được. Thống kê trong Admin đếm bản nháp nên có thể khác.
+
+- `games` là số ván, `decided` là số ván có bên thắng, `blueWins` là số ván bên xanh thắng trong đó.
+- `averageSeconds` là trung bình làm tròn của các thời lượng đã biết; `longest` và `shortest` là `{id,seconds}` của ván dài
+  nhất và ngắn nhất, bằng nhau thì lấy ván công bố sau. Để trống hoặc 0 giây là chưa biết; không ván nào biết thì bỏ cả ba.
+- Tướng gộp theo `id`. Tướng chỉ ghi tên thì gộp theo tên (không phân biệt hoa thường); nếu trong giải đúng một tướng có
+  `id` mang tên đó thì ghép vào, như Admin, còn lại đứng riêng và không có `id`. Tên lấy ở ván công bố mới nhất có tướng
+  đó: tên trong danh mục chụp cùng ván, không có thì tên đã ghi. `code` và `iconUrl` lấy từ danh mục chụp cùng ván.
+- `picks` là lượt chọn, `bluePicks` là phần ở bên xanh, `wins` là lượt chọn ở bên thắng. `bans` tính một lần cho mỗi bên của
+  một ván, kể cả khi ghi hai lần; ô cấm trống bỏ qua.
+- Tướng xếp theo chọn cộng cấm giảm dần, rồi lượt chọn giảm dần, rồi tên. `mvps` lấy từ MVP của từng ván, nhiều ván trước
+  rồi theo `id` tuyển thủ, tối đa 10 người.
+
+Trả `Cache-Control: max-age=300, public` và `ETag` như `/references`. Ván thuộc giải nào chỉ snapshot của ván mới nói, nên
+tìm ván của một giải phải mở mọi snapshot. Service giữ bản đếm gần nhất của 64 giải trong bộ nhớ; mỗi lần gọi, một truy vấn
+không mở snapshot nào (số ván đang công bố và lần công bố mới nhất) cho biết có ván vừa công bố hoặc thu hồi hay không, có
+thì đếm lại giải đang được hỏi. `ETag` tính từ các ván của chính giải đó, nên ván của giải khác không làm đổi. Đo trên dữ
+liệu giả (3.000 ván, mỗi snapshot 50 KB, giải có 330 ván): truy vấn kiểm tra dưới 1 ms, đọc lại 0,12 giây.
+
+Trên Stream, thống kê là một tab của trang giải và chỉ hiện khi `games` lớn hơn 0; tab Tổng quan nêu mười tướng có mặt nhiều
+nhất. Bấm một tướng mở các ván tướng đó được chọn. Trang liệt kê mọi ván (`/games`) bỏ, vì ván đã nằm trong trận của nó và
+trong thống kê; địa chỉ cũ chuyển hướng.
+
+`GET /games` nhận thêm `heroId`: chỉ ván có người chọn tướng đó, bị cấm không tính. Kết hợp được với `tournamentId` và
+`seriesId`; phân trang giữ nguyên. Tướng chỉ ghi tên thì không lọc được. Ván của trận diễn ra sau đứng trước, trong một trận
+thì ván sau đứng trước, trận chưa rõ ngày đứng cuối; trước đây xếp theo lúc công bố, nên công bố hàng loạt làm lộn thứ tự.
+
 ## Tuyển thủ trùng tên và gộp hồ sơ (20/11/2026)
 
 Lần nhập Liquipedia ngày 05/11 tạo một hồ sơ cho mỗi cách viết tên mà trang giải dùng: "Kiral" và "KiraL", "Anh Duy"
@@ -1045,6 +1080,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /competitions?teamId=&playerId=&personPageId=&organizerPageId=&detail=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức. `detail=LIST` để trống `series`, `rosters`, `players`, `people` cho trang danh sách; mặc định FULL |
 | GET /competitions/participants?kind=&q=&country=&page=&size= | Đội (`kind=TEAM`), tuyển thủ (`PLAYER`) hoặc nhân sự (`PERSON`) của các giải đã công bố: [{id,kind,name,shortName,country,imageUrl,imageDarkUrl,competitions,competitionId,competitionName,team,roles}] |
 | GET /competitions/{id} | Snapshot giải |
+| GET /competitions/{id}/statistics | {games,decided,blueWins,averageSeconds?,longest?,shortest?,heroes:[{id?,code?,name,iconUrl?,picks,wins,bans,bluePicks}],mvps:[{playerId,games}]} đếm trên ván đã công bố (xem "Thống kê tướng của giải") |
+| GET /games?tournamentId=&seriesId=&heroId=&page=&size= | Ván đã công bố, trận diễn ra sau đứng trước. `heroId` chỉ giữ ván có người chọn tướng đó |
 | GET /references, /references/people | {items:[{id,kind,name,shortName?,aliases?,path,circuitId?,teamIds?}]}: mọi tên văn bản có thể nhắc, không phân trang (xem "Tham chiếu trong văn bản") |
 | GET /references/{kind}/{id} | Thẻ xem trước. `kind`: CIRCUIT, ORGANIZATION, COMPETITION, TEAM, PLAYER, PERSON |
 | GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Ngày sai dạng hoặc quá 60 ngày trả 400 INVALID_QUERY_PARAMETER |

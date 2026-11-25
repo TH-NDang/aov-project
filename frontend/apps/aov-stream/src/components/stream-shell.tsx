@@ -131,19 +131,19 @@ export function StreamShell({
             <StreamAppSwitcher wikiUrl={WIKI_URL} />
           </div>
           {!compact && topnav}
-          <button
-            type="button"
-            className="hub-icon-button hub-search-back"
-            onClick={closeSearch}
-            aria-label={text("Đóng tìm kiếm", "Close search")}
-          >
-            <StreamIcon name="back" size={20} />
-          </button>
           {pageSearch ? (
             <ListSearch search={pageSearch} inputRef={searchInput} onDismiss={closeSearch} />
           ) : (
             <HeaderSearch inputRef={searchInput} onDismiss={closeSearch} onSearched={() => setShortcuts(false)} />
           )}
+          <button
+            type="button"
+            className="hub-search-close"
+            onClick={closeSearch}
+            aria-label={text("Đóng tìm kiếm", "Close search")}
+          >
+            {text("Đóng", "Close")}
+          </button>
           <div className="hub-topbar-actions">
             <button
               ref={searchTrigger}

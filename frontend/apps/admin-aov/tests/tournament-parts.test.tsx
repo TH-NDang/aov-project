@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { act } from "react"
 import type { DocumentView, TournamentContent, TournamentPart } from "@aov/community-contracts"
 import { inDom, renderer, withGlobals } from "./fixtures/dom"
 
@@ -172,7 +171,6 @@ test("a main event names its parts under its row and each part opens on its own"
     })
     const names = ["Wildcard", "Queens Showdown", "1v1 Tournament", "Open Qualifier", "Closed Qualifier"]
     const parts = new Map([["cup", names.map((name, index) => part(`part-${index}`, `Premier League 2026 - ${name}`))]])
-    let opened = ""
     const render = (search: string) =>
       draw(
         <MemoryRouter>
@@ -181,10 +179,6 @@ test("a main event names its parts under its row and each part opens on its own"
             stats={new Map()}
             parts={parts}
             search={search}
-            partHref={(id) => `/tournaments/${id}`}
-            onOpen={(entry) => {
-              opened = entry.id
-            }}
           />
         </MemoryRouter>,
       )
@@ -194,20 +188,16 @@ test("a main event names its parts under its row and each part opens on its own"
     assert.match(rows[0].textContent ?? "", /5 phần/)
     assert.doesNotMatch(rows[1].textContent ?? "", /phần/, "an event without parts has no parts line")
 
-    const links = [...rows[0].querySelectorAll<HTMLAnchorElement>("a")]
+    const links = () => [...document.querySelectorAll<HTMLAnchorElement>("tbody tr:first-child a:not([aria-label])")]
     assert.deepEqual(
-      links.map((link) => link.textContent),
-      ["Wildcard", "Queens Showdown", "1v1 Tournament", "Open Qualifier"],
+      links().map((link) => link.textContent),
+      ["Wildcard", "Queens Showdown", "1v1 Tournament", "Open Qualifier", "+1 phần khác"],
     )
-    assert.equal(links[0].getAttribute("href"), "/tournaments/part-0")
-    assert.match(links[0].title, /^Premier League 2026 - Wildcard · /, "the full name stays one hover away")
-
-    const more = [...rows[0].querySelectorAll("button")].find((button) => /phần khác/.test(button.textContent ?? ""))!
-    assert.equal(more.textContent, "+1 phần khác")
-    await act(async () => more.click())
-    assert.equal(opened, "cup", "the rest wait inside the main event")
+    assert.equal(links()[0].getAttribute("href"), "/tournaments/part-0")
+    assert.match(links()[0].title, /^Premier League 2026 - Wildcard · /, "the full name stays one hover away")
+    assert.equal(links()[4].getAttribute("href"), "/tournaments/cup", "the rest wait inside the main event")
 
     await render("closed")
-    assert.equal(document.querySelector("tbody tr a")?.textContent, "Closed Qualifier", "what was searched for leads")
+    assert.equal(links()[0].textContent, "Closed Qualifier", "what was searched for leads")
   })
 })

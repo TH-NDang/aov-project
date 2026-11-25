@@ -2,15 +2,18 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import type { PublishedGame } from "@aov/community-contracts"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
+import { PlaceSteps, PlaceTrail, useSections, type Place, type Step } from "../../../components/place-trail"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { mvpOf } from "../../../lib/crew-model"
 import { orderedMatchGames } from "../../../lib/match-model"
 import { dayMonth } from "../../../lib/match-time"
+import { beside } from "../../../lib/neighbours"
 import { gameQuery, matchGamesQuery } from "../../../lib/tournament-api"
 import { clock, plainNote } from "../../../lib/tournament-model"
 import { MvpFact } from "../components/competition-people"
+import { competitionMark } from "../components/competition-mark"
 import { DraftOrder } from "../components/draft-order"
 import { EquipmentEvents } from "../components/equipment-events"
 import { GameLineup } from "../components/game-lineup"
@@ -58,18 +61,40 @@ function PublishedGameView({
   const { text, languageTag } = useStreamLocale()
   const { number, durationSeconds, seriesId, sourceUrl, note } = game.content
   const head = seriesHeadOf(game, languageTag)
+  const { tournaments } = useSections()
+  const [a, b] = head.teams
+  const places: Place[] = [
+    tournaments,
+    {
+      to: `/competitions/${game.series.tournamentId}?tab=matches`,
+      name: game.tournament.name,
+      mark: competitionMark(game.tournament),
+    },
+    { to: `/matches/${encodeURIComponent(seriesId)}`, name: `${a.shortName || a.name} – ${b.shortName || b.name}` },
+  ]
+  const near = beside(
+    siblings,
+    siblings.findIndex((item) => item.id === game.id),
+  )
+  const step = (other: PublishedGame | null): Step | null =>
+    other && { to: `/games/${other.id}`, name: text(`Ván ${other.content.number}`, `Game ${other.content.number}`) }
+  const steps = (
+    <PlaceSteps
+      label={text("Ván liền kề", "Games before and after")}
+      before={step(near.before)}
+      after={step(near.after)}
+    />
+  )
   const mvp = mvpOf(game.content.mvpPlayerId, game.players)
   return (
     <StreamShell>
       <title>{`${head.teams[0].name} vs ${head.teams[1].name} · ${text(`Ván ${number}`, `Game ${number}`)} — AOV Stream`}</title>
       <div className="tn-match-page" aria-busy={busy || undefined}>
         <div className="tn-match-top">
-          <Link className="cp-back" data-flush="" to={`/competitions/${game.series.tournamentId}?tab=matches`}>
-            <StreamIcon name="back" size={16} />
-            {game.tournament.name}
-          </Link>
           <MatchHead
             head={head}
+            trail={<PlaceTrail places={places} steps={steps} />}
+            bar={{ places, steps }}
             scoreNote={text("Tỷ số trận", "Match score")}
             facts={
               <>
@@ -149,8 +174,8 @@ export function GamePage() {
               <button type="button" className="cp-button cp-primary" onClick={() => void query.refetch()}>
                 {text("Thử lại", "Retry")}
               </button>
-              <Link className="cp-button" to="/games">
-                {text("Về danh sách ván đấu", "Back to the game list")}
+              <Link className="cp-button" to="/competitions">
+                {text("Về trang Giải đấu", "Back to tournaments")}
               </Link>
             </div>
           </div>

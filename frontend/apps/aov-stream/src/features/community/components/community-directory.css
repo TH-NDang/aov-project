@@ -67,11 +67,8 @@
 /* A short list (a search, a small region) stretches its cards across the row instead of leaving empty columns. */
 .cp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 10px;
-}
-.cp-grid > .pg-card:only-child {
-  max-width: 560px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 4px 28px;
 }
 .cp-card-skeleton {
   height: 72px;
@@ -80,19 +77,19 @@
 .pg-card {
   position: relative;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
-  padding: 12px;
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
+  margin-inline: -10px;
+  padding: 10px;
+  border-radius: var(--hub-radius);
   container-type: inline-size;
   transition: background-color 120ms;
 }
 .pg-card:hover,
 .pg-card:focus-within {
-  background: var(--hub-hover);
+  background: var(--hub-surface);
 }
 /* The whole card opens the page; the follow button sits above this link. */
 .pg-card-link {
@@ -100,18 +97,6 @@
   inset: 0;
   z-index: 1;
   border-radius: inherit;
-}
-.pg-card > .cp-avatar {
-  width: 48px;
-  height: 48px;
-  border: 0;
-  border-radius: var(--hub-radius-sm);
-  font-size: 16px;
-}
-/* People are round, as on their own pages; teams, organizers and circuits keep the shape of a logo tile. */
-.pg-card[data-person] > .cp-avatar {
-  border-radius: 50%;
-  object-fit: cover;
 }
 .pg-card-body {
   display: grid;
@@ -129,10 +114,6 @@
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-}
-.pg-card-name > svg {
-  margin-left: 4px;
-  vertical-align: -3px;
 }
 .pg-card-meta {
   overflow: hidden;

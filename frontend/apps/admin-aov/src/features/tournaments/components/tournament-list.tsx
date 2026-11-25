@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import { Link } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { CalendarDays, ChevronDown, ChevronUp, Layers, Shapes, Swords, Trophy, Users } from "lucide-react"
 import type {
   DocumentView,
@@ -38,28 +38,26 @@ const onControl = (event: React.MouseEvent) =>
 /**
  * A list of main events. Their parts (qualifiers, wildcard, weekly stops, show matches) are not rows of their own:
  * each main event names them on a line under its dates, where a part opens with one click. With `groups` the seasons
- * of a circuit stand together under its name, and `entries` are the rows on screen. Without `actions` and
- * `selection` the list is for reading only.
+ * of a circuit stand together under its name, and `entries` are the rows on screen. A row is a link to its tournament
+ * under the controls it holds. Without `actions` and `selection` the list is for reading only.
  */
 export function TournamentList({
   entries,
   groups,
   onToggleGroup,
   stats,
-  onOpen,
   parts,
   published,
   actions,
   selection,
   search = "",
-  partHref = (id) => `/tournaments/${id}`,
+  href = (id) => `/tournaments/${id}`,
 }: {
   entries: Entry[]
   groups?: FoldedGroup[]
   onToggleGroup?: (key: string) => void
   /** Missing while the counts are on their way, so no tournament reads as empty meanwhile. */
   stats?: Map<string, TournamentStats>
-  onOpen: (entry: Entry) => void
   /** Parts by the id of their main event. */
   parts?: ReadonlyMap<string, TournamentPart[]>
   /** Ids of the tournaments readers see on Stream; missing while that is not known. */
@@ -68,7 +66,8 @@ export function TournamentList({
   selection?: Pick<RowSelectionState, "ids" | "toggle" | "toggleAll">
   /** What the list was searched for: a part it names moves to the front of its line. */
   search?: string
-  partHref?: (id: string) => string
+  /** Where a tournament or a part of one opens. */
+  href?: (id: string) => string
 }) {
   const ticked = selection?.ids.size ?? 0
   const lead = selection ? 2 : 1
@@ -82,8 +81,7 @@ export function TournamentList({
       parts={parts?.get(entry.id) ?? NO_PARTS}
       published={published?.has(entry.id)}
       search={search}
-      partHref={partHref}
-      onOpen={() => onOpen(entry)}
+      href={href}
       actions={actions}
       selected={selection?.ids.has(entry.id)}
       onToggle={selection && ((range) => selection.toggle(entry.id, range))}
@@ -219,8 +217,7 @@ function TournamentRow({
   parts,
   published,
   search,
-  partHref,
-  onOpen,
+  href,
   actions,
   selected,
   onToggle,
@@ -234,12 +231,12 @@ function TournamentRow({
   parts: TournamentPart[]
   published?: boolean
   search: string
-  partHref: (id: string) => string
-  onOpen: () => void
+  href: (id: string) => string
   actions?: TournamentRowActions
   selected?: boolean
   onToggle?: (range: boolean) => void
 }) {
+  const navigate = useNavigate()
   const content = entry.content
   // Among the seasons of a circuit the dates already say how long ago one ended.
   const timing = circuit && content.status === "FINISHED" ? "" : tournamentTiming(content)
@@ -253,14 +250,15 @@ function TournamentRow({
   )
   return (
     <TableRow
-      className="cursor-pointer [&>td]:align-top"
+      className="group/row relative cursor-pointer [&>td]:align-top"
       data-state={selected ? "selected" : undefined}
+      // What stands above the link, such as a mark with a hint, opens the row as the link does.
       onClick={(event) => {
-        if (!onControl(event)) onOpen()
+        if (!onControl(event)) void navigate(href(entry.id))
       }}
     >
       {onToggle && (
-        <TableCell data-row-control className="cursor-default pr-0! select-none">
+        <TableCell data-row-control className="relative z-1 cursor-default pr-0! select-none">
           <Checkbox
             className="mt-0.5"
             aria-label={`Chọn ${content.name}`}
@@ -272,11 +270,11 @@ function TournamentRow({
         </TableCell>
       )}
       <TableCell className="@max-2xl:px-2!">
-        <button
-          type="button"
-          onClick={onOpen}
+        {/* The link reaches over the whole row; its own words stand above it, so their hints still show. */}
+        <Link
+          to={href(entry.id)}
           aria-label={`Mở giải ${content.name}`}
-          className="group flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex w-full min-w-0 items-start gap-3 outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
         >
           {circuit ? (
             // Lines the season up with its circuit's name; the logo stands once, beside that name.
@@ -284,9 +282,9 @@ function TournamentRow({
           ) : (
             <RegistryLogo url={content.logoUrl} darkUrl={content.logoDarkUrl} name={content.name} />
           )}
-          <span className="min-w-0 flex-1 space-y-1">
+          <span className="relative z-1 min-w-0 flex-1 space-y-1">
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <strong className="type-body underline-offset-2 group-hover:underline" title={content.name}>
+              <strong className="type-body underline-offset-2 group-hover/row:underline" title={content.name}>
                 {partLabel(content.name, circuit)}
               </strong>
               <TierBadge tier={content.tier} compact />
@@ -319,15 +317,14 @@ function TournamentRow({
               )}
             </span>
           </span>
-        </button>
+        </Link>
         {/* Indented by what stands before the tournament's name, so it starts under it. */}
         <div className={cn("mt-2 @2xl:hidden", !circuit && "pl-[54px]")}>{status}</div>
         <PartLinks
-          main={content}
+          main={entry}
           parts={parts}
           search={search}
-          href={partHref}
-          onMore={onOpen}
+          href={href}
           className={circuit ? "@2xl:pl-3.5" : "pl-[54px]"}
         />
       </TableCell>
@@ -342,7 +339,7 @@ function TournamentRow({
         </span>
       </TableCell>
       {actions && (
-        <TableCell data-row-control className="px-2! text-right">
+        <TableCell data-row-control className="relative z-1 px-2! text-right">
           <TournamentRowMenu entry={entry} actions={actions} />
         </TableCell>
       )}
@@ -356,14 +353,12 @@ function PartLinks({
   parts,
   search,
   href,
-  onMore,
   className,
 }: {
-  main: TournamentContent
+  main: Entry
   parts: TournamentPart[]
   search: string
   href: (id: string) => string
-  onMore: () => void
   className?: string
 }) {
   if (!parts.length) return null
@@ -379,20 +374,19 @@ function PartLinks({
           key={part.id}
           to={href(part.id)}
           title={`${part.name} · ${dateRange(part.startsOn ?? undefined, part.endsOn ?? undefined)}`}
-          className="type-meta inline-flex h-6 max-w-56 items-center gap-1.5 rounded-md border px-2 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="type-meta relative z-1 inline-flex h-6 max-w-56 items-center gap-1.5 rounded-md border px-2 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           <PartPhaseDot phase={phase} />
-          <span className="truncate">{partLabel(part.name, main.name)}</span>
+          <span className="truncate">{partLabel(part.name, main.content.name)}</span>
         </Link>
       ))}
       {hidden > 0 && (
-        <button
-          type="button"
-          onClick={onMore}
-          className="type-meta rounded underline-offset-2 outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+        <Link
+          to={href(main.id)}
+          className="type-meta relative z-1 rounded underline-offset-2 outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring"
         >
           +{hidden} phần khác
-        </button>
+        </Link>
       )}
     </div>
   )

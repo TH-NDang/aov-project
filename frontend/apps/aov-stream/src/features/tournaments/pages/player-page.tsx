@@ -1,23 +1,24 @@
 import { useState } from "react"
 import { Link, Navigate, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { regionName } from "../../../components/community-ui"
 import { GoLink } from "../../../components/go-link"
-import { PlayerMark } from "../../../components/player-mark"
+import { Jersey } from "../../../components/jersey"
+import { useSections } from "../../../components/place-trail"
+import { PageHead } from "../../../components/page-head"
 import { RegionMark } from "../../../components/region-mark"
-import { Stage } from "../../../components/stage"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { StreamShell } from "../../../components/stream-shell"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { TitleShelf } from "../../../components/title-shelf"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
-import { playerProfile, playerStints, type PlayerProfile } from "../../../lib/participant-model"
+import { isTitleSeason, playerProfile, playerStints, type PlayerProfile } from "../../../lib/participant-model"
 import { playerCompetitionsQuery } from "../../../lib/tournament-api"
 import { LANE_NAMES } from "../../../lib/tournament-model"
-import { ParticipantMissing, Part, SeasonLine } from "../components/participant-parts"
+import { ParticipantMissing, Part, SeasonLine, ShelfPart } from "../components/participant-parts"
 import "../../../components/participant-list.css"
 
 /** Seasons shown before the rest unfold. */
@@ -50,10 +51,6 @@ export function PlayerPage() {
           : text("Tuyển thủ — AOV Stream", "Player — AOV Stream")}
       </title>
       <div className="cp-container pt-page">
-        <Link className="cp-back" data-flush="" to="/explore?kind=PLAYER">
-          <StreamIcon name="back" size={16} />
-          {text("Tuyển thủ", "Players")}
-        </Link>
         {competitions.isPending || page.isPending ? (
           <div
             className="hub-skeleton-rows"
@@ -84,6 +81,7 @@ export function PlayerPage() {
 
 function PlayerBody({ profile }: { profile: PlayerProfile }) {
   const { text, languageTag } = useStreamLocale()
+  const { explore } = useSections()
   const layout = usePageLayout()
   const [open, setOpen] = useState(false)
   const { player, lane, seasons, titles, mvps, awards } = profile
@@ -91,58 +89,78 @@ function PlayerBody({ profile }: { profile: PlayerProfile }) {
   const stints = playerStints(seasons)
   const now = stints[0]
   const shown = open ? seasons : seasons.slice(0, SEASONS)
-  const facts = [
-    [text("giải", "tournaments"), seasons.length],
-    [text("danh hiệu", "titles"), titles],
-    [text("MVP trận", "match MVPs"), mvps],
-    [text("giải cá nhân", "awards"), awards],
-  ].filter(([, value]) => value) as [string, number][]
+  const figures = [
+    { value: titles, label: text("lần vô địch", titles === 1 ? "title" : "titles"), title: true },
+    { value: seasons.length, label: text("giải đã tham gia", "tournaments played") },
+    { value: mvps, label: text("MVP trận", "match MVPs") },
+    { value: awards, label: text("giải cá nhân", "awards") },
+  ].flatMap(({ value, ...figure }) => (value ? [{ ...figure, value: value.toLocaleString(languageTag) }] : []))
   return (
     <>
-      <Stage
+      <PageHead
         tint={player.nickname}
-        lights={now ? [{ src: now.team.logoUrl, darkSrc: now.team.logoDarkUrl, at: "right" }] : []}
-      >
-        <header className="pt-head">
-          <PlayerMark name={player.nickname} size={layout === "compact" ? 72 : 112} />
-          <div className="pt-head-text">
-            <p>
-              {lane && (
-                <span>
-                  <HeroLaneIcon lane={lane} size={18} label="" />
-                  {text(LANE_NAMES[lane][0], LANE_NAMES[lane][1])}
-                </span>
-              )}
-              {region && (
-                <span>
-                  <RegionMark code={player.country} />
-                  {region}
-                </span>
-              )}
-              {now && (
-                <GoLink className="hub-go-pill pt-head-team" to={`/teams/${now.teamId}`}>
-                  <StreamImage
-                    src={now.team.logoUrl}
-                    darkSrc={now.team.logoDarkUrl}
-                    logo
-                    name={now.team.shortName || now.team.name}
-                  />
-                  {now.team.name}
-                </GoLink>
-              )}
+        lights={now ? [{ src: now.team.logoUrl, darkSrc: now.team.logoDarkUrl, at: "left" }] : []}
+        places={[explore, { to: "/explore?kind=PLAYER", name: text("Tuyển thủ", "Players") }]}
+        mark={
+          <Jersey
+            name={player.nickname}
+            lane={lane}
+            logoUrl={now?.team.logoUrl}
+            logoDarkUrl={now?.team.logoDarkUrl}
+            size={layout === "compact" ? 84 : 148}
+          />
+        }
+        kicker={
+          <>
+            {lane && text(LANE_NAMES[lane][0], LANE_NAMES[lane][1])}
+            {region && (
+              <>
+                {lane && " · "}
+                <RegionMark code={player.country} size={18} /> {region}
+              </>
+            )}
+          </>
+        }
+        name={player.nickname}
+        title={player.nickname}
+        smallMark={
+          <Jersey
+            name={player.nickname}
+            lane={lane}
+            logoUrl={now?.team.logoUrl}
+            logoDarkUrl={now?.team.logoDarkUrl}
+            size={30}
+          />
+        }
+        lines={
+          now && (
+            <p className="ph-line">
+              <GoLink className="hub-go-pill pt-head-team" to={`/teams/${now.teamId}`}>
+                <StreamImage
+                  src={now.team.logoUrl}
+                  darkSrc={now.team.logoDarkUrl}
+                  logo
+                  name={now.team.shortName || now.team.name}
+                />
+                {now.team.name}
+              </GoLink>
             </p>
-            <h1>{player.nickname}</h1>
-            <dl className="pt-head-facts">
-              {facts.map(([label, value]) => (
-                <div key={label}>
-                  <dd>{value.toLocaleString(languageTag)}</dd>
-                  <dt>{label}</dt>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </header>
-      </Stage>
+          )
+        }
+        figures={figures}
+      />
+      <ShelfPart titles={seasons.filter(isTitleSeason)}>
+        {(shelf) => (
+          <TitleShelf
+            titles={shelf}
+            views={seasons.map((season) => season.view)}
+            teams
+            name={player.nickname}
+            logoUrl={now?.team.logoUrl}
+            logoDarkUrl={now?.team.logoDarkUrl}
+          />
+        )}
+      </ShelfPart>
       {stints.length > 0 && (
         <Part title={text("Các đội đã thi đấu", "Teams")}>
           <ul className="pt-cards">

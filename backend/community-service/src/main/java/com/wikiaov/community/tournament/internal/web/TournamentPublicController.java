@@ -13,6 +13,8 @@ import com.wikiaov.community.tournament.internal.games.application.PublicTournam
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,11 +43,12 @@ public class TournamentPublicController implements TournamentPublicApi {
 
     @Override
     @GetMapping(path = ApiPaths.ROOT + "/games", version = "1")
-    public PageSlice<PublishedGame> games(@RequestParam(required = false) UUID tournamentId,
-            @RequestParam(required = false) UUID seriesId, @RequestParam(defaultValue = "0") int page,
+    public PageSlice<PublishedGame> games(@RequestParam(required = false) @Nullable UUID tournamentId,
+            @RequestParam(required = false) @Nullable UUID seriesId,
+            @RequestParam(required = false) @Nullable UUID heroId, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size, HttpServletRequest request) {
-        QueryParameters.requireOnly(request, Set.of("tournamentId", "seriesId", "page", "size"));
-        return queries.games(tournamentId, seriesId, Parameters.pageable(page, size, "published_at"));
+        QueryParameters.requireOnly(request, Set.of("tournamentId", "seriesId", "heroId", "page", "size"));
+        return queries.games(tournamentId, seriesId, heroId, PageRequest.of(page, size));
     }
 
     @Override

@@ -1,12 +1,14 @@
 import { Link } from "react-router"
 import { profileKindLabels } from "@aov/community-contracts"
-import { OfficialBadge } from "@aov/ui/components/official-badge"
 import owlMark from "../../../assets/stream-owl.svg"
+import { OfficialName } from "../../../components/official-name"
+import { ProfileMark } from "../../../components/page-mark"
+import { Stage } from "../../../components/stage"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { signIn, useCommunitySession } from "../../../lib/stream-auth"
 import { useFollowedPages, useFollowPage, useSuggestions } from "../../../lib/community-queries"
-import { Avatar, followersLabel, profileKindEnglish } from "../../../components/community-ui"
+import { followersLabel, profileKindEnglish } from "../../../components/community-ui"
 
 /**
  * The right column of the feed. Visitors get the invitation to sign in; signed-in readers get the pages they follow
@@ -27,26 +29,24 @@ export function CommunityAside() {
 function GuestCard() {
   const { text } = useStreamLocale()
   return (
-    <section className="hub-card hub-card-padded cp-join" aria-labelledby="join-title">
-      <div className="cp-join-head">
-        <img src={owlMark} alt="" width={32} height={32} />
+    <Stage tint="AOV Stream" className="cp-join">
+      <section aria-labelledby="join-title">
+        <img src={owlMark} alt="" width={56} height={56} />
         <h2 id="join-title">{text("Tham gia cộng đồng", "Join the community")}</h2>
-      </div>
-      <p className="hub-card-text" data-flush="">
-        {text(
-          "Ai cũng đọc được bài viết. Đăng nhập để theo dõi trang, nhận thông báo, thích và bình luận.",
-          "Anyone can read posts. Sign in to follow pages, get notifications, like and comment.",
-        )}
-      </p>
-      <div className="cp-join-actions">
+        <p>
+          {text(
+            "Ai cũng đọc được bài viết. Đăng nhập để theo dõi trang, nhận thông báo, thích và bình luận.",
+            "Anyone can read posts. Sign in to follow pages, get notifications, like and comment.",
+          )}
+        </p>
         <button className="cp-button cp-primary" onClick={() => void signIn()}>
           {text("Đăng nhập", "Sign in")}
         </button>
-        <button className="cp-button" onClick={() => void signIn(true)}>
+        <button className="cp-text-button" onClick={() => void signIn(true)}>
           {text("Tạo tài khoản", "Create account")}
         </button>
-      </div>
-    </section>
+      </section>
+    </Stage>
   )
 }
 
@@ -57,7 +57,7 @@ function FollowingCard() {
   const items = pages.data?.items || []
   if (!items.length) return null
   return (
-    <section className="hub-card hub-card-padded" aria-labelledby="side-following">
+    <section className="hub-card" aria-labelledby="side-following">
       <div className="hub-card-heading">
         <h2 id="side-following" className="hub-card-title">
           {text("Đang theo dõi", "Following")}
@@ -70,7 +70,7 @@ function FollowingCard() {
         {items.slice(0, 6).map((profile) => (
           <li key={profile.id}>
             <Link to={`/pages/${profile.code}`}>
-              <Avatar profile={profile} />
+              <ProfileMark profile={profile} size={40} />
               <span>
                 <strong>{profile.content?.name || profile.code}</strong>
                 <small>
@@ -94,7 +94,7 @@ function FollowSuggestions() {
   const pages = useSuggestions(5)
   const follow = useFollowPage()
   return (
-    <section className="hub-card hub-card-padded cp-follow-suggestions" aria-labelledby="side-suggestions">
+    <section className="hub-card cp-follow-suggestions" aria-labelledby="side-suggestions">
       <div className="hub-card-heading">
         <h2 id="side-suggestions" className="hub-card-title">
           {text("Gợi ý theo dõi", "Who to follow")}
@@ -124,13 +124,10 @@ function FollowSuggestions() {
             return (
               <li key={profile.id}>
                 <Link to={`/pages/${profile.code}`}>
-                  <Avatar profile={profile} />
+                  <ProfileMark profile={profile} size={40} />
                   <span>
                     <strong>
-                      {name}
-                      {profile.represented && (
-                        <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
-                      )}
+                      <OfficialName name={name} official={profile.represented} />
                     </strong>
                     <small>
                       {text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])}

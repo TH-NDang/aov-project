@@ -141,13 +141,48 @@
   font-style: normal;
   font-weight: 600;
 }
+.tn-fixture-meta > .tn-fixture-event {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .tn-fixture-event > img {
-  display: inline-block;
   width: 16px;
   height: 16px;
-  margin-right: 6px;
+  flex: none;
   object-fit: contain;
-  vertical-align: -3px;
+}
+.tn-fixture-event > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The matches of a competition that name nobody yet. */
+.tn-fixture-undecided {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-fixture-undecided:hover,
+.tn-fixture-undecided:focus-visible {
+  background: var(--hub-hover);
+}
+.tn-fixture-undecided > img {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  object-fit: contain;
+}
+.tn-fixture-undecided > strong {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.tn-fixture-undecided > span {
+  flex: 1;
 }
 .tn-fixture-format {
   min-width: 34px;
@@ -194,6 +229,9 @@
   .tn-fixture-meta {
     padding-inline: 48px;
     text-align: center;
+  }
+  .tn-fixture-meta > .tn-fixture-event {
+    justify-content: center;
   }
   .tn-fixture-team,
   .tn-fixture-team[data-side="a"] {

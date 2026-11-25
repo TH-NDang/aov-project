@@ -1,0 +1,43 @@
+/* A shield: the trim, the ground, the logo clear of its corners. */
+.tn-shield {
+  --shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 112' preserveAspectRatio='none'%3E%3Cpath d='M50 0 97 13v46c0 26-21 43-47 53C24 102 3 85 3 59V13Z'/%3E%3C/svg%3E");
+  position: relative;
+  display: block;
+  width: var(--crest, 108px);
+  height: calc(var(--crest, 108px) * 1.12);
+  flex: none;
+  margin-top: var(--crest-space, 0);
+  background: color-mix(in srgb, var(--aov-medal-gold) 70%, var(--aov-stream-night));
+  mask: var(--shield) center / 100% 100% no-repeat;
+}
+.tn-shield > span {
+  position: absolute;
+  inset: max(1.5px, calc(var(--crest, 108px) * 0.028));
+  background: var(--crest-ground, var(--hub-surface));
+  mask: var(--shield) center / 100% 100% no-repeat;
+}
+/* A logo with one version stands on the ground it was drawn for, in either theme. */
+.tn-shield[data-ground="light"] > span {
+  background: linear-gradient(var(--hub-logo-paper), var(--hub-logo-paper)), var(--crest-ground, var(--hub-surface));
+}
+.tn-shield[data-ground="dark"] > span {
+  background: var(--aov-stream-night);
+}
+.tn-shield img {
+  position: absolute;
+  inset: 13% 16% 21%;
+  width: 68%;
+  height: 66%;
+  background: none;
+  object-fit: contain;
+}
+.tn-shield b {
+  position: absolute;
+  inset: 0 0 10%;
+  display: grid;
+  place-items: center;
+  color: var(--hub-text);
+  font-size: max(12px, calc(var(--crest, 108px) * 0.26));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

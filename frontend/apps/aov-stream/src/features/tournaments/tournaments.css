@@ -16,7 +16,7 @@
 .tn-heading[data-flush] {
   margin-bottom: 0;
 }
-.tn-heading h2 {
+.tn-heading :is(h2, h3) {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -28,7 +28,7 @@
   line-height: 28px;
   letter-spacing: -0.015em;
 }
-.tn-heading h2 small {
+.tn-heading :is(h2, h3) small {
   color: var(--hub-muted);
   font-size: 14px;
   font-weight: 400;
@@ -103,9 +103,9 @@
 /* ---------- Page layouts ---------- */
 .tn-overview {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 304px;
   align-items: start;
-  gap: 32px;
+  gap: 48px;
 }
 .tn-overview-main,
 .tn-overview-side,
@@ -115,7 +115,7 @@
   gap: 36px;
 }
 .tn-overview-side {
-  gap: 16px;
+  gap: 26px;
 }
 /* A side column with nothing in it leaves the page to the content. */
 .tn-overview:not(:has(> .tn-overview-side > *)) {
@@ -137,15 +137,16 @@
 .tn-match-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
-  gap: 10px;
+  gap: 24px;
 }
 
-/* ---------- Side cards: facts, rankings, awards ---------- */
+/* ---------- Side parts: facts, rankings, awards, a rule between two of them ---------- */
 .tn-side-card {
   min-width: 0;
-  padding: 18px;
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
+}
+.tn-side-card + .tn-side-card {
+  padding-top: 26px;
+  border-top: 1px solid var(--hub-border);
 }
 .tn-side-card > h2 {
   margin: 0 0 8px;
@@ -212,46 +213,6 @@
   text-underline-offset: 3px;
 }
 
-/* ---------- Members of a team in groups, on a team's page ---------- */
-.tn-team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-  gap: 12px;
-}
-.tn-team-card {
-  min-width: 0;
-  padding: 16px;
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
-}
-.tn-team-card ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.tn-team-card li {
-  display: grid;
-  /* The name keeps its width; a long role wraps at the end of the row instead of running over it. */
-  grid-template-columns: 24px minmax(min-content, 1fr) minmax(0, max-content);
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  border-top: 1px solid var(--hub-border);
-  color: var(--hub-text);
-  font-size: 14px;
-  font-weight: 600;
-}
-.tn-team-card li > small {
-  color: var(--hub-muted);
-  font-size: 12px;
-  font-weight: 400;
-}
-.tn-lane {
-  display: grid;
-  place-items: center;
-  color: var(--hub-accent-strong);
-}
-
 /* ---------- What is not there, and what was noted, said once ---------- */
 .tn-quiet {
   margin: 0;
@@ -296,9 +257,9 @@
 }
 .tn-strip-row {
   display: grid;
-  grid-auto-columns: minmax(240px, 1fr);
+  grid-auto-columns: minmax(220px, 1fr);
   grid-auto-flow: column;
-  gap: 10px;
+  gap: 24px;
   /* Room for the focus ring and the hover border, which a scroll box would otherwise clip. */
   margin: -4px;
   padding: 4px;
@@ -378,11 +339,11 @@
   .tn-heading {
     margin-bottom: 10px;
   }
-  .tn-heading h2 {
+  .tn-heading :is(h2, h3) {
     font-size: 18px;
     line-height: 24px;
   }
-  .tn-heading h2 small {
+  .tn-heading :is(h2, h3) small {
     font-size: 13px;
     line-height: 18px;
   }
@@ -412,14 +373,12 @@
   }
   .tn-match-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .tn-side-card {
-    padding: 14px;
+    gap: 18px 16px;
   }
   /* A phone shows one card and the edge of the next, so the row reads as something to swipe. */
   .tn-strip-row {
-    grid-auto-columns: minmax(232px, 72%);
+    grid-auto-columns: minmax(208px, 62%);
+    gap: 18px;
     margin-inline: calc(-1 * var(--hub-gutter));
     padding-inline: var(--hub-gutter);
     scroll-padding-inline: var(--hub-gutter);

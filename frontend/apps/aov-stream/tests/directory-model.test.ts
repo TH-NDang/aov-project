@@ -1,13 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionView } from "@aov/community-contracts"
-import {
-  aheadCompetitions,
-  circuitChampions,
-  circuitGroups,
-  circuitYears,
-  seasonRows,
-} from "../src/lib/directory-model.ts"
+import { aheadCompetitions, circuitGroups, seasonRows } from "../src/lib/directory-model.ts"
 import { competition, on } from "./fixtures/competition.ts"
 
 const finished = { status: "FINISHED" }
@@ -65,18 +59,4 @@ test("circuits follow their newest season and lone competitions close the list",
       ["other", "alone none"],
     ],
   )
-})
-
-test("a circuit's hall holds its finished seasons with a champion, newest first, and leaves the parts out", () => {
-  const won = (name: string) => ({ ...finished, placements: [{ place: "1", teamName: name }] })
-  const [group] = circuitGroups([
-    event("open", { status: "ONGOING", startsOn: "2026-06-01" }, { circuit: "X" }),
-    event("new", { ...won("Blue"), startsOn: "2025-06-01", year: 2025 }, { circuit: "X" }),
-    event("old", { ...won("Red"), startsOn: "2020-06-01", year: 2020 }, { circuit: "X" }),
-    event("part", { ...won("Green"), startsOn: "2025-05-01", parentTournamentId: "new" }, { circuit: "X" }),
-  ])
-
-  assert.deepEqual(ids(circuitChampions(group!)), ["new", "old"])
-  assert.equal(circuitYears(group!.rows.map((row) => row.view)), "2020–2026")
-  assert.equal(circuitYears([]), "")
 })

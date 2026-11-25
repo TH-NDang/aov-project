@@ -1,0 +1,107 @@
+/* The reference column of a page: parts straight on the page, a rule between two of them. */
+.pa {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 26px;
+}
+.pa > section + section {
+  padding-top: 26px;
+  border-top: 1px solid var(--hub-border);
+}
+.pa h2 {
+  margin: 0 0 10px;
+  color: var(--hub-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.pa-bio {
+  max-width: 72ch;
+  margin: 0 0 14px;
+  color: var(--hub-text-soft);
+  font-size: 15px;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.pa-facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.pa-facts > div {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 12px;
+}
+.pa-facts dt {
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.pa-facts dd {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.pa-facts dd > svg {
+  vertical-align: -2px;
+}
+.pa-note {
+  margin: 14px 0 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 19px;
+}
+.pa-facts + .pa-links {
+  margin-top: 14px;
+}
+.pa-links {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pa-links > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.pa-links a {
+  display: inline-flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--hub-text);
+}
+.pa-links a > span {
+  overflow-wrap: anywhere;
+}
+.pa-links a:hover {
+  color: var(--hub-accent-strong);
+}
+.pa-links a > svg {
+  flex: none;
+  color: var(--hub-muted);
+}
+.pa-links small {
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+/* Beside the content it follows the reader down, scrolling by itself where it is taller than the window. */
+.pa[data-column] {
+  position: sticky;
+  top: calc(var(--hub-stack) + 24px);
+  max-height: calc(100dvh - var(--hub-stack) - 48px);
+  margin-inline: -10px;
+  padding-inline: 10px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}

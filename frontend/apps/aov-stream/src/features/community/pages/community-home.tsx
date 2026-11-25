@@ -123,9 +123,9 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
   const items = feed.data?.pages.flatMap((page) => page.items) || []
   if (feed.isPending)
     return (
-      <div className="cp-post-list" role="status" aria-label={text("Đang tải bảng tin", "Loading the feed")}>
-        <div className="hub-skeleton cp-post-skeleton" />
-        <div className="hub-skeleton cp-post-skeleton" />
+      <div className="ps-list" role="status" aria-label={text("Đang tải bảng tin", "Loading the feed")}>
+        <div className="hub-skeleton ps-skeleton" />
+        <div className="hub-skeleton ps-skeleton" />
       </div>
     )
   if (feed.isLoadingError)
@@ -166,16 +166,9 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
       <FeaturedPages />
     )
   return (
-    <div className="cp-post-list">
+    <div className="ps-list">
       {items.map(({ post, page }) => (
-        <PostCard
-          key={post.id}
-          post={post}
-          page={page}
-          role=""
-          represented={page.represented}
-          following={followedIds}
-        />
+        <PostCard key={post.id} post={post} page={page} role="" following={followedIds} />
       ))}
       <InfiniteScroll
         query={feed}

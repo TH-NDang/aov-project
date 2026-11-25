@@ -10,22 +10,30 @@ import {
   type PageRole,
   type ProfileHistory,
 } from "@aov/community-contracts"
+import { readStanding } from "@aov/community-contracts/achievements"
 import { usePageLayout, type PageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamShell } from "../../../components/stream-shell"
 import { RegionMark } from "../../../components/region-mark"
 import { StreamIcon } from "../../../components/stream-icon"
 import { streamText, useStreamLocale } from "../../../components/stream-locale"
 import { CompetitionCard } from "../../../components/competition-card"
+import { Jersey } from "../../../components/jersey"
+import type { HeadFigure } from "../../../components/page-head"
+import { StreamImage } from "../../../components/stream-image"
+import { TeamLineup } from "../../../components/team-lineup"
+import { TitleShelf } from "../../../components/title-shelf"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
+import { competitionLineup, rosterLineup } from "../../../lib/lineup-model"
+import { playerProfile, playerStints, teamProfile, type PlayerProfile } from "../../../lib/participant-model"
 import { pageReferenceKey } from "../../../lib/reference-model"
 import { useCommunitySession } from "../../../lib/stream-auth"
+import { teamCompetitionsQuery } from "../../../lib/tournament-api"
 import { CommunityFeed } from "../components/community-feed"
 import { useFollowPage } from "../../../lib/community-queries"
 import { useSignedInAction } from "../../../components/community-signin"
 import {
   competitionsFeedQuery,
-  followersLabel,
   personRoleEnglish,
   profileCompetitionFilter,
   profileKindEnglish,
@@ -37,19 +45,20 @@ import { ProfileAside } from "../components/profile-aside"
 import { ProfileHead } from "../components/profile-head"
 import { LiveBlock, LiveControl, ProfileMatches } from "../components/profile-home"
 import { ProfileOptions } from "../components/profile-options"
+import { AchievementRows, HistoryRows } from "../components/profile-records"
+import { ProfileSocials } from "../components/profile-socials"
+import { ProfileTeams } from "../components/profile-teams"
+import { TeamRoster } from "../components/team-roster"
 import {
-  AchievementRows,
-  HistoryRows,
-  TeamRoster,
-  achievementCount,
   achievementGroups,
   competitionLinks,
   distinctHistory,
+  isTitle,
+  withPublishedPlaces,
   type AchievementGroup,
   type CompetitionLinks,
-} from "../components/profile-records"
-import { ProfileSocials } from "../components/profile-socials"
-import { ProfileTeams } from "../components/profile-teams"
+} from "../model/profile-records-model"
+import { rosterGroups } from "../model/team-roster-model"
 import {
   OrganizationTeams,
   OrganizationTeamsPreview,
@@ -138,9 +147,31 @@ function profileTabs(
   return tabs
 }
 
+/**
+ * The achievements of a page: what its record holds, with the places its team took in the competitions published
+ * here, which come along. A team's places come from every competition it played, a player's from the newest.
+ */
+function useAchievements(profile: CommunityProfile, links: CompetitionLinks, career: PlayerProfile | null) {
+  const { text } = useStreamLocale()
+  const teamId = profile.kind === "TEAM" ? profile.entityId : null
+  const played = useQuery({ ...teamCompetitionsQuery(teamId ?? ""), enabled: !!teamId })
+  const places = teamId ? (teamProfile(played.data ?? [], teamId)?.seasons ?? []) : (career?.seasons ?? [])
+  const word = (place: string) => {
+    const standing = readStanding(place)
+    if (standing?.place === 1 && !standing.placeTo) return text("Vô địch", "Champion")
+    if (standing?.place === 2 && !standing.placeTo) return text("Á quân", "Runner-up")
+    return text(`Hạng ${place}`, `Place ${place}`)
+  }
+  return {
+    achievements: withPublishedPlaces(achievementGroups(profile.content!.achievements, links), places, word),
+    played: places.map(({ view }) => view),
+  }
+}
+
 function Profile({ profile }: { profile: CommunityProfile }) {
   const { text, languageTag } = useStreamLocale()
   const layout = usePageLayout()
+  const compact = layout === "compact"
   const session = useCommunitySession()
   const signedIn = useSignedInAction()
   const [params, setParams] = useSearchParams()
@@ -159,7 +190,9 @@ function Profile({ profile }: { profile: CommunityProfile }) {
   const views = competitions.data?.pages.flatMap((page) => page.items) ?? []
   const competitionCount = competitions.data?.pages[0]?.totalElements
   const links = competitionLinks(views)
-  const achievements = achievementGroups(content.achievements, links)
+  const career = profile.kind === "PLAYER" && profile.entityId ? playerProfile(views, profile.entityId) : null
+  const stint = career ? playerStints(career.seasons)[0] : undefined
+  const { achievements, played } = useAchievements(profile, links, career)
   const history = distinctHistory(content.history)
   const individual = isIndividualProfile(profile.kind)
   const organization = profile.kind === "ORGANIZATION"
@@ -199,67 +232,109 @@ function Profile({ profile }: { profile: CommunityProfile }) {
     (profile.kind === "PERSON" &&
       content.personRoles?.map((role) => text(personRoleLabels[role], personRoleEnglish[role])).join(", ")) ||
     text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])
-  const achievementTotal = achievementCount(achievements)
-  const facts = [
-    profile.followers > 0 && followersLabel(profile.followers),
-    !!competitionCount &&
-      (organization
-        ? text(
-            `${competitionCount.toLocaleString(languageTag)} giải đấu`,
-            `${competitionCount.toLocaleString(languageTag)} ${competitionCount === 1 ? "tournament" : "tournaments"}`,
-          )
-        : text(
-            `${competitionCount.toLocaleString(languageTag)} giải đã tham gia`,
-            `${competitionCount.toLocaleString(languageTag)} ${competitionCount === 1 ? "tournament" : "tournaments"} played`,
-          )),
-    organization &&
-      !!teamCount &&
-      text(
-        `${teamCount.toLocaleString(languageTag)} đội tuyển`,
-        `${teamCount.toLocaleString(languageTag)} ${teamCount === 1 ? "team" : "teams"}`,
-      ),
-    achievements.length > 0 &&
-      text(
-        `${achievementTotal.toLocaleString(languageTag)} thành tích`,
-        `${achievementTotal.toLocaleString(languageTag)} ${achievementTotal === 1 ? "achievement" : "achievements"}`,
-      ),
+  const titleCount = achievements.filter(isTitle).length
+  const figure = (count: number | undefined, label: string, title?: boolean): HeadFigure[] =>
+    count ? [{ value: count.toLocaleString(languageTag), label, title }] : []
+  const figures = [
+    ...figure(titleCount, text("lần vô địch", titleCount === 1 ? "title" : "titles"), true),
+    ...figure(
+      competitionCount,
+      organization
+        ? text("giải đấu", competitionCount === 1 ? "tournament" : "tournaments")
+        : text("giải đã tham gia", competitionCount === 1 ? "tournament played" : "tournaments played"),
+    ),
+    ...(organization ? figure(teamCount, text("đội tuyển", teamCount === 1 ? "team" : "teams")) : []),
+    ...figure(profile.followers, text("người theo dõi", profile.followers === 1 ? "follower" : "followers")),
+  ]
+  const missing = [
     profile.kind === "TEAM" &&
-      content.roster.length > 0 &&
-      text(
-        `${content.roster.length} thành viên`,
-        `${content.roster.length} ${content.roster.length === 1 ? "member" : "members"}`,
-      ),
-    individual &&
-      history.length > 0 &&
-      text(
-        `${history.length} mốc sự nghiệp`,
-        `${history.length} career ${history.length === 1 ? "milestone" : "milestones"}`,
-      ),
-  ].filter((fact) => !!fact)
+      !content.roster.length &&
+      !(profile.entityId && competitionLineup(views, profile.entityId)) &&
+      text("đội hình", "roster"),
+    (profile.kind === "TEAM" || profile.kind === "PLAYER") &&
+      !achievements.length &&
+      text("thành tích", "achievements"),
+    competitionCount === 0 &&
+      (organization ? text("giải đấu đã tổ chức", "tournaments") : text("giải đấu đã tham gia", "tournaments played")),
+    !content.biography && text("phần giới thiệu", "introduction"),
+    !content.sources.length && text("nguồn đối chiếu", "sources"),
+  ].filter((entry) => typeof entry === "string")
+  const tabRow = tabs.length > 1 && (
+    <nav className="cp-tabs" aria-label={text("Nội dung hồ sơ", "Profile content")}>
+      {tabs.map(([value, label]) => (
+        <button
+          key={value}
+          ref={(button) => {
+            if (button) tabButtons.current.set(value, button)
+            else tabButtons.current.delete(value)
+          }}
+          type="button"
+          aria-current={tab === value ? "page" : undefined}
+          onClick={() => setTab(value)}
+        >
+          {label}
+        </button>
+      ))}
+    </nav>
+  )
   return (
     <div className="cp-container pf-page">
       <title>{`${content.name} — AOV Stream`}</title>
       <ProfileHead
         profile={profile}
-        kicker={
-          region ? (
-            <>
-              {kind} · <RegionMark code={regionKey(content.country)} size={16} /> {region}
-            </>
-          ) : (
-            kind
+        mark={
+          profile.kind === "PLAYER" && (
+            <Jersey
+              name={content.name}
+              lane={career?.lane}
+              logoUrl={stint?.team.logoUrl}
+              logoDarkUrl={stint?.team.logoDarkUrl}
+              size={compact ? 84 : 148}
+            />
           )
+        }
+        lights={stint && [{ src: stint.team.logoUrl, darkSrc: stint.team.logoDarkUrl, at: "left" }]}
+        kicker={
+          <>
+            {(!region || profile.kind === "PERSON") && kind}
+            {region && (
+              <>
+                {profile.kind === "PERSON" && " · "}
+                <RegionMark code={regionKey(content.country)} size={18} /> {region}
+              </>
+            )}
+          </>
         }
         lines={
           individual ? (
-            <ProfileTeams pageId={profile.id} />
+            <ProfileTeams
+              pageId={profile.id}
+              fallback={
+                stint && (
+                  <ul className="pf-teams" aria-label={text("Đội tuyển", "Teams")}>
+                    <li>
+                      <Link to={`/teams/${stint.teamId}`}>
+                        <StreamImage
+                          src={stint.team.logoUrl}
+                          darkSrc={stint.team.logoDarkUrl}
+                          logo
+                          name={stint.team.shortName || stint.team.name}
+                        />
+                        {stint.team.name}
+                      </Link>
+                    </li>
+                  </ul>
+                )
+              }
+            />
           ) : (
             profile.kind === "TEAM" &&
             content.organizationId && <TeamOrganization organizationId={content.organizationId} />
           )
         }
-        facts={facts}
-        channels={layout === "compact" && <ProfileSocials links={content.links} />}
+        figures={figures}
+        channels={content.links.length > 0 && <ProfileSocials links={content.links} />}
+        tabs={!compact && tabRow}
         actions={
           <>
             <button
@@ -281,24 +356,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           </>
         }
       />
-      {tabs.length > 1 && (
-        <nav className="cp-tabs" aria-label={text("Nội dung hồ sơ", "Profile content")}>
-          {tabs.map(([value, label]) => (
-            <button
-              key={value}
-              ref={(button) => {
-                if (button) tabButtons.current.set(value, button)
-                else tabButtons.current.delete(value)
-              }}
-              type="button"
-              aria-current={tab === value ? "page" : undefined}
-              onClick={() => setTab(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-      )}
+      {compact && tabRow}
       {(follow.isError || viewer.isError) && (
         <p className="cp-error" role="alert">
           {follow.error?.message || viewer.error?.message}
@@ -313,8 +371,10 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               competitionsPending={!!filter && competitions.isPending}
               competitionCount={competitionCount}
               achievements={achievements}
+              played={played}
               history={history}
               links={links}
+              crest={stint?.team ?? { logoUrl: content.avatarUrl }}
               ownedTeams={ownedTeams}
               role={viewer.data?.role || ""}
               authenticated={authenticated}
@@ -334,9 +394,9 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               <AchievementRows groups={achievements} />
             </section>
           )}
-          {tab === "overview" && <ProfileAside profile={profile} channels={false} />}
+          {tab === "overview" && <ProfileAside profile={profile} missing={missing} />}
         </div>
-        {layout === "wide" && <ProfileAside profile={profile} />}
+        {!compact && <ProfileAside profile={profile} missing={missing} column />}
       </div>
     </div>
   )
@@ -344,8 +404,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
 
 /**
  * What a reader comes to the page for, in the order they ask it: a broadcast that is on, the matches around now,
- * the squad or the latest of a career, the best of the record, then the page's posts. What the page does not
- * record is said once at the end.
+ * the squad or the latest of a career, the titles and the best of the record, then the page's posts.
  */
 function ProfileHome({
   profile,
@@ -353,8 +412,10 @@ function ProfileHome({
   competitionsPending,
   competitionCount,
   achievements,
+  played,
   history,
   links,
+  crest,
   ownedTeams,
   role,
   authenticated,
@@ -365,8 +426,12 @@ function ProfileHome({
   competitionsPending: boolean
   competitionCount: number | undefined
   achievements: AchievementGroup[]
+  /** The published competitions its achievements were read from. */
+  played: CompetitionView[]
   history: ProfileHistory[]
   links: CompetitionLinks
+  /** The logo the titles are lit by: a team's own, or the one a player plays for. */
+  crest: { logoUrl?: string | null; logoDarkUrl?: string | null }
   /** The teams an organization owns; an empty read for other pages. */
   ownedTeams: OrganizationTeamsQuery
   role: PageRole | ""
@@ -393,20 +458,13 @@ function ProfileHome({
   const hasVideos = !!videos.data?.totalElements
   // Readers who are signed in can write on the page, so they get the feed even while it is empty.
   const feed = authenticated || !!postCount
-  const missing = [
-    profile.kind === "TEAM" && !content.roster.length && text("đội hình", "roster"),
-    (profile.kind === "TEAM" || profile.kind === "PLAYER") &&
-      !achievements.length &&
-      text("thành tích", "achievements"),
-    competitionCount === 0 && (organization ? "giải đấu đã tổ chức" : "giải đấu đã tham gia"),
-    !content.biography && text("phần giới thiệu", "introduction"),
-    !content.sources.length && text("nguồn đối chiếu", "sources"),
-  ].filter((entry) => !!entry)
+  const titles = organization ? [] : achievements.filter(isTitle)
+  const others = organization ? [] : achievements.filter((group) => !isTitle(group))
   return (
     <>
       {profile.live && <LiveBlock live={profile.live} name={content.name} />}
       <ProfileMatches profile={profile} views={views} pending={competitionsPending} more={() => open("competitions")} />
-      {profile.kind === "TEAM" && content.roster.length > 0 && <TeamRoster roster={content.roster} />}
+      {profile.kind === "TEAM" && <TeamSquad profile={profile} views={views} />}
       {organization && (
         <OrganizationTeamsPreview query={ownedTeams} count={teamPreview(layout)} more={() => open("teams")} />
       )}
@@ -445,9 +503,9 @@ function ProfileHome({
           <HistoryRows items={history.slice(0, PREVIEW)} links={links} about={pageReferenceKey(profile)} />
         </section>
       )}
-      {!organization && achievements.length > 0 && (
-        <section aria-labelledby="profile-achievements">
-          <div className="tn-heading">
+      {titles.length + others.length > 0 && (
+        <section className="pf-honours" aria-labelledby="profile-achievements">
+          <div className="tn-heading" data-flush="">
             <h2 id="profile-achievements">{text("Thành tích", "Achievements")}</h2>
             {achievements.length > PREVIEW && (
               <button type="button" onClick={() => open("achievements")}>
@@ -456,49 +514,73 @@ function ProfileHome({
               </button>
             )}
           </div>
-          <AchievementRows groups={achievements.slice(0, PREVIEW)} />
+          {titles.length > 0 && (
+            <TitleShelf
+              titles={titles}
+              views={played}
+              teams={profile.kind === "PLAYER"}
+              name={content.name}
+              {...crest}
+            />
+          )}
+          {others.length > 0 && <AchievementRows groups={others.slice(0, PREVIEW)} />}
         </section>
       )}
       {feed && (
         <section className="pf-posts" aria-labelledby="profile-posts">
           <div className="tn-heading">
             <h2 id="profile-posts">{text("Bài viết", "Posts")}</h2>
+            {hasVideos && (
+              <div className="hub-pills" role="group" aria-label={text("Loại bài viết", "Post type")}>
+                <button type="button" aria-pressed={!onlyVideo} onClick={() => setOnlyVideo(false)}>
+                  {text("Tất cả", "All")}
+                </button>
+                <button type="button" aria-pressed={onlyVideo} onClick={() => setOnlyVideo(true)}>
+                  <StreamIcon name="play" size={14} />
+                  Video
+                </button>
+              </div>
+            )}
           </div>
-          {hasVideos && (
-            <div className="hub-pills pf-post-kinds" role="group" aria-label={text("Loại bài viết", "Post type")}>
-              <button type="button" aria-pressed={!onlyVideo} onClick={() => setOnlyVideo(false)}>
-                {text("Tất cả", "All")}
-              </button>
-              <button type="button" aria-pressed={onlyVideo} onClick={() => setOnlyVideo(true)}>
-                <StreamIcon name="play" size={14} />
-                Video
-              </button>
-            </div>
-          )}
           <CommunityFeed
             key={onlyVideo ? "video" : "all"}
             pageId={profile.id}
             pageName={content.name}
             role={role}
-            represented={profile.represented}
             kind={onlyVideo ? "VIDEO" : undefined}
             composer={!onlyVideo}
           />
         </section>
       )}
-      {missing.length > 0 && (
-        <p className="pf-note">
-          {text(
-            `Trang này chưa ghi nhận ${missing.join(", ")}.`,
-            `This page has no ${missing.join(", ")} recorded yet.`,
-          )}
-          {!profile.represented &&
-            text(
-              " Bạn có thông tin? Chọn nút ⋯ ở đầu trang để đề xuất chỉnh sửa.",
-              " Know more? Choose the ⋯ button at the top of the page to suggest a change.",
-            )}
-        </p>
-      )}
     </>
+  )
+}
+
+/**
+ * A team's lineup on its rail and its other members under it, from the roster of the page. A page without one shows
+ * the starters the team registered in its newest competition.
+ */
+function TeamSquad({ profile, views }: { profile: CommunityProfile; views: CompetitionView[] }) {
+  const { roster, avatarUrl } = profile.content!
+  const { season, groups } = rosterGroups(roster)
+  const seats = rosterLineup(roster)
+  if (seats)
+    return (
+      <TeamLineup seats={seats} logoUrl={avatarUrl} note={season}>
+        <TeamRoster groups={groups.filter(({ standing }) => standing !== "ACTIVE")} roster={roster} />
+      </TeamLineup>
+    )
+  if (roster.length) return <TeamRoster titled season={season} groups={groups} roster={roster} />
+  const registered = profile.entityId ? competitionLineup(views, profile.entityId) : null
+  if (!registered) return null
+  const { id, content } = registered.view
+  const team = content.teams[profile.entityId!]
+  return (
+    <TeamLineup
+      seats={registered.seats}
+      logoUrl={team?.logoUrl ?? avatarUrl}
+      logoDarkUrl={team?.logoDarkUrl}
+      note={<Link to={`/competitions/${id}?tab=teams`}>{content.tournament.name}</Link>}
+    />
   )
 }

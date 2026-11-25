@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -7,9 +8,9 @@ import { memberWords } from "../model/team-roster-model"
 
 /**
  * The teams whose published squads list this person, each with the role and standing recorded there. It reads as a
- * line of the page head, so it takes no room while it loads or when no squad lists the person.
+ * line of the page head, so it takes no room while it loads; `fallback` stands in when no squad lists the person.
  */
-export function ProfileTeams({ pageId }: { pageId: string }) {
+export function ProfileTeams({ pageId, fallback }: { pageId: string; fallback?: ReactNode }) {
   const { text } = useStreamLocale()
   const query = useQuery({
     queryKey: communityKeys.pageTeams(pageId),
@@ -24,7 +25,8 @@ export function ProfileTeams({ pageId }: { pageId: string }) {
         </button>
       </p>
     )
-  if (!query.data?.length) return null
+  if (!query.data) return null
+  if (!query.data.length) return fallback
   return (
     <ul className="pf-teams" aria-label={text("Đội tuyển", "Teams")}>
       {query.data.map((team, index) => (

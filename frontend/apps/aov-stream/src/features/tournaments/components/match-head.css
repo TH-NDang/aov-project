@@ -1,13 +1,17 @@
 /* The head of a match and of its games. */
 .tn-duel {
-  --stage-light-left: 24%;
-  --stage-light-right: 76%;
+  --stage-light-left: 30%;
+  --stage-light-right: 70%;
+  --stage-light-scale: 5.6;
+}
+.tn-duel-trail {
+  padding: 14px var(--stage-side) 6px;
 }
 .tn-duel-main {
   display: grid;
   justify-items: center;
   gap: 18px;
-  padding: 28px 32px 30px;
+  padding: 0 var(--stage-side) 34px;
   text-align: center;
 }
 .tn-duel-round {
@@ -170,6 +174,7 @@
 .tn-track {
   position: relative;
   display: flex;
+  padding: 0 var(--stage-side, 0);
   overflow-x: auto;
   border-top: 1px solid rgb(255 255 255 / 12%);
   background: rgb(18 18 32 / 46%);
@@ -247,9 +252,12 @@
   }
 }
 @media (max-width: 899.98px) {
+  .tn-duel-trail {
+    padding-block: 4px;
+  }
   .tn-duel-main {
     gap: 14px;
-    padding: 16px 12px 18px;
+    padding: 0 var(--stage-side) 18px;
   }
   .tn-duel-round {
     font-size: 13px;

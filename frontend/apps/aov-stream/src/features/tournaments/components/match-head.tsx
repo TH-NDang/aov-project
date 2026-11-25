@@ -1,7 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react"
 import { Link } from "react-router"
 import type { PublishedGame } from "@aov/community-contracts"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { EntityPageLink } from "../../../components/go-link"
+import { PlaceBar, type Place } from "../../../components/place-trail"
 import { Stage } from "../../../components/stage"
 import { RoundLabel } from "../../../components/round-label"
 import { StreamIcon } from "../../../components/stream-icon"
@@ -85,17 +87,22 @@ function DuelTeam({ team, side }: { team: HeadTeam; side: "a" | "b" }) {
 
 /**
  * The head a match shares with each of its games: both teams large around the score, on a stage lit by both.
- * `round` and `bestOf` say what the match is, `center` takes the place of the score while there is none, `scoreNote`
+ * `trail` says where the match stands, `round` and `bestOf` say what the match is, `center` takes the place of the score while there is none, `scoreNote`
  * says what the score counts when the page is about one game, `facts` stand under the board and `foot` closes it.
  */
 export function MatchHead({
   head: { tint, round, bestOf, teams },
+  trail,
+  bar,
   center,
   scoreNote,
   facts,
   foot,
 }: {
   head: Head
+  trail: ReactNode
+  /** The pages above, and beside, for the bar that stands in for the head once it is scrolled away. */
+  bar: { places: Place[]; steps?: ReactNode }
   center?: ReactNode
   scoreNote?: string
   facts?: ReactNode
@@ -103,40 +110,61 @@ export function MatchHead({
 }) {
   const [a, b] = teams
   const scored = a.score != null && b.score != null
+  const wide = usePageLayout() === "wide"
+  const head = useRef<HTMLDivElement>(null)
   return (
-    <Stage
-      tint={tint}
-      lights={[
-        { src: a.logoUrl, darkSrc: a.logoDarkUrl, at: "left" },
-        { src: b.logoUrl, darkSrc: b.logoDarkUrl, at: "right" },
-      ]}
-      className="tn-duel"
-    >
-      <header className="tn-duel-main">
-        <p className="tn-duel-round">
-          {round && <span>{round}</span>}
-          <span>BO{bestOf}</span>
-        </p>
-        <h1 className="tn-duel-board">
-          <DuelTeam team={a} side="a" />
-          <span className="tn-duel-score">
-            {scored ? (
-              <>
-                <b data-lost={a.lost || undefined}>{a.score}</b>
-                <i aria-hidden="true">–</i>
-                <b data-lost={b.lost || undefined}>{b.score}</b>
-                {scoreNote && <small>{scoreNote}</small>}
-              </>
-            ) : (
-              (center ?? <i>vs</i>)
-            )}
-          </span>
-          <DuelTeam team={b} side="b" />
-        </h1>
-        {facts && <div className="tn-duel-facts">{facts}</div>}
-      </header>
-      {foot}
-    </Stage>
+    <>
+      <div ref={head} data-place-head="">
+        <Stage
+          tint={tint}
+          lights={[
+            { src: a.logoUrl, darkSrc: a.logoDarkUrl, at: "left" },
+            { src: b.logoUrl, darkSrc: b.logoDarkUrl, at: "right" },
+          ]}
+          bleeds
+          className="tn-duel"
+        >
+          <div className="tn-duel-trail">{trail}</div>
+          <header className="tn-duel-main">
+            <p className="tn-duel-round">
+              {round && <span>{round}</span>}
+              <span>BO{bestOf}</span>
+            </p>
+            <h1 className="tn-duel-board">
+              <DuelTeam team={a} side="a" />
+              <span className="tn-duel-score">
+                {scored ? (
+                  <>
+                    <b data-lost={a.lost || undefined}>{a.score}</b>
+                    <i aria-hidden="true">–</i>
+                    <b data-lost={b.lost || undefined}>{b.score}</b>
+                    {scoreNote && <small>{scoreNote}</small>}
+                  </>
+                ) : (
+                  (center ?? <i>vs</i>)
+                )}
+              </span>
+              <DuelTeam team={b} side="b" />
+            </h1>
+            {facts && <div className="tn-duel-facts">{facts}</div>}
+          </header>
+          {foot}
+        </Stage>
+      </div>
+      {wide && (
+        <PlaceBar
+          head={head}
+          {...bar}
+          name={`${a.name} ${scored ? `${a.score}–${b.score}` : "vs"} ${b.name}`}
+          mark={
+            <>
+              <StreamImage src={a.logoUrl} darkSrc={a.logoDarkUrl} logo name={a.name} />
+              <StreamImage src={b.logoUrl} darkSrc={b.logoDarkUrl} logo name={b.name} />
+            </>
+          }
+        />
+      )}
+    </>
   )
 }
 

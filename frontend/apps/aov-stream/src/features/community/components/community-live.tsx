@@ -5,7 +5,8 @@ import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
-import { Avatar, TimeAgo } from "../../../components/community-ui"
+import { TimeAgo } from "../../../components/community-ui"
+import { ProfileMark } from "../../../components/page-mark"
 import { videoEmbed, videoPoster } from "../model/post-media-model"
 import "./community-live.css"
 
@@ -25,7 +26,7 @@ export function videoThumbnail(url?: string | null) {
   return embed ? videoPoster(embed, "mqdefault") : null
 }
 
-/** Each broadcast as a card: its picture, the live mark, the title and the page it is on. */
+/** Each broadcast: its picture under the live mark, the title and the page it is on. */
 export function LiveCards({ pages }: { pages: CommunityProfile[] }) {
   const { text } = useStreamLocale()
   return (
@@ -35,20 +36,18 @@ export function LiveCards({ pages }: { pages: CommunityProfile[] }) {
         const picture = videoThumbnail(live.url) || page.content?.coverUrl
         return (
           <Link key={page.id} to={`/pages/${page.code}`} className="lv-card">
-            <div className="lv-thumb">
+            <span className="lv-thumb">
               {picture ? <img src={picture} alt="" loading="lazy" /> : <StreamIcon name="play" size={24} />}
-            </div>
-            <div className="lv-body">
-              <span className="tn-live">{text("Trực tiếp", "Live")}</span>
+              <span className="lv-on">{text("Trực tiếp", "Live")}</span>
+            </span>
+            <span className="lv-body">
+              <ProfileMark profile={page} size={36} />
               <strong>{live.title}</strong>
-              <div className="lv-page">
-                <Avatar profile={page} />
+              <span className="lv-page">
                 <span>{page.content?.name || page.code}</span>
-                <span className="lv-since">
-                  <TimeAgo value={live.startedAt} />
-                </span>
-              </div>
-            </div>
+                <TimeAgo value={live.startedAt} />
+              </span>
+            </span>
           </Link>
         )
       })}
@@ -65,10 +64,7 @@ export function LiveRow() {
   return (
     <section className="lv-row" aria-labelledby="live-row">
       <h2 id="live-row" className="hub-card-title">
-        {text("Đang trực tiếp", "Live now")}{" "}
-        <span className="cp-meta">
-          {text(`· ${items.length} kênh`, `· ${items.length} ${items.length === 1 ? "channel" : "channels"}`)}
-        </span>
+        {text("Đang trực tiếp", "Live now")}
       </h2>
       <LiveCards pages={items} />
     </section>

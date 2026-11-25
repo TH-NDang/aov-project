@@ -1,5 +1,4 @@
 import type { CompetitionView } from "@aov/community-contracts"
-import { competitionChampion } from "./champion-model.ts"
 import { byRecency, bySoonest, competitionStatus } from "./competition-model.ts"
 import { daysUntil } from "./countdown.ts"
 
@@ -19,6 +18,9 @@ export function aheadCompetitions(views: CompetitionView[], now = Date.now()) {
     .filter((view) => rank(view) >= 0)
     .sort((a, b) => rank(a) - rank(b) || (rank(a) === 0 ? byRecency(a, b) : bySoonest(a, b)))
 }
+
+/** The page of the circuit a competition belongs to, or null for one outside any. */
+export const circuitIdOf = ({ content }: CompetitionView) => content.circuit?.id ?? content.plan.circuitPageId ?? null
 
 export type SeasonRow = {
   view: CompetitionView
@@ -47,25 +49,6 @@ export function seasonRows(views: CompetitionView[]): SeasonRow[] {
       { view, part: false },
       ...sorted.filter((item) => parentOf(item) === view.id).map((item) => ({ view: item, part: true })),
     ])
-}
-
-/** The seasons of a circuit with a known champion, newest first; the parts of a season crown none of their own. */
-export function circuitChampions(group: CircuitGroup) {
-  return group.rows
-    .filter((row) => !row.part && competitionStatus(row.view.content) === "FINISHED" && competitionChampion(row.view))
-    .map((row) => row.view)
-}
-
-/** The years a circuit spans, such as "2020–2026". */
-export function circuitYears(views: CompetitionView[]) {
-  const years = views.flatMap(({ content }) => {
-    const { year, startsOn } = content.tournament
-    const value = year ?? Number(startsOn?.slice(0, 4))
-    return value ? [value] : []
-  })
-  if (!years.length) return ""
-  const [first, last] = [Math.min(...years), Math.max(...years)]
-  return first === last ? String(first) : `${first}–${last}`
 }
 
 /** Competitions by circuit, the circuit with the newest season first; those outside any circuit close the list. */

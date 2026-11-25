@@ -1,5 +1,6 @@
 .tn-comp {
-  gap: 20px;
+  --page-gap: 24px;
+  gap: var(--page-gap);
 }
 .tn-info-cards {
   display: grid;

@@ -83,9 +83,11 @@ async function openHub(url = "/tournaments") {
     { initialEntries: [url] },
   )
   await render(<RouterProvider router={router} />)
-  await waitFor(() => button("Mở giải Cup A"), "The list loads")
+  await waitFor(() => opener("Cup A"), "The list loads")
 }
-const rowOf = (name: string) => button(`Mở giải ${name}`)!.closest("tr")!
+/** The link a tournament's row is. */
+const opener = (name: string) => document.querySelector<HTMLAnchorElement>(`a[aria-label="Mở giải ${name}"]`)
+const rowOf = (name: string) => opener(name)!.closest("tr")!
 const box = (name: string) => document.querySelector<HTMLElement>(`[role="checkbox"][aria-label="Chọn ${name}"]`)!
 const ticked = () =>
   ["Cup A", "Cup B", "Cup C", "Cup D"].filter((name) => box(name)?.getAttribute("aria-checked") === "true")
@@ -111,6 +113,13 @@ test("a reader's list offers neither menus nor boxes", async () => {
   assert.equal(button("Thao tác với Cup A"), undefined)
   assert.equal(button("Đổi thành Đã kết thúc"), undefined)
   assert.match(rowOf("Cup A").textContent ?? "", /Lịch đã hết/, "the contradiction itself is still told")
+})
+
+test("a row is a link to its workspace, so it opens in a new tab as any link does", async () => {
+  await openHub()
+  assert.equal(opener("Cup A")!.getAttribute("href"), "/tournaments/a")
+  await click(opener("Cup B"))
+  assert.equal(router.state.location.pathname, "/tournaments/b")
 })
 
 test("a click on a row opens its workspace and a click on its box does not", async () => {
@@ -208,10 +217,10 @@ test("the seasons of a circuit stand together and the older ones wait to be show
   await openHub()
   const heading = [...document.querySelectorAll("h2")].find((item) => item.textContent === "Premier League")!
   assert.match(heading.closest("tr")!.textContent ?? "", /5 mùa · 2022–2026/)
-  assert.equal(button("Mở giải Premier League 2024")?.querySelector("strong")?.textContent, "2024")
-  assert.equal(button("Mở giải Premier League 2023"), undefined, "older seasons are folded away")
+  assert.equal(opener("Premier League 2024")?.querySelector("strong")?.textContent, "2024")
+  assert.equal(opener("Premier League 2023"), null, "older seasons are folded away")
   await click(button("Xem thêm 2 mùa của Premier League"))
-  assert.ok(button("Mở giải Premier League 2022"))
+  assert.ok(opener("Premier League 2022"))
 })
 
 test("what is on and coming up leads the list, and goes while the list is filtered", async () => {
@@ -313,6 +322,6 @@ test("a bulk trash leaves out what is still in use and says why", async () => {
   await answerConfirm("Chuyển vào thùng rác")
   await waitFor(() => document.querySelector('[role="alert"]'), "The report shows")
   assert.deepEqual(removed, ["c"])
-  await waitFor(() => !button("Mở giải Cup C"), "The row leaves the list")
+  await waitFor(() => !opener("Cup C"), "The row leaves the list")
   assert.equal(box("Cup D").getAttribute("aria-checked"), "true")
 })

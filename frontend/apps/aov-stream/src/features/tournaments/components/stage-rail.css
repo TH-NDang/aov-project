@@ -2,7 +2,7 @@
 .tn-rail {
   display: flex;
   margin: 0;
-  padding: 0;
+  padding: 0 var(--stage-side, 0);
   border-top: 1px solid rgb(255 255 255 / 12%);
   background: rgb(18 18 32 / 46%);
   list-style: none;
@@ -29,6 +29,9 @@
   line-height: 18px;
   text-align: left;
   transition: background-color 120ms;
+}
+.tn-rail > li:first-child button {
+  padding-left: var(--rail-inset, 0);
 }
 .tn-rail button:hover {
   background: rgb(255 255 255 / 7%);
@@ -72,7 +75,7 @@
     flex: 1 0 44%;
   }
   .tn-rail button {
-    padding: 10px 16px 13px;
+    padding: 10px 14px 13px;
   }
   .tn-rail button > span {
     display: grid;

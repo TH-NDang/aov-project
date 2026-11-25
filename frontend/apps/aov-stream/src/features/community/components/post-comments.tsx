@@ -1,8 +1,9 @@
 import { useState, type CSSProperties } from "react"
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { CommunityPost, PageRole } from "@aov/community-contracts"
+import type { CommunityPost, PageCard, PageRole } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { PageMark } from "../../../components/page-mark"
 import { ReferenceText } from "../../../components/reference-text"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -12,6 +13,7 @@ import { communityApi } from "../../../lib/community-api"
 import { communityKeys, refreshPostLists } from "../../../lib/community-keys"
 import { initials } from "../../../lib/profile-model"
 import { useCommunitySession } from "../../../lib/stream-auth"
+import "./post-comments.css"
 
 /** The initials of a member who wrote as themselves, in the color of their name. */
 export function AuthorMark({ name, small = false }: { name: string; small?: boolean }) {
@@ -27,15 +29,18 @@ export function AuthorMark({ name, small = false }: { name: string; small?: bool
 }
 
 /**
- * The comments under a post, loaded as the reader scrolls, and the box to add one. Moderators of the page can hide a
- * comment; anyone signed in can report one through `onReport`.
+ * The comments under a post, loaded as the reader scrolls, and the box to add one. `page` is the page the post is on,
+ * whose representatives may answer as it. Moderators of the page can hide a comment; anyone signed in can report one
+ * through `onReport`.
  */
 export function PostComments({
   post,
+  page,
   role,
   onReport,
 }: {
   post: CommunityPost
+  page?: PageCard
   role: PageRole | ""
   onReport: (commentId: string) => void
 }) {
@@ -52,7 +57,7 @@ export function PostComments({
     getNextPageParam: nextPageOf,
     enabled: post.status === "PUBLISHED",
   })
-  const rows = comments.data?.pages.flatMap((page) => page.items) ?? []
+  const rows = comments.data?.pages.flatMap((part) => part.items) ?? []
   const refresh = async () => {
     await client.invalidateQueries({ queryKey: communityKeys.comments(post.id) })
     await refreshPostLists(client)
@@ -68,8 +73,9 @@ export function PostComments({
     mutationFn: (commentId: string) => communityApi.moderate(post.pageId, { postId: post.id, commentId, hidden: true }),
     onSuccess: refresh,
   })
+  const moderates = ["OWNER", "MODERATOR"].includes(role)
   return (
-    <div className="cp-comments">
+    <div className="pc">
       {comments.isLoadingError && (
         <p className="cp-error" role="alert">
           {comments.error.message}
@@ -89,31 +95,46 @@ export function PostComments({
           )}
         </p>
       )}
-      {rows.map((comment) => (
-        <div className="cp-comment" key={comment.id}>
-          <AuthorMark name={comment.authorName} small />
-          <div className="cp-comment-body">
-            <p className="cp-comment-head">
-              <strong>{comment.authorName}</strong>
-              {comment.asPage && <span>{text("Đại diện trang", "Page representative")}</span>}
-              <TimeAgo value={comment.createdAt} />
-            </p>
-            <p className="cp-prose">
-              <ReferenceText text={comment.body} />
-            </p>
-            <div className="cp-comment-tools">
-              <button className="cp-text-button" onClick={() => onReport(comment.id)}>
-                {text("Báo cáo", "Report")}
-              </button>
-              {["OWNER", "MODERATOR"].includes(role) && (
-                <button className="cp-text-button" onClick={() => hide.mutate(comment.id)}>
-                  {text("Ẩn bình luận", "Hide comment")}
-                </button>
+      {rows.length > 0 && (
+        <ol className="pc-list">
+          {rows.map((comment) => (
+            <li key={comment.id} className="pc-comment" data-page={comment.asPage || undefined}>
+              {comment.asPage ? (
+                <PageMark
+                  kind={page?.kind ?? "ORGANIZATION"}
+                  name={comment.authorName}
+                  url={page?.avatarUrl}
+                  size={32}
+                />
+              ) : (
+                <AuthorMark name={comment.authorName} small />
               )}
-            </div>
-          </div>
-        </div>
-      ))}
+              <div>
+                <div className="pc-bubble">
+                  <p className="pc-head">
+                    <strong>{comment.authorName}</strong>
+                    {comment.asPage && <span>{text("Đại diện trang", "Page representative")}</span>}
+                  </p>
+                  <p className="pc-text">
+                    <ReferenceText text={comment.body} />
+                  </p>
+                </div>
+                <p className="pc-tools">
+                  <TimeAgo value={comment.createdAt} />
+                  <button type="button" onClick={() => onReport(comment.id)}>
+                    {text("Báo cáo", "Report")}
+                  </button>
+                  {moderates && (
+                    <button type="button" disabled={hide.isPending} onClick={() => hide.mutate(comment.id)}>
+                      {text("Ẩn bình luận", "Hide comment")}
+                    </button>
+                  )}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
       <InfiniteScroll
         query={comments}
         label={text("Đang tải thêm bình luận", "Loading more comments")}
@@ -121,39 +142,44 @@ export function PostComments({
       />
       {session.status === "authenticated" ? (
         <form
-          className="cp-reply"
+          className="pc-reply"
           onSubmit={(event) => {
             event.preventDefault()
-            reply.mutate()
+            if (body.trim()) reply.mutate()
           }}
         >
-          <label>
+          <span className="pc-self">
+            <AuthorMark name={session.name} small />
+          </span>
+          <label className="pc-field">
             <span className="sr-only">{text("Bình luận của bạn", "Your comment")}</span>
             <textarea
               required
-              rows={2}
+              rows={1}
               maxLength={4000}
               placeholder={text("Viết bình luận…", "Write a comment…")}
               value={body}
               onChange={(event) => setBody(event.target.value)}
             />
           </label>
-          <div className="cp-actions cp-reply-actions">
-            {role && (
-              <label className="cp-check">
-                <input type="checkbox" checked={asPage} onChange={(event) => setAsPage(event.target.checked)} />
-                {text("Trả lời với tư cách trang", "Reply as the page")}
-              </label>
-            )}
-            <button className="cp-button cp-primary" disabled={reply.isPending || !body.trim()}>
-              <StreamIcon name="send" size={16} />
-              {text("Gửi bình luận", "Send comment")}
-            </button>
-          </div>
+          <button
+            className="pc-send"
+            aria-label={text("Gửi bình luận", "Send comment")}
+            title={text("Gửi bình luận", "Send comment")}
+            disabled={reply.isPending || !body.trim()}
+          >
+            <StreamIcon name="send" size={18} />
+          </button>
+          {role && (
+            <label className="cp-check pc-as">
+              <input type="checkbox" checked={asPage} onChange={(event) => setAsPage(event.target.checked)} />
+              {text("Trả lời với tư cách trang", "Reply as the page")}
+            </label>
+          )}
         </form>
       ) : (
         <button
-          className="cp-button cp-reply-prompt"
+          className="cp-button pc-prompt"
           onClick={() =>
             signedIn(
               text("Đăng nhập để bình luận và tham gia thảo luận.", "Sign in to comment and join the discussion."),

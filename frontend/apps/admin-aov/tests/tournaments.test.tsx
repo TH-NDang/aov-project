@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { act, useState } from "react"
+import { useState } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { Catalog, SeriesContent } from "@aov/community-contracts"
 import {
@@ -165,39 +165,36 @@ test("changing one game's season keeps its already observed picks and leaves oth
   })
 })
 
-test("tournament list opens the selected record and displays recorded match counts", async () => {
+test("a tournament's row is a link to it and displays recorded match counts", async () => {
   const { TournamentList } = await import("../src/features/tournaments/components/tournament-list")
-  let opened = ""
+  const { MemoryRouter } = await import("react-router")
   await render(
-    <TournamentList
-      entries={[
-        {
-          id: "cup",
-          version: 0,
-          createdAt: "",
-          updatedAt: "",
-          missingFields: [],
-          content: {
-            code: "cup",
-            name: "Test Cup",
-            region: "VN",
-            startsOn: "2026-10-01",
-            status: "ONGOING",
-            tier: "A",
+    <MemoryRouter>
+      <TournamentList
+        entries={[
+          {
+            id: "cup",
+            version: 0,
+            createdAt: "",
+            updatedAt: "",
+            missingFields: [],
+            content: {
+              code: "cup",
+              name: "Test Cup",
+              region: "VN",
+              startsOn: "2026-10-01",
+              status: "ONGOING",
+              tier: "A",
+            },
           },
-        },
-      ]}
-      stats={new Map([["cup", { teams: 4, matches: 6, played: 2 }]])}
-      onOpen={(entry) => {
-        opened = entry.id
-      }}
-    />,
+        ]}
+        stats={new Map([["cup", { teams: 4, matches: 6, played: 2 }]])}
+      />
+    </MemoryRouter>,
   )
-  const opener = document.querySelector<HTMLButtonElement>('[aria-label="Mở giải Test Cup"]')!
-  assert.ok(opener)
+  const opener = document.querySelector<HTMLAnchorElement>('[aria-label="Mở giải Test Cup"]')!
+  assert.equal(opener.getAttribute("href"), "/tournaments/cup", "a link opens in a new tab as any other")
   assert.match(document.body.textContent ?? "", /Từ 01\/10\/2026/)
   assert.match(document.body.textContent ?? "", /2\/6 trận đã đấu/)
   assert.match(document.body.textContent ?? "", /4 đội/)
-  await act(async () => opener.click())
-  assert.equal(opened, "cup")
 })

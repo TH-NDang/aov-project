@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionView, TournamentContent } from "@aov/community-contracts"
 import {
-  competitionKinds,
   competitionRegionName,
   filterOptions,
   passesFilter,
@@ -18,34 +17,26 @@ const view = (tournament: Partial<TournamentContent>, circuit = "") =>
     },
   }) as unknown as CompetitionView
 
-const none: DirectoryFilter = { region: "all", year: "all", status: "all", tier: "all", kind: "all", search: "" }
+const none: DirectoryFilter = { region: "all", year: "all", search: "" }
 
-const aog = view({ code: "aog", name: "Đấu Trường Danh Vọng", region: "VN", year: 2026, tier: "A" }, "AOG")
-const aogQualifier = view({
-  code: "aog-q",
-  name: "Vòng thăng hạng",
-  region: "VN",
-  year: 2026,
-  tier: "B",
-  competitionType: "QUALIFIER",
-  parentTournamentId: "aog",
-})
-const rpl = view({ code: "rpl", name: "RoV Pro League", region: "TH", year: 2025, tier: "A" })
-const showmatch = view({ code: "show", name: "Show match", region: "TH", year: 2025, competitionType: "SHOWMATCH" })
-const items = [aog, aogQualifier, rpl, showmatch]
+const aog = view({ code: "aog", name: "Đấu Trường Danh Vọng", region: "VN", year: 2026 }, "AOG")
+const aogBefore = view({ code: "aog-2025", name: "Đấu Trường Danh Vọng", region: "VN", year: 2025 }, "AOG")
+const rpl = view({ code: "rpl", name: "RoV Pro League", region: "TH", year: 2025 })
+const world = view({ code: "awc", name: "World Cup", region: undefined, year: undefined })
+const items = [aog, aogBefore, rpl, world]
 
-test("a qualifier of a main event is not a main event, and a show match is neither", () => {
-  assert.deepEqual(competitionKinds(aog.content.tournament), ["MAIN"])
-  assert.deepEqual(competitionKinds(aogQualifier.content.tournament), ["QUALIFIER"])
-  assert.deepEqual(competitionKinds(showmatch.content.tournament), ["SHOWMATCH"])
-})
-
-test("filters combine, so a tier and a kind narrow each other", () => {
-  const shown = items.filter((item) => passesFilter(item, { ...none, tier: "A", kind: "MAIN" }))
+test("filters combine, so a region and a year narrow each other", () => {
+  const shown = items.filter((item) => passesFilter(item, { ...none, region: "VN", year: "2025" }))
   assert.deepEqual(
     shown.map((item) => item.id),
-    ["aog", "rpl"],
+    ["aog-2025"],
   )
+})
+
+test("a competition without a region or a year passes only while that filter is off", () => {
+  assert.ok(passesFilter(world, none))
+  assert.ok(!passesFilter(world, { ...none, region: "VN" }))
+  assert.ok(!passesFilter(world, { ...none, year: "2026" }))
 })
 
 test("the search reads the circuit as well as the name, without accents", () => {
@@ -55,7 +46,7 @@ test("the search reads the circuit as well as the name, without accents", () => 
 })
 
 test("each option counts what it would show with the other filters, not with its own", () => {
-  const regions = filterOptions(items, { ...none, region: "TH", tier: "A" }, "region", (a, b) => b[1] - a[1])
+  const regions = filterOptions(items, { ...none, region: "TH", year: "2025" }, "region", (a, b) => b[1] - a[1])
   assert.deepEqual(regions, [
     ["VN", 1],
     ["TH", 1],
@@ -63,11 +54,11 @@ test("each option counts what it would show with the other filters, not with its
 })
 
 test("the option in use stays in the list when nothing matches it", () => {
-  const tiers = filterOptions(items, { ...none, tier: "S" }, "tier", (a, b) => a[0].localeCompare(b[0]))
-  assert.deepEqual(tiers, [
-    ["A", 2],
-    ["B", 1],
-    ["S", 0],
+  const years = filterOptions(items, { ...none, year: "2019" }, "year", (a, b) => Number(b[0]) - Number(a[0]))
+  assert.deepEqual(years, [
+    ["2026", 1],
+    ["2025", 2],
+    ["2019", 0],
   ])
 })
 

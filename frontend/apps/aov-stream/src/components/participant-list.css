@@ -3,8 +3,8 @@
   --stream-image-size: 44px;
   --stream-image-radius: var(--aov-radius-control);
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 2px 24px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -15,35 +15,18 @@
   min-width: 0;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
+  margin-inline: -10px;
+  padding: 10px;
+  border-radius: var(--hub-radius);
   transition: background-color 120ms;
 }
 .pt-card:has(a:hover) {
-  background: var(--hub-hover);
+  background: var(--hub-surface);
 }
 .pt-card-text {
   display: grid;
   min-width: 0;
   flex: 1;
-}
-/* The arrow that says the whole card opens. */
-.pt-card::after {
-  content: "";
-  width: 7px;
-  height: 7px;
-  flex: none;
-  border: solid var(--hub-muted);
-  border-width: 1.5px 1.5px 0 0;
-  transform: rotate(45deg);
-  transition:
-    border-color 120ms,
-    transform 120ms;
-}
-.pt-card:has(a:is(:hover, :focus-visible))::after {
-  border-color: var(--hub-accent-strong);
-  transform: translateX(2px) rotate(45deg);
 }
 .pt-card-text > a,
 .pt-card-text > b {
@@ -72,10 +55,10 @@
 @media (max-width: 899.98px) {
   .pt-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 2px 20px;
   }
   .pt-card {
     gap: 10px;
-    padding: 10px;
+    padding-block: 8px;
   }
 }

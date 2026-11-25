@@ -1,23 +1,17 @@
 import { useState } from "react"
-import type { ObjectiveKind, PublishedGame, Seat, TimelineEvent } from "@aov/community-contracts"
+import type { PublishedGame, Seat, TimelineEvent } from "@aov/community-contracts"
 import { GameIcon } from "@aov/ui/components/game-icons"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { timelineRows } from "../../../lib/series-model"
 import { clock } from "../../../lib/tournament-model"
+import { GameTrack, OBJECTIVE_ICONS, OBJECTIVE_NAMES } from "./game-track"
 import { ReferenceArt } from "./reference-art"
 import "./game-timeline.css"
 
 /** Moments shown before the reader asks for the rest. */
 const PREVIEW = 12
-
-const OBJECTIVE_NAMES: Record<ObjectiveKind, readonly [string, string]> = {
-  DARK_SLAYER: ["Hạ tà thần Caesar", "Took the Dark Slayer"],
-  ABYSSAL_DRAGON: ["Hạ Rồng", "Took the Abyssal Dragon"],
-  TURRET: ["Phá trụ", "Destroyed a tower"],
-  BASE: ["Phá nhà chính", "Destroyed the base"],
-  OTHER: ["Chiếm mục tiêu", "Took an objective"],
-}
 
 /** The hero in a seat of the game, as its picture. */
 function SeatArt({ game, seat }: { game: PublishedGame; seat?: Seat | null }) {
@@ -49,6 +43,7 @@ function Moment({ game, event }: { game: PublishedGame; event: TimelineEvent }) 
     return (
       <>
         <SeatArt game={game} seat={event.by} />
+        <StreamIcon name={OBJECTIVE_ICONS[event.objective ?? "OTHER"]} size={16} />
         <b>{text(...OBJECTIVE_NAMES[event.objective ?? "OTHER"])}</b>
       </>
     )
@@ -57,16 +52,27 @@ function Moment({ game, event }: { game: PublishedGame; event: TimelineEvent }) 
 
 /**
  * The moments of a game from the first to the last, each on the side of the team it belongs to, with the kills up to
- * then. Nothing shows while none is recorded.
+ * then. Objectives alone are marks along the length of the game where the page is wide. Nothing shows while none is
+ * recorded.
  */
 export function GameTimeline({ game }: { game: PublishedGame }) {
   const { text } = useStreamLocale()
   const [open, setOpen] = useState(false)
+  const layout = usePageLayout()
   const rows = timelineRows(game)
   if (!rows.length) return null
   const shown = open ? rows : rows.slice(0, PREVIEW)
   const first = game.series.teamAId === game.content.sides.find((side) => side.side === "BLUE")?.teamId ? "BLUE" : "RED"
   const second = first === "BLUE" ? "RED" : "BLUE"
+  if (layout === "wide" && rows.every(({ event, side }) => event.kind === "OBJECTIVE" && side))
+    return (
+      <section className="tn-block" aria-labelledby="game-timeline">
+        <div className="tn-heading">
+          <h2 id="game-timeline">{text("Diễn biến", "Timeline")}</h2>
+        </div>
+        <GameTrack game={game} rows={rows} order={[first, second]} />
+      </section>
+    )
   return (
     <section className="tn-block" aria-labelledby="game-timeline">
       <div className="tn-heading">

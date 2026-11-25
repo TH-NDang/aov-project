@@ -1,0 +1,254 @@
+/* The cabinet: trophies on plinths along glass shelves, the words under the shelf. */
+.ts {
+  --stage-light-scale: 7;
+}
+.ts-case {
+  --trophy: 76px;
+  display: grid;
+  gap: 14px;
+  padding: 22px 0 14px;
+}
+.ts-row[data-size="few"] {
+  --trophy: 98px;
+}
+.ts-row[data-size="one"] {
+  --trophy: 124px;
+}
+.ts-row {
+  min-width: 0;
+}
+.ts-label {
+  margin: 0 28px 2px;
+  color: rgb(255 255 255 / 66%);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.ts-label > small {
+  margin-left: 4px;
+  color: rgb(255 255 255 / 44%);
+  font-size: 13px;
+}
+.ts-shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(50%, 136px), 1fr));
+  gap: 0 0;
+  margin: 0 20px;
+  padding: 0;
+  overflow-x: clip;
+  list-style: none;
+}
+/* The trophies of a row stand on one line however tall they are, and their words begin on one. */
+.ts-title {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  color: rgb(255 255 255 / 70%);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+}
+.ts-piece {
+  position: relative;
+  display: grid;
+  align-content: end;
+  justify-items: center;
+  padding: 10px 8px 0;
+}
+/* The shelf: a lit edge of glass under every plinth of its row, and the shade below it. */
+.ts-piece::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 40%), rgb(255 255 255 / 8%));
+  box-shadow: 0 10px 14px rgb(0 0 0 / 34%);
+}
+.ts-title:last-child > .ts-piece::after {
+  right: -100vw;
+}
+.ts-plinth {
+  display: grid;
+  width: 74px;
+  justify-items: center;
+  padding: 6px 0 7px;
+  background:
+    linear-gradient(to bottom, rgb(255 255 255 / 20%), transparent 2px), linear-gradient(to bottom, #3d3d68, #1c1c32);
+  clip-path: polygon(6% 0, 94% 0, 100% 100%, 0 100%);
+  color: color-mix(in srgb, var(--aov-medal-gold) 78%, #fff);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 18px;
+}
+.ts-plinth[data-reigning] {
+  background:
+    linear-gradient(to bottom, rgb(255 255 255 / 60%), transparent 2px),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--aov-medal-gold) 82%, #fff),
+      color-mix(in srgb, var(--aov-medal-gold) 72%, #3a1f00)
+    );
+  color: #2a1803;
+}
+.ts-stars {
+  margin-bottom: -1px;
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.14em;
+  line-height: 14px;
+  text-indent: 0.14em;
+}
+.ts-words {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 16px 8px 18px;
+}
+.ts-words > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.ts-words > strong > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.ts-title:has(a):hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ts-words > em {
+  display: block;
+  color: var(--aov-medal-gold);
+  font-style: normal;
+  font-weight: 600;
+}
+.ts-words b {
+  margin-left: 4px;
+  color: #fff;
+  font-weight: 600;
+}
+.ts-team {
+  --stream-image-size: 20px;
+  --stream-image-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+/* A few trophies keep together at the start of their shelf, larger and with their finals. */
+.ts-row[data-size="few"] .ts-shelf {
+  grid-template-columns: repeat(auto-fill, minmax(min(50%, 152px), 1fr));
+}
+/* A single one has the cabinet to itself and tells its whole story beside it. */
+.ts-row[data-size="one"] .ts-shelf {
+  grid-template-columns: minmax(0, 1fr);
+  overflow: visible;
+}
+.ts-row[data-size="one"] .ts-title {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  text-align: left;
+}
+.ts-row[data-size="one"] .ts-piece {
+  position: static;
+  flex: none;
+  padding-inline: 26px 10px;
+}
+.ts-row[data-size="one"] .ts-piece::after {
+  right: 0;
+}
+.ts-row[data-size="one"] .ts-plinth {
+  width: 108px;
+  padding-block: 9px 11px;
+  font-size: 17px;
+}
+.ts-row[data-size="one"] .ts-words {
+  min-width: 0;
+  gap: 3px;
+  padding: 0 12px 18px 0;
+  font-size: 14px;
+  line-height: 20px;
+}
+.ts-row[data-size="one"] .ts-words > strong {
+  margin-bottom: 3px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 28px;
+  text-wrap: pretty;
+}
+.ts-row[data-size="one"] .ts-team {
+  justify-content: flex-start;
+}
+/* On a phone the shelf goes on past the edge and is walked along. */
+@media (max-width: 899.98px) {
+  .ts-case {
+    gap: 14px;
+    padding: 18px 0 14px;
+  }
+  .ts-row[data-size="one"] {
+    --trophy: 96px;
+  }
+  .ts-label {
+    margin-inline: 14px;
+  }
+  .ts-shelf,
+  .ts-row[data-size="few"] .ts-shelf {
+    grid-auto-columns: 128px;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-template-rows: auto auto;
+    margin: 0;
+    padding: 0 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .ts-row[data-size="few"] .ts-shelf {
+    grid-auto-columns: 152px;
+  }
+  .ts-title:first-child > .ts-piece::after {
+    left: -12px;
+  }
+  .ts-row[data-size="one"] .ts-shelf {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ts-row[data-size="one"] .ts-title {
+    gap: 12px;
+  }
+  .ts-row[data-size="one"] .ts-piece::after {
+    right: -12px;
+  }
+  .ts-row[data-size="one"] .ts-piece {
+    padding-inline: 4px;
+  }
+  .ts-row[data-size="one"] .ts-plinth {
+    width: 86px;
+    padding-block: 6px 7px;
+    font-size: 15px;
+  }
+  .ts-row[data-size="one"] .ts-words {
+    padding-bottom: 12px;
+  }
+  .ts-row[data-size="one"] .ts-words > strong {
+    font-size: 18px;
+    line-height: 24px;
+  }
+}

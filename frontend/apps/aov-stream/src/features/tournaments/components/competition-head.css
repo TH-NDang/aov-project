@@ -1,22 +1,26 @@
 /* The head of a competition on its stage. */
+.tn-head {
+  --stage-light-left: calc(var(--stage-side) + 64px);
+  --stage-light-right: calc(100% - var(--stage-side) - 280px);
+  --stage-light-scale: 5.6;
+}
+.tn-head-trail {
+  padding: 14px var(--stage-side) 0;
+}
+.tn-head-main > :first-child {
+  display: grid;
+  flex: none;
+}
 .tn-head-main {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 28px;
-  padding: 32px;
+  padding: 14px var(--stage-side) 34px;
 }
 .tn-head-title {
   min-width: 0;
   flex: 1;
-}
-/* The circuit's short name, as people call it. */
-.tn-head-short {
-  margin-right: 8px;
-  padding-right: 8px;
-  border-right: 1px solid rgb(255 255 255 / 28%);
-  font-weight: 700;
-  text-decoration: none;
 }
 .tn-head-place {
   display: flex;
@@ -147,10 +151,13 @@
   }
 }
 @media (max-width: 899.98px) {
+  .tn-head-trail {
+    padding-top: 4px;
+  }
   .tn-head-main {
     align-items: flex-start;
     gap: 14px;
-    padding: 18px 16px;
+    padding: 8px var(--stage-side) 18px;
   }
   .tn-head-title {
     flex: 1 1 200px;

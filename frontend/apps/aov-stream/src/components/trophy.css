@@ -1,0 +1,78 @@
+/*
+ * The trophies of titles. Their gold is the medals' gold in five steps, from the shade of an edge to its highlight; the
+ * glass and the enamel are the product's lavender and night. A trophy is as tall as --trophy says, the greater forms
+ * taller than that.
+ */
+.tr {
+  width: auto;
+  height: var(--trophy, 84px);
+  aspect-ratio: 96 / 104;
+  overflow: visible;
+}
+.tr[data-form="globe"] {
+  height: calc(var(--trophy, 84px) * 1.22);
+}
+.tr[data-form="orbit"] {
+  height: calc(var(--trophy, 84px) * 1.16);
+}
+.tr-paints {
+  position: absolute;
+}
+.tr-g1 {
+  stop-color: color-mix(in srgb, var(--aov-medal-gold) 42%, #160b00);
+}
+.tr-g2 {
+  stop-color: color-mix(in srgb, var(--aov-medal-gold) 66%, #1e0f00);
+}
+.tr-g3 {
+  stop-color: color-mix(in srgb, var(--aov-medal-gold) 90%, #5a3200);
+}
+.tr-g4 {
+  stop-color: color-mix(in srgb, var(--aov-medal-gold) 88%, #fff);
+}
+.tr-g5 {
+  stop-color: color-mix(in srgb, var(--aov-medal-gold) 34%, #fff8e0);
+}
+.tr-v1 {
+  stop-color: color-mix(in srgb, var(--aov-stream-periwinkle-deep) 44%, #06031f);
+}
+.tr-v2 {
+  stop-color: var(--aov-stream-periwinkle-deep);
+}
+.tr-v3 {
+  stop-color: var(--aov-stream-lavender);
+}
+.tr-v4 {
+  stop-color: color-mix(in srgb, var(--aov-stream-lavender) 14%, #fff);
+}
+.tr-e1 {
+  stop-color: var(--aov-stream-night);
+}
+.tr-e2 {
+  stop-color: color-mix(in srgb, var(--aov-stream-indigo) 70%, var(--aov-stream-periwinkle-deep));
+}
+.tr-hollow {
+  fill: rgb(40 22 0 / 72%);
+}
+.tr-flute {
+  fill: rgb(50 28 0 / 34%);
+}
+.tr-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--aov-medal-gold) 40%, #fff8e0);
+  stroke-width: 1.2;
+}
+.tr-meridians {
+  fill: none;
+  stroke: rgb(255 255 255 / 42%);
+  stroke-width: 0.9;
+}
+.tr-shine {
+  fill: rgb(255 255 255 / 56%);
+}
+.tr-sheen {
+  fill: rgb(255 255 255 / 26%);
+}
+.tr-face {
+  fill: rgb(255 255 255 / 7%);
+}

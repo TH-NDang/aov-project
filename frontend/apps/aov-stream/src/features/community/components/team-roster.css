@@ -1,0 +1,109 @@
+/* Members of a team by their standing: groups side by side where they fit, each a list of rows. */
+.rs {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+.rs-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 24px 36px;
+}
+.ln > .rs {
+  margin-top: 28px;
+}
+.rs h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 6px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.rs h3 > small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+.rs ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rs li {
+  display: grid;
+  min-width: 0;
+  min-height: 40px;
+  grid-template-columns: 24px minmax(min-content, 1fr) minmax(0, max-content);
+  align-items: center;
+  gap: 10px;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.rs li + li {
+  border-top: 1px solid var(--hub-border);
+}
+.rs-mark {
+  display: grid;
+  place-items: center;
+  color: var(--hub-muted);
+}
+.rs-name {
+  min-width: 0;
+  padding: 7px 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.rs-name > a:hover {
+  color: var(--hub-accent-strong);
+}
+.rs-name > small {
+  display: block;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.rs-name > abbr {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  place-items: center;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  vertical-align: middle;
+}
+/* In a narrow list the role wraps at the end of the row; the member's name never gives way to it. */
+.rs li > small {
+  padding: 7px 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: right;
+}
+.rs-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+}
+.rs-sources > a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 5px;
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+.rs-sources > a:hover {
+  color: var(--hub-accent-strong);
+}

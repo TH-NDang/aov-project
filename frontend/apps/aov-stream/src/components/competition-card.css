@@ -43,22 +43,22 @@
 .tn-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-  gap: 10px;
+  gap: 4px 36px;
 }
 .tn-card {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
-  padding: 14px;
-  border-radius: var(--hub-radius-sm);
-  background: var(--hub-surface);
+  margin-inline: -12px;
+  padding: 12px;
+  border-radius: var(--hub-radius);
   color: var(--hub-text);
   transition: background-color 120ms;
 }
 .tn-card:hover {
-  background: var(--hub-hover);
+  background: var(--hub-surface);
 }
 .tn-card-body {
   display: grid;

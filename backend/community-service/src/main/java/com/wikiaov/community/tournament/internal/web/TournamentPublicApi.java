@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 @Tag(name = "tournaments")
 public interface TournamentPublicApi {
@@ -22,7 +23,7 @@ public interface TournamentPublicApi {
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "tournamentPublicApi_games", summary = "List published games")
-    PageSlice<PublishedGame> games(UUID tournamentId, UUID seriesId,
+    PageSlice<PublishedGame> games(@Nullable UUID tournamentId, @Nullable UUID seriesId, @Nullable UUID heroId,
             @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);
 

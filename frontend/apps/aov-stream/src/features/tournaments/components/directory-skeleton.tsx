@@ -1,7 +1,7 @@
 import { useStreamLocale } from "../../../components/stream-locale"
 import "./directory-skeleton.css"
 
-/** The shape of the directory while it loads: a stage, a shelf and a list, or the rows of a schedule. */
+/** The shape of the directory while it loads: the scores, the banners and the map, or the rows of a schedule. */
 export function DirectorySkeleton({ schedule }: { schedule: boolean }) {
   const { text } = useStreamLocale()
   return (
@@ -16,7 +16,8 @@ export function DirectorySkeleton({ schedule }: { schedule: boolean }) {
         Array.from({ length: 3 }, (_, index) => <span key={index} className="hub-skeleton" data-shape="rows" />)
       ) : (
         <>
-          <span className="hub-skeleton" data-shape="stage" />
+          <span className="hub-skeleton" data-shape="scores" />
+          <span className="hub-skeleton" data-shape="banners" />
           <span className="hub-skeleton" data-shape="rows" />
         </>
       )}

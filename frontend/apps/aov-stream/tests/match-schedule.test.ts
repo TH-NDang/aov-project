@@ -10,6 +10,7 @@ import {
   matchSides,
   scheduleGroups,
   scheduleParts,
+  undecidedMatches,
 } from "../src/lib/match-schedule.ts"
 
 const HOUR = 60 * 60 * 1000
@@ -263,4 +264,24 @@ test("search ignores case and tone marks and reaches teams, aliases and the comp
   for (const typed of ["saigon", "SGP", "bong ma", "team flash", "mua dong 2026", "garena"])
     assert.ok(key.includes(foldSearchText(typed)), typed)
   assert.ok(!key.includes(foldSearchText("box gaming")))
+})
+
+test("matches that name neither a team nor a day are counted by competition, and the others stay", () => {
+  const { undecided, rest } = undecidedMatches(
+    entries([
+      planned("open 1"),
+      planned("dated", { scheduledAt: at(5) }),
+      planned("named", { a: { type: "TEAM", teamId: "sgp" } }),
+      planned("open 2"),
+    ]),
+  )
+
+  assert.deepEqual(
+    undecided.map(({ entry, count }) => [entry.competition.id, count]),
+    [["competition", 2]],
+  )
+  assert.deepEqual(
+    rest.map((entry) => entry.match.key),
+    ["dated", "named"],
+  )
 })

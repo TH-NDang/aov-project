@@ -1,0 +1,95 @@
+/* The directory before anything is chosen: a wall of marks for each kind of page. */
+.dh {
+  display: grid;
+  min-width: 0;
+  gap: 44px;
+  margin-top: 12px;
+}
+.dh-wall {
+  --stream-image-size: 84px;
+  --stream-image-radius: 24%;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 22px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dh-tile {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  justify-items: center;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+}
+.dh-tile > :first-child {
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dh-tile:has(a:is(:hover, :focus-visible)) > :first-child {
+  transform: translateY(-4px);
+}
+.dh-tile > strong {
+  max-width: 100%;
+  margin: 10px 0 1px;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.dh-tile > strong > a {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+/* The whole tile opens the page. */
+.dh-tile > strong > a::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+.dh-tile:has(a:hover) > strong {
+  color: var(--hub-accent-strong);
+}
+.dh-tile > span:last-child {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 5px;
+}
+@media (max-width: 1099.98px) {
+  .dh-wall {
+    grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  }
+}
+@media (max-width: 899.98px) {
+  .dh {
+    gap: 32px;
+    margin-top: 4px;
+  }
+  .dh-wall {
+    --stream-image-size: 64px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px 8px;
+  }
+  .dh-tile > strong {
+    font-size: 14px;
+    line-height: 18px;
+  }
+}
+@media (max-width: 479.98px) {
+  .dh-wall {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dh-tile:has(a:is(:hover, :focus-visible)) > :first-child {
+    transform: none;
+  }
+}

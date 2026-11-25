@@ -1,0 +1,311 @@
+/*
+ * A year as a map: the months along the top, a lane per circuit, a line per season under its label. The lanes share one
+ * scale, so what was played side by side stands side by side. Compact lanes are lists; see the end.
+ */
+.tn-map {
+  --lane-head: 252px;
+  --bar: 54px;
+  --bar-gap: 10px;
+  position: relative;
+  display: grid;
+  min-width: 0;
+  padding-top: 24px;
+}
+.tn-map-months,
+.tn-map-lane {
+  display: grid;
+  grid-template-columns: var(--lane-head) minmax(0, 1fr);
+}
+.tn-map-scale {
+  position: relative;
+  height: 30px;
+}
+.tn-map-scale > span {
+  position: absolute;
+  left: calc(var(--at) * 100%);
+  padding-left: 8px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}
+.tn-map-lanes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-map-lane {
+  min-height: calc(var(--lines) * (var(--bar) + var(--bar-gap)) + 22px + var(--tall) * 20px);
+  border-top: 1px solid var(--hub-border);
+}
+.tn-map-lane:last-child {
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-map-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px 12px 0;
+}
+.tn-map-head > div {
+  min-width: 0;
+}
+.tn-map-head h3 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  text-wrap: balance;
+}
+.tn-map-head p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 3px 0 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+/* The lane itself, ruled at each month. */
+.tn-map-lane-track {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: repeating-linear-gradient(to right, var(--hub-border) 0 1px, transparent 1px calc(100% / 12));
+  list-style: none;
+}
+.tn-map-bar {
+  --crest: 34px;
+  position: absolute;
+  z-index: 1;
+  top: calc(11px + var(--line) * (var(--bar) + var(--bar-gap)) + var(--above) * 20px + var(--bar-gap) / 2);
+  left: calc(var(--left) * 100%);
+  width: calc((var(--right) - var(--left)) * 100%);
+  --bar-left: var(--left);
+  --bar-size: calc(var(--right) - var(--left));
+}
+.tn-map-bar > a {
+  position: relative;
+  display: flex;
+  height: var(--bar);
+  align-items: center;
+  gap: 9px;
+  padding: 0 4px 8px 0;
+  color: var(--hub-text);
+}
+/* The label covers the lines it stands on. */
+.tn-map-bar-name {
+  display: grid;
+  min-width: 0;
+  background: var(--hub-bg);
+}
+.tn-map-bar:not([data-won]) .tn-map-bar-name {
+  padding-left: 4px;
+}
+.tn-map-bar-name > strong,
+.tn-map-bar-days {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-map-bar-name > strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+}
+.tn-map-bar-name > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 17px;
+  white-space: nowrap;
+}
+.tn-map-bar-name b {
+  flex: none;
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-map-bar > a:hover strong,
+.tn-map-parts a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* The weeks it was played; it starts where the season does, which may be inside the room of the label. */
+.tn-map-bar-span {
+  position: absolute;
+  bottom: 0;
+  left: calc((var(--from) - var(--left)) / (var(--right) - var(--left)) * 100%);
+  width: calc((var(--to) - var(--from)) / (var(--right) - var(--left)) * 100%);
+  height: 5px;
+  border-radius: 3px;
+  background: var(--hub-border-strong);
+  transition: background-color 140ms;
+}
+@media (min-width: 900px) {
+  .tn-map-bar[data-won] .tn-map-bar-span {
+    background: color-mix(in srgb, var(--aov-medal-gold) 62%, var(--hub-border-strong));
+  }
+  /* The season that is on is lit; one that is still to come is an outline. */
+  .tn-map-bar[data-status="ONGOING"] .tn-map-bar-span {
+    background: var(--hub-accent);
+  }
+  .tn-map-bar:is([data-status="UPCOMING"], [data-status="ANNOUNCED"]) .tn-map-bar-span {
+    border: 1px dashed var(--hub-muted);
+    background: none;
+  }
+  .tn-map-bar > a:hover .tn-map-bar-span {
+    background: var(--hub-accent);
+  }
+}
+/* The parts of a season: their names under it, and where they were played as ticks on its line. */
+.tn-map-parts {
+  display: flex;
+  width: calc((var(--parts-to) - var(--parts-from)) / var(--bar-size) * 100%);
+  flex-wrap: wrap;
+  gap: 0 12px;
+  margin: 5px 0 0 calc((var(--parts-from) - var(--left)) / var(--bar-size) * 100%);
+  padding: 0;
+  list-style: none;
+}
+.tn-map-parts a {
+  background: var(--hub-bg);
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.tn-map-parts a:hover {
+  color: var(--hub-text);
+}
+.tn-map-tick {
+  position: absolute;
+  top: calc(var(--bar) - 4px);
+  left: calc((var(--from) - var(--bar-left)) / var(--bar-size) * 100%);
+  width: calc((var(--to) - var(--from)) / var(--bar-size) * 100%);
+  height: 3px;
+  border-radius: 2px;
+  background: var(--hub-muted);
+}
+.tn-map-parts a:hover > .tn-map-tick {
+  background: var(--hub-accent);
+}
+.tn-map-bar[data-undated] {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.tn-map-today {
+  position: absolute;
+  z-index: 0;
+  top: 20px;
+  bottom: 0;
+  left: calc(var(--lane-head) + (100% - var(--lane-head)) * var(--today));
+  border-left: 2px solid var(--hub-accent);
+  pointer-events: none;
+}
+.tn-map-today > span {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  padding: 0 8px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+@media (min-width: 900px) and (max-width: 1179.98px) {
+  .tn-map {
+    --lane-head: 190px;
+  }
+  .tn-map-bar[data-won] .tn-map-bar-days {
+    display: none;
+  }
+}
+/* Compact: each lane is its circuit's name and a list of seasons, newest at the top, with a small map in each line. */
+@media (max-width: 899.98px) {
+  .tn-map-months,
+  .tn-map-today {
+    display: none;
+  }
+  .tn-map-lane {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 10px;
+  }
+  .tn-map-head {
+    padding: 14px 0 8px;
+  }
+  .tn-map-head h3 {
+    font-size: 16px;
+  }
+  .tn-map-lane-track {
+    display: flex;
+    flex-direction: column-reverse;
+    background: none;
+  }
+  .tn-map-bar {
+    position: static;
+    width: 100%;
+  }
+  .tn-map-bar > a {
+    height: auto;
+    min-height: 60px;
+    gap: 12px;
+    padding: 8px 0;
+  }
+  .tn-map-bar:not([data-won]) .tn-map-bar-name,
+  .tn-map-bar-name {
+    flex: 1;
+    padding: 0;
+    background: none;
+  }
+  .tn-map-bar-span {
+    position: relative;
+    inset: auto;
+    width: 52px;
+    height: 5px;
+    flex: none;
+    border: 0;
+    background: var(--hub-raised);
+  }
+  .tn-map-bar-span::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: calc(var(--from) * 100%);
+    width: max(3px, calc((var(--to) - var(--from)) * 100%));
+    border-radius: inherit;
+    background: var(--hub-accent);
+  }
+  .tn-map-parts {
+    width: auto;
+    gap: 6px;
+    margin: 2px 0 10px 46px;
+  }
+  .tn-map-bar:not([data-won]) > .tn-map-parts {
+    margin-left: 0;
+  }
+  .tn-map-parts a {
+    display: block;
+    padding: 5px 10px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--hub-surface);
+    font-size: 13px;
+  }
+  .tn-map-tick {
+    display: none;
+  }
+}

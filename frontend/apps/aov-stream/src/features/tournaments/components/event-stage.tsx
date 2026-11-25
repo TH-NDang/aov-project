@@ -119,13 +119,37 @@ export function EventStage({ entry }: { entry: CompetitionView }) {
   )
 }
 
-/** An event that starts later, as a small stage: its logo, its name and how long until it begins. */
-export function ComingEvent({ entry }: { entry: CompetitionView }) {
+/** The teams an event already has, as a row of their logos. */
+function Entrants({ entry }: { entry: CompetitionView }) {
+  const { text } = useStreamLocale()
+  const { plan, teams } = entry.content
+  const known = plan.entrants.filter((entrant) => teams[entrant.teamId])
+  if (!known.length) return null
+  return (
+    <ul className="tn-coming-teams" aria-label={text("Các đội tham dự", "Teams")}>
+      {known.map(({ teamId }) => {
+        const { name, shortName, logoUrl, logoDarkUrl } = teams[teamId]!
+        return (
+          <li key={teamId} title={name}>
+            <StreamImage src={logoUrl} darkSrc={logoDarkUrl} logo name={name} />
+            <span>{shortName || name}</span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/**
+ * An event that starts later, as a small stage: its logo, its name and how long until it begins. One that stands
+ * `alone` takes the whole row and names its teams.
+ */
+export function ComingEvent({ entry, alone }: { entry: CompetitionView; alone?: boolean }) {
   const { text } = useStreamLocale()
   const { tournament, plan } = entry.content
   const tier = codeName(TIER_NAMES, tournament.tier, text)
   return (
-    <Link className="tn-coming" to={`/competitions/${entry.id}`}>
+    <Link className="tn-coming" data-alone={alone || undefined} to={`/competitions/${entry.id}`}>
       <Stage
         tint={tournament.name}
         lights={[{ src: tournament.logoUrl, darkSrc: tournament.logoDarkUrl, at: "left" }]}
@@ -150,6 +174,7 @@ export function ComingEvent({ entry }: { entry: CompetitionView }) {
             )}
           </span>
         </span>
+        {alone && <Entrants entry={entry} />}
       </Stage>
     </Link>
   )

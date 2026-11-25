@@ -1,4 +1,4 @@
-import type { CompetitionView } from "@aov/community-contracts"
+import type { CompetitionStatistics, CompetitionView } from "@aov/community-contracts"
 import { MatchCard } from "../../../components/match-card"
 import { MatchSpotlight } from "../../../components/match-spotlight"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -15,9 +15,10 @@ import { FinalRanking } from "./final-ranking"
 import { Section } from "./section"
 import { StandingsTable } from "./standings-table"
 import { TeamWall } from "./team-wall"
+import { TopHeroes } from "./top-heroes"
 import "./competition-overview.css"
 
-export type CompetitionTab = "overview" | "matches" | "standings" | "teams" | "info"
+export type CompetitionTab = "overview" | "matches" | "standings" | "stats" | "teams" | "info"
 
 /** The main stage of each kind: the table with the most matches and the last elimination stage played. */
 function mainStages(view: CompetitionView) {
@@ -81,10 +82,12 @@ function AroundNow({ matches, open }: { matches: CompetitionMatch[]; open: () =>
 export function CompetitionOverview({
   view,
   matches,
+  statistics,
   openTab,
 }: {
   view: CompetitionView
   matches: CompetitionMatch[]
+  statistics: CompetitionStatistics | null
   openTab: (tab: CompetitionTab) => void
 }) {
   const { text } = useStreamLocale()
@@ -120,6 +123,7 @@ export function CompetitionOverview({
       )}
       <AroundNow matches={matches} open={() => openTab("matches")} />
       {bracket}
+      {statistics && <TopHeroes view={view} statistics={statistics} open={() => openTab("stats")} />}
       <div className="tn-overview">
         <div className="tn-overview-main">
           {showTable && (

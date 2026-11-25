@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
@@ -18,12 +18,12 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { SOCIAL_PLATFORM_NAMES, SocialPlatformIcon, socialPlatformName } from "@aov/ui/components/social-platform-icon"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { PlaceTrail } from "../../../components/place-trail"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { AccountProfile } from "../../../components/account/account-profile"
 import { AccountSettings } from "../../../components/account/account-settings"
-import { initials } from "../../../lib/profile-model"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { useCommunitySession } from "../../../lib/stream-auth"
@@ -36,7 +36,9 @@ import {
   useReadNotifications,
   useUnreadCount,
 } from "../../../lib/community-queries"
-import { Avatar, followersLabel, hueOf, profileKindEnglish } from "../../../components/community-ui"
+import { followersLabel, profileKindEnglish } from "../../../components/community-ui"
+import { ProfileMark } from "../../../components/page-mark"
+import { AuthorMark } from "../components/post-comments"
 import { notificationText } from "../../../lib/notification-text"
 
 const roleLabels: Record<PageManager["role"], readonly [string, string]> = {
@@ -183,7 +185,7 @@ function FollowedPages() {
         <ul className="cp-rows">
           {items.map((profile) => (
             <li key={profile.id} className="cp-row">
-              <Avatar profile={profile} className="cp-row-avatar" />
+              <ProfileMark profile={profile} size={40} />
               <Link to={`/pages/${profile.code}`} className="cp-row-text">
                 <strong>{profile.content?.name || profile.code}</strong>
                 <small>
@@ -318,7 +320,7 @@ function ManagedPages() {
               {managed.data.map((profile) => (
                 <li key={profile.id}>
                   <Link className="cp-row cp-row-link" to={`/manage/${profile.id}`}>
-                    <Avatar profile={profile} className="cp-row-avatar" />
+                    <ProfileMark profile={profile} size={40} />
                     <span className="cp-row-text">
                       <strong>{profile.content?.name || profile.code}</strong>
                       <small>{text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])}</small>
@@ -498,13 +500,15 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
   return (
     <>
       <title>{text(`Quản lý ${name} — AOV Stream`, `Manage ${name} — AOV Stream`)}</title>
-      <Link className="cp-back" to="/account?tab=pages">
-        <StreamIcon name="back" size={16} />
-        {text("Trang bạn quản lý", "Pages you manage")}
-      </Link>
+      <PlaceTrail
+        places={[
+          { to: "/account", name: text("Tài khoản", "Account") },
+          { to: "/account?tab=pages", name: text("Trang bạn quản lý", "Pages you manage") },
+        ]}
+      />
       <header className="tn-page-head cp-manage-head">
         <div className="cp-manage-identity">
-          <Avatar profile={profile} />
+          <ProfileMark profile={profile} size={56} />
           <div>
             <h1>{name}</h1>
             <p>
@@ -535,13 +539,7 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
           <div className="tn-heading" data-flush="">
             <h2 id="manage-posts">{text("Bài viết của trang", "The page's posts")}</h2>
           </div>
-          <CommunityFeed
-            pageId={profile.id}
-            pageName={name}
-            role={viewer.role}
-            represented={profile.represented}
-            manage
-          />
+          <CommunityFeed pageId={profile.id} pageName={name} role={viewer.role} manage />
         </section>
       )}
       {tab === "members" && <Members profile={profile} viewer={viewer} />}
@@ -783,13 +781,7 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
           {members.data.map((member) => (
             <li key={member.id}>
               <div className="cp-row">
-                <span
-                  className="cp-row-avatar cp-initial"
-                  style={{ "--hub-hue": hueOf(member.name) } as CSSProperties}
-                  aria-hidden="true"
-                >
-                  {initials(member.name)}
-                </span>
+                <AuthorMark name={member.name} small />
                 <span className="cp-row-text">
                   <strong>
                     {member.name}

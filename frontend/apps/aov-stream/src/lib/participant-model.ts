@@ -37,6 +37,15 @@ export type TeamSeason = {
   record: TeamRecord
 }
 
+/**
+ * Whether a place is a title: the first of a competition of its own. Winning a qualifier or another part of a
+ * competition is none.
+ */
+export const isTitleSeason = ({ view, place }: { view: CompetitionView; place: string | null }) =>
+  place === "1" &&
+  !view.content.tournament.parentTournamentId &&
+  view.content.tournament.competitionType !== "QUALIFIER"
+
 export type TeamProfile = {
   team: TeamContent
   seasons: TeamSeason[]
@@ -56,7 +65,7 @@ export function teamProfile(views: CompetitionView[], teamId: string): TeamProfi
   return {
     team: played[0]!.content.teams[teamId]!,
     seasons,
-    titles: seasons.filter((season) => season.place === "1").length,
+    titles: seasons.filter(isTitleSeason).length,
     won: seasons.reduce((sum, season) => sum + season.record.won, 0),
     lost: seasons.reduce((sum, season) => sum + season.record.lost, 0),
   }
@@ -103,7 +112,7 @@ export function playerProfile(views: CompetitionView[], playerId: string): Playe
     player,
     lane: player.lane ?? seasons.find((season) => season.lane)?.lane ?? null,
     seasons,
-    titles: seasons.filter((season) => season.place === "1").length,
+    titles: seasons.filter(isTitleSeason).length,
     mvps: seasons.reduce((sum, season) => sum + season.mvps, 0),
     awards: seasons.reduce((sum, season) => sum + season.awards.length, 0),
   }
