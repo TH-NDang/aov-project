@@ -173,7 +173,6 @@ function Hub({ access }: { access: Access }) {
       else next.delete(key)
       return next
     })
-  const open = (entry: Entry) => navigate(tournamentPath(entry.id))
 
   const selection = useRowSelection(
     visible.map((entry) => entry.id),
@@ -249,13 +248,12 @@ function Hub({ access }: { access: Access }) {
               groups={grouped ? revealed.rows : undefined}
               onToggleGroup={filtered ? undefined : toggleGroup}
               stats={counters.isSuccess && !plans.isPending ? stats : undefined}
-              onOpen={open}
               parts={partsByEvent}
               published={published}
               actions={actions}
               selection={access.canWrite ? selection : undefined}
               search={settled}
-              partHref={tournamentPath}
+              href={tournamentPath}
             />
           ) : (
             <ManagementEmpty

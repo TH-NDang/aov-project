@@ -9,7 +9,8 @@ const HIDDEN = "Chưa công khai"
 
 /**
  * A tournament's status with what an editor checks beside it: whether readers see it on Stream, and a mark when its
- * dates contradict the status. An editor gets the status the dates say as one button, which asks first.
+ * dates contradict the status. An editor gets the status the dates say as one button, which asks first. The hint and
+ * the button stand above the link of the row.
  */
 export function TournamentRowStatus({
   content,
@@ -28,7 +29,7 @@ export function TournamentRowStatus({
         <StatusPill status={content.status} />
         {published !== undefined && (
           // Almost every tournament is a draft, so only a published one is written out.
-          <span className="type-meta inline-flex items-center gap-1" title={published ? PUBLIC : HIDDEN}>
+          <span className="type-meta relative z-1 inline-flex items-center gap-1" title={published ? PUBLIC : HIDDEN}>
             {published ? (
               <Globe aria-hidden="true" className="size-3.5 shrink-0 text-(--aov-success)" />
             ) : (
@@ -47,7 +48,7 @@ export function TournamentRowStatus({
             <button
               type="button"
               onClick={() => onFix(conflict.status)}
-              className="rounded underline underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="relative z-1 rounded underline underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               Đổi thành {STATUS_LABELS[conflict.status]}
             </button>
