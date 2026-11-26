@@ -9,10 +9,8 @@ import "./wiki-footer.css"
 const STREAM_URL = publicSiteUrl(import.meta.env.VITE_STREAM_URL, 5174, window.location.origin)
 
 export function WikiFooter() {
-  const { href, options, regions, region, patchVariantId } = useWikiContext()
+  const { href } = useWikiContext()
   const text = useWikiText()
-  const patch = options?.patches.find((entry) => entry.id === (patchVariantId || options.currentPatchVariantId))
-  const market = regions.find((entry) => entry.code === region)?.displayName
 
   return (
     <footer className="wiki-site-footer">
@@ -67,12 +65,6 @@ export function WikiFooter() {
           </a>
           .
         </p>
-        {patch && (
-          <p>
-            {text(`Dữ liệu bản ${patch.code}`, `Data from ${patch.code}`)}
-            {market && ` · ${market}`}
-          </p>
-        )}
       </div>
     </footer>
   )

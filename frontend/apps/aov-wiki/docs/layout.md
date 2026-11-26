@@ -500,6 +500,7 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
 - `WikiFooter` (`src/components/wiki-footer.tsx`) dùng chung cho mọi trang, nằm trong cùng cột với trang trên nền màu
   thanh: bên trái logo, tên AOV Wiki và một câu giới thiệu; bên phải ba liên kết hỗ trợ: Góp ý trang này (mở
   `FeedbackDialog`), Liên hệ & nguồn ảnh (`/contact`), AOV Stream. Chân trang không lặp lại các mục của Wiki.
-- Dòng cuối ghi thuộc về Garena / Liên Quân Mobile và mốc dữ liệu đang xem kèm thị trường.
+- Dòng cuối ghi thuộc về Garena / Liên Quân Mobile và nguồn biểu tượng các mục (Game Icons, CC BY 3.0); chân trang không
+  ghi mốc dữ liệu hay thị trường.
 - Trên compact ba liên kết thành danh sách dưới phần giới thiệu, mỗi liên kết là một vùng bấm cao 40px. Trang có nút mục
   lục nổi (trang tướng dưới 1180px) chừa thêm khoảng trống cuối chân trang để nút không che liên kết.
