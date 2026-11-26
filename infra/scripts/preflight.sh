@@ -122,4 +122,14 @@ for name in POSTGRES_SUPERUSER_PASSWORD WIKI_DB_PASSWORD COMMUNITY_DB_PASSWORD K
     esac
 done
 
+# Only a warning: refusing would stop a running site at its next update. Rotate any secret listed here.
+for name in POSTGRES_SUPERUSER_PASSWORD WIKI_DB_PASSWORD COMMUNITY_DB_PASSWORD KEYCLOAK_DB_PASSWORD \
+    KEYCLOAK_ADMIN_PASSWORD ADMIN_AUTH_CLIENT_SECRET WIKI_IMPORTER_CLIENT_SECRET WIKI_SERVICE_CLIENT_SECRET \
+    REDIS_PASSWORD; do
+    eval "value=\${$name}"
+    if [ "${#value}" -lt 24 ]; then
+        echo "preflight: warning: $name is shorter than 24 characters; use a longer random value." >&2
+    fi
+done
+
 echo "preflight: public origin checks passed."
