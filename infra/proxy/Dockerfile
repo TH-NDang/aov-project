@@ -4,11 +4,11 @@
 # (ADR-021, addendum of 18/11/2026). This image changes only when Caddy or a module does.
 
 # Caddy core has no rate limiter; ADR-007 and spec 01 section 3.3 require one at the proxy.
-FROM caddy:2.10-builder AS caddy
+FROM caddy:2.11-builder AS caddy
 RUN xcaddy build \
     --with github.com/mholt/caddy-ratelimit@5625512f24f6f59d6f64fb3aafe5eecff0b286db
 
-FROM caddy:2.10-alpine AS runtime
+FROM caddy:2.11-alpine AS runtime
 COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
 # Answered on an internal listener so the check also holds once SITE_ADDRESS is a real domain with TLS.
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=6 \
