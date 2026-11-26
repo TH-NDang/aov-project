@@ -1,7 +1,7 @@
 import type { Participant, PublishedGame } from "@aov/community-contracts"
 import { EntityPageLink, GoLink } from "../../../components/go-link"
 import { asksAhead } from "../../../components/on-demand"
-import { StreamIcon } from "../../../components/stream-icon"
+import { MvpBadge } from "../../../components/mvp-badge"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { statsHref } from "../../../lib/statistics-routes"
 import { heroKey, referenceName, UNKNOWN_REFERENCE } from "../../../lib/tournament-model"
@@ -59,12 +59,7 @@ export function SeatNames({
         ) : (
           (nickname ?? heroName)
         )}
-        {mvp && isMvp(game, seat) && (
-          <span className="tn-loadout-mvp">
-            <StreamIcon name="spark" size={13} />
-            MVP
-          </span>
-        )}
+        {mvp && isMvp(game, seat) && <MvpBadge className="tn-loadout-mvp" label={text("MVP ván", "Game MVP")} />}
       </strong>
       {nickname ? <span>{heroName}</span> : !told && <small>{text("Chưa rõ tuyển thủ", "Player not known")}</small>}
     </span>

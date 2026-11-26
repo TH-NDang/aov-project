@@ -1,0 +1,121 @@
+/* The card of a hero, an item, an enchantment or a spell, beside its picture. */
+.tn-entry-popup {
+  width: 288px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  padding: 0;
+}
+.tn-entry {
+  display: grid;
+  background: radial-gradient(130% 90% at 0% 0%, var(--hub-accent-soft), transparent 58%);
+}
+.tn-entry-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 10px;
+}
+.tn-entry-art {
+  --stream-image-size: 52px;
+  --stream-image-radius: 10px;
+  display: grid;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px var(--hub-border-strong),
+    0 6px 16px rgb(0 0 0 / 22%);
+}
+.tn-entry-words {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.tn-entry-words > small {
+  color: var(--hub-accent-strong);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+.tn-entry-words > b {
+  overflow: hidden;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 21px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* An item's stats, as small tags. */
+.tn-entry-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0 14px 10px;
+  list-style: none;
+}
+.tn-entry-stats > li {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--hub-sunken);
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-entry-line {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  padding: 0 14px 12px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  line-height: 18px;
+}
+/* The place of the line while the Wiki's names are read. */
+.tn-entry-wait {
+  display: block;
+  width: 70%;
+  height: 10px;
+  margin: 2px 14px 14px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-raised);
+}
+/* The way to the Wiki: the whole foot of the card, with the Wiki's mark. */
+.tn-entry-wiki {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border-top: 1px solid var(--hub-border);
+  background: color-mix(in srgb, var(--hub-surface) 60%, transparent);
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 120ms;
+}
+.tn-entry-wiki > img {
+  flex: none;
+  border-radius: 5px;
+}
+.tn-entry-wiki > svg {
+  margin-left: auto;
+  transition: translate 120ms;
+}
+.tn-entry-wiki:is(:hover, :focus-visible) {
+  background: var(--hub-accent-soft);
+}
+.tn-entry-wiki:is(:hover, :focus-visible) > svg {
+  translate: 2px -2px;
+}

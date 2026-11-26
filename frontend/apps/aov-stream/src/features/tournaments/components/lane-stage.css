@@ -191,7 +191,7 @@
   text-underline-offset: 3px;
 }
 .tn-lanes-bans a:is(:hover, :focus-visible) {
-  --banned-grey: 0.2;
+  --banned-filter: grayscale(0.2);
 }
 /* Who a struck face is: a wide stage tells it on pointing, a phone writes it under the face. */
 .tn-lanes-ban-name {

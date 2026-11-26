@@ -68,15 +68,13 @@
   /* The tile behind a logo or a picture follows the theme, so a logo stands on what its version is drawn for. */
   --hub-plate: light-dark(color-mix(in srgb, var(--aov-stream-ink) 6%, #fff), var(--aov-stream-indigo));
   --hub-on-plate: light-dark(var(--aov-stream-feather), var(--aov-stream-text-muted));
-  /* A banned hero is struck from corner to corner; the stroke has dark edges, so it shows on a pale picture too. */
-  --hub-ban-stroke: linear-gradient(
-    to top right,
-    transparent 44%,
-    rgb(0 0 0 / 62%) 44% 46.5%,
-    #fff 46.5% 53.5%,
-    rgb(0 0 0 / 62%) 53.5% 56%,
-    transparent 56%
-  );
+  /*
+   * A banned hero is greyed and dimmed and wears a small red "no" sign on its corner, a third of its size; the sign has
+   * a dark rim, so it shows on a pale picture too.
+   */
+  --hub-ban-filter: grayscale(1) brightness(0.72);
+  --hub-ban-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23e5484d' stroke='%23000' stroke-opacity='.35' stroke-width='1.5'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='5.6'/%3E%3Cpath d='M8 8l8 8'/%3E%3C/g%3E%3C/svg%3E")
+    right 6% bottom 6% / max(10px, 34%) no-repeat;
   --brand-wiki-ink: var(--aov-text);
   --brand-wiki-accent: var(--aov-accent);
   --brand-wiki-tint: var(--aov-accent-soft);

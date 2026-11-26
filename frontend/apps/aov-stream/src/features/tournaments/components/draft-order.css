@@ -61,22 +61,22 @@
   --reference-size: 38px;
 }
 .tn-order-phase[data-kind="BAN"] .tn-order-turn > * > * {
-  filter: grayscale(0.85);
+  filter: var(--hub-ban-filter);
 }
-/* A ban nobody saw or nobody made: the place and its stroke, without a hero. */
+/* A ban nobody saw or nobody made: the place and its sign, without a hero. */
 .tn-order-open {
   width: var(--reference-size);
   border-radius: var(--reference-radius);
   background: var(--hub-sunken);
   aspect-ratio: 1;
 }
-/* The stroke of a ban lies on its picture, inside the room of the turn. */
+/* The sign of a ban lies on its picture, inside the room of the turn. */
 .tn-order-phase[data-kind="BAN"] .tn-order-turn::after {
   content: "";
   position: absolute;
   inset: 5px;
   border-radius: var(--reference-radius);
-  background: var(--hub-ban-stroke);
+  background: var(--hub-ban-mark);
   forced-color-adjust: none;
   pointer-events: none;
 }

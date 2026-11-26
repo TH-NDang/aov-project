@@ -1,0 +1,34 @@
+/* The MVP's plate: the medals' gold, a lighter edge on top, dark letters spaced a little. */
+.hub-mvp {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aov-medal-gold) 72%, #fff8e0),
+    var(--aov-medal-gold) 70%,
+    color-mix(in srgb, var(--aov-medal-gold) 82%, #5a3200)
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--aov-medal-gold) 60%, #5a3200),
+    0 1px 2px rgb(0 0 0 / 25%);
+  color: #2b1800;
+  font: 700 10px/1 var(--hub-font);
+  letter-spacing: 0.06em;
+  cursor: default;
+  user-select: none;
+}
+.hub-mvp[data-size="large"] {
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+@media (forced-colors: active) {
+  .hub-mvp {
+    border: 1px solid CanvasText;
+  }
+}

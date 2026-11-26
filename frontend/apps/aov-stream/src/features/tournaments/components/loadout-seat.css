@@ -84,23 +84,13 @@ button.tn-loadout-open:is(:hover, [data-state="open"])::before {
 .tn-loadout-art > :first-child {
   display: flex;
 }
-/* The MVP of the game wears a star on the corner towards the lane. */
+/* The MVP of the game wears the plate across the foot of the hero, over the ring of its side. */
 .tn-loadout-star {
   position: absolute;
-  top: -7px;
-  left: -7px;
-  display: grid;
-  width: 20px;
-  height: 20px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--hub-accent);
-  box-shadow: 0 0 0 2px var(--build-ground, var(--hub-surface));
-  color: var(--hub-on-accent);
-}
-.tn-loadout-seat[data-slot="a"]:not([data-board]) .tn-loadout-star {
-  right: -7px;
-  left: auto;
+  z-index: 1;
+  bottom: -7px;
+  left: 50%;
+  translate: -50% 0;
 }
 /* The names lie on the button and let the pointer through to it, but for the links among them. */
 .tn-loadout-who {

@@ -5,6 +5,7 @@ import "./go-link.css"
 
 type GoLinkProps = Omit<ComponentProps<"a">, "href" | "children"> & {
   to: string
+  /** No line under the name at rest, where a card or a row around it already shows that it opens. */
   plain?: boolean
   /** Inside a sentence, where an arrow would come between the name and its comma: a line under the name instead. */
   prose?: boolean
@@ -12,12 +13,16 @@ type GoLinkProps = Omit<ComponentProps<"a">, "href" | "children"> & {
 }
 
 /**
- * A name that opens another page. The small arrow after it says so before anyone points at it, the same on every page;
- * `plain` leaves it out where a card or a row around the name already shows that it opens. A whole address leads to
- * another site, the Wiki.
+ * A name that opens another page. A faint line under it says so before anyone points at it, the same on every page, and
+ * takes the accent when pointed at; nothing comes between the name and the words after it. A whole address leads to
+ * another site, the Wiki, and says so with a small arrow out.
  */
 export function GoLink({ to, plain = false, prose = false, className, children, ...link }: GoLinkProps) {
-  const props = { ...link, className: ["hub-go", prose && "hub-go-prose", className].filter(Boolean).join(" ") }
+  const props = {
+    ...link,
+    className: ["hub-go", prose && "hub-go-prose", className].filter(Boolean).join(" "),
+    "data-plain": plain || undefined,
+  }
   if (!to.startsWith("/"))
     return (
       <a {...props} href={to}>
@@ -28,7 +33,6 @@ export function GoLink({ to, plain = false, prose = false, className, children, 
   return (
     <Link {...props} to={to}>
       {children}
-      {!plain && !prose && <StreamIcon name="chevronRight" size={12} />}
     </Link>
   )
 }

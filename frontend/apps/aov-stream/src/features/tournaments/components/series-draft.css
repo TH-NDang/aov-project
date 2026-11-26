@@ -94,17 +94,12 @@
 .tn-pool td[data-lost] > .tn-pool-cell {
   opacity: 0.5;
 }
+/* The MVP of a game wears the plate across the foot of the hero it played. */
 .tn-pool-mvp {
   position: absolute;
-  right: -4px;
-  bottom: -4px;
-  display: grid;
-  width: 18px;
-  height: 18px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--hub-accent);
-  color: var(--hub-on-accent);
+  bottom: -6px;
+  left: 50%;
+  translate: -50% 0;
 }
 @media (max-width: 899.98px) {
   .tn-pool {

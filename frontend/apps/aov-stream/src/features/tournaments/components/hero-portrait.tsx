@@ -5,7 +5,7 @@ import "./hero-portrait.css"
 
 /**
  * A hero's picture beside its name, which says who it is; two letters of the name where there is no picture. A `banned`
- * hero loses its colours and is struck.
+ * hero loses its colours and wears the "no" sign.
  */
 export function HeroPortrait({
   hero,

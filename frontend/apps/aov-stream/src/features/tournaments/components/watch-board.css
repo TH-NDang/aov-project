@@ -90,20 +90,20 @@
   border-radius: var(--aov-radius-control);
 }
 .tn-room-ban > * {
-  filter: grayscale(0.85);
+  filter: var(--hub-ban-filter);
 }
 .tn-room-ban > i {
   width: 100%;
   border-radius: inherit;
   background: var(--hub-plate);
 }
-/* A ban is struck from corner to corner; the stroke has dark edges, so it shows on a pale picture too. */
+/* A ban wears the "no" sign on its corner. */
 .tn-room-ban::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--hub-ban-stroke);
+  background: var(--hub-ban-mark);
   forced-color-adjust: none;
 }
 .tn-room-ban:has(> i)::after {

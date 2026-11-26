@@ -1,8 +1,18 @@
-/* A name that opens another page: an arrow after it at rest, the accent and an underline when pointed at. */
+/*
+ * A name that opens another page: a faint line under it at rest, set low so it clears the letters; pointed at, the name
+ * and its line take the accent. A link to another site keeps a small arrow out after it.
+ */
 .hub-go {
-  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
-  text-underline-offset: 3px;
-  transition: color 120ms;
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 28%, transparent);
+  text-decoration-thickness: max(1px, 0.07em);
+  text-underline-offset: 0.24em;
+  transition:
+    color 120ms,
+    text-decoration-color 120ms;
+}
+.hub-go[data-plain] {
+  text-decoration-color: transparent;
 }
 .hub-go > svg {
   display: inline-block;
@@ -10,15 +20,15 @@
   color: var(--hub-accent-strong);
   opacity: 0.8;
   vertical-align: -1px;
-  transition: transform 120ms;
+  transition: translate 120ms;
 }
 .hub-go:is(:hover, :focus-visible) {
   color: var(--hub-accent-strong);
-  text-decoration-line: underline;
+  text-decoration-color: currentColor;
 }
 .hub-go:is(:hover, :focus-visible) > svg {
   opacity: 1;
-  transform: translateX(2px);
+  translate: 2px -1px;
 }
 /* Inside a sentence a line under the name tells it from the words around it, with no arrow before its comma. */
 .hub-go-prose {

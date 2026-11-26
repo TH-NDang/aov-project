@@ -98,7 +98,12 @@
   line-height: 16px;
 }
 
-/* The MVP among the facts of a head: the name stands out and is underlined when pointed at. */
+/* The MVP among the facts of a head: its plate, then the name, which stands out. */
+.tn-mvp {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
 .tn-mvp > b {
   font-weight: 700;
 }
