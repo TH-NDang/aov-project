@@ -105,7 +105,7 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
             ? [{ value: String(seasonCount), label: text("mùa giải", seasonCount === 1 ? "season" : "seasons") }]
             : []
         }
-        channels={content.links.length > 0 && <ProfileSocials links={content.links} />}
+        channels={content.links.length > 0 && <ProfileSocials pageId={profile.id} links={content.links} />}
         aside={<Holder views={views} name={content.name} />}
         actions={<ProfileOptions profile={profile} />}
         tabs={!compact && tabRow}

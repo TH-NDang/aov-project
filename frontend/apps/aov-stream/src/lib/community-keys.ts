@@ -17,6 +17,8 @@ export const communityKeys = {
   entityPage: (kind: string, entityId: string) => ["entity-page", kind, entityId] as const,
   relatedPages: (kind: string) => ["related-pages", kind] as const,
   channels: ["page-channels"] as const,
+  youtubeChannel: (pageId: string, url: string) => ["youtube-channel", pageId, url] as const,
+  youtubeVideos: (pageId: string, url: string) => ["youtube-videos", pageId, url] as const,
   livePageAll: ["live-pages"] as const,
   livePages: (size: number) => ["live-pages", size] as const,
   videoHighlights: ["video-highlights"] as const,
