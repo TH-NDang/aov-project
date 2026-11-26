@@ -59,6 +59,11 @@ http://127.0.0.1:2020 {
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
 
+	# One public name: a request to www. moves to the bare domain, so search engines see one site, not two copies.
+	# It applies when SITE_ADDRESS lists both names, such as "example.com, www.example.com".
+	@www header_regexp www Host ^www\.(.+)$
+	redir @www https://{re.www.1}{uri} 308
+
 	log {
 		output stdout
 		format filter {
