@@ -8,7 +8,7 @@ import type { PublishedWarehouseRecord } from "../../lib/warehouse-types"
 
 export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord }) {
   const scope = useWikiContext()
-  const changes = usePublishedChanges(warehouseChangeDomain[entry.kind], true)
+  const changes = usePublishedChanges(warehouseChangeDomain[entry.kind], "changed")
   const t = useWikiText()
   const seasons = new Map(scope.options?.seasons.map((s) => [s.id, s]))
   const patches = changes.patches
