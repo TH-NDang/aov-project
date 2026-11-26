@@ -392,8 +392,8 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 - Dữ liệu lấy từ `/api/wiki/v1/game-modes`; đội hình riêng của người đọc đã đăng nhập lấy từ
   `/api/wiki/v1/users/me/game-modes`. Thứ tự từng phần trên hai bố cục nằm ở `frontend/docs/RESPONSIVE.md`.
-- Các trang chế độ dùng khung kiểu game (`GameFrame`, `src/styles/game-frame.css`). Tiêu đề từng phần có viên đá vàng,
-  chữ vàng sáng và đường kẻ vàng mờ dần sang phải.
+- Khung kiểu game (`GameFrame`) chỉ dùng cho cẩm nang nổi bật, để nó nổi lên; các thẻ khác có kiểu riêng, không lặp
+  một khung ở mọi chỗ. Tiêu đề từng phần có viên đá vàng, chữ vàng sáng và đường kẻ vàng mờ dần sang phải.
 - `/modes` mở bằng phần trưng bày (`ModesShowcase`, `modes-showcase.tsx`) như các trang danh sách khác: tiêu đề, số chế
   độ, viên "N đang mở" màu xanh; cảnh là sảnh chọn chế độ, các tấm ảnh cao nghiêng viền vàng (cẩm nang trước, rồi chế độ
   đang mở; chế độ đóng không lên sảnh), 6 tấm bên phải trên wide, 4 tấm phủ cả banner trên điện thoại. Chân banner wide ghi
@@ -402,12 +402,13 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 - Cẩm nang nổi bật đứng đầu trong một khung sáng: wide là ảnh bên trái, bên phải là tấm biển "Cẩm nang", tên vàng, thời
   lượng, tình trạng, giới thiệu, nút vàng vát góc "Mở cẩm nang" và chip các phần; điện thoại là ảnh trên cùng, tấm biển đè
   lên mép ảnh, nút trải hết bề ngang, chip cuộn ngang, không có đoạn giới thiệu. Bấm đâu trên khung cũng mở cẩm nang.
-- Sau đó là các nhóm PVP và Chế độ giải trí. Wide là lưới thẻ khung game: ảnh nằm trong đường viền trong, tình trạng là
-  nhãn xiên ở mép trái ảnh (nhãn "Cẩm nang" màu vàng), tên và thời lượng bên dưới; rê chuột viền sáng, thẻ nhích lên, ảnh
-  phóng nhẹ; số cột chọn để hàng cuối không còn một thẻ lẻ. Điện thoại là danh sách hàng khung nhỏ: ảnh 116px bên trái
-  (ảnh dọc cũng cắt cùng chiều cao), tên, thời lượng và tình trạng. Chế độ tạm đóng hoặc chưa mở khóa có ảnh nhạt màu.
+- Sau đó là các nhóm PVP và Chế độ giải trí. Wide là lưới thẻ poster tỉ lệ 4:3: ảnh phủ cả thẻ, tối dần ở chân, tên và
+  thời lượng nằm trên phần tối, tình trạng là viên nhỏ phía trên; rê chuột thì ảnh phóng nhẹ, tên chuyển vàng và một vạch
+  vàng chạy dọc chân thẻ; số cột chọn để hàng cuối không còn một thẻ lẻ. Điện thoại là danh sách dải ngang: tên, thời
+  lượng và tình trạng bên trái, ảnh hiện dần từ bên phải như danh sách chế độ trong game, chế độ đang mở có mép trái màu
+  xanh. Chế độ tạm đóng hoặc chưa mở khóa có ảnh nhạt màu.
 - `/modes/:code` trên wide mở bằng breadcrumb Trang chủ › Chế độ chơi › tên chế độ, rồi banner (`ModeBanner`,
-  `mode-banner.tsx`): một khung game cao 300px, ảnh chế độ làm nền trong đường viền trong, góc dưới trái là tấm biển nhóm,
+  `mode-banner.tsx`): cao 300px, viền mảnh bo góc như banner các trang danh sách, ảnh chế độ làm nền, góc dưới trái là tấm biển nhóm,
   tên lớn màu vàng và thời lượng · số người · tình trạng; nút nguồn ảnh ở góc dưới phải. Trên điện thoại banner trải sát
   hai mép, ảnh chạy lên sau thanh đầu trang trong suốt (thanh mờ dần khi cuộn), kết thúc bằng đường kẻ vàng có viên đá.
   Chế độ chưa có ảnh dùng dấu mục mờ trên nền vàng tối. Ở các tab cẩm nang ngoài Tổng quan, banner thấp lại (148px trên
@@ -416,14 +417,14 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   mở sáng vàng từ dưới lên, đứng trên vạch vàng có viên đá. Hàng cuộn ngang trên điện thoại, tab đang mở được cuộn vào
   tầm nhìn.
 - Tổng quan gồm giới thiệu, một câu nêu những gì Wiki chưa ghi nhận, nguồn, và khung nhỏ các thông tin còn lại (ngày
-  ghi nhận, thời gian mở, phiên bản cẩm nang, ghi chú; nhóm, thời lượng, số người, tình trạng đã có trên banner), hai cột
+  ghi nhận, thời gian mở, phiên bản cẩm nang, ghi chú; nhóm, thời lượng, số người, tình trạng đã có trên banner) trên một tấm nền, hai cột
   trên wide, ô hai cột trên điện thoại. Luật chơi chia nhóm (tên nhóm chữ hoa nhỏ màu vàng, gấp theo nhóm trên điện
-  thoại); với chế độ có cẩm nang, "Luật chơi đầy đủ" là một khung gập. Rồi tướng, vật phẩm riêng khi có. Chế độ ít dữ
+  thoại); với chế độ có cẩm nang, "Luật chơi đầy đủ" là một dòng tiêu đề có viên đá, bấm để mở. Rồi tướng, vật phẩm riêng khi có. Chế độ ít dữ
   liệu có thêm bốn chế độ khác cùng nhóm để đi tiếp. Mọi tab dùng địa chỉ của chế độ làm canonical; chỉ trang chế độ được
   prerender.
 - Cẩm nang Cờ Liên quân có các tab Tổng quan, Quân cờ, Phe & Nghề, Trang bị, Chúc phúc, Nhiệm vụ, Đội hình, Xếp đội hình,
   Phân tích (`auto-chess-guide.tsx`, mỗi tab một file `guide-*.tsx`). Trong lúc cẩm nang tải, tab giữ khung gồm tiêu đề,
-  hàng điều khiển và lưới mục. Các hình của Tổng quan, mỗi thẻ đội hình và bàn cờ đang xếp nằm trong khung game.
+  hàng điều khiển và lưới mục.
 - Chi tiết quân cờ, Phe/Nghề, trang bị mở trong ngăn kéo: từ bên phải trên wide, mép trái viền vàng, tiêu đề chữ hoa nhỏ
   màu vàng, nút đóng là ổ lục giác. Trên điện thoại ngăn kéo trồi từ dưới lên dưới một đường kẻ vàng, không có nút đóng
   hiện ra: chạm vùng trang tối phía trên hoặc kéo thanh trên cùng xuống để đóng (nút đóng vẫn còn cho bàn phím và trình

@@ -1,7 +1,4 @@
-/*
- * Lineups: one card per lineup in a game frame (wiki-frame), a group that stands apart with its own actions; two side
- * by side on wide screens.
- */
+/* Lineups: one card per lineup (a group that stands apart, with its own actions), two side by side on wide screens. */
 .wiki-guide-lineup-tab {
   gap: 36px;
 }
@@ -19,6 +16,8 @@
   gap: 14px;
   min-width: 0;
   padding: 16px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
 }
 .wiki-guide-lineup-skeleton {
   height: 360px;

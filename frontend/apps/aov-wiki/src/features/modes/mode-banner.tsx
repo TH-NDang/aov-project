@@ -9,7 +9,7 @@ import "./mode-banner.css"
 
 /**
  * The head of one mode: its art as the scene, and over it the group on a plate, the name and what a reader decides by
- * (length, players, whether it is open). On wide screens it is a game frame under the breadcrumb; on phones it runs
+ * (length, players, whether it is open). On wide screens it is a banner under the breadcrumb, like the list pages' showcase; on phones it runs
  * edge to edge under the clear header, which frosts over it as the page scrolls. Without art the scene is the
  * section's emblem on the Wiki's dark gold. `short` keeps it low over a guide's tools, so they start near the top.
  */
@@ -29,7 +29,7 @@ export function ModeBanner({
   const meta = modeMetaText(content, locale)
   return (
     <section
-      className={wide ? "wiki-mode-banner wiki-frame" : "wiki-mode-banner"}
+      className="wiki-mode-banner"
       data-layout={wide ? "wide" : "compact"}
       data-art={art ? "" : undefined}
       data-short={short || undefined}
@@ -76,14 +76,10 @@ export function ModeBanner({
   )
 }
 
-/** The banner while the mode loads: the same frame and height, a bar where the name will stand. */
+/** The banner while the mode loads: the same box and height, a bar where the name will stand. */
 export function ModeBannerSkeleton({ wide }: { wide: boolean }) {
   return (
-    <div
-      className={wide ? "wiki-mode-banner wiki-frame" : "wiki-mode-banner"}
-      data-layout={wide ? "wide" : "compact"}
-      data-skeleton=""
-    >
+    <div className="wiki-mode-banner" data-layout={wide ? "wide" : "compact"} data-skeleton="">
       <div className="wiki-mode-banner-text">
         <span className="wiki-mode-banner-bar" />
       </div>

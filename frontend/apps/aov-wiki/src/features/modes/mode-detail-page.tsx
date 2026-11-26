@@ -5,7 +5,6 @@ import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
-import { GameFrame } from "../../components/game-frame"
 import { WikiBreadcrumb } from "../../components/wiki-breadcrumb"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
@@ -129,7 +128,7 @@ export function ModeDetailPage() {
 
           {rules.length > 0 &&
             (hasGuide ? (
-              <details className="wiki-mode-fold wiki-frame">
+              <details className="wiki-mode-fold">
                 <summary>
                   {text("Luật chơi đầy đủ", "Full rules")}
                   <WikiIcon name="chevron" size={20} />
@@ -236,9 +235,9 @@ function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
 }
 
 /**
- * What else is recorded about the mode, in a small game frame: when it was seen, when it is open, the guide's
+ * What else is recorded about the mode, on a quiet panel: when it was seen, when it is open, the guide's
  * edition and a note. The banner already shows the group, the length, the players and whether it is open. A fact that
- * is not recorded has no row: the note beside the frame names it once. Short facts pair up where they are cells; long
+ * is not recorded has no row: the note beside the panel names it once. Short facts pair up where they are cells; long
  * ones take a whole row there.
  */
 function ModeFacts({ content, edition }: { content: ModeContent; edition?: string | null }) {
@@ -276,16 +275,14 @@ function ModeFacts({ content, edition }: { content: ModeContent; edition?: strin
   if (availability?.note) long.push([text("Ghi chú", "Note"), availability.note])
   if (!short.length && !long.length) return null
   return (
-    <GameFrame plain className="wiki-mode-facts-frame">
-      <dl className="wiki-mode-facts">
-        {[...short, ...long].map(([term, value], at) => (
-          <div key={term} data-wide={at >= short.length || undefined}>
-            <dt>{term}</dt>
-            <dd>{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </GameFrame>
+    <dl className="wiki-mode-facts">
+      {[...short, ...long].map(([term, value], at) => (
+        <div key={term} data-wide={at >= short.length || undefined}>
+          <dt>{term}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 

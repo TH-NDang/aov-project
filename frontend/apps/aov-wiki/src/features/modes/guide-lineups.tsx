@@ -211,8 +211,8 @@ function LineupSkeletons() {
       role="status"
       aria-label={text("Đang tải đội hình cộng đồng", "Loading community lineups")}
     >
-      <span className="wiki-guide-lineup-card wiki-frame wiki-guide-lineup-skeleton" />
-      <span className="wiki-guide-lineup-card wiki-frame wiki-guide-lineup-skeleton" />
+      <span className="wiki-guide-lineup-card wiki-guide-lineup-skeleton" />
+      <span className="wiki-guide-lineup-card wiki-guide-lineup-skeleton" />
     </div>
   )
 }
@@ -372,7 +372,7 @@ export function LineupsTab({
           <>
             <div className="wiki-guide-lineup-grid">
               {communityLineups.map((lineup) => (
-                <article key={lineup.id} className="wiki-guide-lineup-card wiki-frame">
+                <article key={lineup.id} className="wiki-guide-lineup-card">
                   <header className="wiki-guide-lineup-head">
                     <div className="wiki-guide-lineup-title">
                       <h3>{lineup.name}</h3>
@@ -563,7 +563,7 @@ function EditorialLineup({
     : lineup.units
   const priorityItems = lineup.priorityItemCodes ?? []
   return (
-    <article className="wiki-guide-lineup-card wiki-frame">
+    <article className="wiki-guide-lineup-card">
       <header className="wiki-guide-lineup-head">
         {lineup.tier && (
           <span

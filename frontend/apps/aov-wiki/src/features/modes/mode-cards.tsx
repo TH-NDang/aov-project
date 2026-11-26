@@ -3,7 +3,7 @@ import { Link } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { ModeCard } from "./mode-api"
-import { AvailabilityState, durationText, isClosed, ModeArt } from "./mode-ui"
+import { AvailabilityState, durationText, isClosed, isOpen, ModeArt } from "./mode-ui"
 
 /**
  * How many cards go in a row when a row holds at most `max`: rows as even as possible, so a group fills its rows
@@ -41,16 +41,15 @@ function ModeTags({ mode }: { mode: ModeCard }) {
   )
 }
 
-/** A card in the game frame: the art inside its inner line with the status on an angled tag, the name under it. */
+/**
+ * A poster card: the art fills the card, the name and length stand on its dark foot, the status on a pill above; a gold
+ * line grows along the foot under the pointer.
+ */
 function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
   return (
-    <Link
-      className="wiki-mode-card wiki-frame wiki-frame-hover"
-      to={to}
-      data-closed={isClosed(mode.availability) || undefined}
-    >
+    <Link className="wiki-mode-card" to={to} data-closed={isClosed(mode.availability) || undefined}>
       <ModeArt className="wiki-mode-card-art" image={mode.art} name={mode.name} inCard>
         <span className="wiki-mode-badges">
           <ModeTags mode={mode} />
@@ -65,17 +64,18 @@ function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
 }
 
 /**
- * Phones scan a list faster than a grid of tall cards: a small framed row with the picture, the name, the length and
- * the status.
+ * Phones scan a list faster than a grid of tall cards: a strip with the name, the length and the status on the left
+ * and the art fading in from the right; an open mode has a green edge.
  */
 function ModeRow({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
   return (
     <Link
-      className="wiki-mode-row wiki-frame wiki-frame-hover"
+      className="wiki-mode-row"
       to={to}
       data-closed={isClosed(mode.availability) || undefined}
+      data-open={isOpen(mode.availability) || undefined}
     >
       <ModeArt className="wiki-mode-row-art" image={mode.art} name={mode.name} inCard />
       <div className="wiki-mode-row-body">
@@ -123,14 +123,14 @@ export function ModeCardsSkeleton({ count }: { count: number }) {
     return (
       <ul className="wiki-mode-list" aria-hidden="true">
         {items.map((at) => (
-          <li key={at} className="wiki-mode-row wiki-frame" data-skeleton="true" />
+          <li key={at} className="wiki-mode-row" data-skeleton="true" />
         ))}
       </ul>
     )
   return (
     <ul className="wiki-mode-grid" style={gridColumns(count)} aria-hidden="true">
       {items.map((at) => (
-        <li key={at} className="wiki-mode-card wiki-frame" data-skeleton="true">
+        <li key={at} className="wiki-mode-card" data-skeleton="true">
           <span className="wiki-mode-art wiki-mode-card-art" />
           <span className="wiki-mode-card-body" />
         </li>

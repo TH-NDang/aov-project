@@ -103,7 +103,7 @@ function GoalSection() {
         note={text("Trụ lại cuối cùng", "Be the last one standing")}
       />
       <div className="wiki-mode-overview-split">
-        <div className="wiki-mode-overview-figure wiki-frame">
+        <div className="wiki-mode-overview-figure">
           <div className="wiki-mode-overview-players" aria-hidden="true">
             {Array.from({ length: PLAYERS }, (_, at) => {
               // Players leave from the last seat backwards, so seat 1 is the one who survives.
@@ -269,7 +269,7 @@ function DamageSection() {
         note={text("Bị trừ bao nhiêu máu?", "How much HP do you lose?")}
       />
       <div className="wiki-mode-overview-split">
-        <div className="wiki-mode-overview-figure wiki-frame">
+        <div className="wiki-mode-overview-figure">
           <div className="wiki-mode-overview-field">
             <span className="wiki-mode-overview-label">
               {text("Quân còn sống của bên thắng", "Winner's surviving units")}

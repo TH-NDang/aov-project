@@ -69,10 +69,7 @@ export function BuilderTab({
     <div className="wiki-guide-tab-body">
       <div className="wiki-guide-builder">
         <div className="wiki-guide-builder-main">
-          <section
-            className="wiki-guide-builder-card wiki-frame"
-            aria-label={text("Đội hình đang xếp", "Lineup being built")}
-          >
+          <section className="wiki-guide-builder-card" aria-label={text("Đội hình đang xếp", "Lineup being built")}>
             <BuilderToolbar builder={builder} compact={compact} />
             {view === "board" ? (
               <BuilderBoard builder={builder} index={index} compact={compact} onOpen={onOpen} />

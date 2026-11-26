@@ -209,11 +209,11 @@
   z-index: 1;
 }
 
-/* Wide: a grid of framed cards. Each group sets its own column count, so its rows fill. */
+/* Wide: a grid of poster cards. Each group sets its own column count, so its rows fill. */
 .wiki-mode-grid {
   display: grid;
   grid-template-columns: repeat(var(--mode-columns-narrow, 4), minmax(0, 1fr));
-  gap: 14px 12px;
+  gap: 12px;
 }
 @media (min-width: 1180px) {
   .wiki-mode-grid {
@@ -224,65 +224,86 @@
   display: grid;
   min-width: 0;
 }
-/* A card in the game frame: the art 5px inside the rim with its own cut corners, the name under it. */
+/*
+ * A poster: the art fills the card and darkens toward its foot, where the name and the length stand; a gold line grows
+ * along the foot under the pointer.
+ */
 .wiki-mode-card {
-  --wiki-frame-cut: 9px;
+  position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-rows: auto 1fr;
+  align-content: end;
   min-width: 0;
-  padding: 5px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
   color: inherit;
   text-decoration: none;
-  transition: transform 0.18s ease-out;
 }
-a.wiki-mode-card:hover {
-  transform: translateY(-2px);
+.wiki-mode-card::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: auto 0 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--aov-wiki-gold-bright), transparent);
+  opacity: 0;
+  transform: scaleX(0.2);
+  transition:
+    opacity 0.2s ease,
+    transform 0.3s ease;
 }
-a.wiki-mode-card:focus-visible {
-  outline: none;
-  background: var(--wiki-frame-rim-lit);
+a.wiki-mode-card:is(:hover, :focus-visible)::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 .wiki-mode-card-art {
-  aspect-ratio: 16 / 9;
-  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%, 0 6px);
+  position: absolute;
+  z-index: -1;
+  inset: 0;
 }
 .wiki-mode-card-art > img {
-  transition: transform 0.4s ease;
+  transition: transform 0.45s ease;
 }
 a.wiki-mode-card:hover .wiki-mode-card-art > img {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
-/* The art fades into the panel under it, where the name stands. */
 .wiki-mode-card-art:not([data-empty])::after {
   content: "";
   position: absolute;
-  inset: auto 0 0;
-  height: 36%;
-  background: linear-gradient(transparent, color-mix(in srgb, var(--aov-wiki-panel-deep) 80%, transparent));
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 30%,
+    color-mix(in srgb, var(--aov-wiki-bar) 70%, transparent) 62%,
+    var(--aov-wiki-bar)
+  );
   pointer-events: none;
+}
+/* Without art the emblem stands in the upper part, clear of the name. */
+.wiki-mode-card-art[data-empty] .wiki-mode-art-fallback {
+  height: 62%;
 }
 .wiki-mode-badges {
   position: absolute;
   z-index: 1;
-  top: 6px;
-  right: 6px;
-  left: 0;
+  top: 8px;
+  right: 8px;
+  left: 8px;
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
-/* Each tag is an angled plate on the art's left edge, as the game tags its lobby tiles. */
+/* One line makes a pill; a label too long for a narrow card wraps inside the same backing. */
 .wiki-mode-badges > * {
-  font: 700 0.75rem/1.25rem var(--wiki-font-reading);
-  max-width: calc(100% - 8px);
-  padding: 0 12px 0 8px;
-  background: color-mix(in srgb, var(--aov-wiki-bar) 90%, transparent);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
+  font: 600 0.75rem/1.25rem var(--wiki-font-reading);
+  max-width: 100%;
+  padding: 0 8px;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-wiki-bar) 85%, transparent);
   white-space: normal;
-}
-.wiki-mode-badges > .wiki-mode-tag {
-  background: linear-gradient(90deg, var(--aov-wiki-gold), var(--aov-wiki-gold-bright));
-  color: var(--aov-wiki-bar);
+  backdrop-filter: blur(4px);
 }
 .wiki-mode-card[data-closed] .wiki-mode-art > img,
 .wiki-mode-row[data-closed] .wiki-mode-art > img {
@@ -290,10 +311,9 @@ a.wiki-mode-card:hover .wiki-mode-card-art > img {
 }
 .wiki-mode-card-body {
   display: grid;
-  align-content: start;
-  gap: 2px;
-  min-height: 60px;
-  padding: 8px 7px 6px;
+  gap: 1px;
+  padding: 10px 12px 12px;
+  text-shadow: 0 1px 8px var(--aov-wiki-bar);
 }
 .wiki-mode-card-body h3,
 .wiki-mode-row-body h3 {
@@ -301,56 +321,79 @@ a.wiki-mode-card:hover .wiki-mode-card-art > img {
   color: var(--aov-text);
   overflow-wrap: anywhere;
 }
-a.wiki-mode-card:hover h3,
-a.wiki-mode-row:hover h3 {
+a.wiki-mode-card:hover h3 {
   color: var(--aov-wiki-gold-bright);
 }
 .wiki-mode-card-body p,
 .wiki-mode-row-body p {
   font: var(--wiki-type-meta);
-  color: var(--aov-muted);
+  color: var(--aov-text-soft);
 }
 
-/* Compact: a list of small framed rows with the picture on the left. */
+/*
+ * Compact: a list of strips. The name, the length and the status sit on the left; the art fades in from the right, as
+ * the game's own list of modes does. An open mode has a green edge on the left.
+ */
 .wiki-mode-list {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 .wiki-mode-row {
-  --wiki-frame-cut: 8px;
+  position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  min-height: 78px;
-  padding: 5px;
+  min-height: 76px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
   color: inherit;
   text-decoration: none;
 }
-a.wiki-mode-row:active {
-  background: var(--wiki-frame-rim-lit);
+.wiki-mode-row[data-open] {
+  box-shadow: inset 3px 0 0 var(--aov-success);
 }
-/* The picture keeps the row's height whatever the art's own shape: portrait lobby art is cropped like the rest. */
+a.wiki-mode-row:active {
+  background: var(--aov-raised);
+}
 .wiki-mode-row-art {
-  align-self: stretch;
-  min-height: 66px;
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 36%;
+  background: none;
 }
 .wiki-mode-row-art > img {
   position: absolute;
   inset: 0;
 }
-.wiki-mode-row-art {
-  clip-path: polygon(5px 0, 100% 0, 100% 100%, 5px 100%, 0 calc(100% - 5px), 0 5px);
+.wiki-mode-row-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--aov-surface),
+    color-mix(in srgb, var(--aov-surface) 55%, transparent) 40%,
+    transparent 80%
+  );
+  pointer-events: none;
+}
+/* Without art the emblem stands faint at the right end. */
+.wiki-mode-row-art[data-empty] .wiki-mode-art-fallback {
+  justify-items: end;
+  padding-right: 18px;
 }
 .wiki-mode-row-art .wiki-mode-art-fallback > * {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
 }
 .wiki-mode-row-body {
   display: grid;
+  align-content: center;
   gap: 2px;
   min-width: 0;
-  padding: 4px 8px 4px 0;
+  max-width: 70%;
+  padding: 10px 14px;
+  text-shadow: 0 1px 6px var(--aov-surface);
 }
 .wiki-mode-row-body .wiki-mode-row-tags {
   display: flex;
@@ -359,6 +402,12 @@ a.wiki-mode-row:active {
 }
 .wiki-mode-row-tags:empty {
   display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-mode-card::after,
+  .wiki-mode-card-art > img {
+    transition: none;
+  }
 }
 
 /* The list of modes: the page head with its filters, the guide, then the game's groups. */
@@ -468,14 +517,13 @@ a.wiki-mode-row:active {
 .wiki-mode-intro[data-skeleton] .wiki-mode-intro-body > span:last-child {
   width: 60%;
 }
-/* The facts in a small game frame: cells two across on a phone, rows with a label and a value on wide screens. */
-.wiki-mode-facts-frame {
-  --wiki-frame-cut: 10px;
+/* The facts on a quiet panel: cells two across on a phone, rows with a label and a value on wide screens. */
+.wiki-mode-facts {
   align-self: start;
   min-width: 0;
   padding: 14px 18px;
-}
-.wiki-mode-facts {
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 20px;
@@ -579,7 +627,7 @@ a.wiki-mode-row:active {
   .wiki-mode-detail > .wiki-guide-tabs {
     margin-top: -8px;
   }
-  .wiki-mode-intro:has(> .wiki-mode-facts-frame):has(> .wiki-mode-intro-body:not(:empty)) {
+  .wiki-mode-intro:has(> .wiki-mode-facts):has(> .wiki-mode-intro-body:not(:empty)) {
     grid-template-columns: minmax(0, 7fr) minmax(280px, 5fr);
     gap: 40px;
   }
@@ -599,14 +647,11 @@ a.wiki-mode-row:active {
     border-top: 1px solid var(--aov-line);
   }
 }
-/* A long part that starts folded: a small game frame whose heading row opens it. */
+/* A long part that starts folded: a heading row with a gem that opens it, under a gold rule that fades out. */
 .wiki-mode-fold {
-  --wiki-frame-cut: 10px;
   min-width: 0;
-  padding: 0 20px;
-}
-.wiki-mode-fold[open] {
-  padding-bottom: 20px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent), transparent) left top /
+    100% 1px no-repeat;
 }
 .wiki-mode-fold > summary {
   font: 700 1.125rem/1.5rem var(--wiki-font-display);
@@ -838,10 +883,7 @@ a.wiki-mode-row:active {
   }
 }
 
-/*
- * Overview in pictures: the goal, a round and the cost of a loss. Each is a section whose figure sits in a game frame
- * (wiki-frame).
- */
+/* Overview in pictures: the goal, a round and the cost of a loss. Each is a section whose figure sits on one surface. */
 .wiki-mode-overview-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -854,7 +896,9 @@ a.wiki-mode-row:active {
   align-content: center;
   gap: 16px;
   min-width: 0;
-  padding: 22px;
+  padding: 20px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
 }
 .wiki-mode-overview-copy {
   display: grid;

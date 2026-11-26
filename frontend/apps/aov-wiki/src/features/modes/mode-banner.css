@@ -78,30 +78,22 @@
   z-index: 2;
 }
 
-/* Wide screens: a game frame, the art 6px inside the rim so the inner line still shows around it. */
+/* Wide screens: a banner with the list pages' thin border and rounded corners. */
 .wiki-mode-banner[data-layout="wide"] {
-  --wiki-frame-cut: 14px;
   min-height: 300px;
   margin-top: 2px;
   padding: 30px 34px;
+  overflow: hidden;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
 }
 .wiki-mode-banner[data-layout="wide"] .wiki-mode-banner-scene {
-  inset: 6px;
-  clip-path: polygon(
-    10px 0,
-    calc(100% - 10px) 0,
-    100% 10px,
-    100% calc(100% - 10px),
-    calc(100% - 10px) 100%,
-    10px 100%,
-    0 calc(100% - 10px),
-    0 10px
-  );
+  inset: 0;
 }
 .wiki-mode-banner[data-layout="wide"] .wiki-mode-banner-text {
   max-width: 62%;
 }
-/* The credit sits in the foot's corner: the frame's cut corner would clip it at the top. */
+/* The credit sits in the foot's corner, clear of the trail above the banner. */
 .wiki-mode-banner[data-layout="wide"] .wiki-mode-banner-credit {
   right: 20px;
   bottom: 18px;
