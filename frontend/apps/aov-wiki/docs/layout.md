@@ -10,10 +10,13 @@
   nội dung bắt đầu trên cùng một đường.
 - Trên wide, `WikiLibraryLayout` đặt sidebar các mục (`LibraryNavigation layout="sidebar"` trong
   `src/components/library-navigation.tsx`) bên trái trang: Trang chủ, rồi các mục theo nhóm Sổ tay nhân vật, Kho trang
-  bị, Lối chơi, Tham khảo. Rê chuột thì hàng có nền mờ; mục đang ở có nền vàng nhạt, chữ vàng đậm và một vạch tròn ngắn
-  ở mép trái. Sidebar rộng 200px, dính dưới thanh đầu trang và tự cuộn nếu cửa
-  sổ thấp; dưới 1180px chỉ còn icon (52px), tên mục hiện trong tooltip bên phải icon ngay khi rê chuột hoặc focus
-  bằng bàn phím. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng có sidebar trên
+  bị, Lối chơi, Tham khảo. Mỗi hàng vẽ như thẻ của trang chủ: dấu mục 18px trên ô vuông 28px tô vàng nhạt, tên mục, và
+  bên phải số mục đã xuất bản bằng chữ mờ, số đều cột (Tướng từ danh sách tướng, Trang phục và bốn phần kho từ
+  `sectionCountsQuery` trong `src/lib/section-counts.ts`, dùng chung với trang chủ; mục không đếm thì không có số). Tên
+  nhóm là chữ hoa nhỏ màu mờ. Rê chuột thì hàng có nền mờ; mục đang ở có nền vàng nhạt, chữ vàng đậm, ô vuông vàng đặc
+  với dấu tối và một vạch tròn ngắn ở mép trái (`aria-current="page"`); focus bằng bàn phím có viền vàng. Sidebar rộng
+  200px, dính dưới thanh đầu trang và tự cuộn nếu cửa sổ thấp; dưới 1180px chỉ còn các ô vuông 32px (cột 52px), tên mục
+  và số mục hiện trong tooltip bên phải ngay khi rê chuột hoặc focus bằng bàn phím. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng có sidebar trên
   wide: ảnh tướng nằm trong cột trang bên phải sidebar, vẫn bắt đầu dưới thanh đầu trang trong suốt. Phía trên tên tướng
   là breadcrumb Trang chủ › Tướng › tên tướng (`WikiBreadcrumb` trong `src/components/wiki-breadcrumb.tsx`) thay cho
   nút quay lại. Trên compact các mục nằm trong tấm mục lục mở từ header.

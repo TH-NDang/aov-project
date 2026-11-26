@@ -1,8 +1,11 @@
 import { useSyncExternalStore, type ReactNode } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { WikiIcon, type WikiIconName } from "./wiki-icon"
 import { useWikiContext, useWikiText } from "../context/wiki-context"
+import { heroCatalogQuery } from "../lib/hero-api"
+import { sectionCountsQuery } from "../lib/section-counts"
 import { wikiSections, type WikiSectionKey, SECTION_NAMES } from "../lib/wiki-sections"
 import "./library-navigation.css"
 
@@ -25,9 +28,10 @@ function useIconsOnly() {
 }
 
 /**
- * Every section of the Wiki in its group. `sheet` is the contents sheet of the compact header; `sidebar` is the column
- * beside every section page of the wide layout, which starts with the home page and narrows to its icons on smaller
- * screens, where each icon names itself in a tooltip on hover and on keyboard focus.
+ * Every section of the Wiki in its group, as the home page draws them: the section's mark on a small tinted square, its
+ * name and how many entries it has published. `sheet` is the contents sheet of the compact header; `sidebar` is the
+ * column beside every section page of the wide layout, which starts with the home page and narrows to its marks on
+ * smaller screens, where each mark names itself (and its count) in a tooltip on hover and on keyboard focus.
  */
 export function LibraryNavigation({
   active,
@@ -38,19 +42,34 @@ export function LibraryNavigation({
   onNavigate?: () => void
   layout?: "sheet" | "sidebar"
 }) {
-  const { href } = useWikiContext()
+  const scope = useWikiContext()
+  const { href, locale } = scope
   const t = useWikiText()
+  const heroes = useQuery(heroCatalogQuery(scope))
+  const counts = useQuery(sectionCountsQuery(scope))
+  const countOf = (key: string) =>
+    key === "heroes" ? heroes.data?.items.length : counts.data?.[key as keyof typeof counts.data]
   const iconsOnly = useIconsOnly() && layout === "sidebar"
-  const iconSize = layout === "sidebar" ? 24 : 26
-
-  const entry = (key: string, to: string, icon: WikiIconName, name: string, current = false) => (
-    <NamedLink key={key} name={name} tooltip={iconsOnly}>
-      <Link to={to} onClick={onNavigate} className="wiki-library-nav-link" aria-current={current ? "page" : undefined}>
-        <WikiIcon name={icon} size={iconSize} />
-        <span className="wiki-library-nav-name">{name}</span>
-      </Link>
-    </NamedLink>
-  )
+  const entry = (key: string, to: string, icon: WikiIconName, name: string, current = false) => {
+    const count = countOf(key)
+    const shown = count?.toLocaleString(locale)
+    return (
+      <NamedLink key={key} name={shown ? `${name} · ${shown}` : name} tooltip={iconsOnly}>
+        <Link
+          to={to}
+          onClick={onNavigate}
+          className="wiki-library-nav-link"
+          aria-current={current ? "page" : undefined}
+        >
+          <span className="wiki-library-nav-mark">
+            <WikiIcon name={icon} size={18} />
+          </span>
+          <span className="wiki-library-nav-name">{name}</span>
+          {shown && <span className="wiki-library-nav-count">{shown}</span>}
+        </Link>
+      </NamedLink>
+    )
+  }
 
   const navigation = (
     <nav

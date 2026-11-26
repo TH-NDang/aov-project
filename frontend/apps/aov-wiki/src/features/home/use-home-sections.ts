@@ -10,7 +10,8 @@ import { warehouseCatalogQuery, warehouseGroupsQuery } from "../../lib/warehouse
 import { warehouseImage } from "../../lib/warehouse-types"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { HOME_BANNERS } from "./home-banners"
-import { modesOpenQuery, sectionCountsQuery, skinSampleQuery } from "./home-api"
+import { sectionCountsQuery } from "../../lib/section-counts"
+import { modesOpenQuery, skinSampleQuery } from "./home-api"
 import { kindTally, useChangedHeroes } from "../../lib/use-changed-heroes"
 
 /** How a section's pictures are drawn: photos fill a frame, icons sit whole on a plain ground. */

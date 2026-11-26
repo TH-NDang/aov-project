@@ -1,71 +1,86 @@
-/* Every section of the Wiki in its group, as the contents sheet of the compact header lists them. */
+/*
+ * Every section of the Wiki in its group, drawn like the home page's cards: each row has the section's mark on a small
+ * square tinted with the accent, its name and, on the right, how many entries it has in muted figures. Group titles
+ * are small capitals. The page you are on takes an accent fill, a solid accent square and a slim bar at its left edge.
+ */
 .wiki-library-navigation {
   font: var(--wiki-type-body);
   padding: 0 12px;
 }
 .wiki-library-nav-group {
+  display: grid;
+  gap: 2px;
   margin: 18px 0;
 }
 .wiki-library-nav-group h3 {
-  font: var(--wiki-type-meta);
-  padding: 0 10px 8px;
+  font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
+  padding: 0 10px 6px;
   color: var(--aov-muted);
-  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.05em;
 }
 .wiki-library-nav-link {
+  position: relative;
   font: var(--wiki-type-body);
   display: flex;
   min-height: 44px;
   align-items: center;
   gap: 10px;
   border-radius: var(--aov-radius-control);
-  padding: 6px 10px;
-  color: var(--aov-text);
+  padding: 6px 10px 6px 8px;
+  color: var(--aov-text-soft);
   text-decoration: none;
+  transition:
+    background 150ms ease-out,
+    color 150ms ease-out;
 }
-.wiki-library-nav-link svg {
+.wiki-library-nav-mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
   flex: none;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent);
+  transition:
+    background 150ms ease-out,
+    color 150ms ease-out;
+}
+.wiki-library-nav-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-library-nav-count {
+  font: var(--wiki-type-meta);
+  flex: none;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
 }
 .wiki-library-nav-link:hover {
-  background: var(--aov-raised);
-}
-.wiki-library-nav-link[aria-current="page"] {
-  background: color-mix(in srgb, var(--aov-accent) 10%, transparent);
-  color: var(--aov-accent);
-  box-shadow: inset 2px 0 var(--aov-accent);
-}
-
-/* Sidebar of the wide layout: the same list, tighter, inside a column that starts at the page's edge. */
-.wiki-library-navigation[data-layout="sidebar"] {
-  padding: 0;
-}
-.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group {
-  margin: 0 0 16px;
-}
-/*
- * Pointing at a row gives it a faint fill; the page you are on takes a soft accent fill, the accent colour and a short
- * rounded bar at its left edge, rather than a square stripe.
- */
-.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link {
-  position: relative;
-  min-height: 40px;
-  padding: 6px 10px;
-  color: var(--aov-text-soft);
-  transition:
-    background 150ms,
-    color 150ms;
-}
-.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link:hover {
   background: color-mix(in srgb, var(--aov-text) 6%, transparent);
   color: var(--aov-text);
 }
-.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link[aria-current="page"] {
+.wiki-library-nav-link:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: -2px;
+}
+.wiki-library-nav-link[aria-current="page"] {
   background: color-mix(in srgb, var(--aov-accent) 13%, transparent);
-  box-shadow: none;
-  color: var(--aov-accent);
+  color: var(--aov-accent-strong);
   font-weight: 600;
 }
-.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link[aria-current="page"]::before {
+.wiki-library-nav-link[aria-current="page"] .wiki-library-nav-mark {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.wiki-library-nav-link[aria-current="page"] .wiki-library-nav-count {
+  color: var(--aov-accent);
+}
+.wiki-library-nav-link[aria-current="page"]::before {
   content: "";
   position: absolute;
   top: 25%;
@@ -75,7 +90,29 @@
   border-radius: var(--aov-radius-pill);
   background: var(--aov-accent);
 }
-/* Narrow desktops and tablets on their side: only the icons stay, each named by its tooltip and for screen readers. */
+@media (prefers-reduced-motion: reduce) {
+  .wiki-library-nav-link,
+  .wiki-library-nav-mark {
+    transition: none;
+  }
+}
+
+/* Sidebar of the wide layout: the same list, tighter, inside a column that starts at the page's edge. */
+.wiki-library-navigation[data-layout="sidebar"] {
+  padding: 0;
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group {
+  margin: 0 0 14px;
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link {
+  min-height: 40px;
+  padding-block: 5px;
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-mark {
+  width: 28px;
+  height: 28px;
+}
+/* Narrow desktops and tablets on their side: only the marks stay, each named by its tooltip and for screen readers. */
 @media (max-width: 1179.98px) {
   .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group {
     margin-bottom: 0;
@@ -90,9 +127,13 @@
   }
   .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link {
     justify-content: center;
-    padding: 6px;
+    padding: 5px;
   }
-  .wiki-library-navigation[data-layout="sidebar"] :is(h3, .wiki-library-nav-name) {
+  .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-mark {
+    width: 32px;
+    height: 32px;
+  }
+  .wiki-library-navigation[data-layout="sidebar"] :is(h3, .wiki-library-nav-name, .wiki-library-nav-count) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -101,7 +142,7 @@
     white-space: nowrap;
   }
 }
-/* The name of an icon in the narrowed sidebar, drawn like the Wiki's other popovers rather than the light default. */
+/* The name of a mark in the narrowed sidebar, drawn like the Wiki's other popovers rather than the light default. */
 .wiki-library-nav-tooltip[data-slot="tooltip-content"] {
   font: var(--wiki-type-meta);
   padding: 6px 10px;
