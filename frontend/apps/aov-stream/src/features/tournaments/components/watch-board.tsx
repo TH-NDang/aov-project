@@ -38,7 +38,7 @@ export function SideHead({
   )
 }
 
-/** A banned hero, struck; a ban nobody saw or nobody made keeps its place and its stroke. */
+/** A banned hero, greyed under the "no" sign; a ban nobody saw or nobody made keeps its place and its sign. */
 export function BanFace({ game, hero }: { game: PublishedGame; hero: Selection | null | undefined }) {
   return present(hero) ? (
     <ReferenceArt catalog={game.catalog} kind="heroes" selection={hero} />

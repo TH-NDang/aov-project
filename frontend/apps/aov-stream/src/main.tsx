@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { connectStoredAnswers } from "@aov/ui/lib/stored-answers"
 import { LocaleProvider } from "@aov/ui/hooks/use-locale-text"
+import { TooltipProvider } from "@aov/ui/components/tooltip"
 import { useStreamLocale } from "./components/stream-locale"
 import "./stream.css"
 import App from "./App"
@@ -24,7 +25,10 @@ if (!relaySilentLogin(import.meta.env.BASE_URL)) {
       <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>
         <QueryClientProvider client={queryClient}>
           <StreamLocale>
-            <App />
+            {/* Tooltips of the page share one wait: after the first, the next one shows at once. */}
+            <TooltipProvider delayDuration={250} skipDelayDuration={400}>
+              <App />
+            </TooltipProvider>
           </StreamLocale>
         </QueryClientProvider>
       </BrowserRouter>

@@ -1,0 +1,18 @@
+/* A short label beside a mark: the page's ink as its ground, so it stands off light and dark pages alike. */
+.hub-tip {
+  --hub-tip-ground: light-dark(var(--aov-stream-ink), var(--aov-stream-cream));
+  z-index: 70;
+  max-width: 240px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: var(--hub-tip-ground);
+  box-shadow: var(--hub-shadow-lg);
+  color: light-dark(#fff, var(--aov-stream-night));
+  font: 600 12px/16px var(--hub-font);
+  text-align: center;
+}
+/* Its arrow is the ground's colour too. */
+.hub-tip svg {
+  background: var(--hub-tip-ground);
+  fill: var(--hub-tip-ground);
+}

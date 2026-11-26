@@ -2,7 +2,7 @@ import { Link } from "react-router"
 import type { PublishedGame } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { EntityPageLink } from "../../../components/go-link"
-import { StreamIcon } from "../../../components/stream-icon"
+import { MvpBadge } from "../../../components/mvp-badge"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { draftRows, gameWinner, type DraftRow } from "../../../lib/series-model"
@@ -36,12 +36,7 @@ function PlayerRow({ row, games, named }: { row: DraftRow; games: PublishedGame[
           {cell && (
             <span className="tn-pool-cell">
               <ReferenceArt catalog={cell.game.catalog} kind="heroes" selection={cell.hero} />
-              {cell.mvp && (
-                <span className="tn-pool-mvp" title={text("MVP ván", "Game MVP")}>
-                  <StreamIcon name="spark" size={12} />
-                  <span className="sr-only">{text("MVP ván", "Game MVP")}</span>
-                </span>
-              )}
+              {cell.mvp && <MvpBadge className="tn-pool-mvp" label={text("MVP ván", "Game MVP")} />}
             </span>
           )}
         </td>

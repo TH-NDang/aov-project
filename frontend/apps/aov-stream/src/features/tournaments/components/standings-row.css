@@ -23,12 +23,6 @@
   padding-block: 11px;
   line-height: 1.34;
 }
-/* In a narrow table the arrow after a name gives way to it. */
-@container (max-width: 599.98px) {
-  .tn-team-name > a > svg {
-    display: none;
-  }
-}
 .tn-team-name > small {
   color: var(--hub-muted);
   font-size: 12px;

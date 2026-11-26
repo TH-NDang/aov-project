@@ -4,6 +4,7 @@ import { broadcastRoles, type GameSide, type PublishedGame } from "@aov/communit
 import { MatchStatus } from "../../../components/match-card"
 import { RoundLabel } from "../../../components/round-label"
 import { Stage } from "../../../components/stage"
+import { MvpBadge } from "../../../components/mvp-badge"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -155,8 +156,8 @@ export function MatchPeek({ entry }: { entry: CompetitionMatch }) {
           <p>
             {mvp && (
               <span>
-                <StreamIcon name="spark" size={14} />
-                MVP <b>{mvp.name}</b>
+                <MvpBadge label={text("MVP trận", "Match MVP")} />
+                <b>{mvp.name}</b>
               </span>
             )}
             {casters.length > 0 && (
