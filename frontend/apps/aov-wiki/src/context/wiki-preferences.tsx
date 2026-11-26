@@ -170,6 +170,21 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
           )}
           <h2 className="wiki-preference-heading">{t("Ngôn ngữ", "Language")}</h2>
           <LanguageSwitch />
+          <h2 className="wiki-preference-heading">{t("Hiển thị", "Display")}</h2>
+          <div className="wiki-preference-display">
+            <label>
+              <span>{t("Múi giờ", "Time zone")}</span>
+              <PublicTimeZoneSelect locale={locale} product="wiki" triggerClassName="wiki-preference-select" />
+            </label>
+            <label>
+              <span>{t("Định dạng ngày", "Date format")}</span>
+              <PublicDateFormatSelect locale={locale} product="wiki" triggerClassName="wiki-preference-select" />
+            </label>
+            <label>
+              <span>{t("Tiền tệ", "Currency")}</span>
+              <PublicCurrencySelect locale={locale} product="wiki" triggerClassName="wiki-preference-select" />
+            </label>
+          </div>
         </PopoverContent>
       </Popover>
     </div>

@@ -23,11 +23,16 @@
   "AOV Stream" dạng chữ thường, một dòng mô tả cắt bằng dấu ba chấm. Ứng dụng đang dùng có nền vàng nhạt và dấu tích;
   ứng dụng kia có mũi tên, sáng lên khi rê chuột. Chọn Stream mở frontend Stream trong cùng tab.
 - Giữa: ô tìm kiếm chung, cao 36px, rộng tối đa 420px, nằm giữa phần logo và phần tiện ích, hiện ở mọi bề rộng.
-- Phải: nút thị trường và ngôn ngữ (cờ và mã thị trường) và tài khoản. Nút mở một bảng gọn rộng 280px, canh mép phải
+- Phải: nút thị trường và ngôn ngữ (cờ và mã thị trường) và tài khoản. Nút mở một bảng gọn rộng 300px, canh mép phải
   với nút (`WikiPreferenceControls`, `src/context/wiki-preferences.tsx`): tiêu đề nhỏ "Thị trường", mỗi thị trường một
   hàng cao 40px có cờ và tên, thị trường đang chọn có nền vàng nhạt và dấu ✓, thị trường chưa hỗ trợ mờ đi với chữ "Chưa
   hỗ trợ" ở bên phải (lý do là tooltip); rồi tiêu đề nhỏ "Ngôn ngữ" và công tắc hai nửa Tiếng Việt | English, nửa đang
-  chọn nổi lên. Không có câu giải thích. Tab đi qua từng lựa chọn, Escape đóng. Chọn thị trường thì bảng đóng.
+  chọn nổi lên; rồi tiêu đề nhỏ "Hiển thị" với ba hàng múi giờ, định dạng ngày, tiền tệ (nhãn bên trái, ô chọn bên phải).
+  Không có câu giải thích. Thị trường Global của API không được đưa ra; đường dẫn hay lựa chọn cũ `region=GLOBAL` đọc
+  thành Việt Nam. Tab đi qua từng lựa chọn, Escape đóng. Chọn thị trường thì bảng đóng.
+- Hai bảng của thanh rộng (thị trường và tài khoản) cùng kiểu: mở khi bấm, không mở khi rê chuột, cùng bề rộng và canh
+  mép phải với nút, cách nút 10px; mở bảng này thì bảng kia đóng; bấm ra ngoài, Escape hoặc sang trang khác thì đóng;
+  tiêu điểm vào bảng khi mở và về lại nút khi đóng.
 - Ô tìm kiếm, nút thị trường và nút tài khoản cùng một kiểu: không viền, bo tròn, nền mờ `--aov-text` 6% (9% khi rê
   chuột). Ô tìm kiếm có viền vàng khi đang gõ.
 - Trang tướng (`variant="hero"`): thanh nằm trên ảnh tướng, trong suốt ở đầu trang; trong 100px cuộn đầu tiên nền, vạch
@@ -132,15 +137,19 @@ Wiki, nên chỗ nào dùng class Tailwind thì ghi bo góc bằng token hoặc 
 
 ## Tài khoản
 
-`PublicAccountMenu` dùng chung với Stream, hỗ trợ hover trên desktop và nhấn/bàn phím; popup gom ngôn ngữ, múi giờ, định
-dạng ngày, tiền tệ và đăng nhập. Compact dùng `PublicAccountSummary` ngay trong menu “⋯”, không mở popup tài khoản lồng
-nhau. Wiki không có thiết lập giao diện. Ngôn ngữ dùng `WikiContext`, giữ thị trường/bộ lọc hiện tại.
+Thanh rộng dùng `WikiAccountPopover` (`src/components/wiki-account-popover.tsx`): nút tròn có ảnh, chữ cái đầu của tên
+trên nền vàng, hoặc hình người khi chưa đăng nhập. Bảng chỉ có phần đầu (ảnh hoặc chữ cái, tên hoặc "Chưa đăng nhập", một
+dòng "Một tài khoản cho Wiki và Stream") và một việc: chưa đăng nhập là nút vàng "Đăng nhập"; đã đăng nhập là hai hàng
+40px "Cài đặt tài khoản" và "Đăng xuất". Cài đặt hiển thị nằm ở bảng thị trường, không lặp lại ở đây. Góp ý nằm ở chân
+trang và trên từng trang, không đặt trong bảng vì hộp góp ý không mở được từ một bảng đang đóng. Compact dùng
+`PublicAccountSummary` ngay trong menu “⋯”, không mở popup tài khoản lồng nhau. Wiki không có thiết lập giao diện. Ngôn ngữ dùng `WikiContext`, giữ thị trường/bộ lọc hiện tại.
 Đăng nhập qua trang AOV riêng tại máy chủ xác thực, public client `aov-wiki` với Code + PKCE S256.
 Callback `/auth/callback` đọc tên qua `/api/wiki/v1/users/me` rồi trở lại URL trước đăng nhập.
-Khi đã đăng nhập, popup tài khoản (desktop) và hàng tài khoản trong menu “⋯” (compact) có liên kết
+Khi đã đăng nhập, bảng tài khoản (desktop) và hàng tài khoản trong menu “⋯” (compact) có liên kết
 **Cài đặt tài khoản** tới `/account`: đổi mật khẩu bằng mã gửi email, xem/đăng xuất thiết bị và bật/tắt xác thực
 hai bước (ADR-028). Phần giao diện dùng chung `PublicAccountSecurity` của `@aov/ui`; bật/tắt 2FA chuyển sang trang
-Keycloak theme AOV bằng `kc_action` rồi quay lại `/account`.
+Keycloak theme AOV bằng `kc_action` rồi quay lại `/account`. Chưa đăng nhập thì `/account` chỉ là một thẻ giữa cột (hình người,
+tiêu đề, một dòng nói đăng nhập để làm gì và nút "Đăng nhập").
 Cấu hình `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` trước khi build; xem
 [cài đặt theme](../../../../backend/wiki-service/infra/local/keycloak-themes/README.md).
 

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import { WikiIcon } from "./wiki-icon"
 import { Link, useNavigate } from "react-router"
-import { PublicAccountMenu, PublicAccountSummary } from "@aov/ui/components/public-account-menu"
+import { PublicAccountSummary } from "@aov/ui/components/public-account-menu"
 import { publicAuthError } from "@aov/ui/lib/public-auth"
 import { useWikiContext, wikiText } from "../context/wiki-context"
+import { WikiAccountPopover } from "./wiki-account-popover"
 import { WikiHeader } from "./wiki-header"
 import { signIn, signOut, completeLogin, useWikiSession } from "../lib/wiki-auth"
 import "./wiki-account.css"
@@ -37,7 +38,7 @@ export function WikiAccountMenu({ inline = false }: { inline?: boolean }) {
       <PublicAccountSummary {...accountProps} layout="sheet" />
     </div>
   ) : (
-    <PublicAccountMenu {...accountProps} openOnHover={false} />
+    <WikiAccountPopover />
   )
 }
 

@@ -1,0 +1,131 @@
+/*
+ * The account button and its panel, matched to the market button and panel beside it: the same soft round fill, the
+ * same 300px panel aligned to the button's right edge. The head holds the picture or initial and the name; the rows
+ * below are 40px, each with its mark.
+ */
+.wiki-account-trigger {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-text) 6%, transparent);
+}
+.wiki-account-trigger:hover,
+.wiki-account-trigger[data-state="open"] {
+  background: color-mix(in srgb, var(--aov-text) 9%, transparent);
+}
+.wiki-account-trigger:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-account-avatar {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--aov-accent) 16%, transparent);
+  color: var(--aov-accent);
+  font: 700 0.875rem/1 var(--wiki-font-reading);
+}
+.wiki-account-avatar[data-avatar="initial"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.wiki-account-avatar > img,
+.wiki-account-avatar > svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wiki-account-avatar-large {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+.wiki-account-panel[data-slot="popover-content"] {
+  display: grid;
+  width: min(300px, calc(100vw - 24px));
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 8px;
+  background: var(--aov-popover);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-account-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 8px;
+}
+.wiki-account-head > span {
+  display: grid;
+  min-width: 0;
+}
+.wiki-account-head strong {
+  font: var(--wiki-type-entry);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-account-head small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-account-rows {
+  display: grid;
+  gap: 2px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 6px;
+}
+.wiki-account-rows > :is(a, button) {
+  font: var(--wiki-type-body);
+  display: flex;
+  height: 40px;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--aov-radius-control);
+  padding: 0 10px;
+  color: var(--aov-text);
+  text-align: left;
+  text-decoration: none;
+}
+.wiki-account-rows > :is(a, button) > svg {
+  flex: none;
+  color: var(--aov-muted);
+}
+.wiki-account-rows > :is(a, button):hover {
+  background: var(--aov-raised);
+}
+.wiki-account-rows > :is(a, button):focus-visible,
+.wiki-account-signin:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: -2px;
+}
+.wiki-account-signin {
+  font: var(--wiki-type-category);
+  display: flex;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.wiki-account-signin:hover:not(:disabled) {
+  background: var(--aov-accent-strong);
+}
+.wiki-account-signin:disabled {
+  opacity: 0.7;
+}
+.wiki-account-error {
+  font: var(--wiki-type-meta);
+  padding: 0 8px 4px;
+  color: var(--aov-danger);
+}

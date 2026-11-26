@@ -97,12 +97,12 @@
   object-fit: cover;
 }
 /*
- * The market and language panel: two short sections under small titles. Markets are rows of 40px (flag, name, a check
+ * The market and language panel: short sections under small titles. Markets are rows of 40px (flag, name, a check
  * on the current one, "Unavailable" on the right of one not yet supported); the two languages are a segmented switch.
  */
 .wiki-preference-panel[data-slot="popover-content"] {
   display: grid;
-  width: min(280px, calc(100vw - 24px));
+  width: min(300px, calc(100vw - 24px));
   gap: 4px;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-card);
@@ -177,6 +177,30 @@
 :is(.wiki-preference-options, .wiki-preference-segment) > button:focus-visible {
   outline: 2px solid var(--aov-accent);
   outline-offset: -2px;
+}
+/* Display settings: a label on the left, its select on the right, one 36px row each. */
+.wiki-preference-display {
+  display: grid;
+  gap: 4px;
+  padding-inline: 2px;
+}
+.wiki-preference-display > label {
+  font: var(--wiki-type-meta);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--aov-text-soft);
+}
+.wiki-preference-display .wiki-preference-select {
+  font: var(--wiki-type-meta);
+  width: 172px;
+  min-height: 34px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 8px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
 }
 /* The two languages as one control: a sunken track, the current one raised on it. */
 .wiki-preference-segment {

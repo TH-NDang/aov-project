@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
+import { AccountAvatar } from "@aov/ui/components/public-account-menu"
 import { PublicAccountSecurity } from "@aov/ui/components/public-account-security"
 import { createAccountSecurityApi } from "@aov/ui/lib/account-security"
 import { WikiHeader } from "../../components/wiki-header"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
-import { CatalogHeading } from "../../layout/catalog-heading"
 import {
   signIn,
   startAccountAction,
@@ -39,40 +39,36 @@ export function AccountSettingsPage() {
             actionResult={actionResult}
           />
         ) : (
-          <>
-            <CatalogHeading
-              title={text("Cài đặt tài khoản", "Account settings")}
-              lead={
-                session.status === "loading"
-                  ? text("Đang hoàn tất đăng nhập…", "Completing sign-in…")
-                  : text(
-                      "Đăng nhập để đổi mật khẩu, xem thiết bị đang đăng nhập và bật xác thực hai bước.",
-                      "Sign in to change your password, review signed-in devices and turn on two-step sign-in.",
-                    )
-              }
-              compact
-            />
+          <section className="wiki-account-card" aria-labelledby="wiki-account-card-title">
+            <AccountAvatar className="wiki-account-card-avatar" />
+            <h1 id="wiki-account-card-title">{text("Cài đặt tài khoản", "Account settings")}</h1>
+            <p>
+              {session.status === "loading"
+                ? text("Đang hoàn tất đăng nhập…", "Completing sign-in…")
+                : text(
+                    "Đăng nhập để đổi mật khẩu, xem thiết bị và bật xác thực hai bước.",
+                    "Sign in to change your password, review devices and turn on two-step sign-in.",
+                  )}
+            </p>
             {session.status === "anonymous" && (
-              <div className="wiki-account-signin">
-                <button
-                  type="button"
-                  className="wiki-button"
-                  data-primary=""
-                  onClick={() => {
-                    setSignInError(false)
-                    void signIn().catch(() => setSignInError(true))
-                  }}
-                >
-                  {text("Đăng nhập", "Sign in")}
-                </button>
-                {signInError && (
-                  <p role="alert">
-                    {text("Chưa mở được đăng nhập. Vui lòng thử lại.", "Could not open sign-in. Try again.")}
-                  </p>
-                )}
-              </div>
+              <button
+                type="button"
+                className="wiki-button"
+                data-primary=""
+                onClick={() => {
+                  setSignInError(false)
+                  void signIn().catch(() => setSignInError(true))
+                }}
+              >
+                {text("Đăng nhập", "Sign in")}
+              </button>
             )}
-          </>
+            {signInError && (
+              <p className="wiki-account-card-error" role="alert">
+                {text("Chưa mở được đăng nhập. Vui lòng thử lại.", "Could not open sign-in. Try again.")}
+              </p>
+            )}
+          </section>
         )}
       </main>
     </>
