@@ -11,8 +11,7 @@ const skin = (skinKey: string, name: string, displayOrder = 0): Skin => ({
 })
 
 test("a skin key is made from the hero part of the other keys and the Vietnamese name", async () => {
-  const { nextSkinKey, skinKeyPrefix, skinSlug } =
-    await import("../src/features/publishing/components/skins/hero-skins-editor")
+  const { nextSkinKey, skinKeyPrefix, skinSlug } = await import("../src/features/publishing/model/skins/skin-keys")
   assert.equal(skinSlug("Tân thủy thủ"), "tan-thuy-thu")
   assert.equal(skinSlug("Chiến Binh Hải Tộc"), "chien-binh-hai-toc")
   assert.equal(skinSlug("Đồ  Ách!"), "do-ach")

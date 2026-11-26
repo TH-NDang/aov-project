@@ -9,6 +9,7 @@ import {
   CommunityInvitation,
 } from "./features/community/pages/community-account"
 import { CommunityLoginCallback } from "./components/community-session"
+import { StreamNotFound } from "./components/stream-not-found"
 import { Travel } from "./components/travel"
 import { VideoFrame } from "./components/video-frame"
 import "./features/community/components/community.css"
@@ -51,7 +52,7 @@ function Pages({ location }: { location: Location }) {
       <Route path="/manage/:id" element={<CommunityPageManager />} />
       <Route path="/invitations" element={<CommunityInvitation />} />
       <Route path="/auth/callback" element={<CommunityLoginCallback />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<StreamNotFound />} />
     </Routes>
   )
 }

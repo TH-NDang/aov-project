@@ -122,7 +122,7 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | Biến | Ý nghĩa |
 |---|---|
 | `PUBLIC_ORIGIN` | Origin trình duyệt dùng, không có `/` cuối. Biên dịch vào frontend và ghi vào realm khi import |
-| `SITE_ADDRESS` | `:80` trên máy này; tên miền trên máy chủ, Caddy khi đó tự lấy chứng chỉ TLS |
+| `SITE_ADDRESS` | `:80` trên máy này; tên miền trên máy chủ, Caddy khi đó tự lấy chứng chỉ TLS. Ghi cả hai tên trong ngoặc kép, như `"athahub.com, www.athahub.com"`, để `www.` chuyển 308 về tên chính |
 | `PUBLIC_BIND_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT` | Nơi proxy nghe trên máy chủ |
 | `KEYCLOAK_ADMIN_PORT` | Cổng console Keycloak, luôn chỉ trên `127.0.0.1` |
 | `AUTH_SECURE_COOKIES` | `true` khi có HTTPS. `false` chỉ dành cho HTTP loopback |

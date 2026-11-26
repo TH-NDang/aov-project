@@ -19,6 +19,7 @@ import { completeLogin, signIn, signOut, useCommunitySession } from "../lib/stre
 import { useNotifications, useReadNotifications, useUnreadCount } from "../lib/community-queries"
 import { TimeAgo } from "./community-ui"
 import { StreamShell, WIKI_URL } from "./stream-shell"
+import { StreamHead } from "./stream-head"
 import owlMark from "../assets/stream-owl.svg"
 import { StreamIcon, type StreamIconName } from "./stream-icon"
 import { accountKeys, saveProfile, useOwnProfile } from "../lib/profile-api"
@@ -225,6 +226,7 @@ export function CommunityLoginCallback() {
   }, [navigate, locale])
   return (
     <StreamShell>
+      <StreamHead title={text("Đăng nhập — AOV Stream", "Sign in — AOV Stream")} noindex />
       <div className="cp-container">
         <section className="hub-state">
           <h1>

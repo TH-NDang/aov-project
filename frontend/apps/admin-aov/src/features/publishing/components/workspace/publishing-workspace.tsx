@@ -13,11 +13,13 @@ import {
   Plus,
   Save,
   Send,
+  Sparkles,
   Trash2,
   X,
   ChevronDown,
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { HeroAiTemplateSheet, useCachedHeroCode } from "../ai-template/hero-ai-template-sheet"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -699,6 +701,31 @@ export function PublishingWorkspace({
         compact={!wideHeader}
       />
     )
+  // The fields of the hero as a template for an AI assistant, and the way its answer comes back into the draft.
+  const [aiTemplateOpen, setAiTemplateOpen] = useState(false)
+  const heroCode = useCachedHeroCode(heroId)
+  const aiTemplateSheet = preview && revision && (
+    <HeroAiTemplateSheet
+      key={`${heroId}:${revision.id}`}
+      open={aiTemplateOpen}
+      onOpenChange={setAiTemplateOpen}
+      content={preview.content}
+      heroName={preview.content.PROFILE ? heroName : ""}
+      heroCode={heroCode}
+      locale={location.readLocale}
+      writable={!!writable && localDraft.ready && !localDraft.invalid && !localDraft.conflict}
+      draftAction={
+        revision.state === "PUBLISHED" && canWrite
+          ? openDraft
+            ? { label: `Mở bản nháp #${openDraft.revisionNo}`, onSelect: startDraft }
+            : canFork
+              ? { label: "Tạo bản nháp", onSelect: () => forkDraft({ cause: "CONTENT_CORRECTION" }) }
+              : undefined
+          : undefined
+      }
+      onApply={(content) => localDraft.update({ ...localDraft.value, content })}
+    />
+  )
   // The versions open from a row of the ⋯ menu, in a sheet of their own, so the header keeps one row of controls.
   const [versionsOpen, setVersionsOpen] = useState(false)
   const versionSheet = revision && (
@@ -867,6 +894,12 @@ export function PublishingWorkspace({
           />
         )}
         <PatchCaptureMenuItem />
+        {preview && revision && (
+          <DropdownMenuItem disabled={busy} onSelect={() => setAiTemplateOpen(true)}>
+            <Sparkles />
+            Mẫu dữ liệu cho AI
+          </DropdownMenuItem>
+        )}
         {((canPublish && heroId && formsOwner) || writable) && <DropdownMenuSeparator />}
         {canPublish && heroId && formsOwner && (
           <DropdownMenuItem disabled={busy} onSelect={() => setFormsOpen(true)}>
@@ -1176,6 +1209,7 @@ export function PublishingWorkspace({
                 {languageSheet}
                 {versionSheet}
                 {draftStatusSheet}
+                {aiTemplateSheet}
                 {closeButton}
               </div>
             </div>

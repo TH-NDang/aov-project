@@ -5,6 +5,7 @@ import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { enchantmentColumn } from "@aov/ui/lib/warehouse-content"
 import { enchantmentRows, type WarehouseEnchantment } from "./use-item-catalog"
 import { WarehouseArtwork } from "./warehouse-artwork"
+import { WarehouseEntryLink } from "./warehouse-entry-link"
 import { EmptyGroup, romanTier } from "./warehouse-parts"
 import {
   warehouseName,
@@ -21,26 +22,27 @@ function EnchantmentNode({
 }: {
   entry: WarehouseEnchantment
   selected: boolean
-  onOpen: (entry: WarehouseEntry, button: HTMLButtonElement) => void
+  onOpen: (entry: WarehouseEntry, element: HTMLElement) => void
 }) {
   const { locale } = useWikiContext()
   const name = warehouseName(entry, locale)
   const summary = warehouseText(entry.content.translations, locale)?.summary
   return (
-    <button
-      type="button"
+    <WarehouseEntryLink
+      kind="enchantments"
+      entry={entry}
+      selected={selected}
+      onOpen={onOpen}
       className="wiki-enchantment-node"
       style={{ gridColumn: enchantmentColumn(entry.content.position) ?? undefined }}
-      aria-pressed={selected}
       aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
-      onClick={(event) => onOpen(entry, event.currentTarget)}
     >
       <WarehouseArtwork entry={entry} kind="enchantments" />
       <span title={summary ? `${name} · ${summary}` : name}>
         <strong>{name}</strong>
         {summary && <small>{summary}</small>}
       </span>
-    </button>
+    </WarehouseEntryLink>
   )
 }
 
@@ -57,7 +59,7 @@ export function EnchantmentCatalog({
   groups: WarehouseGroup[]
   group: string
   selectedId: string | null
-  onSelect: (entry: WarehouseEntry, button?: HTMLButtonElement) => void
+  onSelect: (entry: WarehouseEntry, button?: HTMLElement) => void
 }) {
   const { locale } = useWikiContext()
   const rows = enchantmentRows(entries, group, groups, locale)

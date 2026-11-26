@@ -121,3 +121,10 @@ test("reference navigation preserves detail and browsing context while allowing 
   assert.equal(link.searchParams.get("unscoped"), "1")
   assert.equal(link.hash, "#recipe")
 })
+
+test("links leave out the market and language the Wiki would pick anyway, so crawlers follow canonical addresses", () => {
+  const implied = { region: "VN", locale: "vi-VN" }
+  assert.equal(wikiScopeHref("/hero/airi", { region: "VN", locale: "vi-VN", implied }), "/hero/airi")
+  assert.equal(wikiScopeHref("/hero/airi", { region: "TH", locale: "vi-VN", implied }), "/hero/airi?region=TH")
+  assert.equal(wikiScopeHref("/hero/airi", { region: "VN", locale: "en-US", implied }), "/hero/airi?locale=en-US")
+})

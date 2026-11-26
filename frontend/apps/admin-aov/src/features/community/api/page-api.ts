@@ -31,6 +31,9 @@ export const pageKeys = {
     [...pages, actorKey, organizationId, "owned-teams"] as const,
   claims: (actorKey: string) => [...pages, actorKey, "claims"] as const,
   reports: (actorKey: string) => [...pages, actorKey, "reports"] as const,
+  /** The first page alone, read for its total; under the list keys so answering a request refreshes it too. */
+  claimsCount: (actorKey: string) => [...pages, actorKey, "claims", "count"] as const,
+  reportsCount: (actorKey: string) => [...pages, actorKey, "reports", "count"] as const,
   picker: (actorKey: string, search: string) => [...pages, actorKey, "picker", search] as const,
   referencePicker: (actorKey: string, kind: ProfileKind | "", search: string) =>
     [...pages, actorKey, "reference-picker", kind, search] as const,

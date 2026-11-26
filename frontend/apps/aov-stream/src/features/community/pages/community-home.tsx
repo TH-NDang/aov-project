@@ -16,6 +16,7 @@ import { LiveRow } from "../components/community-live"
 import { HomeCompetitions, HomeMatches } from "../components/home-matches"
 import { useFollowedIds } from "../../../lib/community-queries"
 import { useSignedInAction } from "../../../components/community-signin"
+import { StreamHead } from "../../../components/stream-head"
 import "../components/community.css"
 
 type Tab = "latest" | "following" | "video" | "news"
@@ -64,7 +65,13 @@ export function CommunityHome() {
         </>
       }
     >
-      <title>{text("Bảng tin — AOV Stream", "Feed — AOV Stream")}</title>
+      <StreamHead
+        title={text("AOV Stream — Giải đấu Liên Quân Mobile", "AOV Stream — Arena of Valor esports")}
+        description={text(
+          "Lịch thi đấu, kết quả, bảng xếp hạng, đội tuyển và tuyển thủ các giải đấu Liên Quân Mobile.",
+          "Schedule, results, standings, teams and players of Arena of Valor tournaments.",
+        )}
+      />
       <div className="cp-container">
         <section>
           <div className="cp-feed-header">

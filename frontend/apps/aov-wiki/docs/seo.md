@@ -45,3 +45,23 @@ Không dùng thẻ `<title>` hoặc `<meta>` trong JSX: chúng sẽ nằm song s
   các dạng khác; mỗi dạng có trang tĩnh và canonical riêng. Mã và UUID cũ của dạng (`/hero/flowborn-ad`,
   `/hero/<uuid dạng>`) là trang không vào sitemap, canonical trỏ về địa chỉ mới, ứng dụng chuyển hướng `replace`.
   Đổi dạng giữ vị trí cuộn và kỹ năng đang mở.
+- Liên kết nội bộ không ghi `region` và `locale` khi chúng trùng giá trị Wiki tự chọn (`implied` trong
+  `context/wiki-context.tsx`), nên địa chỉ crawler gặp trùng với canonical.
+- Mỗi mục trong kho là một liên kết `<a>` tới `/warehouse/<tab>/<code>`. Bấm chuột trái mở bảng chi tiết tại chỗ;
+  mở tab mới hoặc crawler đi tới trang riêng của mục. Trang mục lấy tên mục làm `h1`.
+
+## Tiêu đề, dữ liệu có cấu trúc và ảnh xem trước
+
+- Tiêu đề nói tên game: "Liên Quân" (tiếng Anh "Arena of Valor"). Trang tướng có bản lên đồ đã công bố thì ghi
+  "lên đồ, bảng ngọc, kỹ năng"; trang và `pnpm prerender` cùng đọc `/builds` để biết.
+- `headTags` ghi một khối JSON-LD: `WebSite` và `Organization` ở mọi trang, `BreadcrumbList` khi meta có `breadcrumbs`,
+  `Article` khi meta có `published` (bản cập nhật). Thêm `breadcrumbs` khi dựng meta cho trang chi tiết mới.
+- Trang tĩnh của tướng có mô tả mọi kỹ năng và bản lên đồ đầu tiên của từng nguồn, kèm liên kết tới trang bị.
+- Ảnh xem trước mặc định là `public/images/og-default.jpg` (1200×630). Trang có ảnh riêng thì dùng ảnh đó.
+- Sitemap ghi `image:image` cho ảnh của trang, và `lastmod` của trang danh sách theo mục mới nhất trong đó.
+
+## Stream
+
+Stream không có trang tĩnh. Mỗi trang gọi `<StreamHead title description noindex>` (`components/stream-head.tsx`);
+trang tài khoản, quản lý, lời mời, đăng nhập và địa chỉ không có trang đều `noindex`. Canonical lấy origin từ
+`VITE_WIKI_URL` cộng đường dẫn gốc của bản build (`/stream/`); thiếu biến này thì mọi trang `noindex`.

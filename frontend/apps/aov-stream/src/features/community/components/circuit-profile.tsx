@@ -9,7 +9,8 @@ import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { focusesFoldedLink } from "../../../lib/folded-text"
-import { pageReferenceKey } from "../../../lib/reference-model"
+import { pageReferenceKey, plainReferences } from "../../../lib/reference-model"
+import { pageSummary } from "../../../lib/stream-head"
 import { formatDay, regionKey, regionName } from "../../../components/community-ui"
 import { ReferenceText } from "../../../components/reference-text"
 import { RegionMark } from "../../../components/region-mark"
@@ -27,6 +28,7 @@ import { circuitIdOf } from "../../../lib/directory-model"
 import { competitionCatalogQuery } from "../../../lib/tournament-api"
 import { CircuitHonours } from "./circuit-honours"
 import { Crest } from "../../../components/crest"
+import { StreamHead } from "../../../components/stream-head"
 import "./community.css"
 import "./community-profile.css"
 import "./profile-aside.css"
@@ -71,9 +73,19 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
   )
   return (
     <article className="cp-container pf-page">
-      <title>
-        {text(`${content.name} — Hệ thống giải · AOV Stream`, `${content.name} — Tournament circuit · AOV Stream`)}
-      </title>
+      <StreamHead
+        title={text(
+          `${content.name} — Hệ thống giải · AOV Stream`,
+          `${content.name} — Tournament circuit · AOV Stream`,
+        )}
+        description={
+          pageSummary(plainReferences(content.biography ?? "")) ||
+          text(
+            `${content.name}: các mùa giải, lịch thi đấu và kết quả Liên Quân Mobile.`,
+            `${content.name}: seasons, schedule and results of Arena of Valor tournaments.`,
+          )
+        }
+      />
       <ProfileHead
         profile={profile}
         places={[tournaments]}
