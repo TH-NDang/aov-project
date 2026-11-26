@@ -1033,6 +1033,20 @@ giải đó vào một hồ sơ chung "Garena". Người dùng yêu cầu dùng 
   từng là một kênh. Nguồn ảnh của Wiki trỏ `ownerPageId` tới hồ sơ này, nếu có, đọc như tham chiếu hỏng và giữ tên ghi
   công.
 
+## Kênh YouTube trong trang (26/11/2026)
+
+Bấm icon của một link kênh YouTube trên hồ sơ thì Stream mở khung kênh thay vì sang youtube.com (ADR-034): bảng trượt từ
+phải trên màn hình rộng, cả màn hình trên điện thoại. Khung có ảnh bìa, ảnh đại diện, tên, handle, số người đăng ký và số
+video, nút Đăng ký và Mở YouTube, video mới nhất làm thẻ lớn, hàng Shorts vuốt ngang và lưới video. Bấm video thì phát ngay
+ở đầu khung. Cuộn tới cuối thì tải video cũ hơn.
+
+- Link là kênh khi có dạng `youtube.com/@<handle>`, `channel/<id>`, `c/<tên>`, `user/<tên>` hoặc `/<tên>` cũ. Link
+  video, playlist và trang khác giữ thẻ nhỏ "Mở liên kết" như cũ.
+- Hồ sơ chỉ lưu link. Nên ghi link kênh dạng `@<handle>` hoặc `channel/<id>`; chỉ dạng `channel/<id>` hiện được khi Data
+  API tắt.
+- Service chỉ đọc kênh mà hồ sơ đã công bố đang link tới, và giữ câu trả lời trong bộ nhớ (thông tin kênh 24 giờ, video
+  30 phút).
+
 ## Cơ sở dữ liệu
 
 V006 tạo schema community và các bảng page, page_audit, page_member, page_claim, page_invitation,
@@ -1136,6 +1150,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 |---|---|
 | GET /pages?kind=&q=&organizationId=&page=&size= | Chỉ bản công bố; tìm theo tên công bố. `organizationId` chỉ giữ hồ sơ đội có tổ chức chủ quản đó |
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
+| GET /pages/{id}/youtube-channel?url= | Kênh YouTube sau một link của hồ sơ đã công bố (`url` đúng như hồ sơ ghi): {id,title,handle,description,avatarUrl,bannerUrl,subscriberCount,videoCount,url,videos,more}; `videos` là video mới nhất. 404 `CHANNEL_NOT_FOUND` khi hồ sơ không có link đó hoặc link không phải kênh, 503 `CHANNEL_UNAVAILABLE` khi chưa đọc được YouTube (ADR-034) |
+| GET /pages/{id}/youtube-channel/videos?url=&pageToken= | Video cũ hơn của kênh đó, 24 video một lần, mới trước: {videos,nextPageToken}. Không có `pageToken` thì bắt đầu từ video mới nhất; client bỏ video đã hiện |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
 | GET /admin/tournaments/facets?q=&alsoRegions=&status=&tier=&region=&year=&level= | {total,statuses,tiers,regions,years}: số giải mỗi giá trị lọc còn lại theo từ khóa và các bộ lọc khác; `level=MAIN` đếm theo giải chính |
 | GET /admin/tournaments/{id}/game-patches | Mùa và patch của từng ván: tự ghi (`GAME`), theo dòng phiên bản của giai đoạn (`STAGE`) hoặc không có (`NONE`) |
