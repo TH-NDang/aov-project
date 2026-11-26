@@ -7,12 +7,21 @@
 	# It listens inside the container only; no port is published and other containers cannot reach it.
 	admin localhost:2019
 	order rate_limit before basic_auth
+	# With a CDN in front (Cloudflare proxy), TRUSTED_PROXIES lists its address ranges, so that {client_ip} is the
+	# visitor and not the CDN: rate limits, the services' sign-in throttles and Keycloak's brute-force detection all
+	# read it. Empty trusts nobody: {client_ip} is then the address that connected.
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES}
+		client_ip_headers CF-Connecting-IP X-Forwarded-For
+	}
 }
 
 # A backend service found by its Compose name. During an update two containers answer to that name, the old one and
 # the new one; a request that cannot reach one of them (it is shutting down) is tried on the other. Argument: name, port.
 (backend) {
 	reverse_proxy {
+		# One address, the visitor's: the services read it for their sign-in throttles.
+		header_up X-Forwarded-For {client_ip}
 		dynamic a {args[0]} {args[1]} {
 			refresh 1s
 		}
@@ -57,6 +66,18 @@ http://127.0.0.1:2020 {
 		-Server
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		Strict-Transport-Security "max-age=31536000"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin-allow-popups"
+	}
+
+	# The Wiki, Stream and Admin share this origin with content people post, so scripts may only come from here
+	# (and the YouTube player API of Admin's VOD player). Pictures and links in posts can name any https host. Keycloak
+	# under /idp sends a policy of its own.
+	@apps not path /idp/*
+	header @apps {
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com https://player.twitch.tv https://clips.twitch.tv https://www.facebook.com https://www.tiktok.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		X-Frame-Options "DENY"
 	}
 
 	log {
@@ -84,7 +105,7 @@ http://127.0.0.1:2020 {
 				path /api/wiki/*/auth/login /api/wiki/*/auth/google
 				path /idp/realms/*/login-actions/*
 			}
-			key {remote_host}
+			key {client_ip}
 			events 60
 			window 1m
 		}
@@ -93,8 +114,18 @@ http://127.0.0.1:2020 {
 				method POST
 				path /api/wiki/*/media/contact-requests
 			}
-			key {remote_host}
+			key {client_ip}
 			events 10
+			window 1m
+		}
+		# Signed-in writes: posts, comments, reports, follows, lineups, profile and avatar uploads.
+		zone member_writes {
+			match {
+				method POST PUT DELETE
+				path_regexp ^/api/(community/[^/]+/me|wiki/[^/]+/users)/
+			}
+			key {client_ip}
+			events 60
 			window 1m
 		}
 	}
@@ -118,7 +149,10 @@ http://127.0.0.1:2020 {
 
 	@identity path /idp/realms/* /idp/resources/*
 	handle @identity {
-		reverse_proxy keycloak:8080
+		reverse_proxy keycloak:8080 {
+			# Keycloak logs and limits by this address (KC_PROXY_HEADERS=xforwarded).
+			header_up X-Forwarded-For {client_ip}
+		}
 	}
 
 	handle /idp/* {
