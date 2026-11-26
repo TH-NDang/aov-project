@@ -24,7 +24,7 @@ import {
 } from "@aov/ui/components/sidebar"
 import { NAV_GROUPS, activeNavItem, isNavActive, type NavItem, type NavSection } from "@/app/nav"
 import { NavIcon } from "@/app/nav-icon"
-import { useAttentionCounts } from "@/lib/use-wiki-index"
+import { useAttentionCounts } from "./use-attention-counts"
 import { UserMenu } from "./user-menu"
 import { useSession } from "@/app/auth/auth-gate"
 

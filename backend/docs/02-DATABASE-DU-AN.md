@@ -1170,6 +1170,56 @@ ArcanaPatchChangeQueries
 
 ---
 
+## 28a. Theo dõi ghi chú cập nhật (V076, ADR-035)
+
+Hai bảng của phần theo dõi trang cập nhật của nhà phát hành. Không có FK sang bảng patch: một bài chỉ là đường dẫn và
+tiêu đề, biên tập viên tự nhập dữ liệu patch từ bài.
+
+### `patch.note_source_check`
+
+Một dòng cho mỗi nguồn được đọc, khóa là mã nguồn (`LIENQUAN_VN`, `ROV_TH`, `MOBA_TW_EXP`, `MOBA_TW`, `GARENA_ID`;
+V076 tạo sẵn cả năm, đọc ngay lần đầu).
+
+```text
+source_code VARCHAR(32) PK
+schedule_mode VARCHAR(16)     DAILY | EVERY_HOURS, mặc định DAILY
+daily_at TIME                 giờ đọc theo múi giờ wiki.patch-watch.zone, mặc định 08:00
+every_hours SMALLINT          1–24, mặc định 6
+paused BOOLEAN
+last_checked_at, last_success_at, next_check_at TIMESTAMPTZ NULL
+failure_count INTEGER
+last_failure VARCHAR(32) NULL UNREACHABLE | HTTP_STATUS | TOO_LARGE | UNREADABLE
+last_failure_status INTEGER NULL
+etag VARCHAR(256) NULL, last_modified VARCHAR(64) NULL   validator cho GET có điều kiện
+schedule_changed_at, schedule_changed_by_issuer, schedule_changed_by_subject  người đổi lịch gần nhất
+lock_version BIGINT
+```
+
+Lần đọc khóa dòng của nguồn (`SELECT ... FOR UPDATE`) trong transaction ngắn, không giữ transaction khi gọi HTTP. Lỗi liên
+tiếp đẩy lần thử lại ra 30 phút × 2^(n−1), tối đa 6 giờ và không quá lần đọc theo lịch.
+
+### `patch.note_post`
+
+```text
+id UUID PK
+source_code VARCHAR(32)       nguồn tìm thấy, hoặc MANUAL khi biên tập viên thêm tay
+external_id VARCHAR(300)      guid, slug hoặc số bài của nguồn; UNIQUE(source_code, external_id)
+region VARCHAR(8)             VN | TH | TW | ID | OTHER
+channel VARCHAR(16)           OFFICIAL | EXPERIMENTAL
+url VARCHAR(1000), title VARCHAR(500) NULL
+published_at TIMESTAMPTZ NULL  ngày nguồn ghi
+first_seen_at TIMESTAMPTZ
+listed_at TIMESTAMPTZ         published_at, không có thì first_seen_at; thứ tự của hộp bài
+state VARCHAR(16)             NEW | DONE | DISMISSED | EARLIER
+state_changed_at, state_changed_by_issuer, state_changed_by_subject
+lock_version BIGINT
+```
+
+Bài cũ hơn 14 ngày ở lần đọc đầu của một nguồn vào `EARLIER`, để hộp bài không đầy bài cũ. Index `(state, listed_at DESC)`,
+`listed_at DESC` và `url` (chặn thêm tay trùng).
+
+---
+
 # PHẦN D — ITEM / ARCANA / SPELL / ENCHANTMENT
 
 ## 29. Pattern chung

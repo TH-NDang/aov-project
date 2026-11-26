@@ -25,6 +25,7 @@
         <aws-sdk.version>2.55.12</aws-sdk.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <spotless.version>3.10.4</spotless.version>
+        <jsoup.version>1.24.1</jsoup.version>
     </properties>
     <dependencies>
         <!-- Web API and validation -->
@@ -35,6 +36,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!-- Reads the HTML and XML lists of the publishers' patch-note pages (patch watch). -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
         </dependency>
         <!-- Interface-owned API documentation, generated from the live Spring MVC contracts. -->
         <dependency>

@@ -1,0 +1,57 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* Phones see the sources as a strip to swipe above the inbox; wide screens keep them in a column beside it. */
+  .pw-layout {
+    display: grid;
+    gap: 16px;
+    grid-template-areas:
+      "sources"
+      "inbox";
+    min-width: 0;
+  }
+  .pw-layout-inbox {
+    grid-area: inbox;
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    min-width: 0;
+  }
+  .pw-layout-sources {
+    grid-area: sources;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-width: 0;
+  }
+  .pw-sources {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(232px, 78%);
+    gap: 8px;
+    margin-inline: -4px;
+    padding: 0 4px 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+  .pw-posts {
+    display: grid;
+    gap: 8px;
+  }
+
+  @media (min-width: 900px) {
+    .pw-layout {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      grid-template-areas: "inbox sources";
+      align-items: start;
+    }
+    .pw-sources {
+      grid-auto-flow: row;
+      grid-auto-columns: auto;
+      margin-inline: 0;
+      padding: 0;
+      overflow: visible;
+    }
+  }
+}

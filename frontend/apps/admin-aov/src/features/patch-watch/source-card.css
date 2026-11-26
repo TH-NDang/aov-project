@@ -1,0 +1,56 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* A source reads like a small clock: when it is read, big, and how the last read went underneath. */
+  .pw-source {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--aov-success);
+    border-radius: var(--aov-radius-card);
+    background: var(--aov-raised);
+    scroll-snap-align: start;
+  }
+  .pw-source[data-health="failing"] {
+    border-top-color: var(--aov-danger);
+  }
+  .pw-source[data-health="off"] {
+    border-top-color: var(--aov-line-strong);
+  }
+  .pw-source-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .pw-source-region {
+    flex: none;
+    padding: 2px 8px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--aov-accent-soft);
+    color: var(--aov-accent);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0.06em;
+  }
+  .pw-source-dial {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+  }
+  .pw-source-big {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    font-variant-numeric: tabular-nums;
+  }
+  .pw-source[data-health="off"] .pw-source-big {
+    color: var(--muted-foreground);
+  }
+  .pw-source-failure {
+    color: var(--aov-danger);
+  }
+}

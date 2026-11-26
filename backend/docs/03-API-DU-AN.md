@@ -1992,6 +1992,40 @@ locale/múi giờ không hợp lệ trả `422`. Form admin mặc định `avail
 
 ---
 
+## 43a. Theo dõi ghi chú cập nhật (đã triển khai, ADR-035)
+
+```http
+GET  /api/wiki/v1/admin/patch-watch
+GET  /api/wiki/v1/admin/patch-watch/posts?state=NEW&page=0&size=30
+POST /api/wiki/v1/admin/patch-watch/posts
+PUT  /api/wiki/v1/admin/patch-watch/posts/{id}/state
+PUT  /api/wiki/v1/admin/patch-watch/sources/{code}/schedule
+POST /api/wiki/v1/admin/patch-watch/checks
+```
+
+Đọc cần `catalog:read`, ghi cần `patch:write`.
+
+- `GET /admin/patch-watch` trả `scheduled` (lịch có chạy trên máy này không), `zone` (múi giờ của giờ đọc), `newCount`
+  (bài đang chờ) và `sources`: mỗi nguồn có `code`, `region`, `channels`, `pageUrl`, `readable` (false khi máy này không
+  đọc được nguồn, như trang Indonesia không có page reader), `mode`, `dailyAt`, `everyHours`, `paused`,
+  `lastCheckedAt`, `lastSuccessAt`, `nextCheckAt` (không có khi tạm dừng hoặc không đọc được), `failures`, `failure`,
+  `failureStatus`, `version`.
+- `GET /posts` lọc theo `state` (bỏ trống là mọi trạng thái), mới nhất trước theo `listedAt`; trang có `items`, `page`,
+  `size`, `totalElements`. Mỗi bài có `id`, `source`, `region`, `channel`, `url`, `title`, `publishedAt`, `firstSeenAt`,
+  `state`, `stateChangedAt`, `version`.
+- `POST /posts` nhận `{url, title, region, channel}` cho bài ở trang chưa được theo dõi; chỉ nhận địa chỉ `http(s)` có
+  host. Trả `201`; trùng địa chỉ trả `409 PATCH_NOTE_POST_DUPLICATE`. Audit `PATCH_NOTE_POST_ADDED`.
+- `PUT /posts/{id}/state` nhận `{state, expectedVersion}`; `state` là `NEW`, `DONE` hoặc `DISMISSED` (`EARLIER` chỉ do
+  hệ thống đặt, trả `422 PATCH_NOTE_POST_INVALID`). Sai version trả `409 PATCH_NOTE_POST_CONFLICT`. Audit
+  `PATCH_NOTE_POST_STATE_CHANGED`.
+- `PUT /sources/{code}/schedule` nhận `{mode, dailyAt, everyHours, paused, expectedVersion}`: `DAILY` đọc mỗi ngày lúc
+  `dailyAt` (`HH:mm`, múi giờ `zone`), `EVERY_HOURS` đọc cách nhau `everyHours` (1–24) giờ, `paused` ngừng đọc nhưng giữ
+  lịch. Lần đọc kế tiếp được tính lại ngay. `MANUAL` trả `422 PATCH_NOTE_SCHEDULE_INVALID`, sai version trả
+  `409 PATCH_NOTE_SCHEDULE_CONFLICT`. Audit `PATCH_NOTE_SCHEDULE_CHANGED`.
+- `POST /checks` đọc ngay mọi nguồn không tạm dừng và đọc được, trừ nguồn vừa đọc trong 2 phút; trả lại tổng quan.
+
+---
+
 # PHẦN G — ERROR CONTRACT
 
 ## 44. ProblemDetail shape
@@ -2112,6 +2146,17 @@ NO_ACTIVE_PATCH_FOR_REGION
 NO_RULESET_ASSIGNMENT
 UNSUPPORTED_REGION
 UNSUPPORTED_LOCALE
+```
+
+### Theo dõi cập nhật
+
+```text
+PATCH_NOTE_POST_NOT_FOUND      404
+PATCH_NOTE_POST_INVALID        422
+PATCH_NOTE_POST_DUPLICATE      409
+PATCH_NOTE_POST_CONFLICT       409
+PATCH_NOTE_SCHEDULE_INVALID    422
+PATCH_NOTE_SCHEDULE_CONFLICT   409
 ```
 
 ---

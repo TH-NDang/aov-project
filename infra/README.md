@@ -59,7 +59,8 @@ docker compose down -v
 ## Thứ tự khi khởi động
 
 `preflight` → `postgres` → `db-backup` → `keycloak`, `wiki-service`, `community-service` → `web-publish`, `wiki-prerender` →
-`reverse-proxy`. `redis` chạy trước `wiki-service`; tài khoản thử được tạo sau `keycloak`. `web-publish` đưa bản build của Stream
+`reverse-proxy`. `redis` chạy trước `wiki-service`; tài khoản thử được tạo sau `keycloak`. `page-reader` chạy riêng, không
+service nào chờ nó. `web-publish` đưa bản build của Stream
 và Admin vào volume `web-apps`, `wiki-prerender` đưa Wiki vào `wiki-site`; Caddy phục vụ hai volume đó.
 
 - **`preflight`** kiểm tra cấu hình R2 trên mọi origin: thiếu biến, còn giá trị mẫu, endpoint không phải HTTPS,
@@ -156,7 +157,7 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `REQUIRE_STAFF_OTP`, `VERIFY_EMAIL` | Chỉ cho `keycloak-harden`, mặc định `false`; xem [Bảo mật realm](#bảo-mật-realm) |
 | `COMMUNITY_EXCHANGE_RATES_ENABLED` | Lấy tỷ giá hằng ngày từ `api.frankfurter.dev`; đặt `false` nếu không muốn gọi ra ngoài |
 | `YOUTUBE_API_KEY` | Khóa YouTube Data API v3 của `community-service`, cho phần xem kênh YouTube trong web. Tạo riêng cho máy chủ trên Google Cloud, chỉ cho phép YouTube Data API v3 và địa chỉ IP của máy chủ. Để trống thì chỉ đọc feed công khai của kênh |
-| `IMAGE_TAG`, `WIKI_MEM_LIMIT`, `COMMUNITY_MEM_LIMIT`, `KEYCLOAK_MEM_LIMIT` | Tùy chọn: nhãn image, giới hạn RAM |
+| `IMAGE_TAG`, `WIKI_MEM_LIMIT`, `COMMUNITY_MEM_LIMIT`, `KEYCLOAK_MEM_LIMIT`, `PAGE_READER_MEM_LIMIT` | Tùy chọn: nhãn image, giới hạn RAM |
 
 Hai điều dễ nhầm khi đổi `.env` sau lần chạy đầu:
 
@@ -306,13 +307,15 @@ Trên máy chủ, `scripts/deploy.sh` đưa stack lên một commit mới mà si
   thêm một lần để tab đang mở không lỗi. Caddy không phải khởi động lại.
 - **Caddyfile**: áp bằng `caddy reload`. Container Caddy chỉ thay khi `proxy/Dockerfile` đổi (dừng vài giây).
 - **Keycloak**: chỉ khởi động lại khi `keycloak/` hoặc theme đổi. Khoảng một phút không đăng nhập mới được; phiên đang có được giữ.
+- **`page-reader`**: thay thẳng khi `page-reader/` hoặc `compose.yaml` đổi. Không lên được thì lần cập nhật vẫn đi tiếp, chỉ trang
+  tin Indonesia chưa được đọc.
 - Trước khi container backend mới chạy migration, `db-backup` dump database như với `up`.
 
 Migration phải để bản cũ vẫn chạy được, vì hai bản cùng chạy một lúc trên schema mới. Xóa hay đổi tên cột, bảng thì làm qua hai lần
 phát hành: thêm cái mới trước, bỏ cái cũ ở lần sau.
 
 Image lấy từ GHCR (`ghcr.io/th-ndang/aov-project/<image>:<commit>`, workflow `images.yml` build cho mỗi commit của `main`). Không
-tải được thì script build ngay trên máy, trong lúc container cũ vẫn phục vụ. Muốn máy chủ tải được mà không cần đăng nhập, đặt năm
+tải được thì script build ngay trên máy, trong lúc container cũ vẫn phục vụ. Muốn máy chủ tải được mà không cần đăng nhập, đặt sáu
 package của repo trên GitHub ở chế độ Public (Package settings → Change visibility).
 
 Chạy tay, trong thư mục checkout trên máy chủ:
@@ -549,6 +552,20 @@ Hai việc chỉ chạy khi bật, vì có thể chặn người đăng nhập t
   mới chạy.
 - `VERIFY_EMAIL=true docker compose run --rm keycloak-harden`: tài khoản mới phải xác minh email. Cần chạy `keycloak-mail`
   trước; tài khoản cũ chưa xác minh sẽ được hỏi ở lần đăng nhập kế tiếp.
+
+## Theo dõi bản cập nhật Liên Quân
+
+`wiki-service` đọc danh sách bài cập nhật của Garena VN, RoV TH, Garena TW và máy chủ thử nghiệm TW theo lịch của từng nguồn, mặc
+định 08:00 giờ Việt Nam mỗi ngày, đổi trong Admin ở mục Theo dõi cập nhật (ADR-035). Trang tin Indonesia chỉ hiện bài sau khi
+script của nó chạy, nên `page-reader` mở trang đó bằng Chromium không giao diện như trình duyệt của người xem, rồi trả lại trang
+đã hiện bài. Nó chỉ mở đúng trang đó, bật trình duyệt cho từng lần đọc rồi tắt (khoảng 200 đến 300 MB trong lúc đọc), không mở
+cổng ra ngoài mạng của stack và chỉ chạy trên máy chủ. Thiếu `page-reader` thì các nguồn khác vẫn chạy.
+
+Xem lần đọc gần nhất:
+
+```bash
+docker compose logs --tail 20 page-reader
+```
 
 ## Còn lại cho máy chủ thật
 

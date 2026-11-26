@@ -29,6 +29,7 @@ export const NAV_ICONS = {
   releases: gameIcon("tied-scroll"),
   glossary: gameIcon("spell-book"),
   videos: gameIcon("clapperboard"),
+  patchWatch: gameIcon("newspaper"),
   streams: gameIcon("tv"),
   competition: gameIcon("crossed-swords"),
   competitionProfile: gameIcon("id-card"),

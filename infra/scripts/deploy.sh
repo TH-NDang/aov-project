@@ -108,7 +108,7 @@ else
 fi
 changes=$(tr ' ' '\n' <<<"$changes")
 changed() { grep -qE "$1" <<<"$changes"; }
-stack=false wiki=false community=false web=false keycloak=false proxy_image=false caddyfile=false
+stack=false wiki=false community=false web=false keycloak=false proxy_image=false caddyfile=false page_reader=false
 changed '^(everything/|infra/compose\.yaml|infra/postgres/)' && stack=true
 changed '^(everything/|backend/wiki-service/(src/|pom\.xml|Dockerfile|\.mvn/|mvnw$))' && wiki=true
 changed '^(everything/|backend/community-service/)' && community=true
@@ -116,11 +116,12 @@ changed '^(everything/|frontend/|infra/web/)' && web=true
 changed '^(everything/|infra/keycloak/|backend/wiki-service/infra/local/keycloak-themes/)' && keycloak=true
 changed '^(everything/|infra/proxy/Dockerfile$)' && proxy_image=true
 changed '^(everything/|infra/proxy/Caddyfile$)' && caddyfile=true
+changed '^(everything/|infra/page-reader/)' && page_reader=true
 # Compose settings may change any service: the backends and the frontends follow at no cost.
-if $stack; then wiki=true community=true web=true; fi
+if $stack; then wiki=true community=true web=true page_reader=true; fi
 
 log "Updating to $short: stack=$stack wiki=$wiki community=$community web=$web keycloak=$keycloak" \
-    "proxy-image=$proxy_image caddyfile=$caddyfile"
+    "proxy-image=$proxy_image caddyfile=$caddyfile page-reader=$page_reader"
 git -C "$repo" checkout --quiet --detach "$target"
 
 # Images: those CI pushed for this commit (.github/workflows/images.yml), otherwise built here while the old containers
@@ -142,6 +143,7 @@ $community && prepare community-service community-service
 $keycloak && prepare keycloak keycloak
 $proxy_image && prepare reverse-proxy reverse-proxy
 $web && prepare web-publish web
+$page_reader && prepare page-reader page-reader
 if [ ${#build[@]} -gt 0 ]; then
     log "Building here: ${build[*]}"
     docker compose build "${build[@]}"
@@ -207,6 +209,12 @@ roll() {
     log "$service: the new container serves; the old one stopped"
 }
 
+# Nothing waits on the page reader: wiki-service asks it once per scheduled check and tries again later when it is
+# away, so it is simply replaced, and one that does not start leaves the rest of the update going.
+if $page_reader; then
+    docker compose up --detach --no-deps --wait page-reader ||
+        log "page-reader did not become healthy; the Indonesian news page stays unread until it does."
+fi
 $community && roll community-service 8082 "/api/community/v1/tournaments?page=0&size=1"
 $wiki && roll wiki-service 8080 /api/wiki/v1/regions
 
