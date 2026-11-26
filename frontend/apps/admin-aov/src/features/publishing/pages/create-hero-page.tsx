@@ -37,7 +37,9 @@ export function CreateHeroPage() {
     initialValue: { code: "", name: "", locale: "vi-VN", context: null as ImportContext | null },
     schema: createHeroSchema,
   })
-  const context = form.watch("context")
+  // The current patch the picker offers stays out of the saved draft until someone changes it or creates the hero.
+  const [offered, setOffered] = useState<ImportContext | null>(null)
+  const context = form.watch("context") ?? offered
   const locale = form.watch("locale")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -65,7 +67,9 @@ export function CreateHeroPage() {
             key={draft.ready ? "ready" : "loading"}
             regions={regions.data ?? []}
             value={context}
-            onChange={(value) => form.setValue("context", value, { shouldDirty: true })}
+            onChange={(value, automatic) =>
+              automatic ? setOffered(value) : form.setValue("context", value, { shouldDirty: true })
+            }
             disabled={busy || !draft.ready}
             locale={locale}
             onLocaleChange={(value) => form.setValue("locale", value, { shouldDirty: true })}
