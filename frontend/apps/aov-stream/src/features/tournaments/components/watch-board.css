@@ -90,14 +90,14 @@
   border-radius: var(--aov-radius-control);
 }
 .tn-room-ban > * {
-  filter: grayscale(0.85);
+  filter: var(--hub-ban-filter);
 }
 .tn-room-ban > i {
   width: 100%;
   border-radius: inherit;
   background: var(--hub-plate);
 }
-/* A ban is struck from corner to corner; the stroke has dark edges, so it shows on a pale picture too. */
+/* A ban is struck from corner to corner. */
 .tn-room-ban::after {
   content: "";
   position: absolute;

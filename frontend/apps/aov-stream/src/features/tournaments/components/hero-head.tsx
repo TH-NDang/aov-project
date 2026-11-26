@@ -8,6 +8,7 @@ import { gamesText, laneName } from "../../../lib/feed-words"
 import { laneCounts, type HeroRecord } from "../../../lib/hero-model"
 import { verdict, type HeroFate } from "../../../lib/hero-page-model"
 import { statsHref } from "../../../lib/statistics-routes"
+import { wikiEntryUrl } from "../../../lib/wiki-links"
 import { FateBar, FateLegend } from "./fate-bar"
 import { HeroPortrait } from "./hero-portrait"
 import type { StatsData } from "./stats-data"
@@ -111,7 +112,9 @@ export function HeroHead({ data, record, fate }: Props) {
       <div className="tn-hh-name">
         <h2>
           {hero.code ? (
-            <GoLink to={`${WIKI_URL.replace(/\/$/, "")}/heroes/${hero.code}`}>{hero.name}</GoLink>
+            <GoLink to={wikiEntryUrl(WIKI_URL, "heroes", { id: hero.id ?? hero.code, code: hero.code }, languageTag)}>
+              {hero.name}
+            </GoLink>
           ) : (
             hero.name
           )}

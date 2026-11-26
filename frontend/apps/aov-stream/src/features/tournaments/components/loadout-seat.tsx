@@ -1,7 +1,7 @@
 import type { GameSide, Participant, PublishedGame } from "@aov/community-contracts"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { StreamIcon } from "../../../components/stream-icon"
+import { MvpBadge } from "../../../components/mvp-badge"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { isRecorded, shownBuild } from "../../../lib/build-view"
 import { loadoutWords } from "../../../lib/build-words"
@@ -74,12 +74,7 @@ export function LoadoutSeat({
         <span aria-hidden="true">
           <ReferenceArt catalog={catalog} kind="heroes" selection={seat.hero} />
         </span>
-        {mvp && (
-          <span className="tn-loadout-star" title={text("MVP ván", "Game MVP")}>
-            <StreamIcon name="spark" size={13} />
-            <span className="sr-only">MVP</span>
-          </span>
-        )}
+        {mvp && <MvpBadge className="tn-loadout-star" label={text("MVP ván", "Game MVP")} />}
       </span>
       {kit && <LoadoutKit catalog={catalog} seat={seat} />}
       {shown === "ITEMS" && <LoadoutItems catalog={catalog} build={build} />}

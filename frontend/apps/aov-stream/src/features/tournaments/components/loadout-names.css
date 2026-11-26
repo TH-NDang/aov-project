@@ -24,14 +24,8 @@
   line-height: 18px;
 }
 .tn-loadout-mvp {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 10px;
-  color: var(--hub-accent-strong);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
+  margin-left: 8px;
+  vertical-align: 2px;
 }
 @media (max-width: 1159.98px) {
   .tn-loadout-names > strong {

@@ -68,14 +68,18 @@
   /* The tile behind a logo or a picture follows the theme, so a logo stands on what its version is drawn for. */
   --hub-plate: light-dark(color-mix(in srgb, var(--aov-stream-ink) 6%, #fff), var(--aov-stream-indigo));
   --hub-on-plate: light-dark(var(--aov-stream-feather), var(--aov-stream-text-muted));
-  /* A banned hero is struck from corner to corner; the stroke has dark edges, so it shows on a pale picture too. */
+  /*
+   * A banned hero is dimmed and struck from corner to corner by a thin red line; the line has dark edges, so it shows
+   * on a pale picture too.
+   */
+  --hub-ban-filter: grayscale(1) brightness(0.66);
   --hub-ban-stroke: linear-gradient(
     to top right,
-    transparent 44%,
-    rgb(0 0 0 / 62%) 44% 46.5%,
-    #fff 46.5% 53.5%,
-    rgb(0 0 0 / 62%) 53.5% 56%,
-    transparent 56%
+    transparent calc(50% - 2.5px),
+    rgb(0 0 0 / 45%) calc(50% - 2.5px) calc(50% - 1.25px),
+    var(--hub-red) calc(50% - 1.25px) calc(50% + 1.25px),
+    rgb(0 0 0 / 45%) calc(50% + 1.25px) calc(50% + 2.5px),
+    transparent calc(50% + 2.5px)
   );
   --brand-wiki-ink: var(--aov-text);
   --brand-wiki-accent: var(--aov-accent);

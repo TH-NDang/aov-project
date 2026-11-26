@@ -7,7 +7,7 @@ import {
   type CrewMember,
   type StaffMember,
 } from "@aov/community-contracts"
-import { StreamIcon } from "../../../components/stream-icon"
+import { MvpBadge } from "../../../components/mvp-badge"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { personRoleEnglish } from "../../../components/community-ui"
 import { EntityPageLink, GoLink } from "../../../components/go-link"
@@ -128,8 +128,7 @@ export function TeamStaff({ staff, teamId, people }: { staff?: StaffMember[] | n
 export function MvpFact({ label, player }: { label: string; player: NamedPlayer }) {
   return (
     <span className="tn-mvp">
-      <StreamIcon name="spark" size={14} />
-      {label}
+      <MvpBadge label={label} />
       <b>
         <EntityPageLink kind="PLAYER" id={player.id} name={player.name} />
       </b>

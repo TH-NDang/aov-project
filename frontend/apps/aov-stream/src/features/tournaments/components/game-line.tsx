@@ -1,5 +1,6 @@
 import { Link } from "react-router"
 import type { CompetitionView } from "@aov/community-contracts"
+import { MvpBadge } from "../../../components/mvp-badge"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -145,8 +146,8 @@ export function GameLine({
         <span className="tn-line-mvp">
           {mvp && (
             <>
-              <StreamIcon name="spark" size={13} />
-              <b title={`MVP: ${mvp}`}>{mvp}</b>
+              <MvpBadge label={text("MVP ván", "Game MVP")} />
+              <b title={mvp}>{mvp}</b>
             </>
           )}
         </span>

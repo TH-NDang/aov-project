@@ -248,9 +248,6 @@
   grid-area: mvp;
   color: var(--hub-muted);
 }
-.tn-line-mvp > svg {
-  flex: none;
-}
 .tn-line-mvp > b {
   overflow: hidden;
   color: var(--hub-text-soft);

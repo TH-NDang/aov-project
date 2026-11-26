@@ -16,9 +16,10 @@
   font-size: max(12px, calc(var(--portrait, 40px) * 0.34));
   font-weight: 600;
 }
-/* A banned hero loses its colours and is struck. */
+/* A banned hero loses its colours and is struck; a place can lift the dimming where the ban is pointed at. */
 .tn-portrait[data-banned] > * {
-  filter: grayscale(var(--banned-grey, 0.85));
+  filter: var(--banned-filter, var(--hub-ban-filter));
+  transition: filter 160ms;
 }
 .tn-portrait[data-banned]::after {
   content: "";

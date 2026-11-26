@@ -61,7 +61,7 @@
   --reference-size: 38px;
 }
 .tn-order-phase[data-kind="BAN"] .tn-order-turn > * > * {
-  filter: grayscale(0.85);
+  filter: var(--hub-ban-filter);
 }
 /* A ban nobody saw or nobody made: the place and its stroke, without a hero. */
 .tn-order-open {

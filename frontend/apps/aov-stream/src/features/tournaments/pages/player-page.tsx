@@ -9,6 +9,7 @@ import { Jersey } from "../../../components/jersey"
 import { useSections } from "../../../components/place-trail"
 import { PageHead } from "../../../components/page-head"
 import { RegionMark } from "../../../components/region-mark"
+import { MvpBadge } from "../../../components/mvp-badge"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { StreamShell } from "../../../components/stream-shell"
@@ -216,8 +217,8 @@ function PlayerBody({ profile }: { profile: PlayerProfile }) {
               ))}
               {best > 0 && (
                 <span className="pt-award">
-                  <StreamIcon name="spark" size={13} />
-                  {text(`${best} MVP`, `${best} MVP`)}
+                  <MvpBadge label={text(`${best} lần MVP`, `MVP ${best} ${best === 1 ? "time" : "times"}`)} />
+                  {`×${best}`}
                 </span>
               )}
               {team && teamId && (

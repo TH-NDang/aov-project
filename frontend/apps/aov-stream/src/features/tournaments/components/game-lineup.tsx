@@ -5,6 +5,7 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { EntityPageLink } from "../../../components/go-link"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
+import { Tip } from "../../../components/stream-tip"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { banPlaces, inventoryTimes, lineupRecord } from "../../../lib/build-view"
 import { recordWords } from "../../../lib/build-words"
@@ -20,23 +21,33 @@ import "./game-lineup.css"
 
 type Slot = "a" | "b"
 
-/** The heroes a side banned, in the order the record lists them; a ban nobody saw leaves its place struck and empty. */
+/**
+ * The heroes a side banned, in the order the record lists them, in a tray of their own; a ban nobody saw leaves its
+ * place empty. Each hero shows its card when pointed at.
+ */
 function Bans({ game, side, places }: { game: PublishedGame; side: GameSide; places: number }) {
   const { text } = useStreamLocale()
   if (!places) return null
   const unseen = text("Chưa rõ tướng bị cấm", "Banned hero not known")
   return (
-    <p className="tn-bans">
-      <span>{text("Cấm", "Bans")}</span>
-      {Array.from({ length: places }, (_, index) => {
-        const ban = side.bans[index]
-        return present(ban) ? (
-          <ReferenceArt key={index} catalog={game.catalog} kind="heroes" selection={ban} className="tn-ban" />
-        ) : (
-          <span key={index} className="tn-ban" data-unseen="" role="img" aria-label={unseen} title={unseen} />
-        )
-      })}
-    </p>
+    <div className="tn-bans">
+      <p className="tn-bans-tray" role="group" aria-label={text("Cấm", "Bans")}>
+        <span className="tn-bans-label" aria-hidden="true">
+          <StreamIcon name="ban" size={13} />
+          <span>{text("Cấm", "Bans")}</span>
+        </span>
+        {Array.from({ length: places }, (_, index) => {
+          const ban = side.bans[index]
+          return present(ban) ? (
+            <ReferenceArt key={index} catalog={game.catalog} kind="heroes" selection={ban} className="tn-ban" />
+          ) : (
+            <Tip key={index} label={unseen}>
+              <span className="tn-ban" data-unseen="" role="img" aria-label={unseen} />
+            </Tip>
+          )
+        })}
+      </p>
+    </div>
   )
 }
 
@@ -139,10 +150,18 @@ export function GameLineup({ game }: { game: PublishedGame }) {
           return (
             <div className="tn-lane-duel" key={duel.lane} role="group" aria-label={lane}>
               <LoadoutSeat {...seat} seat={duel.a} side={a} slot="a" told={told.a} />
-              <span className="tn-lane-mark" title={lane}>
-                <HeroLaneIcon lane={duel.lane} size={24} />
-                {board && <span>{lane}</span>}
-              </span>
+              {board ? (
+                <span className="tn-lane-mark">
+                  <HeroLaneIcon lane={duel.lane} size={24} />
+                  <span>{lane}</span>
+                </span>
+              ) : (
+                <Tip label={lane}>
+                  <span className="tn-lane-mark">
+                    <HeroLaneIcon lane={duel.lane} size={24} />
+                  </span>
+                </Tip>
+              )}
               <LoadoutSeat {...seat} seat={duel.b} side={b} slot="b" told={told.b} />
             </div>
           )

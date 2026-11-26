@@ -81,46 +81,74 @@
   color: var(--hub-accent-strong);
   font-weight: 700;
 }
+/* The bans of a side in a tray of their own, behind a small struck circle and the word. */
 .tn-bans {
-  --reference-size: 36px;
+  --reference-size: 32px;
+  --reference-radius: 7px;
   display: flex;
-  align-items: center;
-  gap: 6px;
   margin: 0 0 0 auto;
 }
 .tn-lineup-head[data-slot="a"] > .tn-bans {
+  justify-content: flex-end;
   margin: 0 auto 0 0;
 }
-.tn-bans > span:first-child {
-  margin-right: 4px;
-  color: var(--hub-muted);
-  font-size: 13px;
+.tn-bans-tray {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid var(--hub-border);
+  border-radius: 11px;
+  background: var(--hub-sunken);
 }
-/* A ban loses its colours and is struck. */
+.tn-bans-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px 0 5px;
+  color: var(--hub-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tn-bans-label > svg {
+  color: var(--hub-red);
+}
+/* A ban is dimmed and struck by a thin line; pointed at, the hero comes back to colour and its card opens. */
 .tn-ban {
   position: relative;
 }
 .tn-ban > * {
-  filter: grayscale(0.85);
+  filter: var(--hub-ban-filter);
+  transition: filter 160ms;
 }
 .tn-ban::after {
   content: "";
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: var(--hub-ban-stroke);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
   forced-color-adjust: none;
+  pointer-events: none;
+  transition: opacity 160ms;
 }
-/* A ban nobody saw: the place and its stroke, without a hero. */
+.tn-ban:hover > * {
+  filter: none;
+}
+.tn-ban:hover::after {
+  opacity: 0.3;
+}
+/* A ban nobody saw: an empty place, its outline dashed, under a faint stroke. */
 .tn-ban[data-unseen] {
   width: var(--reference-size);
-  overflow: hidden;
-  border: 1px solid transparent;
-  border-radius: var(--aov-radius-control);
-  background: var(--hub-sunken);
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: var(--reference-radius);
   aspect-ratio: 1;
 }
 .tn-ban[data-unseen]::after {
-  opacity: 0.4;
+  opacity: 0.35;
 }
 .tn-lane-duel {
   position: relative;
@@ -236,7 +264,10 @@
     --reference-size: 28px;
     grid-area: bans;
   }
-  .tn-bans > span:first-child {
+  .tn-bans-label {
+    padding: 0 3px;
+  }
+  .tn-bans-label > span {
     display: none;
   }
   .tn-lane-duel {
