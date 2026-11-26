@@ -283,7 +283,8 @@ abstract class OpenApiContractChecks {
         when(patches.published(patchId, "VN", "vi-VN")).thenReturn(patch(patchId, variantId, UUID.randomUUID()));
         when(heroes.forVariant(variantId, "vi-VN")).thenReturn(List.of());
         when(spells.forVariant(variantId, "vi-VN")).thenReturn(List.of());
-        var controller = new PatchPageController(new PatchPages(patches, heroes, spells, List.of()));
+        var controller = new PatchPageController(new PatchPages(patches, heroes, spells, List.of()),
+                JsonMapper.builder().build());
         for (String domain : List.of("HERO", "SPELL")) {
             assertThat(controller.changes(patchId, "VN", "vi-VN", domain, null, 0, 50,
                     new MockHttpServletRequest()).getStatusCode().value()).isEqualTo(200);
@@ -312,7 +313,7 @@ abstract class OpenApiContractChecks {
         when(items.changes(ruleset, variant, "vi-VN")).thenReturn(List.of(change, baseline));
 
         var controller = new PatchPageController(new PatchPages(patches, mock(HeroChangeQueries.class),
-                mock(SpellChangeQueries.class), List.of(items)));
+                mock(SpellChangeQueries.class), List.of(items)), JsonMapper.builder().build());
         var response = controller.changes(patch, "VN", "vi-VN", "ITEM", variant, 0, 50, new MockHttpServletRequest())
                 .getBody();
         assertThat(response.items()).hasSize(1);

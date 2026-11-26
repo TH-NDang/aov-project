@@ -27,6 +27,8 @@ import {
   type WarehouseTab,
 } from "./page-meta.ts"
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
+import { resizedImageUrl, sizedImageSources } from "../sized-image.ts"
+import { HOME_BANNERS, HOME_BANNER_WIDTH } from "../home-banners.ts"
 
 /** Static pages describe the default market and language; other languages stay a view of the same URL (ADR-022). */
 export const STATIC_SCOPE = { region: "VN", locale: "vi-VN" } as const
@@ -98,6 +100,14 @@ export interface StaticPage {
   /** Only canonical pages belong in the sitemap. */
   listed: boolean
   lastmod?: string | null
+  /** Markup for the head beside the page's tags, such as the preload of the picture the app draws first. */
+  head?: string
+}
+
+/** What the static pages need to know about the build they are written into. */
+export interface StaticPageOptions {
+  /** The build asks the image service for resized pictures (`VITE_IMAGE_RESIZE=cloudflare`). */
+  imageResize?: boolean
 }
 
 /** How a build names the entries it holds: each links to that entry's own page. */
@@ -117,25 +127,71 @@ const list = (rows: readonly string[]) =>
   rows.length ? `<ul>${rows.map((row) => `<li>${row}</li>`).join("")}</ul>` : ""
 const paragraph = (text: string | null | undefined) => (text ? `<p>${escapeHtml(text)}</p>` : "")
 
+/**
+ * The page's picture for readers without JavaScript. It is lazy: with JavaScript the static page stays hidden until the
+ * app replaces it, and a hidden lazy picture is never fetched, so the full-size file does not compete with the copy the
+ * app draws.
+ */
 function picture(image: PageImage | undefined) {
   if (!image) return ""
   const size = image.width && image.height ? ` width="${image.width}" height="${image.height}"` : ""
-  return `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.alt ?? "")}"${size} />`
+  return `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.alt ?? "")}"${size} loading="lazy" decoding="async" />`
+}
+
+/** Starts the picture the app draws first while its code still loads; the address must be the one the app asks for. */
+function preloadImage(url: string, srcSet?: string) {
+  const set = srcSet ? ` imagesrcset="${escapeHtml(srcSet)}"` : ""
+  return `<link rel="preload" as="image" href="${escapeHtml(url)}"${set} fetchpriority="high" />`
+}
+
+/** The width the hero page's artwork frame asks for (hero-detail.tsx). */
+const HERO_ARTWORK_WIDTH = 768
+
+/** The large artwork of a hero page, at the size and in the order the page draws it (hero-detail.tsx). */
+function heroArtworkPreload(hero: PublishedHero, options: StaticPageOptions) {
+  const url = hero.media?.SPLASH?.currentVersion?.url ?? hero.media?.PORTRAIT?.currentVersion?.url
+  if (!url) return undefined
+  const sources = sizedImageSources(url, HERO_ARTWORK_WIDTH, options.imageResize ?? false)
+  return preloadImage(sources.src, sources.srcSet)
+}
+
+/**
+ * The home page shows one banner a day, chosen by the reader's own date, so a script picks it before the app starts.
+ * It repeats `bannerOfDay` in home-banners.ts; a test keeps the two choosing the same banner.
+ */
+export function homeBannerPreload(options: StaticPageOptions) {
+  const urls = HOME_BANNERS.map((banner) =>
+    resizedImageUrl(banner.image, HOME_BANNER_WIDTH, options.imageResize ?? false),
+  )
+  return (
+    "<script>(function(){var u=" +
+    JSON.stringify(urls).replace(/</g, "\\u003c") +
+    ',n=new Date(),d=Math.floor((n.getTime()-n.getTimezoneOffset()*60000)/86400000),l=document.createElement("link");' +
+    'l.rel="preload";l.as="image";l.href=u[d%u.length];l.setAttribute("fetchpriority","high");' +
+    "document.head.appendChild(l)})()</script>"
+  )
 }
 
 const contents = `<nav aria-label="Mục lục">${list(
   (Object.keys(SECTIONS) as SectionKey[]).map((key) => link(SECTIONS[key].path, sectionName(key))),
 )}</nav>`
 
-function page(heading: string, content: string) {
-  return `<div data-prerendered><header>${link("/", SITE_NAME)}${contents}</header><main><h1>${escapeHtml(heading)}</h1>${content}</main></div>`
+/** `heroId` names the hero a page is about, so the app can ask for its details before the hero list arrives. */
+function page(heading: string, content: string, heroId?: string) {
+  const hero = heroId ? ` data-hero-id="${escapeHtml(heroId)}"` : ""
+  return `<div data-prerendered${hero}><header>${link("/", SITE_NAME)}${contents}</header><main><h1>${escapeHtml(heading)}</h1>${content}</main></div>`
 }
 
 /**
  * A hero that holds forms has one page per form (ADR-024): the default form at the hero's own address, every other
  * at /hero/<hero>/<form key>. The forms' former addresses and ids preview the same page, unlisted.
  */
-function heroFormPages(hero: PublishedHero, forms: readonly PublishedHeroForm[], names: EntryNames): StaticPage[] {
+function heroFormPages(
+  hero: PublishedHero,
+  forms: readonly PublishedHeroForm[],
+  names: EntryNames,
+  options: StaticPageOptions,
+): StaticPage[] {
   return forms.flatMap((form, index) => {
     const role = formLabelRole(form, forms)
     const label = (role && heroRoleLabels([role], LOCALE)[0]) || form.name
@@ -153,6 +209,7 @@ function heroFormPages(hero: PublishedHero, forms: readonly PublishedHeroForm[],
         forms: undefined,
       },
       names,
+      options,
     )[0]
     const switcher = list(forms.map((other) => link(heroFormPath(hero.code, other.formKey, forms), other.name)))
     const listed = { ...page, body: page.body.replace("</main>", `<h2>Dạng</h2>${switcher}</main>`) }
@@ -187,8 +244,8 @@ function buildSection(builds: readonly PublishedBuild[], names: EntryNames) {
   return rows.length ? `<h2>Lên đồ</h2>${rows.join("")}` : ""
 }
 
-function heroPage(hero: PublishedHero, names: EntryNames = new Map()): StaticPage[] {
-  if (hero.forms?.length) return heroFormPages(hero, hero.forms, names)
+function heroPage(hero: PublishedHero, names: EntryNames, options: StaticPageOptions): StaticPage[] {
+  if (hero.forms?.length) return heroFormPages(hero, hero.forms, names, options)
   const meta = heroMeta({ ...hero, hasBuild: !!hero.builds?.length }, LOCALE)
   const roles = heroRoleLabels(hero.roles, LOCALE)
   const positions = heroPositionLabels(hero.positions, LOCALE)
@@ -209,11 +266,13 @@ function heroPage(hero: PublishedHero, names: EntryNames = new Map()): StaticPag
       skins.length ? `<h2>Trang phục</h2>${list(skins)}` : "",
       `<p>${link("/hero", "Tất cả tướng")}</p>`,
     ].join(""),
+    hero.id,
   )
+  const head = heroArtworkPreload(hero, options)
   // Rich text in the wiki links heroes by id, so those addresses must preview the same page.
   return [
-    { path: meta.path, meta, body, listed: true },
-    { path: `/hero/${encodeURIComponent(hero.id)}`, meta, body, listed: false },
+    { path: meta.path, meta, body, listed: true, head },
+    { path: `/hero/${encodeURIComponent(hero.id)}`, meta, body, listed: false, head },
   ]
 }
 
@@ -279,10 +338,11 @@ function skinsPage(catalog: PublishedCatalog): StaticPage {
 }
 
 /** Every page crawlers can reach, from published data only: anything the public API does not return has no page. */
-export function buildStaticPages(catalog: PublishedCatalog): StaticPage[] {
+export function buildStaticPages(catalog: PublishedCatalog, options: StaticPageOptions = {}): StaticPage[] {
   const pages: StaticPage[] = []
   const home = homeMeta(LOCALE)
   pages.push({
+    head: homeBannerPreload(options),
     path: home.path,
     meta: home,
     body: page(
@@ -332,7 +392,7 @@ export function buildStaticPages(catalog: PublishedCatalog): StaticPage[] {
         ]),
     ),
   )
-  pages.push(...catalog.heroes.flatMap((hero) => heroPage(hero, names)))
+  pages.push(...catalog.heroes.flatMap((hero) => heroPage(hero, names, options)))
   pages.push(skinsPage(catalog))
 
   for (const tab of WAREHOUSE_TABS) {
@@ -464,7 +524,7 @@ export function renderStaticPage(template: string, page: StaticPage, siteUrl: st
   html = replaceBetween(
     html,
     /<!-- seo:head -->[\s\S]*?<!-- \/seo:head -->/,
-    `<!-- seo:head -->\n    ${renderHead(page.meta, siteUrl)}\n    <!-- /seo:head -->`,
+    `<!-- seo:head -->\n    ${renderHead(page.meta, siteUrl)}${page.head ? `\n    ${page.head}` : ""}\n    <!-- /seo:head -->`,
     "head marker",
   )
   return replaceBetween(html, /<!-- seo:body -->/, page.body, "body marker")

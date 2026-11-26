@@ -3,8 +3,12 @@
  * picture is asked for at the width it is drawn, through Cloudflare's image transformations on the same host.
  */
 
-/** The widths the service is asked for. A short list keeps the number of distinct resized copies low. */
-const WIDTHS = [64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048]
+/**
+ * The widths the service is asked for. Each width is a separate copy in the image cache, so a short list lets most
+ * readers share one already made instead of waiting for a new one. Frames are sized to these widths (768 for the large
+ * artwork, its sharp copy 1536).
+ */
+const WIDTHS = [64, 128, 256, 384, 768, 1536]
 
 const SERVICE_ON = import.meta.env?.VITE_IMAGE_RESIZE === "cloudflare"
 

@@ -25,6 +25,7 @@ import {
   warehouseKind,
   type PublishedWarehouseRecord,
   type WarehouseEntry,
+  type WarehouseKind,
 } from "../../lib/warehouse-types"
 import "./warehouse-page.css"
 import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
@@ -40,6 +41,18 @@ const NO_ENTRIES: PublishedWarehouseRecord[] = []
 const OPEN_ENTRY =
   '.shop-item-select[aria-pressed="true"], :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-current="true"]'
 
+/**
+ * What one version did in a section, counted by kind: "Buff 2 · Nerf 1". It renders only while the version menu is
+ * open, so a version's changes are read when a reader looks for them, not with the page.
+ */
+function VersionTally({ kind, variantId }: { kind: WarehouseKind; variantId: string }) {
+  const { patches } = usePublishedChanges(warehouseChangeDomain[kind], { variantId })
+  const counts = new Map<string, number>()
+  for (const subject of changedSubjects(patches.flatMap(({ rows }) => rows)).values())
+    counts.set(subject.kind, (counts.get(subject.kind) ?? 0) + 1)
+  return <ChangeTally kinds={counts} />
+}
+
 export default function WarehousePage() {
   const scope = useWikiContext()
   const text = useWikiText()
@@ -49,8 +62,6 @@ export default function WarehousePage() {
   const { tab, entryCode } = useParams()
   const kind = warehouseKind(tab ?? null)
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
-  // Every version's changes, for the version menu's tally; the queries are the same ones, already cached.
-  const history = usePublishedChanges(warehouseChangeDomain[kind], true)
   const sectionName = wikiText(scope.locale, ...SECTION_NAMES[kind])
   // Enchantments have no search field, so a search left in the address does not hide any of them.
   const search = kind === "enchantments" ? "" : (params.get("q") ?? "")
@@ -206,20 +217,11 @@ export default function WarehousePage() {
     if (name && !subjects.has(id) && !entries.some((e) => e.id === id) && !search) subjects.set(id, { id, name, kind })
   }
 
-  // What each version did in this section, counted by kind: "Buff 2 · Nerf 1".
-  const tallies = new Map(
-    history.patches.map(({ variant, rows }) => {
-      const counts = new Map<string, number>()
-      for (const subject of changedSubjects(rows).values())
-        counts.set(subject.kind, (counts.get(subject.kind) ?? 0) + 1)
-      return [variant.id, counts]
-    }),
-  )
   const version = (
     <WikiVersionPicker
       changedVariants={changes.changedVariants}
       appearance="pill"
-      optionDetail={(patch) => <ChangeTally kinds={tallies.get(patch.id) ?? new Map()} />}
+      optionDetail={(patch) => <VersionTally kind={kind} variantId={patch.id} />}
     />
   )
   const scoped = !!(scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped

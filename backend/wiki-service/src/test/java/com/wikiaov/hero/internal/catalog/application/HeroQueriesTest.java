@@ -34,6 +34,7 @@ import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssetState;
 import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaCredit;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
@@ -152,6 +153,30 @@ class HeroQueriesTest {
         verify(sections, never()).content(eq(HeroSection.SKINS), any());
         verify(media).findAll(Set.of(headId, portraitId));
         verifyNoMoreInteractions(media);
+    }
+
+    @Test
+    void aListedHeroDrawnByItsPortraitLeavesTheHeadsCreditsToItsOwnPage() {
+        UUID headId = UUID.randomUUID();
+        UUID portraitId = UUID.randomUUID();
+        UUID lonelyHeadId = UUID.randomUUID();
+        var pictured = hero("airi", Map.of(MediaRole.HEAD, headId, MediaRole.PORTRAIT, portraitId));
+        var headOnly = hero("baldum", Map.of(MediaRole.HEAD, lonelyHeadId));
+        when(store.heroes(false)).thenReturn(List.of(pictured.identity(), headOnly.identity()));
+        var head = credited(headId, MediaSemanticType.HERO_HEAD);
+        var portrait = credited(portraitId, MediaSemanticType.HERO_PORTRAIT);
+        var lonelyHead = credited(lonelyHeadId, MediaSemanticType.HERO_HEAD);
+        when(media.findAll(Set.of(headId, portraitId, lonelyHeadId)))
+                .thenReturn(Map.of(headId, head, portraitId, portrait, lonelyHeadId, lonelyHead));
+
+        var listed = items(queries.list("VN", "vi-VN", 0, 10, "", null, "code,asc", null, null, false, false));
+
+        var first = listed.get(0);
+        assertThat(((MediaAssetReference) first.get("head")).currentVersion().sources()).isEmpty();
+        assertThat(((MediaAssetReference) first.get("head")).currentVersion().url())
+                .isEqualTo(head.currentVersion().url());
+        assertThat(first).containsEntry("portrait", portrait);
+        assertThat(listed.get(1)).containsEntry("head", lonelyHead);
     }
 
     @Test
@@ -313,6 +338,13 @@ class HeroQueriesTest {
                 List.of(new ProfileTranslation("vi-VN", code, null, null, null)), Set.of(Role.WARRIOR), List.of()));
         when(sections.content(HeroSection.MEDIA_BINDINGS, bindingsId)).thenReturn(new Bindings(assets, List.of()));
         return new CatalogHero(identity, bindingsId);
+    }
+
+    private static MediaAssetReference credited(UUID id, MediaSemanticType type) {
+        return new MediaAssetReference(id, type, MediaAssetState.ACTIVE,
+                new MediaAssetReference.CurrentVersion(UUID.randomUUID(), "image/png", 278, 436,
+                        "https://img.example.test/" + id + ".png", List.of(new MediaCredit("OFFICIAL", "Garena",
+                                false, "https://lienquan.garena.vn", "Garena", null, null, null, null))));
     }
 
     private static MediaAssetReference asset(UUID id, MediaSemanticType type, MediaAssetState state) {

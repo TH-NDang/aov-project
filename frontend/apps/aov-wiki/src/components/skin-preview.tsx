@@ -93,7 +93,7 @@ export function SkinArtwork({
             : `wiki-skin-art wiki-skin-art-${artwork.kind}`
         }
         src={source}
-        frameWidth={preview ? 800 : card ? 128 : 96}
+        frameWidth={preview ? 768 : card ? 128 : 96}
         focus={shown?.currentVersion?.focalPoint}
         media={credit ? shown : undefined}
         alt={preview ? `${skin.name} — ${skin.heroName}` : ""}
@@ -190,7 +190,7 @@ export function SkinPreview({
     if (!open || !canStep) return
     for (const delta of [1, -1, 2]) {
       const source = previewSource(list[(index + delta + list.length) % list.length])
-      if (source) preloadPicture(source, 800)
+      if (source) preloadPicture(source, 768)
     }
   }, [open, canStep, index, list])
 

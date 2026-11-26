@@ -43,7 +43,7 @@ class SeasonUpdatesControllerTest {
                 Instant.parse("2026-10-24T09:00:00Z"), null, null, List.of()));
 
         mvc.perform(get("/api/wiki/v1/seasons/current/updates")).andExpect(status().isOk())
-                .andExpect(header().string("Cache-Control", "no-cache, public"))
+                .andExpect(header().string("Cache-Control", "max-age=60, must-revalidate, public"))
                 .andExpect(jsonPath("$.region").value("VN"))
                 .andExpect(jsonPath("$.requestedLocale").value("vi-VN"))
                 .andExpect(jsonPath("$.season").isEmpty())

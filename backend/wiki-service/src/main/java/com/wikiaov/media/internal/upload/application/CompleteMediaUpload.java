@@ -21,6 +21,7 @@ import com.wikiaov.media.internal.provenance.persistence.entity.MediaProvenance;
 import com.wikiaov.media.internal.query.application.MediaAssetViews;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
+import com.wikiaov.media.internal.upload.application.port.ResizedCopies;
 import com.wikiaov.media.internal.upload.persistence.MediaUploadSessionRepository;
 import com.wikiaov.media.internal.upload.persistence.entity.MediaUploadSession;
 import com.wikiaov.platform.ApiException;
@@ -61,12 +62,13 @@ public class CompleteMediaUpload {
     private final Clock clock;
     private final MediaProvenanceRepository provenance;
     private final MediaOwners owners;
+    private final ResizedCopies copies;
 
     CompleteMediaUpload(MediaUploadSessionRepository sessions, MediaAssetVersionRepository versions,
             MediaIngestion ingestion, ObjectStorage storage, MediaAssetAccess assetAccess, MediaAssetViews assetViews,
             MediaProperties properties,
             CurrentActor currentActor, AuditLog auditLog, TransactionTemplate transaction, Clock clock,
-            MediaProvenanceRepository provenance, MediaOwners owners) {
+            MediaProvenanceRepository provenance, MediaOwners owners, ResizedCopies copies) {
         this.sessions = sessions;
         this.versions = versions;
         this.ingestion = ingestion;
@@ -80,6 +82,7 @@ public class CompleteMediaUpload {
         this.clock = clock;
         this.provenance = provenance;
         this.owners = owners;
+        this.copies = copies;
     }
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
@@ -147,7 +150,11 @@ public class CompleteMediaUpload {
 
         deleteIncomingQuietly(claim.objectKey());
 
-        return assetViews.result(outcome.asset(), outcome.version(), outcome.duplicate());
+        var result = assetViews.result(outcome.asset(), outcome.version(), outcome.duplicate());
+        if (!outcome.duplicate()) {
+            copies.warm(result.url());
+        }
+        return result;
     }
 
     /**

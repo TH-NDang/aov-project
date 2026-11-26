@@ -1,4 +1,5 @@
 import { mediaPath } from "../../tooling/media-proxy.mts"
+import { fontPreload } from "../../tooling/font-preload.mts"
 import { seoShell } from "./seo-shell.mts"
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
@@ -44,6 +45,6 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react(), tailwindcss(), seoShell()],
+  plugins: [react(), tailwindcss(), seoShell(), fontPreload()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
 })

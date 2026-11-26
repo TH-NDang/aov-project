@@ -34,6 +34,8 @@ export interface PrerenderJobOptions {
   siteUrl: string
   apiBase: string
   retryDelayMs?: number
+  /** The build asks the image service for resized pictures (VITE_IMAGE_RESIZE, the same value the image was built with). */
+  imageResize?: boolean
   loadRenderer?: () => Promise<Renderer>
 }
 
@@ -79,7 +81,8 @@ async function main() {
   if (!siteUrl || !apiBase || !siteDir) throw new Error("Set VITE_WIKI_URL, WIKI_API_TARGET and WIKI_SITE_DIR.")
 
   const distDir = fileURLToPath(new URL("../dist", import.meta.url))
-  const pages = await runPrerenderJob({ distDir, siteDir, siteUrl, apiBase })
+  const imageResize = process.env.VITE_IMAGE_RESIZE === "cloudflare"
+  const pages = await runPrerenderJob({ distDir, siteDir, siteUrl, apiBase, imageResize })
 
   console.log(
     pages

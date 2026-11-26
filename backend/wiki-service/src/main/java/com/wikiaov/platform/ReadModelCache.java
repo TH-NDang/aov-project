@@ -7,6 +7,8 @@ public interface ReadModelCache {
     enum Area {
         PUBLIC_REFERENCES,
         PUBLIC_TERMS,
+        /** Public catalog lists and the patch marks built from them; the same TTL and epoch as references. */
+        PUBLIC_CATALOGS,
         ADMIN_REFERENCES
     }
 

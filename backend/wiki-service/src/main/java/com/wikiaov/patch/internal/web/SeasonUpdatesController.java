@@ -4,10 +4,10 @@ import com.wikiaov.patch.internal.application.response.SeasonUpdatesView;
 import com.wikiaov.patch.internal.context.application.SeasonUpdates;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PublicResponses;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +30,7 @@ public class SeasonUpdatesController implements SeasonUpdatesApi {
             @RequestParam(defaultValue = "4") int limit,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "limit"));
-        return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
+        return ResponseEntity.ok().cacheControl(PublicResponses.current())
                 .body(updates.read(region, locale, limit));
     }
 }

@@ -1,19 +1,19 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.hero.internal.catalog.application.HeroQueries;
 import com.wikiaov.hero.internal.catalog.application.HeroSectionPages;
+import com.wikiaov.hero.internal.catalog.application.PublicCatalogCache;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PublicResponses;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.HexFormat;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import org.springframework.http.CacheControl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,11 +29,14 @@ public class HeroPublicController implements HeroPublicApi {
     private final HeroQueries queries;
     private final HeroSectionPages sectionPages;
     private final JsonMapper json;
+    private final PublicCatalogCache catalogs;
 
-    public HeroPublicController(HeroQueries queries, HeroSectionPages sectionPages, JsonMapper json) {
+    public HeroPublicController(HeroQueries queries, HeroSectionPages sectionPages, JsonMapper json,
+            PublicCatalogCache catalogs) {
         this.queries = queries;
         this.sectionPages = sectionPages;
         this.json = json;
+        this.catalogs = catalogs;
     }
 
     @Override
@@ -48,8 +51,13 @@ public class HeroPublicController implements HeroPublicApi {
             @RequestParam(defaultValue = "false") boolean playable, HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size", "q", "role", "sort", "seasonId",
                 "patchVariantId", "includeUnscoped", "playable"));
-        return cached(queries.list(region, locale, page, size, q, role, sort, seasonId, patchVariantId,
-                includeUnscoped, playable), web, false);
+        Supplier<HeroListView> read = () -> queries.list(region, locale, page, size, q, role, sort, seasonId,
+                patchVariantId, includeUnscoped, playable);
+        return cached(seasonId == null && patchVariantId == null && !includeUnscoped
+                ? catalogs.current("heroes", region, String.join("|", locale, String.valueOf(page),
+                        String.valueOf(size), String.valueOf(role), sort, String.valueOf(playable), q),
+                        HeroListView.class, read)
+                : read.get(), web, false);
     }
 
     @Override
@@ -133,19 +141,8 @@ public class HeroPublicController implements HeroPublicApi {
     }
 
     private <T> ResponseEntity<T> cached(T body, WebRequest request, boolean immutable) {
-        String tag;
-        try {
-            tag = "\"" + HexFormat.of()
-                    .formatHex(MessageDigest.getInstance("SHA-256").digest(json.writeValueAsBytes(body))) + "\"";
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-        var cache = immutable
+        return PublicResponses.tagged(body, request, json, immutable
                 ? CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable()
-                : CacheControl.maxAge(Duration.ZERO).cachePublic().mustRevalidate();
-        if (request.checkNotModified(tag)) {
-            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(tag).cacheControl(cache).build();
-        }
-        return ResponseEntity.ok().eTag(tag).cacheControl(cache).body(body);
+                : PublicResponses.current());
     }
 }
