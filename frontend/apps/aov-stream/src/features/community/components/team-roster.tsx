@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import type { ProfileMember } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
+import { CaptainBadge } from "../../../components/captain-badge"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { dayRange } from "../../../components/community-ui"
@@ -52,11 +53,7 @@ export function TeamRoster({
                       </span>
                       <span className="rs-name">
                         {member.pageId ? <Link to={`/pages/${member.pageId}`}>{member.name}</Link> : member.name}
-                        {captain && (
-                          <abbr title={captain} aria-label={captain}>
-                            C
-                          </abbr>
-                        )}
+                        {captain && <CaptainBadge />}
                         {detail && <small>{detail}</small>}
                       </span>
                       <small title={member.role}>{role}</small>

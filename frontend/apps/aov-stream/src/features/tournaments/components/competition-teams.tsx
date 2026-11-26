@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import type { CompetitionView, Lane, RosterMembershipContent } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
+import { CaptainBadge } from "../../../components/captain-badge"
 import { EntityPageLink, GoLink } from "../../../components/go-link"
 import { Stage } from "../../../components/stage"
 import { StreamImage } from "../../../components/stream-image"
@@ -21,7 +22,10 @@ const ROSTER_ORDER = ["ACTIVE", "SUBSTITUTE", "UNKNOWN", "INACTIVE"]
 const rosterOrder = (row: RosterMembershipContent) =>
   ROSTER_ORDER.indexOf(row.status ?? "UNKNOWN") * 10 + (row.lane ? LANE_ORDER.indexOf(row.lane) : 9)
 
-/** One member of a roster: the lane as its mark, the nickname, and the standing when it is not a starter. */
+/**
+ * One member of a roster: the lane as its mark, the nickname with the captain's mark, and the standing when it is not a
+ * starter.
+ */
 function Member({ view, row }: { view: CompetitionView; row: RosterMembershipContent }) {
   const { text } = useStreamLocale()
   const lane = row.lane ? text(LANE_NAMES[row.lane][0], LANE_NAMES[row.lane][1]) : null
@@ -38,11 +42,14 @@ function Member({ view, row }: { view: CompetitionView; row: RosterMembershipCon
       <span className="tn-squad-lane" title={lane ?? text("Chưa rõ vị trí", "Unknown position")}>
         {row.lane ? <HeroLaneIcon lane={row.lane} size={20} label={lane!} /> : "?"}
       </span>
-      <EntityPageLink
-        kind="PLAYER"
-        id={row.playerId}
-        name={view.content.players[row.playerId]?.nickname || text("Tuyển thủ", "Player")}
-      />
+      <span className="tn-squad-name">
+        <EntityPageLink
+          kind="PLAYER"
+          id={row.playerId}
+          name={view.content.players[row.playerId]?.nickname || text("Tuyển thủ", "Player")}
+        />
+        {row.captain && <CaptainBadge />}
+      </span>
       <small>{standing}</small>
     </li>
   )

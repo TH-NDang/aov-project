@@ -798,13 +798,13 @@ class TournamentApiIntegrationTest {
         var side = fixture.game().sides().get(0);
         UUID playerId = side.participants().get(0).playerId();
         var first = create("roster-memberships", new RosterMembership(fixture.tournamentId(), side.teamId(), playerId,
-                null, null, null, null, null, null, null, "Position not shown"));
+                null, null, null, null, null, null, null, "Position not shown", null));
         var secondTournament = create("tournaments", new Tournament("next-event-" + UUID.randomUUID(),
                 "Next event", "GLOBAL", 2026, null, null, null, null));
         var nextTeam = create("teams", new Team("next-team-" + UUID.randomUUID(), "Next team", null, null, null));
         var second = create("roster-memberships", new RosterMembership(id(secondTournament), id(nextTeam), playerId,
                 Lane.MID, "7", RosterStatus.ACTIVE, LocalDate.of(2026, 10, 1), null,
-                "https://example.test/roster", Verification.SECONDARY_CAPTURE, null));
+                "https://example.test/roster", Verification.SECONDARY_CAPTURE, null, null));
 
         mvc.perform(
                 authorized(get(ADMIN + "/roster-memberships")).param("tournamentId", fixture.tournamentId().toString())
@@ -829,7 +829,7 @@ class TournamentApiIntegrationTest {
         var fixture = fixture();
         var side = fixture.game().sides().get(0);
         var content = new RosterMembership(fixture.tournamentId(), side.teamId(), side.participants().get(0).playerId(),
-                Lane.TOP, null, RosterStatus.ACTIVE, null, null, null, null, null);
+                Lane.TOP, null, RosterStatus.ACTIVE, null, null, null, null, null, null);
         mvc.perform(get(ADMIN + "/roster-memberships")).andExpect(status().isUnauthorized());
         mvc.perform(post(ADMIN + "/roster-memberships")
                 .with(jwt().authorities(new SimpleGrantedAuthority("tournament:read")))
@@ -839,7 +839,7 @@ class TournamentApiIntegrationTest {
         mvc.perform(authorized(post(ADMIN + "/roster-memberships")).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(Map.of("content", content)))).andExpect(status().isConflict());
         var changed = new RosterMembership(content.tournamentId(), content.teamId(), content.playerId(), Lane.MID,
-                null, RosterStatus.SUBSTITUTE, null, null, null, null, null);
+                null, RosterStatus.SUBSTITUTE, null, null, null, null, null, null);
         write(put(ADMIN + "/roster-memberships/" + row.get("id")),
                 Map.of("version", version(row), "content", changed));
         mvc.perform(authorized(put(ADMIN + "/roster-memberships/" + row.get("id")))
@@ -889,13 +889,13 @@ class TournamentApiIntegrationTest {
 
     private static RosterMembership rosterLine(UUID tournamentId, UUID teamId, UUID playerId, Lane lane) {
         return new RosterMembership(tournamentId, teamId, playerId, lane, null, RosterStatus.ACTIVE, null, null, null,
-                null, null);
+                null, null, null);
     }
 
     @Test
     void rosterRejectsMissingIdentitiesUnsafeEvidenceAndUnboundedListQueries() throws Exception {
         var unknown = new RosterMembership(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null,
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
         mvc.perform(authorized(post(ADMIN + "/roster-memberships")).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(Map.of("content", unknown)))).andExpect(status().isBadRequest());
         var fixture = fixture();
@@ -903,7 +903,7 @@ class TournamentApiIntegrationTest {
         for (String source : List.of("", "javascript:alert(1)")) {
             var invalid = new RosterMembership(fixture.tournamentId(), side.teamId(),
                     side.participants().get(0).playerId(),
-                    null, null, null, null, null, source, Verification.PRIMARY, null);
+                    null, null, null, null, null, source, Verification.PRIMARY, null, null);
             mvc.perform(authorized(post(ADMIN + "/roster-memberships")).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("content", invalid)))).andExpect(status().isBadRequest());
         }
@@ -971,7 +971,7 @@ class TournamentApiIntegrationTest {
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_RESTORE_BLOCKED"));
 
         var roster = create("roster-memberships", new RosterMembership(fixture.tournamentId(), side.teamId(),
-                side.participants().get(0).playerId(), null, null, null, null, null, null, null, null));
+                side.participants().get(0).playerId(), null, null, null, null, null, null, null, null, null));
         mvc.perform(authorized(get(ADMIN + "/teams/" + side.teamId() + "/deletion-impact")))
                 .andExpect(jsonPath("$.usages[0].type").value("ROSTER_MEMBERSHIP"));
         var deletedRoster = write(post(ADMIN + "/roster-memberships/" + roster.get("id") + "/delete"),
@@ -1341,9 +1341,9 @@ class TournamentApiIntegrationTest {
                                 null)),
                 null, null));
         create("roster-memberships", new RosterMembership(id(title), id(champions), id(starter), Lane.JUNGLE, null,
-                RosterStatus.ACTIVE, null, null, null, null, null));
+                RosterStatus.ACTIVE, null, null, null, null, null, null));
         create("roster-memberships", new RosterMembership(id(title), id(champions), id(former), Lane.MID, null,
-                RosterStatus.INACTIVE, null, null, null, null, null));
+                RosterStatus.INACTIVE, null, null, null, null, null, null));
         create("series", new Series(marker + "-final", id(title), "Final", null, id(champions), id(rivals), 3, null,
                 null, null,
                 new SeriesResult(2, 1, "https://example.com/result", Verification.PRIMARY, LocalDate.of(2026, 1, 6)),

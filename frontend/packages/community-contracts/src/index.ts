@@ -120,6 +120,8 @@ export type RosterMembershipContent = {
   sourceUrl?: string | null
   verification?: ResultVerification
   note?: string | null
+  /** The team's captain in this tournament; absent means no. */
+  captain?: boolean | null
 }
 export type TournamentTier = "S" | "A" | "B" | "C" | "D" | "UNKNOWN"
 export type CompetitionType = "LEAGUE" | "CUP" | "QUALIFIER" | "SHOWMATCH" | "OTHER" | "UNKNOWN"

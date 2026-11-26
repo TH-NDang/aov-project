@@ -82,19 +82,6 @@
 .ln-rail > li:hover > strong {
   color: var(--hub-accent-strong);
 }
-.ln-rail abbr {
-  display: inline-grid;
-  width: 18px;
-  height: 18px;
-  margin-left: 6px;
-  place-items: center;
-  border-radius: var(--aov-radius-pill);
-  background: var(--hub-accent-soft);
-  color: var(--hub-accent-strong);
-  font-size: 12px;
-  text-decoration: none;
-  vertical-align: 2px;
-}
 @media (prefers-reduced-motion: no-preference) {
   .ln-hung {
     animation: ln-hang calc(700ms * var(--entrance, 1)) cubic-bezier(0.3, 1.5, 0.5, 1) backwards;
