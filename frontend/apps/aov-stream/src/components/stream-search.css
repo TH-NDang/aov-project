@@ -1,0 +1,134 @@
+/* The field of the bar, between the tabs and the tools: a soft round fill, no outline until it takes focus. */
+.hub-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 360px;
+  min-width: 0;
+  height: var(--hub-control-height);
+  margin-inline: auto;
+  padding: 0 4px 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-bar-fill);
+  color: var(--hub-muted);
+  transition: flex-basis 200ms ease;
+}
+.hub-search:hover {
+  background: var(--hub-bar-fill-hover);
+}
+.hub-search:focus-within {
+  border-color: var(--hub-accent);
+  background: var(--hub-surface);
+}
+.hub-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--hub-text);
+  font-size: 13px;
+}
+.hub-search input::placeholder {
+  color: var(--hub-muted);
+}
+/* The field draws its own clear button. */
+.hub-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.hub-search > button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
+  border-radius: var(--aov-radius-pill);
+  color: var(--hub-muted);
+}
+.hub-search > button:hover {
+  background: var(--hub-hover);
+}
+/* The key that puts the focus in the field, shown only to a mouse and a keyboard, until the field has the focus. */
+.hub-search-key {
+  display: none;
+}
+@media (hover: hover) and (min-width: 1100px) {
+  .hub-search-key {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--hub-border-strong);
+    border-radius: 5px;
+    color: var(--hub-muted);
+    font: 600 11px/1 var(--hub-font);
+  }
+  .hub-search:focus-within .hub-search-key {
+    display: none;
+  }
+  .hub-search:not(:focus-within) .hub-search-key + button {
+    display: none;
+  }
+  /* Open, the field takes more of the bar, so longer names fit while they are typed. */
+  .hub-search[data-open] {
+    flex-basis: 480px;
+  }
+}
+/* Where the bar is short of room, the field folds behind a button and opens over the whole bar. */
+@media (max-width: 1099.98px) {
+  .hub-search {
+    display: none;
+  }
+  .hub-search-open .hub-search {
+    display: flex;
+    flex: 1;
+    height: 40px;
+    margin: 4px 0;
+  }
+  .hub-search-open .hub-search input {
+    /* Below 16px, iPhones zoom the page when the field takes focus. */
+    font-size: 16px;
+  }
+}
+
+/* What the field offers: a panel under it while it has the focus. */
+.hub-search-panel {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - var(--hub-topbar) - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--aov-popover);
+  color: var(--hub-text);
+  box-shadow: var(--hub-shadow-lg);
+  cursor: default;
+  translate: -50% 0;
+  scrollbar-width: thin;
+}
+/* On a compact layout it is a screen of its own under the bar, so the page behind no longer shows. */
+.hub-search-panel[data-sheet] {
+  position: fixed;
+  top: var(--hub-topbar);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  max-height: none;
+  padding: 4px var(--hub-gutter) calc(16px + env(safe-area-inset-bottom));
+  border: 0;
+  border-top: 1px solid var(--hub-bar-line);
+  border-radius: 0;
+  background: var(--hub-bg);
+  box-shadow: none;
+  translate: none;
+}

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react"
 import { flushSync } from "react-dom"
-import { Link, useLocation, useNavigate } from "react-router"
+import { Link, useLocation } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useScrolled } from "@aov/ui/hooks/use-scrolled"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
@@ -9,14 +9,12 @@ import { StreamAppSwitcher } from "./stream-app-switcher"
 import { StreamFooter } from "./stream-footer"
 import { GameIcon, type GameIconName } from "@aov/ui/components/game-icons"
 import { StreamIcon } from "./stream-icon"
+import { ListSearch, StreamSearch, type PageSearch } from "./stream-search"
 import { useStreamLocale } from "./stream-locale"
 import { CommunitySessionButton } from "./community-session"
 import { SignInDialog } from "./community-signin"
 
 export const WIKI_URL = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
-
-/** The search of a page's own list, typed into the bar's field. */
-export type PageSearch = { value: string; onChange: (value: string) => void; placeholder: string; label: string }
 
 type Destination = {
   to: string
@@ -86,24 +84,39 @@ export function StreamShell({
     const open = row?.querySelector<HTMLElement>("[aria-current]")
     if (row && open) row.scrollLeft = open.offsetLeft - (row.clientWidth - open.offsetWidth) / 2
   }, [pathname, compact])
-  // Opened from the bar's button, the search covers the page with a screen of shortcuts until a search is made.
-  const [shortcuts, setShortcuts] = useState(false)
+  // On a compact layout the search, opened from the bar's button, is a screen of its own over the page.
+  const [sheetOpen, setSheetOpen] = useState(false)
   const openSearch = () => {
     flushSync(() => {
       setSearchOpen(true)
       // A page that searches its own list answers under the bar, so nothing covers it.
-      setShortcuts(!pageSearch)
+      setSheetOpen(!pageSearch && compact)
     })
     searchInput.current?.focus()
   }
   const closeSearch = () => {
     setSearchOpen(false)
-    setShortcuts(false)
+    setSheetOpen(false)
     requestAnimationFrame(() => {
       if (searchTrigger.current?.offsetParent) searchTrigger.current.focus()
       else searchInput.current?.blur()
     })
   }
+  // "/" (or Ctrl+K) puts the focus in the search from anywhere but a field, as on most sites with one search.
+  const onShortcut = useEffectEvent(openSearch)
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const typing =
+        event.target instanceof HTMLElement && event.target.closest("input, textarea, select, [contenteditable]")
+      const slash = event.key === "/" && !event.ctrlKey && !event.metaKey && !event.altKey
+      const command = event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey)
+      if ((!slash && !command) || (typing && !command) || event.defaultPrevented) return
+      event.preventDefault()
+      onShortcut()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
   // On phones the tabs are a row of their own under the brand row, so they come last in the bar.
   const topnav = (
     <nav ref={tabRow} className="hub-topnav" aria-label={text("Điều hướng chính", "Main navigation")}>
@@ -121,7 +134,7 @@ export function StreamShell({
         {text("Đến nội dung chính", "Skip to content")}
       </a>
       <header
-        className={`hub-topbar${searchOpen ? " hub-search-open" : ""}${searchOpen && shortcuts ? " hub-search-shortcuts" : ""}`}
+        className={`hub-topbar${searchOpen ? " hub-search-open" : ""}${searchOpen && sheetOpen ? " hub-search-sheet-open" : ""}`}
       >
         <div className="hub-topbar-inner">
           <div className="hub-brand-group">
@@ -134,7 +147,18 @@ export function StreamShell({
           {pageSearch ? (
             <ListSearch search={pageSearch} inputRef={searchInput} onDismiss={closeSearch} />
           ) : (
-            <HeaderSearch inputRef={searchInput} onDismiss={closeSearch} onSearched={() => setShortcuts(false)} />
+            <StreamSearch
+              key={`${pathname}:${search}`}
+              inputRef={searchInput}
+              sheet={compact}
+              sheetOpen={searchOpen && sheetOpen}
+              onSheetOpen={(open) => {
+                setSearchOpen(true)
+                setSheetOpen(open)
+              }}
+              onDismiss={closeSearch}
+              onDone={(opened) => (opened === "page" ? closeSearch() : setSheetOpen(false))}
+            />
           )}
           <button
             type="button"
@@ -160,25 +184,6 @@ export function StreamShell({
           </div>
           {compact && topnav}
         </div>
-        {searchOpen && shortcuts && (
-          <div className="hub-search-sheet">
-            <p className="hub-search-sheet-title">{text("Đi nhanh tới", "Jump to")}</p>
-            <nav aria-label={text("Điều hướng chính", "Main navigation")}>
-              {destinations.map((item) => (
-                <Link key={item.to} to={item.to} onClick={closeSearch}>
-                  <GameIcon name={item.icon} size={22} />
-                  {text(item.label, item.english)}
-                </Link>
-              ))}
-            </nav>
-            <p className="hub-search-sheet-hint">
-              {text(
-                "Gõ tên trang, đội, giải đấu hoặc nội dung bài viết rồi nhấn Tìm.",
-                "Type the name of a page, team or tournament, or words from a post, then search.",
-              )}
-            </p>
-          </div>
-        )}
       </header>
       <main id="main" className="hub-body" tabIndex={-1}>
         {lead}
@@ -194,128 +199,5 @@ export function StreamShell({
       <StreamFooter />
       <SignInDialog />
     </div>
-  )
-}
-
-/** The bar's field while a page searches its own list with it: every key narrows the list, Escape clears it. */
-function ListSearch({
-  search,
-  inputRef,
-  onDismiss,
-}: {
-  search: PageSearch
-  inputRef: RefObject<HTMLInputElement | null>
-  onDismiss: () => void
-}) {
-  const { text } = useStreamLocale()
-  return (
-    <form
-      id="stream-global-search"
-      className="hub-search"
-      role="search"
-      aria-label={search.label}
-      onSubmit={(event) => {
-        event.preventDefault()
-        inputRef.current?.blur()
-      }}
-    >
-      <input
-        ref={inputRef}
-        type="search"
-        enterKeyHint="search"
-        maxLength={100}
-        aria-label={search.label}
-        placeholder={search.placeholder}
-        value={search.value}
-        onChange={(event) => search.onChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key !== "Escape") return
-          if (search.value) search.onChange("")
-          else onDismiss()
-        }}
-      />
-      <button
-        type="button"
-        aria-label={search.value ? text("Xóa từ khóa", "Clear the search") : text("Tìm kiếm", "Search")}
-        onClick={() => {
-          if (search.value) search.onChange("")
-          inputRef.current?.focus()
-        }}
-      >
-        <StreamIcon name={search.value ? "close" : "search"} size={16} />
-      </button>
-    </form>
-  )
-}
-
-/** The search of the bar; on Explore it starts from the words already searched for. */
-function HeaderSearch({
-  inputRef,
-  onDismiss,
-  onSearched,
-}: {
-  inputRef: RefObject<HTMLInputElement | null>
-  onDismiss: () => void
-  onSearched: () => void
-}) {
-  const { pathname, search } = useLocation()
-  const query = pathname === "/explore" ? new URLSearchParams(search).get("q") || "" : ""
-  return (
-    <SearchForm
-      key={`${pathname}:${search}`}
-      initialValue={query}
-      inputRef={inputRef}
-      onDismiss={onDismiss}
-      onSearched={onSearched}
-    />
-  )
-}
-
-function SearchForm({
-  initialValue,
-  inputRef,
-  onDismiss,
-  onSearched,
-}: {
-  initialValue: string
-  inputRef: RefObject<HTMLInputElement | null>
-  onDismiss: () => void
-  onSearched: () => void
-}) {
-  const { text } = useStreamLocale()
-  const navigate = useNavigate()
-  const [value, setValue] = useState(initialValue)
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    const q = value.trim()
-    void navigate(q ? `/explore?${new URLSearchParams({ q })}` : "/explore")
-    inputRef.current?.blur()
-    onSearched()
-  }
-  return (
-    <form
-      id="stream-global-search"
-      className="hub-search"
-      role="search"
-      aria-label={text("Tìm kiếm chung", "Global search")}
-      onSubmit={submit}
-    >
-      <input
-        ref={inputRef}
-        type="search"
-        enterKeyHint="search"
-        maxLength={100}
-        aria-label={text("Tìm kiếm trên AOV Stream", "Search AOV Stream")}
-        placeholder={text("Tìm trang, bài viết, giải đấu…", "Search pages, posts, tournaments…")}
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") onDismiss()
-        }}
-      />
-      <button type="submit" aria-label={text("Tìm kiếm", "Search")}>
-        <StreamIcon name="search" size={16} />
-      </button>
-    </form>
   )
 }

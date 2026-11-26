@@ -6,6 +6,13 @@
 .ex-page > .ex-page-head {
   margin-bottom: -8px;
 }
+/* The groups a search found, as pills under the title; each scrolls to its group, which stops under the bar. */
+.ex-jump {
+  margin-top: 12px;
+}
+.ex-result {
+  scroll-margin-top: calc(var(--hub-stack) + 16px);
+}
 /* What is on and new, above the directory. */
 .ex-lead {
   display: grid;

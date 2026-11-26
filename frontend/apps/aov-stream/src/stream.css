@@ -340,53 +340,6 @@ button:disabled {
   border-radius: 3px 3px 0 0;
   background: var(--hub-accent);
 }
-/* The field sits between the tabs and the tools: a soft round fill, no outline until it takes focus. */
-.hub-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 1 360px;
-  min-width: 0;
-  height: var(--hub-control-height);
-  margin-inline: auto;
-  padding: 0 4px 0 14px;
-  border: 1px solid transparent;
-  border-radius: var(--aov-radius-pill);
-  background: var(--hub-bar-fill);
-  color: var(--hub-muted);
-}
-.hub-search:hover {
-  background: var(--hub-bar-fill-hover);
-}
-.hub-search:focus-within {
-  border-color: var(--hub-accent);
-  background: var(--hub-surface);
-}
-.hub-search input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: var(--hub-text);
-  font-size: 13px;
-}
-.hub-search input::placeholder {
-  color: var(--hub-muted);
-}
-.hub-search > button {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  margin: -4px;
-  border-radius: var(--aov-radius-pill);
-  color: var(--hub-muted);
-}
-.hub-search > button:hover {
-  background: var(--hub-hover);
-}
 .hub-topbar-actions {
   display: flex;
   align-items: center;
@@ -502,9 +455,6 @@ button:disabled {
   .hub-aside {
     display: none;
   }
-  .hub-search {
-    display: none;
-  }
   .hub-topbar .hub-search-link {
     display: inline-grid;
   }
@@ -524,75 +474,9 @@ button:disabled {
     font-size: 14px;
     font-weight: 600;
   }
-  .hub-search-open .hub-search {
-    display: flex;
-    flex: 1;
-    height: 40px;
-    margin: 4px 0;
-  }
-  .hub-search-open .hub-search input {
-    font-size: 16px;
-  }
-  .hub-search-open .hub-search > button {
-    width: 36px;
-    height: 36px;
-  }
-}
-/* The search opened from the bar's button: a screen of its own under the bar, shortcuts until a search is made. */
-.hub-search-sheet {
-  display: none;
-}
-@media (max-width: 1099.98px) {
-  .hub-search-sheet {
-    position: fixed;
-    z-index: 39;
-    top: var(--hub-topbar);
-    right: 0;
-    bottom: 0;
-    left: 0;
-    display: block;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 8px max(var(--hub-gutter), calc((100% - var(--aov-page-max)) / 2 + var(--hub-gutter)))
-      calc(16px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--hub-bar-line);
-    background: var(--hub-bg);
-  }
-  .hub-search-sheet-title {
-    margin: 10px 0 8px;
-    color: var(--hub-muted);
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .hub-search-sheet nav {
-    display: grid;
-    gap: 2px;
-  }
-  .hub-search-sheet nav a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 48px;
-    padding: 0 12px;
-    border-radius: var(--hub-radius-sm);
-    color: var(--hub-text);
-    font-size: 15px;
-    font-weight: 600;
-  }
-  .hub-search-sheet nav a > svg {
-    color: var(--hub-accent);
-  }
-  .hub-search-sheet nav a:is(:hover, :active, :focus-visible) {
-    background: var(--hub-hover);
-  }
-  /* The shortcuts list the tabs, so the tab row under the bar steps aside meanwhile. */
-  .hub-search-shortcuts .hub-topnav {
+  /* The search's own screen covers the page under the bar, so the tab row under it steps aside meanwhile. */
+  .hub-search-sheet-open .hub-topnav {
     display: none !important;
-  }
-  .hub-search-sheet-hint {
-    margin: 16px 0 0;
-    color: var(--hub-muted);
-    font-size: 13px;
   }
 }
 /*
@@ -969,16 +853,6 @@ html[data-room] .hub-topnav {
   font-size: 14px;
   text-align: center;
 }
-@media (max-width: 899.98px) {
-  .stream-search {
-    flex-basis: auto;
-    margin: 0;
-  }
-  .stream-search input {
-    font-size: 16px;
-  }
-}
-
 /* ---------- Popovers and menus from @aov/ui, as surfaces with a hairline ---------- */
 .hub-popover {
   z-index: 60;
