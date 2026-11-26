@@ -76,10 +76,11 @@ public class PatchReleaseWorkflow {
         var now = clock.instant();
         requireAnnouncedDateReached(release, region, now);
         requirePublished(variant, "Publish the variant before confirming its release.");
-        seasons.requireRelease(release.getSeasonId(), target.regionId(), now);
-        requireConsistentTimeline(target.regionId(), variant, now);
+        var appliedAt = activationInstant(release, region, now);
+        seasons.requireRelease(release.getSeasonId(), target.regionId(), appliedAt);
+        requireConsistentTimeline(target.regionId(), variant, appliedAt);
 
-        markApplied(release, now);
+        markApplied(release, appliedAt);
         record("PATCH_RELEASE_CONFIRMED", releaseId);
     }
 
@@ -156,6 +157,20 @@ public class PatchReleaseWorkflow {
         }
     }
 
+    /**
+     * A release dated today becomes active at the confirmation instant, because the hour it reached the game is not
+     * known. A release dated on an earlier day is a historical record: it was already in the game by the end of that
+     * day, so it becomes active from the start of that day in the market's time zone. This keeps the order of past
+     * patches, so a season archive can be confirmed after the fact.
+     */
+    private static Instant activationInstant(PatchRelease release, Region region, Instant now) {
+        var zone = ZoneId.of(region.getTimezone());
+        if (release.getEffectiveOn().isBefore(now.atZone(zone).toLocalDate())) {
+            return release.getEffectiveOn().atStartOfDay(zone).toInstant();
+        }
+        return now;
+    }
+
     private static void requirePublished(VariantSnapshot variant, String detail) {
         if (variant.status() != PatchVariantStatus.PUBLISHED) {
             throw invalid(detail);
@@ -177,9 +192,9 @@ public class PatchReleaseWorkflow {
         return release;
     }
 
-    private static void markApplied(PatchRelease release, Instant now) {
-        release.setEffectiveAt(now);
-        release.setConfirmedAt(now);
+    private static void markApplied(PatchRelease release, Instant appliedAt) {
+        release.setEffectiveAt(appliedAt);
+        release.setConfirmedAt(appliedAt);
         release.setStatus(PatchReleaseStatus.SCHEDULED);
     }
 

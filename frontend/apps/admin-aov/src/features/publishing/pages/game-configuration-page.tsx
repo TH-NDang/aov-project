@@ -17,6 +17,7 @@ import {
   MarketSchedule,
   PatchMarketSchedule,
   ConfirmRelease,
+  ConfirmReleases,
   type MarketMode,
 } from "../components/setup/market-schedule"
 import { Button } from "@aov/ui/components/button"
@@ -351,12 +352,13 @@ function MarketOverview({
   const row = (m: PublicationOverview["markets"][number]) => {
     const season = data.seasons.find((s) => s.id === m.currentSeasonId)
     const release = data.releases.find((r) => r.id === m.currentReleaseId)
-    const pending = data.releases.find(
+    const pendingAll = data.releases.filter(
       (r) =>
         r.regionId === m.id &&
         r.phase === "AWAITING_CONFIRMATION" &&
         data.variants.some((v) => v.id === r.variantId && v.rulesetId === m.currentRulesetId),
     )
+    const pending = pendingAll[0]
     const patchRecord = data.releases.find((r) => r.regionId === m.id && r.variantId === variantId)
     const variant = data.variants.find((v) => v.id === release?.variantId)
     return (
@@ -421,8 +423,17 @@ function MarketOverview({
         </ActionStrip>
         {pending && m.available && (
           <div className="col-span-full flex flex-wrap items-center gap-2 type-meta">
-            Chờ xác nhận {data.variants.find((v) => v.id === pending.variantId)?.patchCode}
-            <ConfirmRelease id={pending.id} />
+            {pendingAll.length > 1 ? (
+              <>
+                Chờ xác nhận {pendingAll.length} bản cập nhật
+                <ConfirmReleases releases={pendingAll} data={data} />
+              </>
+            ) : (
+              <>
+                Chờ xác nhận {data.variants.find((v) => v.id === pending.variantId)?.patchCode}
+                <ConfirmRelease id={pending.id} />
+              </>
+            )}
           </div>
         )}
       </li>

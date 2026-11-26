@@ -18,6 +18,7 @@ import {
   phaseLabels,
   type Market,
   type PublicationOverview,
+  type Release,
   type Season,
   type Variant,
 } from "../../api/publication-overview"
@@ -25,6 +26,7 @@ import { invalidateReferenceCatalog } from "../../../terminology/reference-api"
 import { ScheduleForm } from "./shared-version-setup"
 import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
+import { confirmAction } from "@/components/confirm-dialog"
 
 export type MarketMode = "season" | "patch"
 
@@ -81,6 +83,69 @@ export function PatchMarketSchedule({
     </ul>
   )
 }
+/**
+ * Confirms every release of a market that waits for confirmation, oldest first, so a season archive reaches the Wiki in
+ * one step. A past date counts from the start of that day; the first refusal stops the run and is shown.
+ */
+export function ConfirmReleases({ releases, data }: { releases: Release[]; data: PublicationOverview }) {
+  const cache = useQueryClient()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState("")
+  const allowed = useSession().actor?.capabilities.includes("patch:publish")
+  if (!allowed || !releases.length) return null
+  const ordered = [...releases].sort((a, b) => (a.effectiveOn ?? "").localeCompare(b.effectiveOn ?? ""))
+  const patchCode = (release: Release) => data.variants.find((v) => v.id === release.variantId)?.patchCode ?? "?"
+  const run = async () => {
+    const accepted = await confirmAction({
+      title: `Xác nhận ${ordered.length} bản cập nhật đã áp dụng?`,
+      description:
+        "Các bản cập nhật sẽ hiện trên Wiki theo đúng ngày phát hành. Ghi chú và thay đổi của từng patch vẫn sửa được sau đó.",
+      details: (
+        <p className="type-meta">
+          Từ {patchCode(ordered[0])} đến {patchCode(ordered[ordered.length - 1])}
+        </p>
+      ),
+      confirmLabel: "Xác nhận tất cả",
+      tone: "publish",
+    })
+    if (!accepted) return
+    setBusy(true)
+    setError("")
+    let done = 0
+    try {
+      for (const release of ordered) {
+        try {
+          await backendRequest(`/admin/patch-releases/${release.id}/confirm`, { method: "POST" })
+        } catch (cause) {
+          setError(`Dừng ở patch ${patchCode(release)}: ${errorMessage(cause)}`)
+          break
+        }
+        done += 1
+      }
+    } finally {
+      await cache.invalidateQueries({ queryKey: publishingKeys.overview })
+      await Promise.all([
+        cache.invalidateQueries({ queryKey: publishingKeys.allAuthoringContexts }),
+        invalidateReferenceCatalog(cache),
+      ])
+      setBusy(false)
+    }
+    if (done) toast.success(`Đã xác nhận ${done} bản cập nhật.`)
+  }
+  return (
+    <div className="mt-2">
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => void run()}>
+        {busy ? "Đang xác nhận…" : `Xác nhận cả ${ordered.length} bản`}
+      </Button>
+      {error && (
+        <p role="alert" className="mt-2 text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
 export function ConfirmRelease({ id }: { id: string }) {
   const cache = useQueryClient()
   const [busy, setBusy] = useState(false)
