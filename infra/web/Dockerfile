@@ -4,7 +4,7 @@
 # Build context is frontend/.
 # Images are not bundled: every public picture is a Media URL (ADR-030), so no Git LFS file is needed here.
 
-FROM node:22-bookworm-slim AS frontend
+FROM node:25-bookworm-slim AS frontend
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 CI=true
 RUN corepack enable
 WORKDIR /workspace/frontend
@@ -29,7 +29,7 @@ RUN pnpm --filter @aov/admin-aov run build --base=/admin/
 
 # Two one-shot jobs of Compose run from this image: web-publish (Stream and Admin) and wiki-prerender (the Wiki, which
 # needs the API and so cannot be rendered while images build).
-FROM node:22-bookworm-slim AS web
+FROM node:25-bookworm-slim AS web
 WORKDIR /job
 COPY --from=frontend /workspace/frontend/apps/aov-wiki/package.json ./
 COPY --from=frontend /workspace/frontend/apps/aov-wiki/dist ./dist
