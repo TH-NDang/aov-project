@@ -21,6 +21,18 @@ class PagePersonRolesTest {
     }
 
     @Test
+    void aContentCreatorIsAPersonnelRole() {
+        assertThatCode(() -> PagePersonRoles.validate(PageContent.Kind.PERSON, withRoles("CREATOR")))
+                .doesNotThrowAnyException();
+        assertThat(PagePersonRoles.filter("CREATOR")).isEqualTo("CREATOR");
+    }
+
+    @Test
+    void theBroadcastFilterLeavesCreatorsOut() {
+        assertThat(PagePersonRoles.filter("BROADCAST")).doesNotContain("CREATOR");
+    }
+
+    @Test
     void aTeamHasNoPersonnelRoles() {
         assertThatThrownBy(() -> PagePersonRoles.validate(PageContent.Kind.TEAM, withRoles("COACH")))
                 .isInstanceOf(PageRules.InvalidPage.class);

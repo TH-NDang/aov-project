@@ -41,6 +41,7 @@ export const NAV_ICONS = {
   players: gameIcon("swordman"),
   coaches: gameIcon("teacher"),
   broadcast: gameIcon("microphone"),
+  creators: gameIcon("falling-star"),
 }
 
 export type AovNavIconName = keyof typeof NAV_ICONS

@@ -290,6 +290,10 @@ cũ thiếu danh sách được đọc thành rỗng. Một người kiêm nhi�
 Danh sách admin/public nhận `personRole`: một mã vai trò hoặc nhóm COACHING (COACH, TEAM_ANALYST),
 BROADCAST (HOST, INTERVIEWER, CASTER, GUEST_ANALYST). Bộ lọc public chỉ đọc vai trò đã công bố.
 Admin có tab Tuyển thủ, Ban huấn luyện và Broadcast; vai trò được chọn từ danh sách trong form tạo/sửa.
+Nhà sáng tạo nội dung (26/11/2026): vai trò CREATOR cho người được biết đến qua kênh riêng (video, livestream về
+Liên Quân) chứ không qua đội hay ê-kíp một giải. CREATOR không thuộc nhóm COACHING hay BROADCAST; admin có tab
+Nhà sáng tạo riêng, lọc bằng chính mã CREATOR. Kênh là link YouTube của hồ sơ; khung xem kênh trong Stream chỉ
+mở cho hồ sơ đã công bố. Tuyển thủ hay bình luận viên có kênh lớn có thể thêm CREATOR trên cùng hồ sơ.
 PERSON có thông tin, hoạt động/sự nghiệp, nguồn và quyền đại diện; không mặc định hiện thành tích hay trận đấu.
 Thông tin từ đội hình của một giải được ghi rõ tên giải, trạng thái chính thức/dự bị/đã rời đội và nguồn;
 không suy diễn ngày gia nhập/rời đội từ ngày diễn ra giải. Nhân sự broadcast được ghi sự kiện trong lịch sử

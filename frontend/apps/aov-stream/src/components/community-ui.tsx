@@ -26,6 +26,7 @@ export const personRoleEnglish: Record<PersonRole, string> = {
   INTERVIEWER: "Interviewer",
   CASTER: "Caster",
   GUEST_ANALYST: "Guest analyst",
+  CREATOR: "Content creator",
 }
 
 const regionCode = /^[A-Z]{2}$/

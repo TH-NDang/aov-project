@@ -2,10 +2,13 @@ package com.wikiaov.community.community.internal.domain;
 
 import java.util.Set;
 
-/** Editorial occupations are independent of page-management permissions. */
+/**
+ * Editorial occupations are independent of page-management permissions. CREATOR marks someone known for their own
+ * channel (videos, livestreams) rather than for a team or a broadcast crew; it belongs to neither filter group.
+ */
 public final class PagePersonRoles {
     private static final Set<String> ROLES = Set.of("COACH", "TEAM_ANALYST", "HOST", "INTERVIEWER", "CASTER",
-            "GUEST_ANALYST");
+            "GUEST_ANALYST", "CREATOR");
 
     private PagePersonRoles() {
     }
