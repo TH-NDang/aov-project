@@ -9,6 +9,8 @@ export type YouTubePlayer = {
   rate(): number
   muted(): boolean
   mute(on: boolean): void
+  /** Sets the loudness, 0 to 100. */
+  volume(level: number): void
   focus(): void
   destroy(): void
 }
@@ -35,6 +37,7 @@ type ApiPlayer = {
   isMuted(): boolean
   mute(): void
   unMute(): void
+  setVolume(volume: number): void
   getIframe(): HTMLIFrameElement
   destroy(): void
 }
@@ -113,6 +116,7 @@ export function openYouTube(host: HTMLElement, options: YouTubeOptions): YouTube
   let place: { videoId: string; second: number; load: boolean } | null = null
   let playing: boolean | null = null
   let quiet: boolean | null = null
+  let loudness: number | null = null
   let videoId = options.videoId
   let discard = () => {}
 
@@ -135,6 +139,7 @@ export function openYouTube(host: HTMLElement, options: YouTubeOptions): YouTube
     if (place?.load) loadInto(ready, place.videoId, place.second)
     else if (place) ready.seekTo(place.second, true)
     if (quiet != null) setQuiet(ready, quiet)
+    if (loudness != null) ready.setVolume(loudness)
     if (playing === true) ready.playVideo()
     if (playing === false) ready.pauseVideo()
   }
@@ -209,6 +214,11 @@ export function openYouTube(host: HTMLElement, options: YouTubeOptions): YouTube
     mute(on) {
       if (player) setQuiet(player, on)
       else quiet = on
+    },
+    volume(level) {
+      const clamped = Math.round(Math.min(100, Math.max(0, level)))
+      if (player) player.setVolume(clamped)
+      else loudness = clamped
     },
     focus: () => player?.getIframe().focus(),
     destroy() {
