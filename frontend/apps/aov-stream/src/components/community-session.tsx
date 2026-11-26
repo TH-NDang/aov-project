@@ -51,6 +51,7 @@ export function CommunitySessionButton() {
   const { locale, setLocale, text } = useStreamLocale()
   const { theme, setTheme } = useStreamTheme()
   const mobile = usePageLayout() === "compact"
+  const unread = useUnreadCount().data?.unread ?? 0
   const accountProps = {
     product: "stream" as const,
     locale,
@@ -69,6 +70,11 @@ export function CommunitySessionButton() {
       <Link key={item.to} to={item.to}>
         <StreamIcon name={item.icon} size={16} />
         {text(item.label, item.english)}
+        {item.icon === "bell" && unread > 0 && (
+          <span className="cp-session-count" aria-label={text(`${unread} chưa đọc`, `${unread} unread`)}>
+            {unread > 99 ? "99+" : unread}
+          </span>
+        )}
       </Link>
     ))
   const wikiLogoUrl = new URL("images/mole-logo-v4.png", `${WIKI_URL.replace(/\/$/, "")}/`).href

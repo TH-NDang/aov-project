@@ -64,6 +64,12 @@ const paths = {
   shrink: "M3 5h18v14H3V5Zm9 7h6v4h-6v-4Z",
   expand: "M9 4H4v5m0-5 6 6M15 20h5v-5m0 5-6-6",
   keyboard: "M3 7h18v10H3V7Zm4 3.2h.1m3.2 0h.1m3.2 0h.1m3.2 0h.1M8 14h8",
+  /** The reader's language: a globe. */
+  globe:
+    "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM3.5 9h17m-17 6h17M12 3c-2.4 2.6-3.6 5.6-3.6 9s1.2 6.4 3.6 9c2.4-2.6 3.6-5.6 3.6-9S14.4 5.6 12 3Z",
+  /** Money shown in the reader's currency: a stack of coins. */
+  coins:
+    "M4 7.5C4 5.6 7.6 4 12 4s8 1.6 8 3.5S16.4 11 12 11 4 9.4 4 7.5Zm0 0V12c0 1.9 3.6 3.5 8 3.5s8-1.6 8-3.5V7.5M4 12v4.5C4 18.4 7.6 20 12 20s8-1.6 8-3.5V12",
 } as const
 
 export type StreamIconName = keyof typeof paths

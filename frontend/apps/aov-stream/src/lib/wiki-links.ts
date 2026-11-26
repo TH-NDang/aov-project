@@ -31,9 +31,12 @@ export function wikiEntryUrl(
   return address.href
 }
 
+/** A line of a description, with the heading it opens with before its colon (an active or a passive), if any. */
+export type EntryLine = { label: string | null; body: string }
+
 /**
- * What a card can say of an entry from its description on the Wiki: the lines of stats an item opens with (four at
- * most), and the first line of what it does.
+ * What a card can say of an entry from its description on the Wiki: the lines of stats an item opens with, and the
+ * whole of the rest, paragraph by paragraph, each line split from the heading it opens with.
  */
 export function describeEntry(description: string | null | undefined) {
   const paragraphs = (description ?? "")
@@ -46,8 +49,14 @@ export function describeEntry(description: string | null | undefined) {
         .filter(Boolean),
     )
     .filter((lines) => lines.length > 0)
-  const [first, ...rest] = paragraphs
   const statLike = (line: string) => /^[+\-−]\s?\d/.test(line)
-  if (first?.every(statLike)) return { stats: first.slice(0, 4), line: rest[0]?.[0] ?? null }
-  return { stats: [] as string[], line: first?.[0] ?? null }
+  const [first, ...rest] = paragraphs
+  const opensWithStats = !!first?.every(statLike)
+  const text = (opensWithStats ? rest : paragraphs).map((lines) => lines.map(splitHeading))
+  return { stats: opensWithStats ? first! : [], text }
+}
+
+function splitHeading(line: string): EntryLine {
+  const match = /^([^:.,;!?]{2,40}):\s+(\S.*)$/.exec(line)
+  return match ? { label: match[1]!.trim(), body: match[2]! } : { label: null, body: line }
 }

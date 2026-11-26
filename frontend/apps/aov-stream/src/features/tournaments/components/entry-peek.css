@@ -69,19 +69,34 @@
   font-weight: 600;
   line-height: 18px;
 }
-.tn-entry-line {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 0;
-  padding: 0 14px 12px;
+/* The whole description, which scrolls within the card when it is long. */
+.tn-entry-text {
+  display: grid;
+  gap: 8px;
+  max-height: 208px;
+  margin: 0 6px 10px 0;
+  padding: 0 8px 4px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   color: var(--hub-muted);
   font-size: 13px;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  line-height: 18px;
+  line-height: 19px;
+  scrollbar-color: var(--hub-border-strong) transparent;
+  scrollbar-width: thin;
 }
-/* The place of the line while the Wiki's names are read. */
+.tn-entry-text:focus-visible {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.tn-entry-text > p {
+  margin: 0;
+}
+.tn-entry-text b {
+  color: var(--hub-text-soft);
+  font-weight: 700;
+}
+/* The place of the description while the Wiki's names are read. */
 .tn-entry-wait {
   display: block;
   width: 70%;

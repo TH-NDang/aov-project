@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactElement } from "react"
+import { Fragment, useRef, useState, type ReactElement } from "react"
 import { useQuery } from "@tanstack/react-query"
 import type { Reference } from "@aov/community-contracts"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@aov/ui/components/hover-card"
@@ -29,7 +29,7 @@ function EntryCard({ kind, reference }: { kind: CatalogKind; reference: Referenc
   const entity = wiki.data?.find((entry) => entry.kind === wikiKind(kind) && entry.id === reference.id)
   const translation = entity && referenceTranslation(entity, languageTag)
   const name = translation?.name || reference.name
-  const { stats, line } = describeEntry(translation?.description)
+  const { stats, text: paragraphs } = describeEntry(translation?.description)
   return (
     <div className="tn-entry" data-kind={kind}>
       <div className="tn-entry-head">
@@ -48,8 +48,21 @@ function EntryCard({ kind, reference }: { kind: CatalogKind; reference: Referenc
           ))}
         </ul>
       )}
-      {line ? (
-        <p className="tn-entry-line">{line}</p>
+      {paragraphs.length > 0 ? (
+        // The whole description scrolls inside the card, and the page stays where it is.
+        <div className="tn-entry-text" tabIndex={0} aria-label={text(`Mô tả ${name}`, `About ${name}`)}>
+          {paragraphs.map((lines, index) => (
+            <p key={index}>
+              {lines.map(({ label, body }, at) => (
+                <Fragment key={at}>
+                  {at > 0 && <br />}
+                  {label && <b>{label}: </b>}
+                  {body}
+                </Fragment>
+              ))}
+            </p>
+          ))}
+        </div>
       ) : (
         wiki.isPending && <i className="tn-entry-wait" aria-hidden="true" />
       )}
