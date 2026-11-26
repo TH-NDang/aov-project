@@ -23,13 +23,18 @@ export type PublicAccountOptionsProps = {
   onSignOut?: () => void
   children?: ReactNode
 }
-type Props = PublicAccountOptionsProps & { triggerClassName?: string }
+type Props = PublicAccountOptionsProps & {
+  triggerClassName?: string
+  /** False opens the menu on click only, like the other menus of an app that has no hover menus. */
+  openOnHover?: boolean
+}
 /** `sheet` gives the settings and the links the roomier rows of the preferences sheet phones open. */
 export type PublicAccountLayout = "menu" | "sheet"
 
 export function PublicAccountMenu(props: Props) {
   const mobile = usePageLayout() === "compact"
-  const { product, locale, name, avatarUrl, triggerClassName = "" } = props
+  const { product, locale, name, avatarUrl, triggerClassName = "", openOnHover = true } = props
+  const hoverable = openOnHover && !mobile
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const hovered = useRef(false)
@@ -48,7 +53,7 @@ export function PublicAccountMenu(props: Props) {
     return () => window.removeEventListener("resize", onResize)
   }, [open])
   function leave() {
-    if (mobile) return
+    if (!hoverable) return
     cancel()
     timer.current = setTimeout(() => {
       if (panel.current?.querySelector('[data-slot="select-trigger"][data-state="open"]')) return
@@ -64,7 +69,7 @@ export function PublicAccountMenu(props: Props) {
         data-account={name ? "signed-in" : "guest"}
         aria-label={text("Tài khoản và tùy chọn", "Account and preferences")}
         onPointerEnter={(event) => {
-          if (mobile || event.pointerType !== "mouse") return
+          if (!hoverable || event.pointerType !== "mouse") return
           cancel()
           if (!open)
             timer.current = setTimeout(() => {
