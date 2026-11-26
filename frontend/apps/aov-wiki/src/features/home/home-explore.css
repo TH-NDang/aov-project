@@ -22,6 +22,19 @@
   padding: 0;
   list-style: none;
 }
+/* Once game modes are published, they share the last row with the glossary. */
+.wiki-home-cards:has(> [data-section="modes"]) {
+  grid-template-areas:
+    "heroes heroes skins skins"
+    "items enchantments arcana spells"
+    "updates updates terms modes";
+}
+.wiki-home-card[data-section="modes"] {
+  grid-area: modes;
+}
+.wiki-home-card-strip[data-shape="mark"] {
+  color: color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent);
+}
 .wiki-home-card[data-section="heroes"] {
   grid-area: heroes;
 }
@@ -46,23 +59,16 @@
 .wiki-home-card[data-section="terms"] {
   grid-area: terms;
 }
+/* Each card is a game frame (styles/game-frame.css); its pictures sit inside the frame's inner line. */
 .wiki-home-card {
-  position: relative;
+  --wiki-frame-cut: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
+  padding: 6px;
   color: var(--aov-text);
-  transition:
-    transform 180ms ease-out,
-    border-color 180ms ease-out,
-    box-shadow 180ms ease-out;
+  transition: transform 180ms ease-out;
 }
 .wiki-home-card:hover {
-  border-color: color-mix(in srgb, var(--aov-accent) 55%, var(--aov-line));
-  box-shadow: 0 12px 28px -18px rgb(0 0 0 / 60%);
   transform: translateY(-3px);
 }
 .wiki-home-card:has(.wiki-home-card-link:focus-visible) {
@@ -78,7 +84,9 @@
   justify-content: center;
   gap: 10px;
   overflow: hidden;
-  background: var(--aov-sunken);
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--aov-wiki-bar) 80%, transparent);
 }
 .wiki-home-card-frame {
   position: relative;
@@ -160,21 +168,15 @@
   gap: 10px;
   padding: 12px 14px;
 }
-.wiki-home-card-mark {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--aov-accent-soft);
-  color: var(--aov-accent);
+.wiki-home-card-socket {
+  --socket-size: 34px;
 }
 .wiki-home-card-link {
   font: var(--wiki-type-entry);
   min-width: 0;
   overflow: hidden;
-  color: inherit;
+  color: var(--aov-wiki-gold-bright);
+  font-family: var(--wiki-font-display);
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -223,6 +225,15 @@
       "terms terms";
     gap: 8px;
   }
+  .wiki-home-cards:has(> [data-section="modes"]) {
+    grid-template-areas:
+      "heroes heroes"
+      "skins skins"
+      "items enchantments"
+      "arcana spells"
+      "updates updates"
+      "terms modes";
+  }
   /* On a phone the wide cards keep a strip of 96px, the four armory cards a shorter one, two to a row. */
   .wiki-home-card-strip {
     min-height: 96px;
@@ -259,12 +270,15 @@
   .wiki-home-card-strip[data-shape="words"] > :nth-child(n + 5) {
     display: none;
   }
+  /* Two cards to a row leave little room: a smaller socket and chip so the name keeps its letters. */
   .wiki-home-card-body {
-    gap: 8px;
-    padding: 10px;
+    gap: 6px;
+    padding: 10px 8px;
   }
-  .wiki-home-card-mark {
-    width: 28px;
-    height: 28px;
+  .wiki-home-card-socket {
+    --socket-size: 26px;
+  }
+  .wiki-home-card-count {
+    padding: 2px 6px;
   }
 }

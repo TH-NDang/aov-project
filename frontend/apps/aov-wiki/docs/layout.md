@@ -84,9 +84,12 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   giây, tự kiểm tra lại mỗi 5 phút khi tab đang mở. Chỉ hiện patch đã công bố và có hiệu lực trong mùa áp dụng cho thị
   trường đang chọn; không suy đoán mùa nếu backend chưa xác nhận. Ngày patch giữ đúng độ chính xác backend. Lỗi kết nối
   có nút thử lại.
-- Khám phá (`HomeExplore`, `home-explore.tsx`): mỗi mục của Wiki là một thẻ: trên cùng một dải ảnh thật của mục, dưới là
-  dấu mục trong ô vuông vàng nhạt, tên mục (liên kết phủ cả thẻ) và số mục thành chip. Wide bốn cột: Tướng và Trang phục
-  mỗi thẻ hai cột ở hàng đầu, bốn phần kho mỗi thẻ một cột ở hàng hai, Cập nhật và Thuật ngữ mỗi thẻ hai cột ở hàng ba.
+- Khám phá (`HomeExplore`, `home-explore.tsx`): mỗi mục của Wiki là một thẻ trong khung kiểu game (vát góc, viền vàng
+  chuyển đồng, rê chuột thì viền sáng): trên cùng một dải ảnh thật của mục nằm trong đường viền trong của khung, dưới là
+  dấu mục trong ổ lục giác, tên mục màu vàng sáng (liên kết phủ cả thẻ) và số mục thành chip. Wide bốn cột: Tướng và
+  Trang phục mỗi thẻ hai cột ở hàng đầu, bốn phần kho mỗi thẻ một cột ở hàng hai, Cập nhật hai cột và Thuật ngữ hai cột
+  ở hàng ba; khi đã có chế độ chơi thì Thuật ngữ và Chế độ chơi mỗi thẻ một cột. Mục không có ảnh (Chế độ chơi) hiện dấu
+  mục lớn trong dải.
   Dải ảnh (`useHomeSections`, `use-home-sections.ts`, chọn theo ngày bằng `dailySpread`): Tướng tám chân dung; Trang
   phục ba ảnh trang phục từ một trang nhỏ của `GET /skins`; Trang bị bốn món cấp 3 (đồ hoàn chỉnh) từ danh mục trang bị;
   Phù hiệu biểu tượng của mọi hệ (`GET /enchantment-branches`); Bảng ngọc ba viên cấp 3, mỗi màu đỏ, tím, xanh một viên;

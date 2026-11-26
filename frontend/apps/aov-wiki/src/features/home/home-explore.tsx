@@ -29,6 +29,14 @@ function Strip({ section }: { section: HomeSection }) {
       </span>
     )
   }
+  // A section without pictures (game modes) shows its own mark large instead.
+  if (section.pictures.length === 0) {
+    return (
+      <span className="wiki-home-card-strip" data-shape="mark" aria-hidden="true">
+        <WikiIcon name={section.icon} size={56} />
+      </span>
+    )
+  }
   return (
     <span className="wiki-home-card-strip" data-shape={section.shape} aria-hidden="true">
       {section.pictures.slice(0, count).map((picture) => (
@@ -46,9 +54,10 @@ function Strip({ section }: { section: HomeSection }) {
 }
 
 /**
- * Every section of the Wiki as a card: a strip of real pictures on top, then the section's mark, name and count (for
- * updates, the change marks with their numbers). Heroes, skins, updates and the glossary take two columns; the four
- * armory catalogs one each. The heroes card ends with the roles, under a title of their own, apart from the portraits.
+ * Every section of the Wiki as a card in the game frame: a strip of real pictures on top, then the section's mark in a
+ * hexagonal socket, its name and count (for updates, the change marks with their numbers). Heroes, skins and updates
+ * take two columns; the four armory catalogs, the glossary and game modes one each (the glossary two when there are no
+ * modes). The heroes card ends with the roles, under a title of their own, apart from the portraits.
  */
 export function HomeExplore() {
   const { locale } = useWikiContext()
@@ -62,10 +71,10 @@ export function HomeExplore() {
       </header>
       <ul className="wiki-home-cards">
         {sections.map((section) => (
-          <li key={section.key} className="wiki-home-card" data-section={section.key}>
+          <li key={section.key} className="wiki-home-card wiki-frame wiki-frame-hover" data-section={section.key}>
             <Strip section={section} />
             <span className="wiki-home-card-body">
-              <span className="wiki-home-card-mark">
+              <span className="wiki-frame-socket wiki-home-card-socket">
                 <WikiIcon name={section.icon} size={20} />
               </span>
               <Link className="wiki-home-card-link" to={section.to}>
