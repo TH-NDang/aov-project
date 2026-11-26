@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, Info } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Page, PageHeader } from "@/components/page-header"
 import { backendRequest } from "@/app/auth/session"
@@ -52,11 +52,6 @@ export function ImportHeroWorkspace() {
         <p>Bạn chưa có quyền nhập tướng.</p>
       ) : (
         <>
-          <p className="flex items-start gap-2 text-sm text-muted-foreground">
-            <Info className="mt-0.5 size-4 shrink-0" />
-            Sau khi máy chủ nhận tác vụ, bạn có thể tải lại hoặc đóng trang. Tiến trình sẽ xuất hiện khi đăng nhập lại.
-            Việc tải ảnh lên sẽ tạm dừng nếu đóng trang; mở lại và tiếp tục phiên đã lưu bên dưới.
-          </p>
           {regions.error && (
             <p role="alert" className="text-destructive">
               {errorMessage(regions.error)}

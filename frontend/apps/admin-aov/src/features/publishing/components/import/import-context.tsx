@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { CalendarDays, GitBranch, Info } from "lucide-react"
 import { DataLanguage } from "../editing/data-language"
@@ -10,6 +10,7 @@ import type { Region } from "@/lib/hero-types"
 import type { components } from "../../generated/hero-api"
 import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
+import { usePublicationOverview } from "../../api/publication-overview"
 
 export type ImportContext = components["schemas"]["AuthoringContext"]
 type Season = components["schemas"]["Season"]
@@ -24,7 +25,8 @@ export function ImportContextPicker({
 }: {
   regions: Region[]
   value: ImportContext | null
-  onChange: (value: ImportContext | null) => void
+  /** `automatic` is set when the picker offers the current patch itself, before anyone chose. */
+  onChange: (value: ImportContext | null, automatic?: boolean) => void
   disabled: boolean
   /** Left out where the language does not matter for what is being chosen. */
   locale?: string
@@ -47,6 +49,26 @@ export function ImportContextPicker({
     enabled: !!seasonId,
     queryFn: () => backendRequest<ImportContext[]>(`/admin/heroes/import/contexts?seasonId=${seasonId}`),
   })
+  // Most entries belong to the patch players have now, so an empty choice starts there; it is offered once and any
+  // choice the editor makes afterwards stays.
+  const overview = usePublicationOverview()
+  const market = overview.data?.markets.find((entry) => entry.available && entry.currentReleaseId)
+  const current = overview.data?.releases.find((release) => release.id === market?.currentReleaseId)
+  const offered = useRef(!!value)
+  const [suggested, setSuggested] = useState<string | null>(null)
+  useEffect(() => {
+    if (offered.current || disabled || !market?.currentSeasonId) return
+    if (!seasonId) {
+      setSeasonId(market.currentSeasonId)
+      return
+    }
+    if (seasonId !== market.currentSeasonId || !patches.data) return
+    offered.current = true
+    const now = patches.data.find((patch) => patch.patchVariantId === current?.variantId)
+    if (!now) return
+    setSuggested(market.displayName)
+    onChange(now, true)
+  }, [disabled, market, current, seasonId, patches.data, onChange])
   return (
     <section className="admin-section py-5">
       <fieldset disabled={disabled} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -64,6 +86,8 @@ export function ImportContextPicker({
                 setSetup("season")
                 return
               }
+              offered.current = true
+              setSuggested(null)
               setSeasonId(e.target.value)
               onChange(null)
             }}
@@ -91,6 +115,8 @@ export function ImportContextPicker({
                 setSetup("patch")
                 return
               }
+              offered.current = true
+              setSuggested(null)
               onChange(patches.data?.find((p) => p.contextId === e.target.value) ?? null)
             }}
           >
@@ -122,6 +148,9 @@ export function ImportContextPicker({
           <span className="font-medium">
             {value.seasonName} / {value.patchCode}
           </span>
+          {suggested && (
+            <span className="text-muted-foreground"> · patch đang áp dụng ở {suggested}, đổi được ở trên</span>
+          )}
         </p>
       )}
       <ContextSetup kind={setup} regions={regions} regionId={regionId} onClose={() => setSetup(null)} />

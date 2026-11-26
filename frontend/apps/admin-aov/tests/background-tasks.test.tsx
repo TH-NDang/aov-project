@@ -295,3 +295,60 @@ test("background work survives route exit and returns with progress and result i
     restoreGlobals()
   }
 })
+
+test("many tasks fold into a short list, and finished ones can be hidden together", async () => {
+  const dom = createWindow("http://localhost/hero")
+  Object.defineProperty(dom.window, "matchMedia", {
+    value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+  })
+  const restoreGlobals = installWindow(dom.window)
+  const { BackgroundTaskStatus } = await import("../src/app/layout/background-task-status")
+  const { SidebarProvider } = await import("@aov/ui/components/sidebar")
+  const { createRoot } = await import("react-dom/client")
+  function Seed() {
+    const { updateTask } = useBackgroundTasks()
+    useEffect(() => {
+      const task = { title: "Task", path: "/hero/import", description: "", completed: 1, total: 4 }
+      updateTask({ ...task, id: "a", status: "running" })
+      updateTask({ ...task, id: "b", status: "running" })
+      updateTask({ ...task, id: "c", status: "error", description: "Failed" })
+      updateTask({ ...task, id: "d", status: "review", description: "Waiting" })
+      updateTask({ ...task, id: "e", status: "review", description: "Waiting too" })
+    }, [updateTask])
+    return null
+  }
+  const root = createRoot(dom.window.document.getElementById("root")!)
+  const rows = () => dom.window.document.querySelectorAll('li > a[href="/hero/import"]').length
+  const buttonNamed = (text: string) =>
+    [...dom.window.document.querySelectorAll("button")].find((button) => button.textContent?.includes(text))
+  try {
+    await act(async () =>
+      root.render(
+        <MemoryRouter>
+          <QueryClientProvider client={new QueryClient()}>
+            <BackgroundTasksProvider>
+              <SidebarProvider>
+                <Seed />
+                <BackgroundTaskStatus />
+              </SidebarProvider>
+            </BackgroundTasksProvider>
+          </QueryClientProvider>
+        </MemoryRouter>,
+      ),
+    )
+    await waitFor(() => rows() === 3)
+    assert.match(dom.window.document.body.textContent ?? "", /2 đang chạy · 1 lỗi · 2 xong/)
+    assert.equal(dom.window.document.querySelectorAll('[role="progressbar"]').length, 2, "Running work comes first")
+
+    await act(async () => buttonNamed("Xem thêm 2 tác vụ")!.click())
+    await waitFor(() => rows() === 5)
+
+    await act(async () => buttonNamed("Ẩn mục đã xong")!.click())
+    await waitFor(() => rows() === 2)
+    assert.equal(buttonNamed("Xem thêm"), undefined)
+  } finally {
+    await act(async () => root.unmount())
+    dom.window.close()
+    restoreGlobals()
+  }
+})
