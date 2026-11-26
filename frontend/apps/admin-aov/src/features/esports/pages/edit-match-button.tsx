@@ -32,21 +32,19 @@ export function EditMatchButton({ record, actorKey }: { record: DocumentView<Ser
   const scheduled = useInSchedule(actorKey, tournamentId, record.id)
   const label = (
     <>
-      <CalendarCog aria-hidden />
-      <span className="@xl:hidden">Lịch</span>
-      <span className="hidden @xl:inline">Sửa trong lịch</span>
+      <CalendarCog aria-hidden /> Sửa trong lịch
     </>
   )
   // Most matches are in the schedule, so the button already has that shape while the plan is read.
   if (scheduled === undefined)
     return (
-      <Button size="sm" variant="secondary" disabled aria-label="Sửa trong lịch">
+      <Button size="sm" variant="outline" disabled aria-label="Sửa trong lịch">
         {label}
       </Button>
     )
   if (scheduled)
     return (
-      <Button asChild size="sm" variant="secondary">
+      <Button asChild size="sm" variant="outline">
         <Link
           to={schedulePath(tournamentId, record.id)}
           aria-label="Sửa trong lịch"
@@ -58,7 +56,7 @@ export function EditMatchButton({ record, actorKey }: { record: DocumentView<Ser
     )
   return (
     <>
-      <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+      <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
         <Pencil aria-hidden /> Sửa trận
       </Button>
       {editing && (

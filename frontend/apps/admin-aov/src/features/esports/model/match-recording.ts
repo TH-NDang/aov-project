@@ -33,24 +33,25 @@ export function matchRecording(
   if (!started && !rows.length) return { state: "upcoming", expected, games: rows, confirmed, gaps: [] }
 
   const gaps: MatchGap[] = []
-  if (!result) gaps.push({ text: "Chưa có tỉ số trận", kind: "missing" })
+  if (!result) gaps.push({ text: "Chưa có tỷ số trận", kind: "missing" })
   if (expected != null && rows.length < expected)
     gaps.push({ text: `Thiếu ${expected - rows.length}/${expected} ván`, kind: "missing" })
   const video = games.some((entry) => youtubeVideoId(entry.content.sourceUrl)) || !!youtubeVideoId(series.sourceUrl)
   if (!video) gaps.push({ text: "Chưa gắn video", kind: "missing" })
   for (const row of rows) {
     const { progress } = row
-    if (progress.state === "recording") {
-      const needed = progress.steps.filter((step) => step.required && step.status !== "done")
+    // A game published while something was unknown still asks for it.
+    const needed = progress.steps.filter((step) => step.required && step.status !== "done")
+    if (needed.length)
       gaps.push({
-        text: `Ván ${row.number}: thiếu ${needed.map((step) => step.label.toLocaleLowerCase("vi")).join(", ")}`,
+        text: `Ván ${row.number}: thiếu ${needed.map((step) => (step.gap ?? step.label).toLocaleLowerCase("vi")).join(", ")}`,
         kind: "missing",
         gameId: row.id,
       })
-    } else if (progress.state === "ready")
-      gaps.push({ text: `Ván ${row.number} chờ xác nhận`, kind: "confirm", gameId: row.id })
+    if (progress.state === "ready")
+      gaps.push({ text: `Ván ${row.number} chờ xuất bản`, kind: "confirm", gameId: row.id })
     else if (progress.state === "changed")
-      gaps.push({ text: `Ván ${row.number} có thay đổi chưa xác nhận`, kind: "confirm", gameId: row.id })
+      gaps.push({ text: `Ván ${row.number} đã sửa sau khi xuất bản`, kind: "confirm", gameId: row.id })
   }
 
   const state: MatchRecordingState = gaps.some((gap) => gap.kind === "missing")

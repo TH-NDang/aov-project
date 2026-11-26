@@ -1,0 +1,147 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  .esp-transport {
+    --key: 32px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+
+  .esp-transport-key {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    min-width: var(--key);
+    height: var(--key);
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-transport-key:hover {
+    background: var(--accent);
+  }
+  .esp-transport-key[aria-pressed="true"] {
+    background: color-mix(in oklch, var(--foreground) 14%, transparent);
+  }
+
+  /* The text colour, not gold: gold is left to the one button that is the next step. */
+  .esp-transport-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-inline: 2px;
+    border-radius: var(--aov-radius-pill);
+    color: var(--background);
+    background: var(--foreground);
+  }
+  .esp-transport-play:disabled {
+    opacity: 0.4;
+  }
+
+  .esp-transport-time {
+    display: flex;
+    flex: none;
+    align-items: baseline;
+    gap: 4px;
+    margin-left: 2px;
+    padding: 4px;
+    border-radius: var(--aov-radius-control);
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-transport-time:hover {
+    background: var(--accent);
+  }
+  .esp-transport-time > b {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+  }
+  .esp-transport-time > small {
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .esp-transport-time > small[data-live] {
+    font-weight: 600;
+    color: var(--aov-live);
+  }
+  .esp-transport-place {
+    min-width: 0;
+    overflow: hidden;
+    margin-inline: 8px 4px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+  }
+  .esp-transport-place > b {
+    font-weight: 600;
+  }
+  /* Between games it is a longer text, and less of what the eye looks for. */
+  .esp-transport-place[data-between] {
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+
+  .esp-transport-end {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+  }
+  .esp-transport-volume {
+    width: 64px;
+    height: 4px;
+    margin-inline: 0 4px;
+    accent-color: var(--foreground);
+    cursor: pointer;
+  }
+
+  .esp-transport-key:focus-visible,
+  .esp-transport-play:focus-visible,
+  .esp-transport-time:focus-visible,
+  .esp-transport-volume:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+
+  @media (max-width: 899.98px) {
+    .esp-transport {
+      --key: 40px;
+      height: 48px;
+    }
+    .esp-transport-key {
+      min-width: 34px;
+    }
+    .esp-transport-play {
+      width: 40px;
+      height: 40px;
+    }
+  }
+  /* Where the row is narrow its keys stand closer, so the time and the place keep their room. */
+  @container watch (max-width: 699.98px) {
+    .esp-transport,
+    .esp-transport-end {
+      gap: 0;
+    }
+  }
+  @container watch (max-width: 479.98px) {
+    .esp-transport {
+      padding-inline: 4px;
+    }
+    .esp-transport-place {
+      margin-left: 4px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .esp-transport-key[aria-pressed="true"] {
+      border: 1px solid Highlight;
+    }
+  }
+}

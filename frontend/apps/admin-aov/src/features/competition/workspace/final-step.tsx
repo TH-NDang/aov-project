@@ -1,140 +1,35 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
-import { ListOrdered, Wand2 } from "lucide-react"
-import { Button } from "@aov/ui/components/button"
-import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
-import { cn } from "@aov/ui/lib/utils"
-import { confirmAction } from "@/components/confirm-dialog"
-import { TeamLogo } from "@/features/esports/components/primitives"
-import { TournamentFinalTable } from "@/features/esports/components/tournament-final-table"
-import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
-import { FinalTableEditButton } from "@/features/tournaments/components/tournament-final-table-editor"
+import { TournamentAwards } from "@/features/esports/components/tournament-awards"
 import { CompetitionStatistics } from "../competition-statistics"
-import { suggestedPlacements } from "./model"
-import { Chip, Panel, type Workspace } from "./parts"
+import { FinalPlaces } from "./final-places"
+import type { FinalOutcome } from "./final-state"
+import type { Workspace } from "./parts"
 
-/** Final places, prizes and awards of the tournament, with a ranking read from the bracket to check them against. */
-export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: DocumentView<TournamentContent> }) {
-  const client = useQueryClient()
+/** The result and the final places first, checked against the matches, then the awards and the recorded games. */
+export function FinalStep({
+  ws,
+  tournament,
+  outcome,
+}: {
+  ws: Workspace
+  /** The tournament record, which the final table is written to; absent while it loads. */
+  tournament?: DocumentView<TournamentContent>
+  outcome: FinalOutcome
+}) {
   const { entry, plan } = ws
-  const suggested = suggestedPlacements(plan, entry.content.resolved, entry.content.standings, ws.teams)
-  const known = suggested.filter((line) => line.teamId)
-  const current = tournament?.content.placements ?? []
-  const apply = useMutation({
-    mutationFn: () =>
-      tournamentApi.save("tournaments", tournament!, {
-        ...tournament!.content,
-        placements: known.map((line) => {
-          const kept = current.find((row) => row.teamId === line.teamId)
-          return {
-            place: line.place,
-            teamId: line.teamId,
-            teamName: line.teamName,
-            prizeUsd: kept?.prizeUsd ?? null,
-            prizeLocal: kept?.prizeLocal ?? null,
-            // The bracket knows the last match of each team; a line it cannot read keeps what was typed.
-            lastOpponent: line.lastOpponent ?? kept?.lastOpponent ?? null,
-            lastScore: line.lastScore ?? kept?.lastScore ?? null,
-          }
-        }),
-      }),
-    meta: { silent: true, successMessage: "Đã điền thứ hạng theo nhánh đấu." },
-    onSuccess: () => client.invalidateQueries({ queryKey: tournamentKeys.all }),
-  })
-  const fill = async () => {
-    if (current.length) {
-      const confirmed = await confirmAction({
-        title: "Thay thứ hạng đã nhập?",
-        description: `${current.length} dòng hiện có → ${known.length} dòng theo nhánh đấu. Tiền thưởng của đội vẫn có mặt được giữ lại.`,
-        confirmLabel: "Thay thứ hạng",
-      })
-      if (!confirmed) return
-    }
-    apply.mutate()
-  }
-
+  const content = tournament?.content ?? entry.content.tournament
   return (
-    <div className="space-y-6">
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="min-w-0">
-          {tournament ? (
-            <TournamentFinalTable
-              content={tournament.content}
-              team={(id) => ws.team(id)}
-              player={(id) => {
-                const known = entry.content.players[id]
-                return known && { name: known.nickname, photoUrl: known.photoUrl }
-              }}
-              action={
-                ws.canEdit && (
-                  <FinalTableEditButton
-                    tournament={tournament}
-                    teamOfPlayer={(playerId) => {
-                      const row = ws.rosters.find((entry) => entry.content.playerId === playerId)
-                      return row && { id: row.content.teamId, name: ws.team(row.content.teamId).name }
-                    }}
-                  />
-                )
-              }
-            />
-          ) : (
-            <p className="type-meta">Đang tải kết quả chung cuộc…</p>
-          )}
-        </div>
-        <Panel
-          title="Gợi ý từ nhánh đấu"
-          icon={ListOrdered}
-          action={
-            ws.canEdit &&
-            tournament &&
-            known.length > 0 && (
-              <Button type="button" variant="outline" disabled={apply.isPending} onClick={() => void fill()}>
-                <Wand2 aria-hidden /> Điền thứ hạng
-              </Button>
-            )
-          }
-        >
-          {suggested.length ? (
-            <ul>
-              {suggested.map((line, index) => (
-                <li
-                  key={index}
-                  className={cn(
-                    "grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 border-b px-4 py-2 last:border-b-0",
-                    medalOf(line.place) && "esp-medal-row",
-                  )}
-                  data-medal={medalOf(line.place) ?? undefined}
-                >
-                  <span className="type-body tabular-nums">
-                    <RankBadge place={line.place} size={32} />
-                  </span>
-                  <span className="min-w-0">
-                    {line.teamId ? (
-                      <span className="flex items-center gap-2.5">
-                        <TeamLogo team={ws.team(line.teamId)} size={medalOf(line.place) === "gold" ? 32 : 24} />
-                        <span className={cn("type-body truncate", medalOf(line.place) && "font-semibold")}>
-                          {line.teamName}
-                        </span>
-                      </span>
-                    ) : (
-                      <Chip tone="warn">Chưa xác định</Chip>
-                    )}
-                    <span className="type-meta mt-0.5 block">{line.reason}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="type-meta p-4">
-              Chưa có gợi ý: cần một giai đoạn loại trực tiếp có các trận nối suất thắng/thua với nhau.
-            </p>
-          )}
-          {apply.error && (
-            <p className="type-body border-t px-4 py-3 text-destructive" role="alert">
-              {tournamentError(apply.error)}
-            </p>
-          )}
-        </Panel>
+    <div className="space-y-8">
+      <FinalPlaces ws={ws} tournament={tournament} content={content} outcome={outcome} />
+      <div className="@container">
+        <TournamentAwards
+          content={content}
+          team={(id) => ws.team(id)}
+          player={(id) => {
+            const known = entry.content.players[id]
+            return known && { name: known.nickname, photoUrl: known.photoUrl }
+          }}
+        />
       </div>
       <CompetitionStatistics
         tournamentId={entry.id}

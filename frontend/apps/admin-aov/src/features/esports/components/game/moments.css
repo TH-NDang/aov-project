@@ -1,0 +1,423 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* What the hands press while the video plays. */
+  .esp-pad {
+    display: grid;
+    align-content: start;
+    padding: 0 12px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+  }
+  .esp-pad-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .esp-pad-head > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .esp-pad-head > :last-child {
+    text-align: right;
+  }
+  .esp-pad-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 104px minmax(0, 1fr);
+    align-items: center;
+    height: 40px;
+  }
+  .esp-pad-row + .esp-pad-row {
+    margin-top: 2px;
+  }
+  .esp-pad-name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .esp-pad-key {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    padding-inline: 9px;
+    border-left: 3px solid var(--side);
+    border-radius: var(--aov-radius-control);
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: var(--side-soft);
+    touch-action: manipulation;
+  }
+  .esp-pad-key b {
+    font-weight: inherit;
+  }
+  .esp-pad-key[data-side="RED"] {
+    flex-direction: row-reverse;
+    border-left: 0;
+    border-right: 3px solid var(--side);
+  }
+  .esp-pad-key:hover {
+    background: color-mix(in oklch, var(--side) 24%, transparent);
+  }
+  .esp-pad-key:active {
+    background: color-mix(in oklch, var(--side) 34%, transparent);
+  }
+  .esp-pad-key:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+  .esp-pad-key[aria-disabled="true"] {
+    opacity: 0.45;
+  }
+  /* Without a keycap the count keeps its place beside the middle. */
+  .esp-pad-key > b {
+    min-width: 16px;
+    margin-left: auto;
+    text-align: right;
+  }
+  .esp-pad-key[data-side="RED"] > b {
+    margin-right: auto;
+    margin-left: 0;
+    text-align: left;
+  }
+  .esp-pad-cap {
+    display: grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding-inline: 4px;
+    border: 1px solid color-mix(in oklch, var(--foreground) 24%, transparent);
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    color: var(--muted-foreground);
+  }
+  @media (pointer: coarse) {
+    .esp-pad-cap {
+      display: none;
+    }
+  }
+  /* Viewing: the same counts as plain figures. */
+  .esp-pad-table {
+    width: 100%;
+    table-layout: fixed;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-pad-table tr {
+    height: 32px;
+  }
+  .esp-pad-table th {
+    width: 104px;
+    font-weight: 400;
+  }
+  .esp-pad-table td {
+    padding-inline: 9px;
+    font-weight: 700;
+  }
+  .esp-pad-table td:first-child {
+    text-align: right;
+  }
+
+  /* The moments of the game: blue on the left of their time, red on the right. */
+  .esp-moments {
+    min-width: 0;
+    padding-block: 4px;
+  }
+  .esp-moments-bar {
+    display: flex;
+    justify-content: flex-end;
+    min-height: 28px;
+    padding-inline: 8px;
+  }
+  .esp-moment {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    min-height: 34px;
+    padding: 2px 12px;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: left;
+  }
+  .esp-moment:hover {
+    background: color-mix(in oklch, var(--foreground) 5%, transparent);
+  }
+  .esp-moment:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+  .esp-moment-item[data-active] {
+    background: color-mix(in oklch, var(--foreground) 7%, transparent);
+  }
+  .esp-moment-item[data-later] {
+    color: var(--muted-foreground);
+  }
+  .esp-moment-time {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-moment-what {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    grid-row: 1;
+  }
+  .esp-moment-what[data-side="BLUE"] {
+    flex-direction: row-reverse;
+    grid-column: 1;
+    text-align: right;
+  }
+  .esp-moment-what[data-side="RED"] {
+    grid-column: 3;
+  }
+  .esp-moment-words {
+    display: -webkit-box;
+    min-width: 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .esp-moment-words[data-long] {
+    font-size: 12px;
+    line-height: 15px;
+  }
+  .esp-moment-art {
+    display: inline-flex;
+    flex: none;
+    border-radius: var(--aov-radius-pill);
+    box-shadow: 0 0 0 2px var(--side);
+  }
+  .esp-moment-title {
+    grid-column: 1 / -1;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .esp-moment-more {
+    display: grid;
+    gap: 4px;
+    padding: 0 12px 6px;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+    color: var(--muted-foreground);
+  }
+  .esp-moment-note {
+    color: var(--foreground);
+    overflow-wrap: anywhere;
+  }
+  .esp-moment-acts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    color: var(--foreground);
+  }
+  .esp-fight {
+    padding: 6px 12px 0;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--muted-foreground);
+  }
+  /* Where the video stands between past and later moments. */
+  .esp-moment-now {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 18px;
+    padding-inline: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-moment-now::before,
+  .esp-moment-now::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--foreground);
+  }
+  .esp-moments-none {
+    padding: 32px 16px;
+    font-size: 14px;
+    text-align: center;
+    color: var(--muted-foreground);
+  }
+
+  /* The form of one moment, in the place of the pad. */
+  .esp-form {
+    display: grid;
+    gap: 8px;
+    padding: 8px 12px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    outline: none;
+  }
+  .esp-form-row {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+  .esp-form-label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--muted-foreground);
+  }
+  .esp-form-faces {
+    display: grid;
+    grid-template-columns: minmax(0, 158px) minmax(0, 158px);
+    gap: 10px;
+  }
+  .esp-form-faces > span {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 30px));
+    gap: 2px;
+  }
+  .esp-form-face {
+    display: grid;
+    border-radius: var(--aov-radius-control);
+  }
+  .esp-form-face[aria-pressed="true"] {
+    z-index: 1;
+    box-shadow:
+      0 0 0 1px var(--card),
+      0 0 0 3px var(--foreground);
+  }
+  .esp-form-face:disabled {
+    opacity: 0.25;
+  }
+  .esp-form-face:focus-visible {
+    z-index: 1;
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .esp-form-picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .esp-form-pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 2px 8px;
+    border: 1px solid var(--input);
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  /* The six slots keep to one row. */
+  .esp-form-picks:has(> [data-tight]) {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 48px));
+  }
+  .esp-form-pick[data-tight] {
+    justify-content: center;
+    gap: 3px;
+    padding-inline: 2px;
+  }
+  .esp-form-pick:hover {
+    background: var(--muted);
+  }
+  .esp-form-pick[aria-pressed="true"] {
+    border-color: var(--foreground);
+    background: color-mix(in oklch, var(--foreground) 10%, transparent);
+  }
+  .esp-form-pick[data-side] {
+    border-left: 3px solid var(--side);
+  }
+  .esp-form-pick:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+  /* A narrow dock puts the label over its row, so ten faces keep their size. */
+  @container dock (max-width: 359.98px) {
+    .esp-form-row[data-wide] {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+    .esp-form-row[data-time] {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .esp-pad,
+    .esp-form {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+  }
+  @container dock (min-width: 760px) {
+    .esp-pad,
+    .esp-form {
+      border-bottom: 0;
+    }
+    .esp-moments {
+      min-height: 100%;
+      border-left: 1px solid var(--border);
+    }
+  }
+  /*
+   * A finger needs a target of 36 px, 40 on a phone. The faces of the form keep their 30 px inside a larger button, so
+   * the two teams stand one over the other.
+   */
+  @media (pointer: coarse) {
+    .esp-pad-head button,
+    .esp-moments-bar button,
+    .esp-moment,
+    .esp-moment-acts button,
+    .esp-form button,
+    .esp-form input:not([type="checkbox"], [type="radio"]) {
+      min-height: 36px;
+    }
+    .esp-form-faces {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+    }
+    .esp-form-faces > span {
+      grid-template-columns: repeat(5, 36px);
+      gap: 4px;
+    }
+    .esp-form-face {
+      padding: 3px;
+    }
+  }
+  @media (pointer: coarse) and (max-width: 899.98px) {
+    .esp-pad-head button,
+    .esp-moments-bar button,
+    .esp-moment,
+    .esp-moment-acts button,
+    .esp-form button,
+    .esp-form input:not([type="checkbox"], [type="radio"]) {
+      min-height: 40px;
+    }
+    .esp-form-faces > span {
+      grid-template-columns: repeat(5, 40px);
+    }
+    .esp-form-face {
+      padding: 5px;
+    }
+  }
+}

@@ -349,20 +349,26 @@ export function workspaceChecks(input: {
   rosters: RosterMembershipContent[]
   organizerName?: string
   organizerPublished?: boolean
-  placements: number
+  /** Whether the tournament is over, and how far its final places are, as the final step reads them. */
+  over: boolean
+  final: { detail: string; state: CheckState }
   now: number
 }): WorkspaceCheck[] {
-  const { plan, resolved, rosters, now } = input
+  const { plan, resolved, rosters, over, now } = input
   const index = resolvedIndex(resolved)
+  const paired = (match: PlannedMatch) => {
+    const row = index.get(match.key)
+    return !!row?.teamAId && !!row.teamBId
+  }
   const state = (ok: boolean): CheckState => (ok ? "ok" : "todo")
   const withRoster = plan.entrants.filter((entry) => rosters.some((row) => row.teamId === entry.teamId)).length
   const timed = plan.matches.filter((match) => !!match.scheduledAt).length
-  // A match counts as due once its start has passed; a match without a time is due as soon as both teams are known.
+  // A match counts as due once its start has passed. One without a time is due once it was opened, and after the
+  // tournament as soon as both its teams are known.
   const due = plan.matches.filter((match) =>
-    match.scheduledAt ? new Date(match.scheduledAt).getTime() <= now : !!match.seriesId,
+    match.scheduledAt ? new Date(match.scheduledAt).getTime() <= now : !!match.seriesId || (over && paired(match)),
   )
   const dueScored = due.filter((match) => hasScore(index.get(match.key))).length
-  const finished = plan.matches.length > 0 && plan.matches.every((match) => hasScore(index.get(match.key)))
   const checks: WorkspaceCheck[] = [
     {
       id: "source",
@@ -446,8 +452,8 @@ export function workspaceChecks(input: {
     {
       id: "results",
       label: "Tỷ số các trận đã đấu",
-      detail: `${dueScored}/${due.length} trận`,
-      state: state(dueScored === due.length),
+      detail: due.length ? `${dueScored}/${due.length} trận` : "Chưa có trận nào tới giờ",
+      state: due.length ? state(dueScored === due.length) : "waiting",
       step: "schedule",
       focus: { show: "NO_SCORE", open: "results" },
       required: false,
@@ -455,8 +461,7 @@ export function workspaceChecks(input: {
     {
       id: "placements",
       label: "Thứ hạng chung cuộc",
-      detail: input.placements ? `${input.placements} dòng` : finished ? "Chưa có" : "Chờ giải kết thúc",
-      state: input.placements ? "ok" : finished ? "todo" : "waiting",
+      ...input.final,
       step: "final",
       required: false,
     },
@@ -591,149 +596,6 @@ export function pendingChanges(draft: CompetitionSnapshot, published: Competitio
   if (stable(draftInfo) !== stable(liveInfo) || stable(about(draft.plan)) !== stable(about(published.plan)))
     changes.push({ kind: "info", text: "Thông tin giải đã đổi" })
   return changes
-}
-
-export type SuggestedPlacement = {
-  place: string
-  teamId?: string
-  teamName: string
-  reason: string
-  /** The team's last match in the bracket: who it played and the score from its side, such as "4–2". */
-  lastOpponent?: string
-  lastScore?: string
-}
-
-/**
- * Final ranking read from a linked elimination bracket: the final gives first and second, each match whose loser goes
- * nowhere gives a place from the latest round back, and teams that never reached the bracket keep their table rank.
- */
-export function suggestedPlacements(
-  plan: CompetitionPlan,
-  resolved: ResolvedMatch[],
-  standings: CompetitionSnapshot["standings"],
-  teams: Record<string, TeamContent>,
-): SuggestedPlacement[] {
-  const stage = [...plan.stages].reverse().find((entry) => !isLeagueStage(entry))
-  if (!stage) return []
-  const layout = layoutBracket(plan.matches.filter((match) => match.stageCode === stage.code))
-  if (!layout.linked) return []
-  const index = resolvedIndex(resolved)
-  const name = (id?: string | null) => (id && teams[id]?.name) || ""
-  const outcome = (key: string) => {
-    const row = index.get(key)
-    if (!row || !hasScore(row) || !row.consistent || row.scoreA === row.scoreB) return null
-    const aWon = row.scoreA! > row.scoreB!
-    const high = Math.max(row.scoreA!, row.scoreB!)
-    const low = Math.min(row.scoreA!, row.scoreB!)
-    return {
-      winner: aWon ? row.teamAId : row.teamBId,
-      loser: aWon ? row.teamBId : row.teamAId,
-      row,
-      winnerScore: `${high}–${low}`,
-      loserScore: `${low}–${high}`,
-    }
-  }
-  const dropsSomewhere = new Set(
-    plan.matches.flatMap((match) =>
-      [match.a, match.b].filter((slot) => slot.type === "LOSER").map((slot) => slot.matchKey),
-    ),
-  )
-  const lines: SuggestedPlacement[] = []
-  const final = layout.nodes.filter((node) => node.lane === "final").at(-1) ?? layout.nodes.at(-1)
-  if (!final) return []
-  const decided = outcome(final.match.key)
-  lines.push(
-    decided
-      ? {
-          place: "1",
-          teamId: decided.winner ?? undefined,
-          teamName: name(decided.winner),
-          reason: `Thắng ${matchLabel(final.match)}`,
-          lastOpponent: name(decided.loser) || undefined,
-          lastScore: decided.winnerScore,
-        }
-      : { place: "1", teamName: "", reason: `Chờ ${matchLabel(final.match)}` },
-    decided
-      ? {
-          place: "2",
-          teamId: decided.loser ?? undefined,
-          teamName: name(decided.loser),
-          reason: `Thua ${matchLabel(final.match)}`,
-          lastOpponent: name(decided.winner) || undefined,
-          lastScore: decided.loserScore,
-        }
-      : { place: "2", teamName: "", reason: `Chờ ${matchLabel(final.match)}` },
-  )
-  let next = 3
-  const stageMatches = layout.nodes.map((node) => node.match)
-  const third = layout.nodes.find((node) => node !== final && isThirdPlace(node.match, stageMatches))
-  if (third) {
-    const result = outcome(third.match.key)
-    const name3 = matchLabel(third.match)
-    lines.push(
-      result
-        ? {
-            place: "3",
-            teamId: result.winner ?? undefined,
-            teamName: name(result.winner),
-            reason: `Thắng ${name3} · ${result.winnerScore}`,
-            lastOpponent: name(result.loser) || undefined,
-            lastScore: result.winnerScore,
-          }
-        : { place: "3", teamName: "", reason: `Chờ ${name3}` },
-      result
-        ? {
-            place: "4",
-            teamId: result.loser ?? undefined,
-            teamName: name(result.loser),
-            reason: `Thua ${name3} · ${result.loserScore}`,
-            lastOpponent: name(result.winner) || undefined,
-            lastScore: result.loserScore,
-          }
-        : { place: "4", teamName: "", reason: `Chờ ${name3}` },
-    )
-    next = 5
-  }
-  const eliminating = layout.nodes
-    .filter((node) => node !== final && node !== third && !dropsSomewhere.has(node.match.key))
-    .sort((a, b) => b.column - a.column)
-  for (const column of [...new Set(eliminating.map((node) => node.column))]) {
-    const group = eliminating.filter((node) => node.column === column)
-    const place = group.length === 1 ? String(next) : `${next}-${next + group.length - 1}`
-    for (const node of group) {
-      const result = outcome(node.match.key)
-      lines.push(
-        result
-          ? {
-              place,
-              teamId: result.loser ?? undefined,
-              teamName: name(result.loser),
-              reason: `Thua ${matchLabel(node.match)} · ${result.loserScore}`,
-              lastOpponent: name(result.winner) || undefined,
-              lastScore: result.loserScore,
-            }
-          : { place, teamName: "", reason: `Chờ ${matchLabel(node.match)}` },
-      )
-    }
-    next += group.length
-  }
-  const inBracket = new Set(
-    layout.nodes.flatMap((node) => {
-      const row = index.get(node.match.key)
-      return [row?.teamAId, row?.teamBId].filter((id): id is string => !!id)
-    }),
-  )
-  const table = [...standings].reverse().find((entry) => entry.complete)
-  for (const row of table?.rows ?? []) {
-    if (inBracket.has(row.teamId)) continue
-    lines.push({
-      place: String(next++),
-      teamId: row.teamId,
-      teamName: name(row.teamId),
-      reason: `Hạng ${row.rank} vòng bảng`,
-    })
-  }
-  return lines
 }
 
 const ROSTER_LANES = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const

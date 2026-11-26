@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { after, before, beforeEach, test } from "node:test"
 import { act } from "react"
 import type { Root } from "react-dom/client"
+import type { TournamentPlacement } from "@aov/community-contracts"
 import { createWindow, flush, installWindow, QuietResizeObserver } from "./fixtures/dom"
 
 const dom = createWindow()
@@ -10,7 +11,8 @@ let root: Root
 let chooseCurrency: (currency: string | null) => Promise<void>
 let LocalMoney: typeof import("@aov/ui/components/local-money").LocalMoney
 let LocalPrizeText: typeof import("@aov/ui/components/local-money").LocalPrizeText
-let TournamentFinalTable: typeof import("../src/features/esports/components/tournament-final-table").TournamentFinalTable
+let FinalPlacesTable: typeof import("../src/features/competition/workspace/final-places-table").FinalPlacesTable
+let TournamentAwards: typeof import("../src/features/esports/components/tournament-awards").TournamentAwards
 
 // Each test uses its own day, because rates loaded for a day stay for the life of the page.
 const dayRates: Record<string, { currency: string; unitsPerUsd: number; rateDate: string }[]> = {
@@ -62,7 +64,8 @@ before(async () => {
   const { createRoot } = await import("react-dom/client")
   ;({ chooseCurrency } = await import("@aov/ui/lib/currency"))
   ;({ LocalMoney, LocalPrizeText } = await import("@aov/ui/components/local-money"))
-  ;({ TournamentFinalTable } = await import("../src/features/esports/components/tournament-final-table"))
+  ;({ FinalPlacesTable } = await import("../src/features/competition/workspace/final-places-table"))
+  ;({ TournamentAwards } = await import("../src/features/esports/components/tournament-awards"))
   root = createRoot(dom.window.document.getElementById("root")!)
 })
 
@@ -217,34 +220,42 @@ test("the short form keeps the exact amount in its popup", async () => {
 })
 
 test("a final table reads each prize at the rate of the day the tournament ended", async () => {
+  const content = { startsOn: "2020-02-20", endsOn: "2020-03-02", localCurrency: "vnd" }
+  const row = (recorded: TournamentPlacement) => ({
+    key: recorded.place,
+    state: "RECORDED" as const,
+    recorded,
+    ...recorded,
+  })
+  const team = (id: string) => ({ id, name: id, shortName: id })
   await render(
-    <TournamentFinalTable
-      team={() => ({ logoUrl: null }) as never}
-      content={{
-        code: "t",
-        name: "Giải",
-        region: "VN",
-        startsOn: "2020-02-20",
-        endsOn: "2020-03-02",
-        localCurrency: "vnd",
-        placements: [
-          { place: "1", teamName: "Đội A", prizeUsd: 425.19, prizeLocal: 10000000 },
-          { place: "2", teamName: "Đội B", prizeUsd: 170.08 },
-          { place: "3", teamName: "Đội C", prizeLocal: 4000000 },
-        ],
-        awards: [{ title: "MVP", recipientName: "X", prizeUsd: 100 }],
-      }}
-    />,
+    <>
+      <FinalPlacesTable
+        rows={[
+          row({ place: "1", teamName: "Đội A", prizeUsd: 425.19, prizeLocal: 10000000 }),
+          row({ place: "2", teamName: "Đội B", prizeUsd: 170.08 }),
+          row({ place: "3", teamName: "Đội C", prizeLocal: 4000000 }),
+        ]}
+        content={content}
+        team={team}
+      />
+      <TournamentAwards
+        content={{ ...content, awards: [{ title: "MVP", recipientName: "X", prizeUsd: 100 }] }}
+        team={team}
+      />
+    </>,
   )
-  const text = spaced(body())
+  const [first, second, third] = [...dom.window.document.querySelectorAll("tbody tr")].map((entry) =>
+    spaced(entry.textContent),
+  )
   assert.match(
-    text,
-    /Đội A10\.000\.000 VND \(Số tiền gốc: 425,19 USD · 10\.000\.000 VND\)/,
+    first!,
+    /Đội A.*10\.000\.000 VND \(Số tiền gốc: 425,19 USD · 10\.000\.000 VND\)/,
     "the recorded amount, not a conversion",
   )
-  assert.match(text, /Đội B3\.948\.577 VND \(Số tiền gốc: 170,08 USD, Tỷ giá ngày 02\/03\/2020\)/)
-  assert.match(text, /Đội C4\.000\.000 VND/)
-  assert.match(text, /MVP.*2\.321\.600 VND/)
+  assert.match(second!, /Đội B.*3\.948\.577 VND \(Số tiền gốc: 170,08 USD, Tỷ giá ngày 02\/03\/2020\)/)
+  assert.match(third!, /Đội C.*4\.000\.000 VND/)
+  assert.match(spaced(body()), /MVP.*2\.321\.600 VND/)
 })
 
 test("a prize pool written as text is read when it is certain and kept as written when it is not", async () => {

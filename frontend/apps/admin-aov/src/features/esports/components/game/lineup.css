@@ -1,0 +1,331 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  .esp-lineup-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px;
+    height: 44px;
+    padding-inline: 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .esp-lineup-team {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    height: 24px;
+    padding-left: 8px;
+    border-left: 3px solid var(--side);
+  }
+  .esp-lineup-team[data-side="RED"] {
+    flex-direction: row-reverse;
+    padding-right: 8px;
+    padding-left: 0;
+    border-right: 3px solid var(--side);
+    border-left: 0;
+  }
+  .esp-lineup-team > span:last-of-type {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .esp-lineup-when {
+    max-width: 112px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-foreground);
+  }
+  .esp-lineup-fill {
+    display: grid;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .esp-lineup-fill:empty {
+    display: none;
+  }
+  /* Five rows in lane order: blue on the left, red mirrored on the right, the lane between them. */
+  .esp-lineup-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    min-height: 96px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .esp-lineup-lane {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    display: grid;
+    color: var(--muted-foreground);
+    transform: translateX(-50%);
+  }
+  .esp-seat {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-content: start;
+    gap: 6px 8px;
+    min-width: 0;
+  }
+  .esp-seat[data-side="RED"] {
+    grid-template-columns: minmax(0, 1fr) 46px;
+  }
+  .esp-seat-face {
+    position: relative;
+    display: inline-grid;
+    grid-row: 1;
+    width: 46px;
+    height: 46px;
+    border-radius: var(--aov-radius-control);
+  }
+  .esp-seat[data-side="RED"] > .esp-seat-face {
+    grid-column: 2;
+  }
+  .esp-seat-face[data-swap] {
+    cursor: pointer;
+  }
+  .esp-seat-face[data-swap]:hover {
+    box-shadow: 0 0 0 2px var(--foreground);
+  }
+  .esp-seat-face:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .esp-seat-warn {
+    position: absolute;
+    z-index: 1;
+    top: -5px;
+    right: -5px;
+    color: var(--aov-warning);
+  }
+  .esp-seat-who {
+    display: grid;
+    grid-row: 1;
+    align-content: space-between;
+    min-width: 0;
+  }
+  .esp-seat[data-side="RED"] > .esp-seat-who {
+    grid-column: 1;
+  }
+  .esp-seat-name {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .esp-seat[data-side="RED"] .esp-seat-name {
+    text-align: right;
+    text-align-last: right;
+  }
+  .esp-seat-took {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+  }
+  .esp-seat[data-side="RED"] .esp-seat-took {
+    flex-direction: row-reverse;
+  }
+  .esp-seat-kda {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-seat[data-side="RED"] .esp-seat-kda {
+    margin-right: auto;
+    margin-left: 0;
+  }
+  .esp-seat-items {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(6, minmax(0, 24px));
+    gap: 2px;
+  }
+  .esp-seat[data-side="RED"] > .esp-seat-items {
+    justify-content: end;
+  }
+  .esp-seat-item,
+  .esp-seat-empty {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    width: 100%;
+    max-width: 24px;
+    aspect-ratio: 1;
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    line-height: 1;
+    color: var(--muted-foreground);
+  }
+  .esp-seat-item > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .esp-seat-item[data-state="filled"] {
+    background: var(--muted);
+  }
+  .esp-seat-item[data-state="empty"] {
+    border: 1px solid var(--border);
+  }
+  /* Nothing seen there: most slots of a game under way, so they stay quiet. */
+  .esp-seat-item[data-state="unknown"] {
+    border: 1px dashed color-mix(in oklch, var(--foreground) 12%, transparent);
+  }
+  .esp-seat-empty {
+    border: 1px dashed color-mix(in oklch, var(--foreground) 30%, transparent);
+  }
+  .esp-seat-empty {
+    width: 22px;
+    max-width: none;
+  }
+  .esp-seat-empty[data-round] {
+    border-radius: var(--aov-radius-pill);
+  }
+  /* Bought a moment ago. */
+  .esp-seat-item[data-changed] {
+    outline: 2px solid var(--foreground);
+    outline-offset: -2px;
+  }
+  .esp-seat-open {
+    display: inline-grid;
+    border-radius: var(--aov-radius-control);
+  }
+  .esp-seat-open:hover {
+    background: color-mix(in oklch, var(--foreground) 12%, transparent);
+  }
+  .esp-seat-open:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+  .esp-seat-picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .esp-seat-pick {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    width: 60px;
+    padding: 4px;
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .esp-seat-pick:hover {
+    background: var(--muted);
+  }
+  .esp-seat-pick[aria-selected="true"] {
+    box-shadow: inset 0 0 0 2px var(--foreground);
+  }
+  .esp-seat-pick > span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @container dock (max-width: 359.98px) {
+    .esp-lineup-when {
+      max-width: 72px;
+    }
+  }
+  /*
+   * A finger needs a target of 36 px, 40 on a phone. The pictures keep the sizes of the board: their presses reach
+   * past them, and the rows of a seat leave room so that two reaches never cover each other.
+   */
+  @media (pointer: coarse) {
+    .esp-seat {
+      --reach: 7px;
+      row-gap: calc(2 * var(--reach) + 2px);
+    }
+    .esp-seat-who {
+      gap: calc(var(--reach) + 2px);
+    }
+    select.esp-seat-name {
+      min-height: 36px;
+    }
+    .esp-seat-took :is(.esp-seat-open, [role="button"]),
+    .esp-seat-items :is(.esp-seat-open, [role="button"]) {
+      position: relative;
+    }
+    .esp-seat-took :is(.esp-seat-open, [role="button"])::after,
+    .esp-seat-items :is(.esp-seat-open, [role="button"])::after {
+      content: "";
+      position: absolute;
+      inset: calc(-1 * var(--reach)) -1px;
+    }
+    .esp-lineup-head button {
+      min-width: 36px;
+      min-height: 36px;
+    }
+  }
+  @media (pointer: coarse) and (max-width: 899.98px) {
+    .esp-seat {
+      --reach: 9px;
+    }
+    select.esp-seat-name {
+      min-height: 40px;
+    }
+    .esp-lineup-head button {
+      min-width: 40px;
+      min-height: 40px;
+    }
+  }
+  /* Room for a seat on one line. */
+  @container dock (min-width: 640px) {
+    .esp-lineup-row {
+      gap: 40px;
+      min-height: 62px;
+    }
+    .esp-seat {
+      grid-template-columns: 46px minmax(0, 1fr) auto;
+      align-items: center;
+    }
+    .esp-seat[data-side="RED"] {
+      grid-template-columns: auto minmax(0, 1fr) 46px;
+    }
+    .esp-seat > .esp-seat-items {
+      grid-row: 1;
+      grid-column: 3;
+      grid-template-columns: repeat(6, 24px);
+    }
+    .esp-seat[data-side="RED"] > .esp-seat-items {
+      grid-column: 1;
+    }
+    .esp-seat[data-side="RED"] > .esp-seat-who {
+      grid-column: 2;
+    }
+    .esp-seat[data-side="RED"] > .esp-seat-face {
+      grid-column: 3;
+    }
+    .esp-lineup-lane {
+      top: 22px;
+    }
+  }
+}
+
+/* The shared style of lists stands outside the layers, so what differs here does too: the name and its arrow stay
+   together, at the inner end of the seat for red. */
+select.esp-seat-name:not([multiple]) {
+  justify-content: flex-start;
+  gap: 4px;
+}
+select.esp-seat-name:not([multiple])::picker-icon {
+  margin-inline: 0;
+}
+.esp-seat[data-side="RED"] select.esp-seat-name:not([multiple]) {
+  flex-direction: row-reverse;
+}

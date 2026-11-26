@@ -454,6 +454,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  container-type: inline-size;
 }
 .tournament-equipment-add {
   display: flex;
@@ -495,6 +496,12 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
+}
+/* A column narrower than this cuts the names of the items. */
+@container (max-width: 459.98px) {
+  .tournament-inventory-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .tournament-inventory-slot {
   display: flex;
@@ -585,9 +592,6 @@
   .tournament-registry-form input,
   .tournament-registry-form textarea {
     font-size: 16px !important;
-  }
-  .tournament-inventory-slots {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (prefers-reduced-motion: reduce) {

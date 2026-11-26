@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import type { DocumentView, GameContent } from "@aov/community-contracts"
-import { ChevronDown, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
@@ -18,7 +18,7 @@ import { seriesLabel } from "../../model/series-label"
 import { matchPath } from "../../pages/esports-shell"
 import { MATCH_STATE_LABELS } from "../match-recording-strip"
 import { TeamLogo } from "../primitives"
-import { isTyping } from "./shortcut-list"
+import { isTyping } from "./key-owner"
 
 /**
  * Moves between the matches of a tournament in time order, keeping the recording mode: the match before, the match
@@ -29,11 +29,14 @@ export function MatchSwitcher({
   seriesId,
   team,
   editing,
+  keysEnabled = true,
 }: {
   records: readonly SeriesRecord[]
   seriesId: string
   team: (id: string) => TeamView
   editing: boolean
+  /** Shift + P and Shift + N; off with the Admin switch for shortcuts, and in a second place of the same screen. */
+  keysEnabled?: boolean
 }) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -49,6 +52,7 @@ export function MatchSwitcher({
     N: () => next && void navigate(path(next)),
   }
   useEffect(() => {
+    if (!keysEnabled) return
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return
       const key = event.key.toUpperCase()
@@ -60,36 +64,37 @@ export function MatchSwitcher({
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [])
+  }, [keysEnabled])
 
   if (total < 2) return null
   const step = (record: SeriesRecord | null, label: string, key: string, icon: typeof ChevronLeft) => {
     const Icon = icon
     const name = record ? `${label}: ${pairName(record)} (Shift + ${key})` : `Không có ${label.toLowerCase()}`
     return record ? (
-      <Button asChild size="icon-sm" variant="outline">
+      <Button asChild size="icon-sm" variant="ghost">
         <Link to={path(record)} aria-label={name} title={name}>
           <Icon aria-hidden />
         </Link>
       </Button>
     ) : (
-      <Button size="icon-sm" variant="outline" disabled aria-label={name} title={name}>
+      <Button size="icon-sm" variant="ghost" disabled aria-label={name} title={name}>
         <Icon aria-hidden />
       </Button>
     )
   }
   return (
-    <nav className="flex shrink-0 items-center gap-1" aria-label="Chuyển trận">
+    <nav className="flex shrink-0 items-center" aria-label="Chuyển trận">
       {step(previous, "Trận trước", "P", ChevronLeft)}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             size="sm"
-            variant="outline"
-            className="esp-num"
+            variant="ghost"
+            className="esp-num px-2"
             aria-label={`Trận ${position} trên ${total}, chọn trận`}
+            title="Chọn trận"
           >
-            Trận {position}/{total} <ChevronDown aria-hidden />
+            {position}/{total}
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-[min(26rem,calc(100vw-1.5rem))] p-0">
@@ -133,9 +138,23 @@ function MatchList({
     const words = [...teams.flatMap((entry) => [entry.name, entry.shortName]), seriesLabel(content) ?? ""]
     return words.some((word) => nameKey(word).includes(key))
   })
+  const list = useRef<HTMLDivElement>(null)
   const current = useRef<HTMLAnchorElement>(null)
   useEffect(() => {
-    current.current?.scrollIntoView?.({ block: "center" })
+    const box = list.current
+    if (!box) return
+    let at = box.scrollTop
+    const showCurrent = () => {
+      if (Math.abs(box.scrollTop - at) > 1) return
+      current.current?.scrollIntoView?.({ block: "center" })
+      at = box.scrollTop
+    }
+    showCurrent()
+    if (typeof ResizeObserver === "undefined") return
+    // The list has its height only once the popover is placed. One that was scrolled meanwhile stays where it is.
+    const observer = new ResizeObserver(showCurrent)
+    observer.observe(box)
+    return () => observer.disconnect()
   }, [])
 
   return (
@@ -150,7 +169,11 @@ function MatchList({
           className="h-8 pl-8"
         />
       </div>
-      <div className="max-h-[min(60vh,28rem)] overflow-y-auto py-1">
+      {/* What is left of the room under the search field, so the list scrolls inside its popover. */}
+      <div
+        ref={list}
+        className="max-h-[min(60vh,28rem,calc(var(--radix-popover-content-available-height,100vh)-3.25rem))] overflow-y-auto py-1"
+      >
         {matchDays(shown, currentTimeZone()).map((group) => (
           <section key={group.day ?? "none"} aria-label={group.day ? formatDay(group.day) : "Chưa xếp lịch"}>
             <h3 className="type-label px-3 pt-2 pb-1 text-muted-foreground first-letter:uppercase">
@@ -168,7 +191,7 @@ function MatchList({
                   onClick={onPicked}
                   className={cn(
                     "grid grid-cols-[2.75rem_minmax(0,1fr)_3rem_minmax(0,1fr)] items-center gap-x-2 px-3 py-1.5 hover:bg-muted",
-                    here && "bg-[var(--esp-gold-soft)]",
+                    here && "bg-foreground/10",
                   )}
                 >
                   <span className="type-meta esp-num">{formatTime(record.content.scheduledAt)}</span>
@@ -191,7 +214,7 @@ function MatchList({
                           recording.state === "unconfirmed" && "text-(--aov-warning)",
                         )}
                       >
-                        {MATCH_STATE_LABELS[recording.state]} · {recording.games.length}
+                        {MATCH_STATE_LABELS[recording.state]}, {recording.games.length}
                         {recording.expected != null && `/${recording.expected}`} ván
                       </span>
                     )}

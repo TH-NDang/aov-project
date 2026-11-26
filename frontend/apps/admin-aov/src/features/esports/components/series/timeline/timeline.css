@@ -1,0 +1,512 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* ---- strip: the whole video ---- */
+  .esp-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 0;
+    padding-inline: 12px 6px;
+  }
+  .esp-strip-bar {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: var(--aov-radius-control);
+    background: color-mix(in oklch, var(--foreground) 6%, transparent);
+    cursor: pointer;
+    user-select: none;
+    touch-action: pan-y;
+  }
+  .esp-strip-bar > * {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+  .esp-strip-draft {
+    background: repeating-linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--foreground) 15%, transparent) 0 2px,
+      transparent 2px 5px
+    );
+  }
+  .esp-strip-game {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    container-type: inline-size;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    /* Muted text stands on page and card only; on this tint it fell to 3.9:1 in light, a softened text reads 5.4:1. */
+    color: color-mix(in oklch, var(--foreground) 70%, transparent);
+    background: color-mix(in oklch, var(--foreground) 11%, transparent);
+  }
+  .esp-strip-game > span {
+    margin-left: clamp(0px, calc(50cqw - 4px), 5px);
+  }
+  .esp-strip-game[data-focused] {
+    color: var(--foreground);
+    background: color-mix(in oklch, var(--foreground) 24%, transparent);
+  }
+  .esp-strip-tick {
+    width: 2px;
+    height: 5px;
+    background: var(--side);
+  }
+  .esp-strip-tick[data-side="BLUE"] {
+    bottom: auto;
+  }
+  .esp-strip-tick[data-side="RED"] {
+    top: auto;
+  }
+  /* Where the match begins in a video that starts with something else. */
+  .esp-strip-notch {
+    width: 0;
+    border-left: 1px dashed color-mix(in oklch, var(--foreground) 60%, transparent);
+  }
+  .esp-strip-window {
+    border-radius: var(--aov-radius-control);
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--foreground) 42%, transparent);
+  }
+  .esp-strip-now {
+    width: 2px;
+    margin-left: -1px;
+    background: var(--foreground);
+  }
+  .esp-strip-part,
+  .esp-strip-zoom > button {
+    flex: none;
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+  .esp-strip-part {
+    padding-inline: 6px;
+  }
+  .esp-strip-zoom {
+    display: flex;
+    flex: none;
+    align-items: stretch;
+  }
+  .esp-strip-zoom > button {
+    display: grid;
+    place-items: center;
+    min-width: 28px;
+  }
+  .esp-strip-zoom > .esp-strip-span {
+    min-width: 60px;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-strip-part:hover,
+  .esp-strip-zoom > button:hover:not(:disabled) {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+  .esp-strip-zoom > button:disabled {
+    opacity: 0.4;
+  }
+
+  /* ---- track: the phase on screen ---- */
+  .esp-track {
+    min-width: 0;
+    min-height: 0;
+  }
+  .esp-track-fold {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    height: 32px;
+    padding-inline: 12px;
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .esp-track-box {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    height: 100%;
+    /* Two lanes of 96 px, the spine, the band and the ticks: a taller place stays empty below. */
+    max-height: 246px;
+  }
+  .esp-lanes {
+    position: relative;
+  }
+  .esp-lane {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: var(--lane);
+    padding-left: 5px;
+    border-left: 3px solid var(--side);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .esp-lane[data-row="BLUE"] {
+    top: 20px;
+  }
+  .esp-lane[data-row="SPINE"] {
+    top: calc(20px + var(--lane));
+    height: 16px;
+    border-left: 0;
+  }
+  .esp-lane[data-row="RED"] {
+    top: calc(36px + var(--lane));
+  }
+  .esp-lane-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .esp-track-area {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+  }
+  /* One finger scrolls the track; two fingers are the track's own zoom, not the browser's. */
+  .esp-track-viewport {
+    height: 100%;
+    overflow: auto hidden;
+    scrollbar-width: none;
+    touch-action: pan-x pan-y;
+  }
+  .esp-plane {
+    position: relative;
+    height: 100%;
+    margin-inline: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .esp-plane:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+  .esp-lane-ground {
+    position: absolute;
+    left: -14px;
+    right: -14px;
+    height: var(--lane);
+    background: color-mix(in oklch, var(--side) 7%, transparent);
+    pointer-events: none;
+  }
+  .esp-grid {
+    position: absolute;
+    top: 20px;
+    bottom: 18px;
+    width: 1px;
+    background: color-mix(in oklch, var(--foreground) 6%, transparent);
+    pointer-events: none;
+  }
+  .esp-tick {
+    position: absolute;
+    bottom: 0;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    line-height: 18px;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .esp-tick[data-clock="video"]::before {
+    content: "▸";
+  }
+  .esp-tick[data-end="first"] {
+    transform: none;
+  }
+  .esp-tick[data-end="last"] {
+    transform: translateX(-100%);
+  }
+
+  .esp-band {
+    position: absolute;
+    top: 0;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    color: var(--muted-foreground);
+    pointer-events: none;
+  }
+  /* Held at the left edge while the beginning of its phase is scrolled away. */
+  .esp-band-name {
+    position: sticky;
+    left: 4px;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .esp-band-name > b {
+    font-weight: 600;
+  }
+  .esp-band[data-focused] .esp-band-name > b {
+    color: var(--foreground);
+  }
+  .esp-band-line {
+    position: absolute;
+    top: 0;
+    z-index: 5;
+    max-width: 100%;
+    overflow: hidden;
+    padding-inline: 4px;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    line-height: 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: var(--background);
+    pointer-events: none;
+    /* The name of a phase it covers fades out beside it instead of ending in the middle of a letter. */
+    box-shadow: 0 0 8px 8px var(--background);
+    clip-path: inset(0 -14px);
+  }
+
+  .esp-lane-game {
+    position: absolute;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    height: var(--lane);
+    pointer-events: none;
+  }
+  /* Held at the left edge it may stand on a mark, so it brings the ground it stands on. */
+  .esp-lane-crest {
+    position: sticky;
+    left: 2px;
+    display: grid;
+    border-radius: var(--aov-radius-control);
+    background: var(--background);
+  }
+
+  /* ---- spine: what each game is ---- */
+  .esp-spine {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+  .esp-part {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+  .esp-part[data-part="draft"] {
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--foreground) 22%, transparent) 0 3px,
+      transparent 3px 6px
+    );
+  }
+  .esp-part[data-part="wait"] {
+    top: 8px;
+    bottom: auto;
+    height: 1px;
+    background: color-mix(in oklch, var(--foreground) 30%, transparent);
+  }
+  .esp-part[data-part="play"] {
+    background: color-mix(in oklch, var(--foreground) 24%, transparent);
+  }
+  .esp-part[data-part="pause"] {
+    background: color-mix(in oklch, var(--background) 70%, transparent);
+  }
+  .esp-part[data-part="guess"] {
+    border: 1px dashed color-mix(in oklch, var(--foreground) 30%, transparent);
+  }
+  .esp-part[data-part="clash"] {
+    background: repeating-linear-gradient(135deg, var(--aov-warning) 0 3px, transparent 3px 6px);
+  }
+  .esp-handle {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 16px;
+    margin-left: -10px;
+    border: 1px solid color-mix(in oklch, var(--foreground) 50%, transparent);
+    border-radius: var(--aov-radius-control);
+    color: var(--foreground);
+    background: var(--background);
+  }
+
+  /* ---- marks ---- */
+  .esp-mark {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: var(--s);
+    height: var(--s);
+    margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+    border-radius: var(--aov-radius-pill);
+    color: var(--foreground);
+    background: var(--card);
+    box-shadow: 0 0 0 2px var(--side, color-mix(in oklch, var(--foreground) 60%, transparent));
+  }
+  .esp-mark > * {
+    pointer-events: none;
+  }
+  .esp-mark:is([data-kind="ITEM"], [data-kind="BAN"], [data-kind="PICK"]) {
+    border-radius: var(--aov-radius-control);
+    box-shadow: 0 0 0 1.5px var(--side);
+  }
+  .esp-mark[data-kind="BAN"] img {
+    filter: grayscale(1);
+    opacity: 0.5;
+  }
+  .esp-mark[data-past="false"] {
+    opacity: 0.45;
+  }
+  /* A ban to come would all but vanish under both. */
+  .esp-mark[data-kind="BAN"][data-past="false"] img {
+    opacity: 0.9;
+  }
+  .esp-mark:is(:hover, :focus-visible, [data-active], [data-dragging]) {
+    z-index: 3;
+    opacity: 1;
+  }
+  .esp-mark:is(:focus-visible, [data-active], [data-dragging]) {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+  .esp-mark-badge,
+  .esp-mark-count {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    border-radius: var(--aov-radius-pill);
+    color: var(--background);
+    background: var(--foreground);
+  }
+  .esp-mark-badge {
+    right: -4px;
+    bottom: -4px;
+    width: 13px;
+    height: 13px;
+  }
+  .esp-mark-count {
+    top: -7px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    padding-inline: 3px;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  /* The moment the broadcast showed a team's spells, emblems, arcana or equipment. */
+  .esp-ring {
+    position: absolute;
+    z-index: 2;
+    width: 12px;
+    height: 12px;
+    border: 2.5px solid var(--side);
+    border-radius: var(--aov-radius-pill);
+    background: var(--card);
+    transform: translate(-50%, -50%);
+  }
+  .esp-ring::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+  .esp-handle:focus-visible,
+  .esp-ring:focus-visible {
+    z-index: 3;
+    outline: 2px solid var(--foreground);
+    outline-offset: 1px;
+  }
+
+  /* What an editor may drag to another second while recording. */
+  .esp-mark[data-movable],
+  .esp-ring[data-movable] {
+    cursor: grab;
+    touch-action: none;
+  }
+  .esp-handle[data-movable] {
+    cursor: ew-resize;
+    touch-action: none;
+  }
+  .esp-mark[data-dragging],
+  .esp-ring[data-dragging] {
+    z-index: 6;
+    cursor: grabbing;
+  }
+  .esp-handle[data-dragging] {
+    z-index: 6;
+    border-color: var(--foreground);
+  }
+
+  .esp-now {
+    position: absolute;
+    top: 14px;
+    bottom: 18px;
+    z-index: 4;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--foreground);
+    pointer-events: none;
+  }
+
+  .esp-track-fold:focus-visible,
+  .esp-strip-part:focus-visible,
+  .esp-strip-zoom > button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  @container watch (max-width: 479.98px) {
+    .esp-track-box {
+      grid-template-columns: 40px minmax(0, 1fr);
+    }
+    .esp-lane-name {
+      display: none;
+    }
+  }
+  @media (max-width: 899.98px) {
+    .esp-strip {
+      height: 28px;
+    }
+    .esp-track-box {
+      height: 150px;
+    }
+  }
+
+  /* Forced colours drop the backgrounds that say where the video is and what each game is. */
+  @media (forced-colors: active) {
+    .esp-now,
+    .esp-strip-now,
+    .esp-strip-tick,
+    .esp-part:is([data-part="wait"], [data-part="play"]) {
+      background: CanvasText;
+    }
+    .esp-part[data-part="pause"] {
+      background: Canvas;
+    }
+    .esp-strip-bar,
+    .esp-strip-game {
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+    }
+    .esp-strip-draft,
+    .esp-part:is([data-part="draft"], [data-part="clash"]) {
+      border: 1px dashed CanvasText;
+    }
+    .esp-strip-window {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+}

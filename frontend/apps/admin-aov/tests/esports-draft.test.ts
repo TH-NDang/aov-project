@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import type { GameContent } from "@aov/community-contracts"
 import { gameStatistics } from "../src/features/esports/model/statistics"
 import { draftGame } from "./fixtures/esports-model"
 
@@ -184,4 +185,94 @@ test("an imported hero name finds its catalog hero by code or by the checked lis
     "Lu Bu",
     "a selection with an id keeps the name recorded with it",
   )
+})
+
+const imported = () =>
+  draftGame(
+    2,
+    { teamId: "a", picks: ["Maloch", "Nakroth", "Tulen", "Violet", "Alice"], bans: ["Aoi"] },
+    { teamId: "b", picks: ["Florentino", "Murad", "Lauriel", "Capheny", "Zip"] },
+  ).content as GameContent
+const turnOf = (order: number, kind: "BAN" | "PICK", side: "BLUE" | "RED", name: string, atSecond?: number) => ({
+  order,
+  kind,
+  side,
+  hero: { id: name.toLowerCase(), name },
+  atSecond,
+})
+
+test("a game with heroes or bans and no turns lacks its turns; an empty one does not", async () => {
+  const { lacksTurns } = await import("../src/features/esports/model/draft")
+  assert.equal(lacksTurns(imported()), true)
+  const empty = draftGame(2, { teamId: "a", picks: [] }, { teamId: "b", picks: [] }).content as GameContent
+  assert.equal(lacksTurns(empty), false)
+  const turns = [turnOf(1, "BAN", "BLUE", "Aoi")]
+  assert.equal(lacksTurns({ ...imported(), draft: { startSecond: null, lockedSecond: null, turns } }), false)
+})
+
+test("one turn of an imported game would empty its line-ups, so it waits while any recorded hero is unnamed", async () => {
+  const { unnamed, withTurns } = await import("../src/features/esports/model/draft")
+  const first = [turnOf(1, "BAN", "BLUE", "Aoi")]
+  const wiped = withTurns(imported(), first)
+  assert.equal(
+    wiped.sides.every((side) => side.participants.every(({ hero }) => !hero.name)),
+    true,
+    "this is what one turn alone would do",
+  )
+  assert.equal(unnamed(imported(), first).length, 10, "so the ten heroes are still to be named")
+  assert.deepEqual(unnamed(imported(), [])[0], { side: "BLUE", kind: "BAN", hero: { id: null, name: "Aoi" } })
+})
+
+test("a hero named for the other team, or as a ban, stays unnamed", async () => {
+  const { unnamed } = await import("../src/features/esports/model/draft")
+  const left = (turns: ReturnType<typeof turnOf>[]) => unnamed(imported(), turns).map(({ hero }) => hero.name)
+  assert.equal(left([turnOf(1, "PICK", "RED", "Tulen")]).includes("Tulen"), true)
+  assert.equal(left([turnOf(1, "BAN", "BLUE", "Tulen")]).includes("Tulen"), true)
+  assert.equal(left([turnOf(1, "PICK", "BLUE", "Tulen")]).includes("Tulen"), false)
+})
+
+test("turns saved together keep every hero in its lane and give it the id its turn knows", async () => {
+  const { withCollectedTurns } = await import("../src/features/esports/model/draft")
+  const content = imported()
+  const turns = content.sides.flatMap((side) => [
+    ...side.bans.flatMap((ban) => (ban.name ? [turnOf(0, "BAN", side.side, ban.name)] : [])),
+    // In another order than the lanes.
+    ...[...side.participants].reverse().map(({ hero }) => turnOf(0, "PICK", side.side, hero.name!)),
+  ])
+  const next = withCollectedTurns(content, turns)
+  assert.deepEqual(
+    next.sides[0]!.participants.map(({ hero }) => [hero.id, hero.name]),
+    ["Maloch", "Nakroth", "Tulen", "Violet", "Alice"].map((name) => [name.toLowerCase(), name]),
+  )
+  assert.equal(next.draft?.turns[0]?.order, 1)
+})
+
+test("a turn's second stays inside the phase and between the turns around it", async () => {
+  const { turnSecond } = await import("../src/features/esports/model/draft")
+  const content: GameContent = {
+    ...imported(),
+    sourceTimestampSeconds: 200,
+    draft: {
+      startSecond: 100,
+      lockedSecond: 160,
+      turns: [turnOf(1, "BAN", "BLUE", "Aoi", 110), turnOf(2, "BAN", "RED", "Elsu", 130)],
+    },
+  }
+  assert.equal(turnSecond(content, 140.9), 140)
+  assert.equal(turnSecond(content, 90), 130, "not before the turn it follows")
+  assert.equal(turnSecond(content, 500), 160, "not after the lock")
+  assert.equal(turnSecond(content, 150, 0), 130, "a recorded turn stays before the next one")
+  const unlocked = { ...content, draft: { ...content.draft!, lockedSecond: null } }
+  assert.equal(turnSecond(unlocked, 500), 200, "not after 0:00")
+  assert.equal(turnSecond(imported(), 140), null, "a draft without a start has no seconds")
+})
+
+test("restoring a draft puts turns, bans and lanes back and leaves the rest of the game", async () => {
+  const { restoreDraft, withTurns } = await import("../src/features/esports/model/draft")
+  const before = imported()
+  const after = { ...withTurns(before, [turnOf(1, "BAN", "BLUE", "Aoi")]), note: "written since" }
+  const back = restoreDraft(before)(after)
+  assert.deepEqual(back.sides, before.sides)
+  assert.deepEqual(back.draft?.turns, [])
+  assert.equal(back.note, "written since")
 })

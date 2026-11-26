@@ -309,29 +309,31 @@ test("the trash page shows deleted tournaments to a reader without offering to r
   }
 })
 
-test("the game info panel saves only what changed and asks before taking the public copy down", async () => {
+test("the information of a game saves only what changed and asks before taking the public copy down", async () => {
   const fetch = async () =>
     Response.json({
       seasons: [{ id: "s3", name: "S3 2026", patches: [{ id: "p3", code: "s3-final", title: "Baseline" }] }],
     })
   const render = routed()
   await withGlobals({ fetch }, async () => {
-    const { GameInfoPanel, changedGameInfo, gameInfoOf } = await import("../src/features/esports/pages/game-info-panel")
+    const { changedGameInfo, gameInfoOf } = await import("../src/features/esports/pages/tools/game-info")
+    const { GameInfoForm } = await import("../src/features/esports/pages/tools/game-info-form")
+    const { PublicCopy } = await import("../src/features/esports/pages/tools/public-copy")
     const content = { seriesId: "s", number: 2, region: "VN", locale: "vi-VN", sides: [], note: "MVP: A" }
     const entry = { id: "g", version: 4, createdAt: "", updatedAt: "", missingFields: [], content }
     const saved: unknown[] = []
     let withdrawn = 0
-    let progress = 0
-    const panel = (publishedAt: string | null, canPublish = true) => (
-      <GameInfoPanel
-        key={String(publishedAt)}
-        entry={{ ...entry, publishedAt } as never}
-        canPublish={canPublish}
-        onSave={(change) => saved.push(change)}
-        onWithdraw={() => withdrawn++}
-        onDeleted={() => assert.fail("nothing was deleted")}
-        onOpenProgress={() => progress++}
-      />
+    let published = 0
+    const parts = (publishedAt: string | null, canPublish = true) => (
+      <>
+        <GameInfoForm entry={{ ...entry, publishedAt } as never} onSave={(change) => saved.push(change)} />
+        <PublicCopy
+          entry={{ ...entry, publishedAt } as never}
+          canPublish={canPublish}
+          onWithdraw={() => withdrawn++}
+          onPublish={() => published++}
+        />
+      </>
     )
     const button = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>("button")].filter(
@@ -339,12 +341,12 @@ test("the game info panel saves only what changed and asks before taking the pub
       )
 
     assert.deepEqual(changedGameInfo(gameInfoOf(content as never), gameInfoOf(content as never)), {})
-    await render(panel(null))
+    await render(parts(null))
     assert.equal(button("Lưu thông tin ván")[0]!.disabled, true, "nothing to save yet")
     assert.match(document.body.textContent ?? "", /Chưa xuất bản/)
-    assert.equal(button("Gỡ công khai").length, 0)
-    await pressed("Mở Tiến độ")
-    assert.equal(progress, 1)
+    assert.equal(button("Ngừng xuất bản").length, 0)
+    await pressed("Xuất bản…")
+    assert.equal(published, 1)
 
     await type(document.querySelector<HTMLTextAreaElement>("textarea")!, "MVP: B")
     await pressed("Lưu thông tin ván")
@@ -355,14 +357,14 @@ test("the game info panel saves only what changed and asks before taking the pub
     assert.equal(document.querySelector<HTMLTextAreaElement>("textarea")!.value, "MVP: A")
 
     // A published game can be taken down, by someone who may publish, after a question.
-    await render(panel("2026-11-12T03:00:00Z", false))
-    assert.equal(button("Gỡ công khai").length, 0)
-    await render(panel("2026-11-12T04:00:00Z"))
-    await act(async () => button("Gỡ công khai")[0]!.click())
+    await render(parts("2026-11-12T03:00:00Z", false))
+    assert.equal(button("Ngừng xuất bản").length, 0)
+    await render(parts("2026-11-12T04:00:00Z"))
+    await act(async () => button("Ngừng xuất bản")[0]!.click())
     await flush()
     assert.equal(withdrawn, 0, "the question comes first")
-    assert.match(document.body.textContent ?? "", /Gỡ ván 2 khỏi trang công khai\?/)
-    await act(async () => button("Gỡ công khai").at(-1)!.click())
+    assert.match(document.body.textContent ?? "", /Ngừng xuất bản ván 2\?/)
+    await act(async () => button("Ngừng xuất bản").at(-1)!.click())
     await flush()
     assert.equal(withdrawn, 1)
   })
