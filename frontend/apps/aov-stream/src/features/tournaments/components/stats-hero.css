@@ -1,0 +1,47 @@
+.tn-hh-page {
+  display: grid;
+  min-width: 0;
+  gap: 36px;
+}
+/* The way up and the scope, the stage and its tabs: the head of the page. */
+.tn-hh-top {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}
+.tn-hh-top > :first-child {
+  margin-bottom: -6px;
+}
+.tn-hh-analysis {
+  display: grid;
+  min-width: 0;
+  gap: 48px;
+}
+/* The two charts of time stand side by side; one alone has the whole width. */
+.tn-hh-times {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  align-items: start;
+  gap: 40px 56px;
+}
+.tn-hh-times:empty {
+  display: none;
+}
+@media (max-width: 899.98px) {
+  .tn-hh-page {
+    gap: 24px;
+  }
+  .tn-hh-top {
+    gap: 10px;
+  }
+  .tn-hh-top > :first-child {
+    margin-bottom: -4px;
+  }
+  .tn-hh-analysis {
+    gap: 34px;
+  }
+  .tn-hh-times {
+    gap: 34px;
+  }
+}

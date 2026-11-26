@@ -1,0 +1,87 @@
+/* One team against each of the others, two columns of them where there is room. */
+.tn-meet-choice {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 2px;
+  margin-block: -8px;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.tn-meet-choice:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-meet-choice > svg {
+  transform: rotate(90deg);
+}
+.tn-meet-list {
+  margin: 0;
+  padding: 0;
+  columns: 480px 2;
+  column-gap: 48px;
+  font-variant-numeric: tabular-nums;
+  list-style: none;
+}
+.tn-meet-list > li {
+  border-top: 1px solid var(--hub-border);
+  break-inside: avoid;
+}
+.tn-meet-row {
+  --meet-leg: 44px;
+  --stream-image-size: 30px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: grid;
+  width: 100%;
+  min-height: 63px;
+  grid-template-columns: 30px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+.tn-meet-row:hover {
+  background: var(--hub-hover);
+}
+.tn-meet-row:focus-visible {
+  outline-offset: -2px;
+}
+.tn-meet-row[aria-expanded="true"] {
+  background: var(--hub-accent-soft);
+}
+.tn-meet-row > strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-meet-row > b {
+  min-width: 52px;
+  color: var(--hub-muted);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 22px;
+  text-align: right;
+}
+.tn-meet-row > b[data-outcome="won"] {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-meet-row > b[data-outcome="level"] {
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}
+@media (max-width: 899.98px) {
+  .tn-meet-choice {
+    min-height: 40px;
+    margin-block: -11px;
+  }
+  .tn-meet-row {
+    min-height: 51px;
+    padding-inline: 4px;
+  }
+}

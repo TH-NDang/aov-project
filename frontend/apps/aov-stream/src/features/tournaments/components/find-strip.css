@@ -1,0 +1,59 @@
+/* The folded board: the faces give way to each other before they run into the button. */
+.tn-find-strip {
+  display: flex;
+  min-width: 0;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  margin-block: -14px -6px;
+  padding-inline: 14px 8px;
+}
+.tn-find-strip > span {
+  --portrait: 100%;
+  --portrait-radius: 8px;
+  --stream-image-size: 100%;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+}
+.tn-find-strip > span > span {
+  width: auto;
+  min-width: 20px;
+  max-width: 40px;
+  height: auto;
+  flex: 0 1 40px;
+  aspect-ratio: 1;
+}
+.tn-find-strip small {
+  flex: none;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+}
+.tn-find-strip b {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-find-strip b::first-letter {
+  text-transform: uppercase;
+}
+.tn-find-strip > button {
+  min-width: 48px;
+  min-height: 44px;
+  flex: none;
+  padding: 0 10px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+@container tn-line (min-width: 760px) {
+  .tn-find-strip {
+    display: none;
+  }
+}

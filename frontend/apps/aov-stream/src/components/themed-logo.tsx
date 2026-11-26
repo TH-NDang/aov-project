@@ -15,7 +15,7 @@ export function ThemedLogo({
   darkSrc?: string | null
   alt?: string
   className?: string
-  onLoad?: () => void
+  onLoad?: (url: string) => void
   onError?: (url: string) => void
 }) {
   const image = (url: string, version: string) => (
@@ -27,7 +27,7 @@ export function ThemedLogo({
       alt={alt}
       loading="lazy"
       decoding="async"
-      onLoad={onLoad}
+      onLoad={onLoad && (() => onLoad(url))}
       onError={onError && (() => onError(url))}
     />
   )

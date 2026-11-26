@@ -3,6 +3,8 @@ package com.wikiaov.community.tournament.internal.games.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftTurn;
@@ -38,7 +40,8 @@ class GameRulesTest {
     private static final List<Reference> HEROES = IntStream.rangeClosed(1, 18)
             .mapToObj(index -> reference(index, null, null, null)).toList();
     private static final Catalog CATALOG = new Catalog(HEROES,
-            List.of(reference(200, 1, null, null), reference(201, 3, null, null)),
+            List.of(item(200, 1), item(201, 3, 202), item(202, 2, 200), item(203, 2, 200), item(204, 3, 203),
+                    item(205, 2, 203), item(206, null)),
             List.of(reference(100, 3, "RED", null), reference(101, 3, "PURPLE", null),
                     reference(102, 3, "GREEN", null)),
             List.of(reference(110, 1, null, "main"), reference(111, 2, null, "main"),
@@ -89,17 +92,198 @@ class GameRulesTest {
     }
 
     @Test
-    void missingBansPlayerLaneAndSpellArePublicationFailures() {
+    void aPlayerSpellOrBanNobodySawDoesNotHoldAGameBack() {
         var original = game();
-        var incomplete = new Participant(null, null, selection(1), null, null, null, List.of(), List.of(), null);
-        var edited = replaceParticipant(original, 0, 0, incomplete);
+        var first = participant(original, 0, 0);
+        var edited = replaceParticipant(original, 0, 0,
+                new Participant(null, first.lane(), first.hero(), null, null, null, List.of(), List.of(), null));
         var blue = edited.sides().getFirst();
         edited = replaceSide(edited, 0, new GameSide(blue.side(), blue.teamId(), blue.bans().subList(0, 3),
                 blue.participants()));
 
-        assertThat(GameRules.violations(edited, true, CATALOG)).contains("sides[0].bans.four",
-                "sides[0].participants[0].playerId", "sides[0].participants[0].lane",
-                "sides[0].participants[0].spell");
+        assertThat(GameRules.violations(edited, true, CATALOG)).isEmpty();
+    }
+
+    @Test
+    void aPublishedGameNamesTheHeroAndTheLaneOfEverySeat() {
+        var empty = new Participant(null, null, null, null, null, null, List.of(), List.of(), null);
+
+        assertThat(GameRules.violations(replaceParticipant(game(), 0, 0, empty), true, CATALOG))
+                .containsExactly("sides[0].participants[0].lane", "sides[0].participants[0].hero");
+    }
+
+    @Test
+    void aPublishedGameHasFiveSeatsOnEachSide() {
+        for (int index = 0; index < 2; index++) {
+            var side = game().sides().get(index);
+            var edited = replaceSide(game(), index, new GameSide(side.side(), side.teamId(), side.bans(),
+                    side.participants().subList(0, 4)));
+
+            assertThat(GameRules.violations(edited, true, CATALOG))
+                    .containsExactly("sides[" + index + "].participants.five");
+        }
+    }
+
+    @Test
+    void aPublishedGameNamesTheColorAndTheTeamOfEachSide() {
+        for (int index = 0; index < 2; index++) {
+            var side = game().sides().get(index);
+            var edited = replaceSide(game(), index, new GameSide(null, null, side.bans(), side.participants()));
+
+            assertThat(GameRules.violations(edited, true, CATALOG))
+                    .containsExactly("sides[" + index + "].side", "sides[" + index + "].teamId");
+        }
+    }
+
+    @Test
+    void aDraftIsSavedWithoutTheTeamsSeatsAndSlotsAPublicationNeeds() {
+        var first = participant(game(), 0, 0);
+        var seen = new Participant(first.playerId(), first.lane(), first.hero(), first.spell(), null, null,
+                List.of(new EquipmentSnapshot(20, emptyInventory().subList(0, 5), null)), List.of(), null);
+        var draft = replaceSide(game(), 0, new GameSide(null, null, List.of(), List.of(seen)));
+
+        assertThat(GameRules.violations(draft, false, null)).isEmpty();
+    }
+
+    @Test
+    void aSpellOrBanThatIsNamedMustExistInThePatch() {
+        var first = participant(game(), 0, 0);
+        var edited = replaceParticipant(game(), 0, 0, new Participant(first.playerId(), first.lane(), first.hero(),
+                selection(999), null, null, List.of(), List.of(), null));
+        var blue = edited.sides().getFirst();
+        edited = replaceSide(edited, 0, new GameSide(blue.side(), blue.teamId(), List.of(selection(998)),
+                blue.participants()));
+
+        assertThat(GameRules.violations(edited, true, CATALOG)).containsExactly(
+                "sides[0].bans[0].unavailableInPatch", "sides[0].participants[0].spell.unavailableInPatch");
+    }
+
+    @Test
+    void aBuildListsTheItemsOfHigherTiersWithWhatTheyGrewFrom() {
+        var build = List.of(new BuildStep(selection(202), List.of(), BuildPlace.REPLACED, 180),
+                new BuildStep(selection(201), List.of(selection(202), selection(203)), BuildPlace.KEPT, 420),
+                new BuildStep(new Selection(null, "Observed item"), null, BuildPlace.SITUATIONAL, null));
+
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG)).isEmpty();
+    }
+
+    @Test
+    void aBuildNamesNoItemTwiceHoweverOftenItWasBought() {
+        var build = List.of(step(selection(201), BuildPlace.KEPT), step(selection(201), BuildPlace.SITUATIONAL));
+
+        assertThat(GameRules.violations(withBuild(build), false, null))
+                .containsExactly("sides[0].participants[0].build[1].item.duplicate");
+    }
+
+    @Test
+    void aBuildHasNoMoreThanTwentyFourSteps() {
+        assertThat(GameRules.violations(withBuild(steps(24, BuildPlace.SITUATIONAL)), false, null)).isEmpty();
+        assertThat(GameRules.violations(withBuild(steps(25, BuildPlace.SITUATIONAL)), false, null))
+                .containsExactly("sides[0].participants[0].build.maximum");
+    }
+
+    @Test
+    void aBuildHoldsNoMoreItemsToTheEndThanAnInventoryHasSlots() {
+        assertThat(GameRules.violations(withBuild(steps(7, BuildPlace.KEPT)), false, null))
+                .containsExactly("sides[0].participants[0].build[6].kept.maximum");
+    }
+
+    @Test
+    void itemsGivenUpOrBoughtForAMomentDoNotCountTowardsTheSixHeldToTheEnd() {
+        var build = new ArrayList<>(steps(6, BuildPlace.KEPT));
+        build.add(step(selection(202), BuildPlace.REPLACED));
+        build.add(step(selection(201), BuildPlace.SITUATIONAL));
+
+        assertThat(GameRules.violations(withBuild(build), false, null)).isEmpty();
+    }
+
+    @Test
+    void aBuildLeavesOutTheItemsOfTheLowestTier() {
+        var build = List.of(new BuildStep(selection(201), List.of(selection(200)), BuildPlace.KEPT, null),
+                step(selection(200), BuildPlace.REPLACED));
+
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG)).containsExactly(
+                "sides[0].participants[0].build[0].from[0].tier", "sides[0].participants[0].build[1].item.tier");
+    }
+
+    @Test
+    void anItemOfABuildDoesNotGrowFromItselfNorTwiceFromAnother() {
+        var build = List.of(new BuildStep(selection(201), List.of(selection(201), selection(202), selection(202)),
+                BuildPlace.KEPT, null));
+        var refused = List.of("sides[0].participants[0].build[0].from[0].same",
+                "sides[0].participants[0].build[0].from[2].duplicate");
+
+        assertThat(GameRules.violations(withBuild(build), false, null)).isEqualTo(refused);
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG)).isEqualTo(refused);
+    }
+
+    @Test
+    void anItemOfABuildIsMadeOfNoMoreThanThreeOthers() {
+        var parts = IntStream.rangeClosed(1, 4).mapToObj(index -> new Selection(null, "Part " + index)).toList();
+        var three = List.of(new BuildStep(selection(201), parts.subList(0, 3), BuildPlace.KEPT, null));
+        var four = List.of(new BuildStep(selection(201), parts, BuildPlace.KEPT, null));
+
+        assertThat(GameRules.violations(withBuild(three), false, null)).isEmpty();
+        assertThat(GameRules.violations(withBuild(four), false, null))
+                .containsExactly("sides[0].participants[0].build[0].from.maximum");
+    }
+
+    @Test
+    void anItemOfABuildDoesNotGrowFromOneOfAHigherTier() {
+        var build = List.of(new BuildStep(selection(202), List.of(selection(201)), BuildPlace.KEPT, null));
+
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG))
+                .containsExactly("sides[0].participants[0].build[0].from[0].notLower");
+    }
+
+    @Test
+    void twoFinishedItemsOfABuildDoNotGrowFromEachOther() {
+        var build = List.of(new BuildStep(selection(201), List.of(selection(204)), BuildPlace.KEPT, null),
+                new BuildStep(selection(204), List.of(selection(201)), BuildPlace.KEPT, null));
+
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG)).containsExactly(
+                "sides[0].participants[0].build[0].from[0].notLower",
+                "sides[0].participants[0].build[1].from[0].notLower");
+    }
+
+    @Test
+    void anItemOfABuildMayGrowFromOneOfItsOwnTierThatItsRecipeNames() {
+        var build = List.of(new BuildStep(selection(205), List.of(selection(203)), BuildPlace.KEPT, null));
+
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG)).isEmpty();
+    }
+
+    @Test
+    void aPartIsComparedWithItsItemOnlyWhenTheTiersOfBothAreKnown() {
+        var named = new Selection(null, "Observed part");
+        var build = List.of(new BuildStep(selection(202), List.of(named, selection(206)), BuildPlace.KEPT, null),
+                new BuildStep(selection(206), List.of(selection(204)), BuildPlace.KEPT, null),
+                new BuildStep(new Selection(null, "Observed item"), List.of(selection(204)), BuildPlace.KEPT, null));
+
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG)).isEmpty();
+    }
+
+    @Test
+    void anItemIsBuiltInsideTheGame() {
+        var build = List.of(new BuildStep(selection(201), List.of(), BuildPlace.KEPT, 601));
+
+        assertThat(GameRules.violations(withBuild(build), false, null))
+                .containsExactly("sides[0].participants[0].build[0].atSeconds.range");
+    }
+
+    @Test
+    void aBuildThatNamesNoItemIsRefused() {
+        assertThat(GameRules.violations(withBuild(List.of(step(null, BuildPlace.KEPT))), false, null))
+                .containsExactly("sides[0].participants[0].build[0].item");
+    }
+
+    @Test
+    void anItemOfABuildMustExistInThePatch() {
+        var build = List.of(new BuildStep(selection(999), List.of(selection(998)), BuildPlace.KEPT, null));
+
+        assertThat(GameRules.violations(withBuild(build), true, CATALOG)).containsExactly(
+                "sides[0].participants[0].build[0].item.unavailableInPatch",
+                "sides[0].participants[0].build[0].from[0].unavailableInPatch");
     }
 
     @Test
@@ -212,6 +396,14 @@ class GameRulesTest {
     }
 
     @Test
+    void anInventoryThatShowsFewerThanSixSlotsIsNotPublished() {
+        var snapshot = new EquipmentSnapshot(20, emptyInventory().subList(0, 5), null);
+
+        assertThat(GameRules.violations(withInventory(List.of(snapshot), List.of()), true, CATALOG))
+                .containsExactly("sides[0].participants[0].equipmentSnapshots[0].slots.six");
+    }
+
+    @Test
     void inventoryRejectsDuplicateSlotsUnknownItemsAndObservationsAfterGameEnd() {
         var slots = emptyInventory();
         slots.set(0, new InventorySlot(1, false, selection(200)));
@@ -316,17 +508,20 @@ class GameRulesTest {
     }
 
     @Test
+    void aPartialLoadoutThatNamesSomethingOutsideThePatchIsNotPublished() {
+        var arcana = new Loadout<>(ObservationStatus.PARTIAL,
+                List.of(new ArcanaAllocation(selection(997), 10, "RED")), null);
+        var enchantments = new Loadout<>(ObservationStatus.PARTIAL,
+                List.of(new EnchantmentAllocation(selection(998), true, 1, "main")), null);
+
+        assertThat(GameRules.violations(withLoadouts(arcana, enchantments), true, CATALOG)).containsExactly(
+                "sides[0].participants[0].arcana.entries[0].selection.unavailableInPatch",
+                "sides[0].participants[0].enchantments.entries[0].selection.unavailableInPatch");
+    }
+
+    @Test
     void draftTurnsMustProduceTheFinalBansAndLineUpsInsideTheDraftWindow() {
-        var turns = new ArrayList<DraftTurn>();
-        for (int ban = 0; ban < 4; ban++) {
-            turns.add(new DraftTurn(turns.size() + 1, DraftKind.BAN, Side.BLUE, selection(11 + ban), 110 + ban * 2));
-            turns.add(new DraftTurn(turns.size() + 1, DraftKind.BAN, Side.RED, selection(15 + ban), 111 + ban * 2));
-        }
-        for (int pick = 0; pick < 5; pick++) {
-            turns.add(new DraftTurn(turns.size() + 1, DraftKind.PICK, Side.BLUE, selection(1 + pick), 120 + pick * 2));
-            turns.add(new DraftTurn(turns.size() + 1, DraftKind.PICK, Side.RED, selection(6 + pick), 121 + pick * 2));
-        }
-        var drafted = withDraft(game(), 300, new GameDraft(100, 250, turns));
+        var drafted = drafted();
         assertThat(GameRules.violations(drafted, true, CATALOG)).isEmpty();
 
         // Teammates may swap heroes before the lock, but a line-up cannot hold a hero the team never picked.
@@ -335,6 +530,28 @@ class GameRulesTest {
                 new Selection(null, "Observed elsewhere"), first.spell(), null, null, List.of(), List.of(), null));
         assertThat(GameRules.violations(undrafted, false, CATALOG))
                 .containsExactly("sides[0].participants[0].hero.notDrafted");
+    }
+
+    @Test
+    void aPublishedGameListsEveryBannedHeroOfItsDraftAmongTheBansOfTheSide() {
+        // The statistics count the bans of the sides: one that only a turn names would be missing from them.
+        assertThat(GameRules.violations(withABanOnlyItsDraftNames(), true, CATALOG))
+                .containsExactly("draft.turns[6].hero.notBanned");
+    }
+
+    @Test
+    void aGameWithABanOnlyItsDraftNamesCanStillBeSaved() {
+        assertThat(GameRules.violations(withABanOnlyItsDraftNames(), false, null)).isEmpty();
+    }
+
+    @Test
+    void aBanTurnThatWasNotUsedAsksForNoBanOfItsSide() {
+        var drafted = withABanOnlyItsDraftNames();
+        var turns = new ArrayList<>(drafted.draft().turns());
+        turns.set(6, new DraftTurn(7, DraftKind.BAN, Side.BLUE, null, null));
+
+        assertThat(GameRules.violations(withDraft(drafted, 300, new GameDraft(100, 250, turns)), true, CATALOG))
+                .isEmpty();
     }
 
     @Test
@@ -348,6 +565,28 @@ class GameRulesTest {
                         "draft.turns[1].hero", "draft.turns[2].hero.duplicate", "sides[0].bans[1].notDrafted");
         assertThat(GameRules.violations(withDraft(game(), null, new GameDraft(null, 50, List.of())), false, CATALOG))
                 .containsExactly("draft.lockedSecond.range");
+    }
+
+    /** A game with its draft: the bans of both sides in turn from the blue one, then their picks the same way. */
+    private static Game drafted() {
+        var turns = new ArrayList<DraftTurn>();
+        for (int ban = 0; ban < 4; ban++) {
+            turns.add(new DraftTurn(turns.size() + 1, DraftKind.BAN, Side.BLUE, selection(11 + ban), 110 + ban * 2));
+            turns.add(new DraftTurn(turns.size() + 1, DraftKind.BAN, Side.RED, selection(15 + ban), 111 + ban * 2));
+        }
+        for (int pick = 0; pick < 5; pick++) {
+            turns.add(new DraftTurn(turns.size() + 1, DraftKind.PICK, Side.BLUE, selection(1 + pick), 120 + pick * 2));
+            turns.add(new DraftTurn(turns.size() + 1, DraftKind.PICK, Side.RED, selection(6 + pick), 121 + pick * 2));
+        }
+        return withDraft(game(), 300, new GameDraft(100, 250, turns));
+    }
+
+    /** A drafted game whose blue side lists three of the four heroes it banned. */
+    private static Game withABanOnlyItsDraftNames() {
+        var drafted = drafted();
+        var blue = drafted.sides().getFirst();
+        return replaceSide(drafted, 0,
+                new GameSide(blue.side(), blue.teamId(), blue.bans().subList(0, 3), blue.participants()));
     }
 
     private static Game withDraft(Game game, Integer liveSecond, GameDraft draft) {
@@ -375,6 +614,23 @@ class GameRulesTest {
         var first = participant(original, 0, 0);
         return replaceParticipant(original, 0, 0, new Participant(first.playerId(), first.lane(), first.hero(),
                 first.spell(), null, null, snapshots, events, null));
+    }
+
+    private static Game withBuild(List<BuildStep> build) {
+        var original = game();
+        var first = participant(original, 0, 0);
+        return replaceParticipant(original, 0, 0, new Participant(first.playerId(), first.lane(), first.hero(),
+                first.spell(), null, null, List.of(), List.of(), null, null, build));
+    }
+
+    private static BuildStep step(Selection item, BuildPlace place) {
+        return new BuildStep(item, List.of(), place, null);
+    }
+
+    /** As many different items of one place, known by their names alone. */
+    private static List<BuildStep> steps(int count, BuildPlace place) {
+        return IntStream.rangeClosed(1, count).mapToObj(index -> step(new Selection(null, "Item " + index), place))
+                .toList();
     }
 
     private static Game withLoadouts(Loadout<ArcanaAllocation> arcana, Loadout<EnchantmentAllocation> enchantments) {
@@ -453,6 +709,12 @@ class GameRulesTest {
     private static Reference reference(int value, Integer tier, String color, String branch) {
         return new Reference(id(value), "entry-" + value, "Entry " + value, null, tier, color, branch,
                 id(value + 2000));
+    }
+
+    /** An item and the items its recipe names. */
+    private static Reference item(int value, Integer tier, int... recipe) {
+        return new Reference(id(value), "entry-" + value, "Entry " + value, null, tier, null, null, id(value + 2000),
+                IntStream.of(recipe).mapToObj(GameRulesTest::id).toList());
     }
 
     private static UUID id(int value) {

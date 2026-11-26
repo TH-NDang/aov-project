@@ -1,17 +1,18 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import type { EquipmentEvent, EquipmentSnapshot, GameContent } from "@aov/community-contracts"
 import {
   clusterEvents,
   clusterKills,
   eventSide,
   inventoryAt,
   killScoreAt,
-  leadEvent,
   seatStatsAt,
+  type ItemEvent,
   type TimelineEvent,
 } from "../src/features/esports/model/timeline"
 import {
-  eventRemoval,
+  moveEvent,
   readTimeline,
   upsertEvent,
   withPlayback,
@@ -50,6 +51,39 @@ test("inventory at a moment starts from the latest snapshot and never invents un
     "Trượng",
     "events before the snapshot are superseded",
   )
+})
+
+/** The first two slots of one player, seen at 5:00. */
+const seenAt300: EquipmentSnapshot[] = [
+  {
+    atSeconds: 300,
+    slots: [
+      { slot: 1, known: true, item: { id: "a", name: "Trượng" } },
+      { slot: 2, known: true, item: { id: "b", name: "Giày" } },
+    ],
+  },
+]
+
+test("a snapshot taken at the second asked for is the inventory of that second", () => {
+  assert.deepEqual(inventoryAt("BLUE:MID", 300, seenAt300, []).slice(0, 2), [
+    { id: "a", name: "Trượng" },
+    { id: "b", name: "Giày" },
+  ])
+})
+
+test("an item event at the second of a snapshot is already in it", () => {
+  const sold: TimelineEvent[] = [{ id: "s", kind: "ITEM", at: 300, seat: "BLUE:MID", action: "SELL", slot: 2 }]
+  assert.deepEqual(inventoryAt("BLUE:MID", 400, seenAt300, sold)[1], { id: "b", name: "Giày" })
+})
+
+test("a swap trades the items of its two slots", () => {
+  const swapped: TimelineEvent[] = [
+    { id: "w", kind: "ITEM", at: 350, seat: "BLUE:MID", action: "SWAP", slot: 1, toSlot: 2 },
+  ]
+  assert.deepEqual(inventoryAt("BLUE:MID", 400, seenAt300, swapped).slice(0, 2), [
+    { id: "b", name: "Giày" },
+    { id: "a", name: "Trượng" },
+  ])
 })
 
 test("kill score and KDA only count events up to the playhead", () => {
@@ -124,45 +158,94 @@ test("timeline moments round-trip through the API shape: items on participants, 
   assert.deepEqual(full.timeline?.pauses, [{ atSeconds: 300, durationSeconds: 60 }], "pauses survive event edits")
   assert.equal(readTimeline(full).filter((event) => event.kind === "ITEM").length, 4)
 
-  const replayed = withPlayback(full, { url: "https://youtu.be/R5rCsGqDJIg", startSecond: 95, pauses: [] })
+  const replayed = withPlayback(full, { startSecond: 95, pauses: [] })
   assert.equal(replayed.sourceTimestampSeconds, 95)
   assert.deepEqual(replayed.timeline?.pauses, [])
   assert.equal(replayed.timeline?.events.length, 2, "playback changes keep recorded moments")
 })
 
-test("a deleted moment comes back unchanged with its undo", () => {
-  const content = {
-    seriesId: "s",
-    number: 1,
-    region: "VN",
-    locale: "vi-VN",
-    sides: [
-      { side: "BLUE" as const, teamId: "a", bans: [], participants: [] },
-      { side: "RED" as const, teamId: "b", bans: [], participants: [] },
-    ],
-    timeline: { pauses: [], events: [] },
-  }
-  const kill: TimelineEvent = {
-    id: "kill-1",
-    kind: "KILL",
-    at: 312,
-    killer: "RED:JUNGLE",
-    victim: "BLUE:MID",
-    assists: [],
-  }
-  const note: TimelineEvent = { id: "note-1", kind: "NOTE", at: 200, title: "Gank", side: "RED" }
-  const recorded = writeTimeline(content, [kill, note])
+/** Every kind of an item event, with all that the service keeps of it. */
+const PURCHASES: EquipmentEvent[] = [
+  { atSeconds: 60, type: "BUY", item: { id: "boots", name: "Giày" }, fromSlot: 2, toSlot: 1, note: "Đổi với đồng đội" },
+  {
+    atSeconds: 200,
+    type: "UPGRADE",
+    item: { id: "loki", name: "Gươm Loki" },
+    replacedItem: { id: "blade", name: "Kiếm ngắn" },
+    fromSlot: 3,
+    toSlot: 4,
+  },
+  { atSeconds: 400, type: "SWAP", item: { id: "boots", name: "Giày" }, fromSlot: 1, toSlot: 6 },
+  {
+    atSeconds: 500,
+    type: "SELL",
+    item: { id: "boots", name: "Giày" },
+    replacedItem: { id: "loki", name: "Gươm Loki" },
+    fromSlot: 6,
+    toSlot: 2,
+  },
+]
 
-  const removal = eventRemoval(kill)
-  const removed = removal.apply(recorded)
-  const restored = removal.revert(removed)
+/** A game whose one player bought, built, moved and sold items. */
+const shopping = (): GameContent => ({
+  seriesId: "s",
+  number: 1,
+  region: "VN",
+  locale: "vi-VN",
+  sides: [
+    {
+      side: "BLUE",
+      teamId: "a",
+      bans: [],
+      participants: [
+        {
+          lane: "MID",
+          hero: { id: null, name: "Mid" },
+          spell: {},
+          arcana: { status: "UNKNOWN", entries: [] },
+          enchantments: { status: "UNKNOWN", entries: [] },
+          equipmentSnapshots: [],
+          equipmentEvents: structuredClone(PURCHASES),
+        },
+      ],
+    },
+    { side: "RED", teamId: "b", bans: [], participants: [] },
+  ],
+  timeline: { pauses: [], events: [] },
+})
+/** The item events of that player as they are sent. */
+const purchases = (content: GameContent): EquipmentEvent[] =>
+  JSON.parse(JSON.stringify(content.sides[0]!.participants[0]!.equipmentEvents))
+const itemAt = (content: GameContent, at: number) =>
+  readTimeline(content).find((event): event is ItemEvent => event.kind === "ITEM" && event.at === at)!
 
-  assert.equal(removal.text, "Đã xóa hạ gục lúc 5:12")
-  assert.deepEqual(
-    readTimeline(removed).map((event) => event.id),
-    ["note-1"],
-  )
-  assert.deepEqual(readTimeline(restored), readTimeline(recorded))
+test("saving a moment leaves every item event as it was recorded", () => {
+  const content = shopping()
+  const kill: TimelineEvent = { id: "k", kind: "KILL", at: 90, killer: "RED:MID", victim: "BLUE:MID", assists: [] }
+  assert.deepEqual(purchases(writeTimeline(content, upsertEvent(readTimeline(content), kill))), PURCHASES)
+})
+
+test("an item event that is corrected keeps what its form does not show", () => {
+  const content = shopping()
+  const built = itemAt(content, 200)
+  const corrected = { ...built, at: 230, slot: 5, item: { id: "spear", name: "Thương Longinus" }, note: "Nhìn nhầm" }
+  assert.deepEqual(purchases(writeTimeline(content, upsertEvent(readTimeline(content), corrected)))[1], {
+    atSeconds: 230,
+    type: "UPGRADE",
+    item: { id: "spear", name: "Thương Longinus" },
+    replacedItem: { id: "blade", name: "Kiếm ngắn" },
+    fromSlot: 3,
+    toSlot: 5,
+    note: "Nhìn nhầm",
+  })
+})
+
+test("an item event that turns out to be another action does not keep what only the first one had", () => {
+  const content = shopping()
+  const sold = { ...itemAt(content, 200), action: "SELL" as const }
+  const written = purchases(writeTimeline(content, upsertEvent(readTimeline(content), sold)))[1]!
+  assert.equal(written.replacedItem, undefined)
+  assert.deepEqual([written.type, written.fromSlot, written.toSlot], ["SELL", 4, undefined])
 })
 
 test("moments a few seconds apart form one teamfight, and per-side clustering keeps lanes apart", () => {
@@ -180,7 +263,6 @@ test("moments a few seconds apart form one teamfight, and per-side clustering ke
   )
   assert.deepEqual(clusterKills(groups[0]), { BLUE: 2, RED: 1 })
   assert.equal(groups[0].side, null, "a mixed fight has no single side")
-  assert.equal(leadEvent(groups[0]).kind, "KILL")
 
   const lanes = clusterEvents(fight, 5, (event) => (event.kind === "OBJECTIVE" ? "MID" : (eventSide(event) ?? "MID")))
   assert.deepEqual(
@@ -193,4 +275,42 @@ test("moments a few seconds apart form one teamfight, and per-side clustering ke
     ],
   )
   assert.equal(lanes.at(-1)?.lane, "MID", "objectives get their own row")
+})
+
+test("pauses are kept in the order they happen, however they were given", () => {
+  const given = [
+    { atSeconds: 600, durationSeconds: 30 },
+    { atSeconds: 200, durationSeconds: 60 },
+  ]
+  const { pauses } = withPlayback(shopping(), { pauses: given }).timeline!
+  assert.deepEqual(
+    pauses.map((pause) => pause.atSeconds),
+    [200, 600],
+  )
+})
+
+test("0:00 taken away leaves the game without one, not at the start of the video", () => {
+  const live: GameContent = { ...shopping(), sourceTimestampSeconds: 95 }
+  assert.equal(withPlayback(live, { startSecond: null }).sourceTimestampSeconds, undefined)
+})
+
+test("a moment moved before 0:00 stays at 0:00", () => {
+  const content: GameContent = {
+    ...shopping(),
+    timeline: { pauses: [], events: [{ id: "n", kind: "NOTE", atSeconds: 30, title: "Gank" }] },
+  }
+  assert.equal(moveEvent(content, "n", -5)!.timeline!.events[0]!.atSeconds, 0)
+})
+
+test("the note of a moment is written with it", () => {
+  const kill: TimelineEvent = {
+    id: "k",
+    kind: "KILL",
+    at: 90,
+    killer: "RED:MID",
+    victim: "BLUE:MID",
+    assists: [],
+    note: "Lật kèo",
+  }
+  assert.equal(writeTimeline(shopping(), [kill]).timeline!.events[0]!.note, "Lật kèo")
 })

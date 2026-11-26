@@ -8,14 +8,17 @@ import {
   chapterAt,
   chapterClock,
   chapterVideo,
+  gameLength,
   layoutChapters,
   seriesVideo,
   sourceOf,
+  stripRange,
 } from "../src/features/esports/model/series-vod"
 import { type TimelineEvent } from "../src/features/esports/model/timeline"
 import { moveEvent } from "../src/features/esports/model/timeline-io"
 import { gameToVideo, videoToGame, youtubeLinkTime, youtubeVideoId } from "../src/features/esports/model/vod"
 import { formatClock, parseClock } from "@/lib/clock"
+import { completeGame, seat } from "./fixtures/match-records"
 
 test("YouTube links are parsed strictly and keep their start time", () => {
   assert.equal(youtubeVideoId("https://youtu.be/R5rCsGqDJIg?si=abc"), "R5rCsGqDJIg")
@@ -55,12 +58,12 @@ test("broadcast chapters include match and game starts only for the same video",
   ]
   assert.deepEqual(broadcastChapters("R5rCsGqDJIg", `${url}?t=30`, games), [
     { id: "match-start", at: 30, label: "Bắt đầu trận" },
-    { id: "g1", at: 95, label: "Bắt đầu ván 1" },
-    { id: "g2", at: 1800, label: "Bắt đầu ván 2" },
+    { id: "g1", at: 95, label: "Vào trận ván 1" },
+    { id: "g2", at: 1800, label: "Vào trận ván 2" },
   ])
   assert.deepEqual(broadcastChapters("R5rCsGqDJIg", url, games), [
-    { id: "g1", at: 95, label: "Bắt đầu trận · Ván 1" },
-    { id: "g2", at: 1800, label: "Bắt đầu ván 2" },
+    { id: "g1", at: 95, label: "Bắt đầu trận, vào trận ván 1" },
+    { id: "g2", at: 1800, label: "Vào trận ván 2" },
   ])
 })
 
@@ -79,16 +82,17 @@ test("game and video clocks stay aligned across broadcast pauses", () => {
   assert.equal(parseClock("12:75"), null)
 })
 
-test("games of one broadcast become chapters on the video axis; unsynced games follow in order", () => {
-  const url = "https://youtu.be/R5rCsGqDJIg"
-  const game = (id: string, number: number, extra: Record<string, unknown>) => ({
-    id,
-    version: 1,
-    createdAt: "",
-    updatedAt: "",
-    missingFields: [],
-    content: { seriesId: "s", number, region: "VN", locale: "vi-VN", sides: [], ...extra },
-  })
+const url = "https://youtu.be/R5rCsGqDJIg"
+const game = (id: string, number: number, extra: Record<string, unknown>) => ({
+  id,
+  version: 1,
+  createdAt: "",
+  updatedAt: "",
+  missingFields: [],
+  content: { seriesId: "s", number, region: "VN", locale: "vi-VN", sides: [], ...extra },
+})
+
+test("games of one broadcast become chapters on the video axis; a game without a place in the video has none", () => {
   const games = [
     game("g2", 2, { sourceUrl: url, sourceTimestampSeconds: 2400, durationSeconds: 900 }),
     game("g1", 1, {
@@ -101,7 +105,7 @@ test("games of one broadcast become chapters on the video axis; unsynced games f
         events: [{ id: "k", atSeconds: 400, kind: "KILL", killer: { side: "RED", lane: "MID" }, assists: [] }],
       },
     }),
-    game("g3", 3, { durationSeconds: 1000 }),
+    game("g3", 3, { durationSeconds: 1000, sourceUrl: "https://youtu.be/abcdefghijk", sourceTimestampSeconds: 60 }),
   ]
   assert.deepEqual(seriesVideo({ code: "s", tournamentId: "t", teamAId: "a", teamBId: "b", bestOf: 5 }, games), {
     videoId: "R5rCsGqDJIg",
@@ -113,9 +117,14 @@ test("games of one broadcast become chapters on the video axis; unsynced games f
     [
       [1, 600, 1860, true],
       [2, 2400, 3300, true],
-      [3, 3600, 4600, false],
+      [3, 0, 0, false],
     ],
-    "game 1 ends after its pause; game 3 has no start in this video and is placed after game 2",
+    "game 1 ends after its pause; game 3 is in another video and has no position in this one",
+  )
+  assert.deepEqual(
+    [chapters[2]!.videoId, chapters[2]!.live, chapters[2]!.sync.startSecond],
+    ["abcdefghijk", false, null],
+    "it still says which video it is in",
   )
   assert.equal(chapterAt(chapters, 1000)?.number, 1)
   assert.equal(chapterAt(chapters, 2000), null, "the break between games belongs to no game")
@@ -123,7 +132,8 @@ test("games of one broadcast become chapters on the video axis; unsynced games f
   assert.equal(chapterClock(chapters[0], 1100), 440)
   assert.equal(chapterVideo(chapters[0], 400), 1060)
   assert.equal(axisLength(chapters, 7200), 7200)
-  assert.equal(axisLength(chapters, null), 4720)
+  assert.equal(axisLength(chapters, null), 3420)
+  assert.equal(chapterAt(chapters, 30), null, "a game without a place never takes the playhead")
 
   const copies = broadcastEvents(chapters)
   assert.deepEqual(
@@ -131,6 +141,60 @@ test("games of one broadcast become chapters on the video axis; unsynced games f
     [["g1|k", 1060]],
   )
   assert.deepEqual(sourceOf(copies[0].id), { gameId: "g1", id: "k" })
+})
+
+test("a live game without an end holds the video until the next game", () => {
+  const draft = { startSecond: 3000, lockedSecond: 3200, turns: [] }
+  const chapters = layoutChapters(
+    [
+      game("g1", 1, { sourceUrl: url, sourceTimestampSeconds: 600 }),
+      game("g2", 2, { sourceUrl: url, sourceTimestampSeconds: 3400, durationSeconds: 900, draft }),
+    ],
+    "R5rCsGqDJIg",
+  )
+  assert.deepEqual([chapters[0]!.ended, chapters[1]!.ended], [false, true])
+  assert.equal(chapterAt(chapters, 600 + 25 * 60)?.number, 1, "the estimated fifteen minutes do not end it")
+  assert.equal(chapterClock(chapters[0]!, 600 + 25 * 60), 25 * 60, "and its clock runs on")
+  assert.equal(chapterVideo(chapters[0]!, 25 * 60), 600 + 25 * 60)
+  assert.equal(chapterAt(chapters, 3000)?.number, 2, "the next game takes over at its draft")
+  assert.equal(chapterAt(chapters, 4400), null, "a game that ended does not hold the video after it")
+  assert.equal(chapterClock(chapters[1]!, 4400), 900, "and its clock stops at the end")
+})
+
+test("only moments of a game whose 0:00 is known stand on the axis", () => {
+  const events = [{ id: "k", atSeconds: 400, kind: "NOTE", title: "Steal" }]
+  const timeline = { pauses: [], events }
+  const draft = { startSecond: 100, lockedSecond: null, turns: [] }
+  const chapters = layoutChapters(
+    [
+      game("g1", 1, { sourceUrl: url, draft, timeline }),
+      game("g2", 2, { timeline }),
+      game("g3", 3, { sourceUrl: url, sourceTimestampSeconds: 3000, durationSeconds: 900, timeline }),
+    ],
+    "R5rCsGqDJIg",
+  )
+  assert.deepEqual(
+    broadcastEvents(chapters).map((event) => [event.id, event.at]),
+    [["g3|k", 3400]],
+  )
+})
+
+test("the strip is cut to the match in a video of a whole day, and only when every game has its place there", () => {
+  const placed = (id: string, number: number, start: number) =>
+    game(id, number, { sourceUrl: url, sourceTimestampSeconds: start, durationSeconds: 900 })
+  const chapters = layoutChapters([placed("g1", 1, 14000), placed("g2", 2, 17000)], "R5rCsGqDJIg")
+  assert.deepEqual(stripRange(chapters, 38200), { from: 13100, to: 18800, cut: true })
+  const long = layoutChapters([placed("g1", 1, 3000), placed("g2", 2, 17000)], "R5rCsGqDJIg")
+  assert.deepEqual(stripRange(long, 18900), { from: 0, to: 18900, cut: false }, "not under half of the video")
+  const begun = layoutChapters([placed("g1", 1, 1546)], "R5rCsGqDJIg")
+  assert.deepEqual(
+    stripRange(begun, 13504),
+    { from: 0, to: 13504, cut: false },
+    "the first game of a match's own video",
+  )
+  const missing = layoutChapters([placed("g1", 1, 14000), game("g2", 2, {})], "R5rCsGqDJIg")
+  assert.deepEqual(stripRange(missing, 38200), { from: 0, to: 38200, cut: false })
+  assert.deepEqual(stripRange([], 38200), { from: 0, to: 38200, cut: false })
 })
 
 test("a game's ban/pick phase sits before its start on the video axis and belongs to that game", () => {
@@ -249,4 +313,44 @@ test("a marker can only be dragged where the service would accept it", () => {
   )
   assert.equal(turned.sides, doc.content.sides, "line-ups and bans are not rebuilt by a change of second")
   assert.equal(moveTurn(doc.content, 9, 10), null)
+})
+
+test("a game whose length is not recorded lasts a minute past its last moment, and at least fifteen minutes", () => {
+  const { content } = game("g1", 1, {})
+  const late: TimelineEvent[] = [{ id: "n", kind: "NOTE", at: 1200, title: "Late" }]
+  assert.equal(gameLength(content, late), 1260)
+  assert.equal(gameLength(content, []), 900)
+})
+
+test("a video whose length is known ends the axis, though a game ends at its very end", () => {
+  const last = game("g1", 1, { sourceUrl: url, sourceTimestampSeconds: 2400, durationSeconds: 900 })
+  assert.equal(axisLength(layoutChapters([last], "R5rCsGqDJIg"), 3300), 3300)
+})
+
+test("a loadout mark of a game without its end may go up to the next game, not past it", () => {
+  const shown = seat(completeGame(1, "a"), "BLUE", "MID", { spellObservedAtSeconds: 30 })
+  const content = { ...shown.content, sourceUrl: url, sourceTimestampSeconds: 1000, durationSeconds: null }
+  const [running] = layoutChapters([{ ...shown, content }], "R5rCsGqDJIg")
+  const mark = { kind: "mark" as const, gameId: "g1", side: "BLUE" as const, part: "spell" as const, at: 30 }
+  assert.deepEqual(retimeRange(running!, mark, 5000, { nextFrom: 4000 }), { min: 1000, max: 3999 })
+})
+
+test("the ban/pick marks of a game that is not live yet stay before the next game", () => {
+  const turn = (order: number, atSecond: number) => ({
+    order,
+    kind: "BAN" as const,
+    side: "BLUE" as const,
+    hero: { id: null, name: `Hero ${order}` },
+    atSecond,
+  })
+  const drafting = (lockedSecond: number | null) => {
+    const draft = { startSecond: 100, lockedSecond, turns: [turn(1, 120), turn(2, 150)] }
+    return layoutChapters([game("g1", 1, { sourceUrl: url, draft })], "R5rCsGqDJIg")[0]!
+  }
+  const next = { nextFrom: 3000 }
+  assert.deepEqual(retimeRange(drafting(380), { kind: "draftLock", gameId: "g1" }, 5000, next), { min: 150, max: 2999 })
+  assert.deepEqual(retimeRange(drafting(null), { kind: "turn", gameId: "g1", order: 2 }, 5000, next), {
+    min: 120,
+    max: 2999,
+  })
 })

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { DocumentView, GameContent, SeriesContent } from "@aov/community-contracts"
-import { Crown, Loader2, Save, TriangleAlert } from "lucide-react"
+import { Check, Loader2, Save, TriangleAlert } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { cn } from "@aov/ui/lib/utils"
@@ -79,13 +79,13 @@ export function QuickGamesPanel({
         disabled={!!row.winner || save.isPending}
         onClick={() => pick(row.number, which)}
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-2 py-1.5 text-left disabled:opacity-60",
-          won ? "border-[var(--esp-gold)] bg-[var(--esp-gold-soft)]" : "hover:bg-muted",
+          "flex min-w-0 flex-1 items-center gap-1.5 rounded-lg border px-1.5 py-1.5 text-left disabled:opacity-60",
+          won ? "border-foreground bg-foreground/10 font-semibold" : "hover:bg-muted",
         )}
       >
         <TeamLogo team={view} size={24} />
         <span className="type-body min-w-0 flex-1 truncate">{view.shortName}</span>
-        {won && <Crown size={14} className="shrink-0 text-[var(--esp-gold-text)]" aria-hidden />}
+        {won && <Check size={14} className="shrink-0" aria-hidden />}
       </button>
     )
   }
@@ -100,9 +100,9 @@ export function QuickGamesPanel({
             {teamButton(row, "B")}
             <Input
               aria-label={`Thời lượng ván ${row.number}`}
-              placeholder="mm:ss"
+              placeholder="phút:giây"
               inputMode="numeric"
-              className="esp-num h-9 w-20 shrink-0 text-center"
+              className="esp-num h-9 w-20 shrink-0 px-1 text-center placeholder:text-sm"
               disabled={!!row.winner || save.isPending}
               aria-invalid={!!lengths[row.number]?.trim() && !length(row.number)}
               value={
@@ -129,7 +129,7 @@ export function QuickGamesPanel({
       <div className="flex items-center gap-2 border-t pt-3">
         <span className="type-meta esp-num flex-1">
           Đã chọn {tally.scoreA} – {tally.scoreB}
-          {result && ` · tỷ số ${result.scoreA} – ${result.scoreB}`}
+          {result && `, tỷ số ${result.scoreA} – ${result.scoreB}`}
         </span>
         <Button
           type="button"

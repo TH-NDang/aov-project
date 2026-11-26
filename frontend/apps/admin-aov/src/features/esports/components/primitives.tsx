@@ -7,7 +7,6 @@ import { CalendarClock, CircleHelp, Flag, Megaphone, Radio } from "lucide-react"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { initials, type IconRef, type TeamView } from "../model/game-view"
 import type { SlotState } from "../model/timeline"
-import { VIDEO_MARK } from "../model/vod"
 import { LANE_LABELS } from "@/lib/lanes"
 import { useThemedLogo } from "@/lib/themed-logo"
 
@@ -61,13 +60,16 @@ export function Monogram({
   )
 }
 
+/** Letters of 12px that fit beside each other in the place of a logo. */
+const lettersIn = (size: number) => (size < 20 ? 1 : size < 30 ? 2 : 3)
+
 export function TeamLogo({ team, size = 32, className }: { team?: TeamView; size?: number; className?: string }) {
   return (
     <Monogram
       url={team?.logoUrl}
       darkUrl={team?.logoDarkUrl}
       label={`Logo ${team?.name ?? "chưa xác định"}`}
-      text={team ? team.shortName.slice(0, 3) : "?"}
+      text={team ? team.shortName.slice(0, lettersIn(size)) : "?"}
       size={size}
       className={cn("rounded-md", className)}
     />
@@ -116,13 +118,11 @@ export function ItemSlot({
   item,
   iconUrl,
   size = 30,
-  changed,
   index,
 }: {
   item: SlotState
   iconUrl?: string | null
   size?: number
-  changed?: boolean
   index: number
 }) {
   const state = item === undefined ? "unknown" : item === null ? "empty" : "filled"
@@ -134,7 +134,6 @@ export function ItemSlot({
       className="esp-slot text-xs font-semibold text-muted-foreground"
       style={{ width: size, height: size }}
       data-state={state}
-      data-changed={changed || undefined}
       title={label}
       aria-label={label}
       role="img"
@@ -233,112 +232,7 @@ export function EmptyState({ icon, title, children }: { icon: ReactNode; title: 
   )
 }
 
-/** Each format has its own color so Bo1/Bo3/Bo5/Bo7 can be told apart at a glance. */
-const BEST_OF_TONES: Record<number, string> = {
-  1: "esp-bo-1",
-  3: "esp-bo-3",
-  5: "esp-bo-5",
-  7: "esp-bo-7",
-}
-export function BestOfBadge({ bestOf, className }: { bestOf: number; className?: string }) {
-  return (
-    <span
-      className={cn("esp-bo", BEST_OF_TONES[bestOf] ?? "esp-bo-1", className)}
-      title={
-        bestOf % 2
-          ? `Thể thức Bo${bestOf}: thắng ${Math.floor(bestOf / 2) + 1} ván trước`
-          : `Thể thức Bo${bestOf}: đấu đủ ${bestOf} ván`
-      }
-    >
-      BO{bestOf}
-    </span>
-  )
-}
-
-/** "First to N" progress: one bar per game needed to take the series. */
-export function WinPips({
-  wins = 0,
-  bestOf,
-  align = "start",
-  won,
-}: {
-  wins?: number
-  bestOf: number
-  align?: "start" | "end"
-  won?: boolean
-}) {
-  const needed = Math.floor(bestOf / 2) + 1
-  return (
-    <span
-      className={cn("inline-flex gap-0.5", align === "end" && "flex-row-reverse")}
-      aria-label={`${wins}/${needed} ván cần thắng`}
-    >
-      {Array.from({ length: needed }, (_, index) => (
-        <span key={index} className="esp-pip" data-on={index < wins || undefined} data-won={won || undefined} />
-      ))}
-    </span>
-  )
-}
-
-/** Explicit result label in the game's own end-screen wording, so the result never relies on color alone. */
-export function ResultTag({ won, className }: { won: boolean; className?: string }) {
-  return (
-    <span className={cn("esp-result", className)} data-won={won} title={won ? "Chiến thắng" : "Thất bại"}>
-      {won ? "Victory" : "Defeat"}
-    </span>
-  )
-}
-
 /** Lane glyph in the current text color. */
 export function LaneIcon({ lane, size = 16, className }: { lane: Lane; size?: number; className?: string }) {
   return <HeroLaneIcon lane={lane} size={size} label={LANE_LABELS[lane].name} className={className} />
-}
-
-/** Play triangle in text presentation, shared with the models. */
-export { VIDEO_MARK }
-
-/** The red video mark used beside broadcast positions. */
-export function VideoMark({ className }: { className?: string }) {
-  return (
-    <span aria-hidden="true" className={cn("text-destructive", className)}>
-      {VIDEO_MARK}
-    </span>
-  )
-}
-
-const TIME_TAGS = {
-  game: { label: "Giờ trong trận (đồng hồ game)", mark: "⏱" },
-  video: { label: "Vị trí trên video YouTube", mark: VIDEO_MARK },
-} as const
-
-/**
- * A clock that says which clock it is: ⏱ is the in-game timer shown on the game HUD, ▶ is the position in the
- * broadcast video. Every time shown next to a moment uses one of these so the two are never confused.
- */
-export function TimeTag({
-  kind,
-  seconds,
-  className,
-}: {
-  kind: keyof typeof TIME_TAGS
-  seconds: number | null | undefined
-  className?: string
-}) {
-  const total = Math.max(0, Math.floor(seconds ?? 0))
-  const hours = Math.floor(total / 3600)
-  const minutes = Math.floor((total % 3600) / 60)
-  const text = `${hours ? `${hours}:${String(minutes).padStart(2, "0")}` : minutes}:${String(total % 60).padStart(2, "0")}`
-  return (
-    <span
-      className={cn("esp-num inline-flex items-center gap-0.5 whitespace-nowrap", className)}
-      data-time={kind}
-      title={TIME_TAGS[kind].label}
-      aria-label={`${TIME_TAGS[kind].label} ${seconds == null ? "chưa rõ" : text}`}
-    >
-      <span aria-hidden="true" className={kind === "video" ? "text-[0.8em] text-destructive" : "text-[0.85em]"}>
-        {TIME_TAGS[kind].mark}
-      </span>
-      {seconds == null ? "--:--" : text}
-    </span>
-  )
 }

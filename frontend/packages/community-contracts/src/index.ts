@@ -252,11 +252,21 @@ export type EquipmentEvent = {
   toSlot?: number
   note?: string
 }
+/**
+ * What became of an item a player built: still held when the game ended, given up for another, or bought for a moment
+ * of the game, such as a revive, and no part of the build itself.
+ */
+export type BuildPlace = "KEPT" | "REPLACED" | "SITUATIONAL"
+/**
+ * An item of tier 2 or 3 a player built, in the order it was built; buying it again is no second step. `from` are the
+ * lower-tier items that went into it, `atSeconds` the game second it was held, where one is known.
+ */
+export type BuildStep = { item: Selection; from?: Selection[]; place: BuildPlace; atSeconds?: number | null }
 export type Participant = {
   playerId?: string | null
   lane: Lane
   hero: Selection
-  spell: Selection
+  spell?: Selection | null
   arcana: Loadout<ArcanaAllocation>
   enchantments: Loadout<EnchantmentAllocation>
   equipmentSnapshots: EquipmentSnapshot[]
@@ -264,6 +274,8 @@ export type Participant = {
   note?: string
   /** Game second the source showed the spell. */
   spellObservedAtSeconds?: number | null
+  /** The items the player built; empty while nobody wrote them down, so the last snapshot is read instead. */
+  build?: BuildStep[]
 }
 export type GameSide = { side: Side; teamId: string; bans: Selection[]; participants: Participant[] }
 /** A participant position inside one game, independent of the player who filled it. */
@@ -392,6 +404,8 @@ export type Reference = {
   color?: string | null
   branchCode?: string | null
   revisionId?: string | null
+  /** The items an item is made of, where the wiki has verified its recipe. */
+  components?: string[]
 }
 export type ResolvedContext = {
   region: string

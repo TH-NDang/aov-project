@@ -10,28 +10,48 @@ import tools.jackson.databind.ObjectReader;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The published games, cut down to their bans, picks and results. Native SQL because it takes parts of the jsonb
- * snapshots: {@code jsonb_to_record} unpacks each snapshot once, where one {@code ->} per part would unpack it again
- * every time.
+ * The published games, cut down to their bans, picks, builds and results. Native SQL because it takes parts of the
+ * jsonb snapshots: {@code jsonb_to_record} unpacks each snapshot once, where one {@code ->} per part would unpack it
+ * again every time.
  */
 @Repository
 public class PublishedLineups {
     /** A game belongs to a competition as the list of published games says: by the match frozen in its snapshot. */
     private static final String LINEUPS = """
-        SELECT CAST(jsonb_build_object('id', g.id, 'publishedAt', g.published_at, 'winner', content.winner,
+        SELECT CAST(jsonb_build_object('id', g.id, 'publishedAt', g.published_at, 'seriesId', content."seriesId",
+                      'number', content.number, 'winner', content.winner,
                       'durationSeconds', content."durationSeconds", 'mvpPlayerId', content."mvpPlayerId",
-                      'sides', (SELECT jsonb_agg(jsonb_build_object('side', s.side, 'bans', s.bans,
-                                         'picks', jsonb_path_query_array(s.participants, '$[*].hero')))
+                      'turns', content.draft->'turns',
+                      'players', (SELECT jsonb_object_agg(player.key, player.value->'nickname')
+                                    FROM jsonb_each(part.players) AS player),
+                      'sides', (SELECT jsonb_agg(jsonb_build_object('side', s.side, 'teamId', s."teamId",
+                                         'bans', s.bans, 'seats', (
+                                           SELECT jsonb_agg(jsonb_build_object('hero', p.hero, 'lane', p.lane,
+                                                    'playerId', p."playerId", 'spell', p.spell,
+                                                    'enchantments', p.enchantments->'entries', 'build', p.build,
+                                                    'inventory', (
+                                                      SELECT to_jsonb(e)
+                                                        FROM jsonb_to_recordset(p."equipmentSnapshots")
+                                                             AS e("atSeconds" integer, slots jsonb)
+                                                       ORDER BY e."atSeconds" DESC NULLS LAST
+                                                       LIMIT 1)))
+                                             FROM jsonb_to_recordset(s.participants)
+                                                  AS p(hero jsonb, lane text, "playerId" text, spell jsonb,
+                                                       enchantments jsonb, build jsonb,
+                                                       "equipmentSnapshots" jsonb))))
                                   FROM jsonb_to_recordset(content.sides)
-                                       AS s(side text, bans jsonb, participants jsonb)),
-                      'heroes', (SELECT jsonb_agg(jsonb_build_object('id', h.id, 'code', h.code, 'name', h.name,
-                                         'iconUrl', h."iconUrl"))
-                                   FROM jsonb_to_recordset(part.catalog->'heroes')
-                                        AS h(id text, code text, name text, "iconUrl" text))) AS text)
+                                       AS s(side text, "teamId" text, bans jsonb, participants jsonb)),
+                      'catalog', (SELECT jsonb_object_agg(kind, known)
+                                    FROM (SELECT kind, jsonb_agg(jsonb_build_object('id', k.id, 'code', k.code,
+                                                   'name', k.name, 'iconUrl', k."iconUrl", 'tier', k.tier)) AS known
+                                            FROM unnest(ARRAY['heroes', 'spells', 'enchantments', 'items']) AS kind
+                                           CROSS JOIN LATERAL jsonb_to_recordset(part.catalog->kind)
+                                                 AS k(id text, code text, name text, "iconUrl" text, tier integer)
+                                           GROUP BY kind) AS kinds)) AS text)
           FROM tournament.game g
-         CROSS JOIN LATERAL jsonb_to_record(g.published_snapshot) AS part(content jsonb, catalog jsonb)
-         CROSS JOIN LATERAL jsonb_to_record(part.content) AS content(winner text, "durationSeconds" integer,
-                      "mvpPlayerId" text, sides jsonb)
+         CROSS JOIN LATERAL jsonb_to_record(g.published_snapshot) AS part(content jsonb, catalog jsonb, players jsonb)
+         CROSS JOIN LATERAL jsonb_to_record(part.content) AS content("seriesId" text, number integer, winner text,
+                      "durationSeconds" integer, "mvpPlayerId" text, draft jsonb, sides jsonb)
          WHERE g.published_at IS NOT NULL
            AND g.published_snapshot->'series'->>'tournamentId' = CAST(:tournamentId AS text)
          ORDER BY g.published_at DESC, g.id

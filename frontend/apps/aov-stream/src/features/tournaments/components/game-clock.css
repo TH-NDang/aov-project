@@ -33,6 +33,9 @@
 .tn-clock-ticks {
   display: flex;
   gap: 4px;
+  /* Room for what the buttons answer to above and below themselves, which a row that scrolls would cut. */
+  margin-block: -4px;
+  padding-block: 4px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -46,11 +49,11 @@
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches 40px. */
 .tn-clock-ticks > button::before {
   content: "";
   position: absolute;
-  inset: -2px 0;
+  inset: -4px 0;
 }
 .tn-clock-ticks > button[aria-pressed="true"] {
   background: var(--hub-accent-soft);

@@ -1,0 +1,66 @@
+/* What was found: the sentence, then the score of the side asked about. */
+.tn-find-answer {
+  min-width: 0;
+}
+.tn-find-answer > h2 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 27px;
+  text-wrap: pretty;
+}
+.tn-find-answer > h2 > b {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tn-find-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 3px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 15px;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-find-score > span {
+  text-wrap: pretty;
+}
+.tn-find-score b {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+/* Long records become a bar, which needs a width to be a part of. */
+.tn-find-cells {
+  display: inline-grid;
+  min-width: 0;
+  max-width: 100%;
+}
+.tn-find-cells:has(> [data-fill]) {
+  width: 180px;
+}
+.tn-find-few,
+.tn-find-unseen,
+.tn-find-asked {
+  margin: 2px 0 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+  text-wrap: pretty;
+}
+.tn-find-asked {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 22px;
+}
+.tn-find-asked::first-letter {
+  text-transform: uppercase;
+}
+@media (max-width: 899.98px) {
+  .tn-find-score {
+    font-size: 14px;
+    line-height: 22px;
+  }
+}

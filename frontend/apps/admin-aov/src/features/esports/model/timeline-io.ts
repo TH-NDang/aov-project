@@ -7,16 +7,7 @@ import type {
   TimelineEvent as StoredEvent,
   VodPause,
 } from "@aov/community-contracts"
-import {
-  KIND_LABELS,
-  recordedItemEvents,
-  seatKey,
-  sortEvents,
-  type ItemEvent,
-  type SeatKey,
-  type TimelineEvent,
-} from "./timeline"
-import { formatClock } from "@/lib/clock"
+import { recordedItemEvents, seatKey, sortEvents, type ItemEvent, type SeatKey, type TimelineEvent } from "./timeline"
 
 const toKey = (seat?: Seat | null): SeatKey | undefined => (seat ? seatKey(seat.side, seat.lane) : undefined)
 const toSeat = (key?: SeatKey): Seat | null => {
@@ -74,16 +65,24 @@ function toStored(event: Exclude<TimelineEvent, ItemEvent>): StoredEvent {
   }
 }
 
+/** The slots of an item event under the names the game keeps them by. */
+function slotsOf({ action, slot, toSlot }: ItemEvent): Pick<EquipmentEvent, "fromSlot" | "toSlot"> {
+  if (action === "SELL") return { fromSlot: slot }
+  return action === "SWAP" ? { fromSlot: slot, toSlot } : { toSlot: slot }
+}
+
 function toEquipment(event: ItemEvent): EquipmentEvent {
-  const item = event.item ? { id: event.item.id ?? null, name: event.item.name } : undefined
-  const at = Math.round(event.at)
-  switch (event.action) {
-    case "SELL":
-      return { atSeconds: at, type: "SELL", item, fromSlot: event.slot, note: event.note }
-    case "SWAP":
-      return { atSeconds: at, type: "SWAP", fromSlot: event.slot, toSlot: event.toSlot, note: event.note }
-    default:
-      return { atSeconds: at, type: event.action, item, toSlot: event.slot, note: event.note }
+  // Every save writes all of them again, so what a moment does not carry must come from its own record. What is said of
+  // a purchase says nothing of the sale it was corrected to.
+  const kept = event.stored?.type === event.action ? event.stored : undefined
+  const item = event.item && event.action !== "SWAP" ? { id: event.item.id ?? null, name: event.item.name } : kept?.item
+  return {
+    ...kept,
+    atSeconds: Math.round(event.at),
+    type: event.action,
+    item,
+    ...slotsOf(event),
+    note: event.note,
   }
 }
 
@@ -110,13 +109,12 @@ export function writeTimeline(content: GameContent, events: TimelineEvent[]): Ga
   }
 }
 
-export type Playback = { url?: string; startSecond?: number | null; pauses?: VodPause[]; durationSeconds?: number }
+export type Playback = { startSecond?: number | null; pauses?: VodPause[]; durationSeconds?: number }
 
-/** Updates the broadcast link, game start, duration and pauses without touching recorded moments. */
+/** Updates the game start, duration and pauses without touching recorded moments. */
 export function withPlayback(content: GameContent, change: Playback): GameContent {
   return {
     ...content,
-    ...(change.url !== undefined ? { sourceUrl: change.url } : {}),
     ...(change.startSecond !== undefined ? { sourceTimestampSeconds: change.startSecond ?? undefined } : {}),
     ...(change.durationSeconds !== undefined ? { durationSeconds: change.durationSeconds } : {}),
     timeline: {
@@ -138,17 +136,4 @@ export function moveEvent(content: GameContent, id: string, gameSecond: number):
   const event = events.find((candidate) => candidate.id === id)
   if (!event) return null
   return writeTimeline(content, upsertEvent(events, { ...event, at: Math.max(0, Math.round(gameSecond)) }))
-}
-
-/** Removes one moment, with the change that puts it back: the match screen deletes at once and offers an undo. */
-export function eventRemoval(event: TimelineEvent) {
-  return {
-    text: `Đã xóa ${KIND_LABELS[event.kind].toLowerCase()} lúc ${formatClock(event.at)}`,
-    apply: (content: GameContent) =>
-      writeTimeline(
-        content,
-        readTimeline(content).filter((candidate) => candidate.id !== event.id),
-      ),
-    revert: (content: GameContent) => writeTimeline(content, upsertEvent(readTimeline(content), event)),
-  }
 }

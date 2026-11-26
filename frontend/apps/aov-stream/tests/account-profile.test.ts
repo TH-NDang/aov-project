@@ -9,7 +9,6 @@ import {
   profileError,
   profileRequest,
   sameDraft,
-  withCurrent,
   type UserProfile,
 } from "../src/lib/profile-model.ts"
 
@@ -163,9 +162,7 @@ test("browser language and time zone are suggested only before the first save", 
   assert.equal(initialDraft(unsaved, { languages: [], timeZone: "Mars/Olympus" }).timeZone, "Asia/Ho_Chi_Minh")
 })
 
-test("stored values stay selectable and initials fall back for an empty name", () => {
-  assert.deepEqual(withCurrent(["vi-VN", "en-US"], "ja-JP"), ["ja-JP", "vi-VN", "en-US"])
-  assert.deepEqual(withCurrent(["vi-VN", "en-US"], "en-US"), ["vi-VN", "en-US"])
+test("initials fall back for an empty name", () => {
   assert.equal(initials("Nguyễn Văn An"), "VA")
   assert.equal(initials("   "), "?")
 })

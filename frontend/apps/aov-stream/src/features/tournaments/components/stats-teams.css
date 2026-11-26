@@ -1,0 +1,18 @@
+.tn-clubs-part {
+  display: grid;
+  min-width: 0;
+  gap: 48px;
+}
+.tn-clubs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-clubs > li {
+  border-bottom: 1px solid var(--hub-border);
+}
+@media (max-width: 899.98px) {
+  .tn-clubs-part {
+    gap: 36px;
+  }
+}

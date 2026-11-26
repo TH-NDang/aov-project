@@ -81,25 +81,6 @@
   font-size: 14px;
 }
 
-/* ---------- Unfolding the rest of a list ---------- */
-.tn-more {
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  color: var(--hub-accent-strong);
-  font-size: 14px;
-  font-weight: 600;
-}
-.tn-more:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.tn-more > svg {
-  transform: rotate(90deg);
-}
-
 /* ---------- Page layouts ---------- */
 .tn-overview {
   display: grid;
@@ -342,6 +323,11 @@
   .tn-heading :is(h2, h3) {
     font-size: 18px;
     line-height: 24px;
+  }
+  /* The title takes the line beside its link, so a long note goes under the title and the link stays at the end. */
+  .tn-heading > :is(h2, h3) {
+    min-width: 0;
+    flex: 1 1 0;
   }
   .tn-heading :is(h2, h3) small {
     font-size: 13px;

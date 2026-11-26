@@ -4,18 +4,18 @@ import type { RecordingProgress, RecordingState } from "../../model/recording-pr
 
 export const STATE_LABELS: Record<RecordingState, string> = {
   recording: "Đang ghi",
-  ready: "Đủ dữ liệu · chờ xác nhận",
-  confirmed: "Đã xác nhận",
-  changed: "Có thay đổi chưa xác nhận",
+  ready: "Đủ dữ liệu, chờ xuất bản",
+  confirmed: "Đã xuất bản",
+  changed: "Đã sửa sau khi xuất bản",
 }
 
-/** Compact state marker for a game chip: what is recorded and whether it was confirmed. */
+/** Compact state marker for a game chip: what is recorded and whether it is published. */
 export function ProgressBadge({ progress, className }: { progress: RecordingProgress; className?: string }) {
   const { state, done, total } = progress
   return (
     <span
       data-state={state}
-      title={`${STATE_LABELS[state]} · ${done}/${total} mục bắt buộc`}
+      title={`${STATE_LABELS[state]}, ${done}/${total} mục cần ghi`}
       className={cn(
         "esp-num inline-flex items-center gap-0.5 rounded-full px-1.5 text-xs font-semibold",
         className,
@@ -32,7 +32,7 @@ export function ProgressBadge({ progress, className }: { progress: RecordingProg
       ) : (
         <CircleDot size={11} />
       )}
-      {state === "confirmed" ? "Đã xác nhận" : `${done}/${total}`}
+      {state === "confirmed" ? STATE_LABELS.confirmed : `${done}/${total}`}
     </span>
   )
 }

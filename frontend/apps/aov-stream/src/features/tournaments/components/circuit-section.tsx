@@ -5,6 +5,7 @@ import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { dayRange } from "../../../components/community-ui"
 import { CompetitionClock, CompetitionLogo, StatusBadge } from "../../../components/competition-card"
+import { FoldButton } from "../../../components/fold-button"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -18,7 +19,7 @@ import "./circuit-section.css"
 const PREVIEW = { wide: 6, compact: 4 }
 
 /** One season on a line: what it was, who won it and against whom; a season not over yet says where it stands. */
-export function Season({ row, within }: { row: SeasonRow; within: string | null }) {
+function Season({ row, within }: { row: SeasonRow; within: string | null }) {
   const { text } = useStreamLocale()
   const { view, part } = row
   const { tournament, plan } = view.content
@@ -120,17 +121,14 @@ export function CircuitSection({ group, open }: { group: CircuitGroup; open: boo
           <Season key={row.view.id} row={row} within={other ? null : name} />
         ))}
       </div>
-      {(hidden > 0 || (expanded && !open && rows.length > preview)) && (
-        <button ref={toggle} type="button" className="tn-more" aria-expanded={expanded} onClick={fold}>
-          {expanded
-            ? text("Thu gọn", "Show less")
-            : text(
-                `Xem thêm ${hidden} ${other ? "giải" : "mùa giải"}`,
-                `Show ${hidden} more ${other ? (hidden === 1 ? "tournament" : "tournaments") : hidden === 1 ? "season" : "seasons"}`,
-              )}
-          <StreamIcon name={expanded ? "chevronLeft" : "chevronRight"} size={14} />
-        </button>
-      )}
+      <FoldButton
+        ref={toggle}
+        fold={{ folds: !open && rows.length > preview, open: expanded, toggle: fold }}
+        more={text(
+          `Xem thêm ${hidden} ${other ? "giải" : "mùa giải"}`,
+          `Show ${hidden} more ${other ? (hidden === 1 ? "tournament" : "tournaments") : hidden === 1 ? "season" : "seasons"}`,
+        )}
+      />
     </section>
   )
 }

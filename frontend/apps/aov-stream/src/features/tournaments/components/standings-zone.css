@@ -1,0 +1,93 @@
+/* Where some places of a table lead, as a line inside it; the words never make the table wider. */
+.tn-zone > th {
+  max-width: 0;
+  height: var(--table-zone, 40px);
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+.tn-zone > th > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 0 0 var(--table-start, 0);
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.tn-zone > th > span::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--hub-border-strong);
+  opacity: 0.6;
+}
+.tn-zone :is(a, b) {
+  overflow: hidden;
+  color: var(--hub-text-soft);
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+.tn-zone a {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  text-underline-offset: 3px;
+  transition: color 120ms;
+}
+.tn-zone a > svg {
+  flex: none;
+  color: var(--hub-accent-strong);
+  opacity: 0.8;
+}
+.tn-zone a:is(:hover, :focus-visible) {
+  color: var(--hub-accent-strong);
+  text-decoration-line: underline;
+}
+.tn-zone small {
+  flex: none;
+  font-size: 13px;
+  font-weight: 400;
+}
+/* The mark of a zone: solid for the best way on, paler for the next ones, hollow for the way out. */
+.tn-zone i {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 3px;
+  background: var(--hub-accent);
+}
+.tn-zone i[data-mark="second"] {
+  background: color-mix(in srgb, var(--hub-accent) 54%, var(--hub-bg));
+}
+.tn-zone i[data-mark="other"] {
+  background: color-mix(in srgb, var(--hub-accent) 30%, var(--hub-bg));
+}
+.tn-zone i[data-mark="out"] {
+  border: 1.5px solid var(--hub-border-strong);
+  background: none;
+}
+@media (max-width: 899.98px) {
+  /* Long words take two lines of a phone. */
+  .tn-zone > th > span {
+    line-height: 17px;
+    text-wrap: balance;
+  }
+  .tn-zone small {
+    white-space: nowrap;
+  }
+  /* The words keep a target of their own, as tall as the line lets them. */
+  .tn-zone a {
+    min-height: 40px;
+    margin-block: -10px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-zone i {
+    forced-color-adjust: none;
+  }
+}

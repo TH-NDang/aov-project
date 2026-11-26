@@ -1,8 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import type { GameContent, Lane, Participant, Side } from "@aov/community-contracts"
+import { DRAFT_ORDER } from "../src/features/esports/model/draft"
+import { recordingProgress } from "../src/features/esports/model/recording-progress"
+import { completeGame, seat } from "./fixtures/match-records"
 
-test("recording progress separates required data, source-dependent loadouts and the confirmed state", async () => {
-  const { recordingProgress } = await import("../src/features/esports/model/recording-progress")
+test("recording progress separates required data, source-dependent loadouts and the confirmed state", () => {
   const pick = (name: string) => ({ id: null, name })
   const seat = (lane: string, index: number, extra: Record<string, unknown> = {}) => ({
     playerId: `p${index}`,
@@ -75,7 +78,7 @@ test("recording progress separates required data, source-dependent loadouts and 
   assert.equal(partial.steps.find((step) => step.id === "checks")?.status, "todo")
   assert.equal(
     partial.steps.find((step) => step.id === "arcana")?.detail,
-    "1 một phần · 4 không hiển thị · 5 chưa ghi · 1 có mốc",
+    "1 một phần, 4 không hiển thị, 5 chưa ghi, 1 có mốc",
   )
 
   assert.equal(recordingProgress(entry({ publishedAt: "2026-10-29T01:00:00Z" })).state, "confirmed")
@@ -84,6 +87,73 @@ test("recording progress separates required data, source-dependent loadouts and 
     "changed",
     "edits after confirming wait for a new confirmation",
   )
+})
+
+/** A complete game whose given seats have items, and what its items step says. */
+const itemsStep = (seats: [Side, Lane, Partial<Participant>][]) => {
+  const entry = seats.reduce((game, [side, lane, change]) => seat(game, side, lane, change), completeGame(1, "a"))
+  const progress = recordingProgress(entry)
+  return { progress, step: progress.steps.find((step) => step.id === "items")! }
+}
+const list: Partial<Participant> = { build: [{ item: { id: null, name: "Thánh kiếm" }, place: "REPLACED" }] }
+const moment = (item: string | null): Partial<Participant> => ({
+  equipmentSnapshots: [{ atSeconds: 900, slots: [{ slot: 1, known: true, item: item ? { name: item } : null }] }],
+})
+
+test("the items step counts the players with a list and those whose last moment is read instead", () => {
+  const { step } = itemsStep([
+    ["BLUE", "TOP", list],
+    ["BLUE", "MID", list],
+    ["RED", "TOP", moment("Thánh kiếm")],
+  ])
+  assert.equal(step.detail, "3/10, 1 đọc từ mốc")
+  assert.equal(step.status, "partial")
+})
+
+test("a moment of the middle of the game is no record of what its player ended with", () => {
+  const early = moment("Thánh kiếm").equipmentSnapshots!.map((snapshot) => ({ ...snapshot, atSeconds: 500 }))
+  const { step } = itemsStep([["BLUE", "TOP", { equipmentSnapshots: early }]])
+  assert.equal(step.detail, "0/10")
+})
+
+test("a moment that shows an empty inventory is no record of items", () => {
+  const { step } = itemsStep([["BLUE", "TOP", moment(null)]])
+  assert.equal(step.detail, "0/10")
+  assert.equal(step.status, "todo")
+})
+
+test("items nobody recorded hold no game back and are no part of a complete record", () => {
+  const { progress, step } = itemsStep([])
+  assert.equal(step.required, false)
+  assert.equal(progress.state, "ready")
+  assert.equal(progress.publishable, true)
+})
+
+/** One step of a game that has everything publishing asks for, and more. */
+const stepOf = (id: string, change: Partial<GameContent>) => {
+  const complete = completeGame(1, "a")
+  const progress = recordingProgress({ ...complete, content: { ...complete.content, ...change } })
+  return progress.steps.find((step) => step.id === id)!
+}
+
+test("a game saved within two seconds of its publication is still the copy that was published", () => {
+  const publishedAt = "2026-09-02T00:00:00.000Z"
+  const progress = recordingProgress(completeGame(1, "a", { publishedAt, updatedAt: "2026-09-02T00:00:01.500Z" }))
+  assert.equal(progress.state, "confirmed")
+})
+
+test("eighteen turns are a recorded draft only once the line-ups are locked", () => {
+  const turns = DRAFT_ORDER.map((turn, index) => ({
+    ...turn,
+    order: index + 1,
+    hero: { id: null, name: `hero ${index}` },
+    atSecond: 600 + index * 10,
+  }))
+  assert.equal(stepOf("draft", { draft: { startSecond: 600, lockedSecond: null, turns } }).status, "partial")
+})
+
+test("0:00 without a video is no place in one", () => {
+  assert.equal(stepOf("video", { sourceTimestampSeconds: 1000 }).status, "todo")
 })
 
 test("a match lists what it still needs: score, missing games, video and each game's gaps", async () => {
@@ -150,11 +220,20 @@ test("a match lists what it still needs: score, missing games, video and each ga
   )
   assert.equal(played.gaps[1]!.gameId, "g2", "a game's gap opens that game")
 
+  const publishedWithGap = matchRecording(series({ result: { scoreA: 1, scoreB: 0 }, bestOf: 1 }), [
+    game(1, { publishedAt: "2026-10-29T01:00:00Z" }, false),
+  ])
+  assert.deepEqual(
+    publishedWithGap.gaps.map((gap) => gap.text),
+    ["Ván 1: thiếu phụ trợ"],
+    "a game published with something unknown still asks for it",
+  )
+
   const waiting = matchRecording(series({ result: { scoreA: 1, scoreB: 0 }, bestOf: 1 }), [game(1)])
   assert.equal(waiting.state, "unconfirmed")
   assert.deepEqual(
     waiting.gaps.map((gap) => gap.text),
-    ["Ván 1 chờ xác nhận"],
+    ["Ván 1 chờ xuất bản"],
   )
 
   const done = matchRecording(series({ result: { scoreA: 1, scoreB: 0 }, bestOf: 1 }), [
@@ -169,7 +248,7 @@ test("a match lists what it still needs: score, missing games, video and each ga
   )
   assert.deepEqual(
     noScore.gaps.map((gap) => gap.text),
-    ["Chưa có tỉ số trận", "Chưa gắn video"],
+    ["Chưa có tỷ số trận", "Chưa gắn video"],
     "a match that should have been played asks for its score and video",
   )
 })

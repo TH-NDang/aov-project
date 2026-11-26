@@ -1,0 +1,59 @@
+/* The story of a match on a phone: the games as tabs over the line of the one being watched. */
+.tn-story-games {
+  display: grid;
+  height: 98px;
+  gap: 6px;
+  padding: 8px 12px 10px;
+  color: var(--hub-text);
+}
+.tn-story-list {
+  --stream-image-size: 16px;
+  --stream-image-radius: 4px;
+  display: flex;
+  min-width: 0;
+  height: 40px;
+  gap: 4px;
+  margin-left: 26px;
+  transition: opacity 120ms 60ms;
+}
+.tn-story-games:has(.tn-story-readout) > .tn-story-list {
+  opacity: 0;
+  transition-delay: 0s;
+}
+.tn-story-list > * {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 6%);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.tn-story-list > [aria-current] {
+  min-width: max-content;
+  flex-grow: 1.7;
+  gap: 6px;
+  padding-inline: 6px;
+  background: color-mix(in srgb, var(--aov-stream-lavender) 24%, var(--aov-stream-night));
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-story-staff {
+  display: flex;
+  min-width: 0;
+}
+@media (forced-colors: active) {
+  .tn-story-list > * {
+    border: 1px solid CanvasText;
+  }
+  .tn-story-list > [aria-current] {
+    border-color: Highlight;
+    text-decoration: underline;
+  }
+}

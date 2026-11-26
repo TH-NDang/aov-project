@@ -11,6 +11,13 @@
   --hub-text-soft: var(--aov-stream-text-soft);
   --hub-muted: var(--aov-stream-text-muted);
   --hub-hover: var(--aov-stream-indigo);
+  --hub-sunken: var(--aov-stream-night);
+  --hub-blue: var(--aov-stream-blue);
+  --hub-red: var(--aov-stream-red);
+  --hub-success: var(--aov-stream-green);
+  --hub-danger: var(--aov-stream-rose);
+  --hub-border: rgb(255 255 255 / 12%);
+  --hub-border-strong: rgb(255 255 255 / 26%);
   --hub-plate: var(--aov-stream-indigo);
   --hub-on-plate: var(--aov-stream-text-muted);
   --hub-logo-light: none;
@@ -51,12 +58,23 @@
   inset: 0;
   overflow: hidden;
 }
-/* A floor of shade keeps text readable over a pale logo's light. */
+/* A floor of shade keeps text readable over a pale logo's light; words all over a stage ask for more of it. */
 .tn-stage-lights::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, rgb(18 18 32 / 22%), rgb(18 18 32 / 60%));
+}
+/* A head carries the small words of the trail along its top, where that floor is thinnest. */
+.tn-stage[data-bleeds] > .tn-stage-lights::after {
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--aov-stream-night) 44%, transparent), transparent 120px),
+    linear-gradient(to bottom, rgb(18 18 32 / 22%), rgb(18 18 32 / 60%));
+}
+.tn-stage[data-shaded] > .tn-stage-lights::after {
+  background:
+    linear-gradient(rgb(18 18 32 / 42%), rgb(18 18 32 / 42%)),
+    linear-gradient(to bottom, rgb(18 18 32 / 22%), rgb(18 18 32 / 60%));
 }
 /* Drawn small and scaled up: the blur then costs a fraction of what it would at full size. */
 .tn-stage-light {

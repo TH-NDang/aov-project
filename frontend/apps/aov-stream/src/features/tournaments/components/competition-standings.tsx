@@ -1,25 +1,38 @@
+import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import type { CompetitionView } from "@aov/community-contracts"
 import { useStreamLocale } from "../../../components/stream-locale"
-import { codeName, playedOrder, STAGE_FORMAT_NAMES } from "../../../lib/competition-model"
+import { codeName, STAGE_FORMAT_NAMES } from "../../../lib/competition-model"
+import { gameFeed } from "../../../lib/game-feed"
 import { stageName } from "../../../lib/match-labels"
-import { allPlayed } from "../../../lib/standings-model"
+import { shownStages, teamOrder } from "../../../lib/standings-order"
+import { lineupsQuery } from "../../../lib/tournament-api"
+import { useHeldPlace } from "../../../lib/use-held-place"
+import { useAskedStage } from "./asked-stage"
 import { Bracket } from "./bracket"
 import { FinalRanking } from "./final-ranking"
+import { useStandingsAddress } from "./standings-address"
+import { StandingsStage } from "./standings-stage"
 import { Section } from "./section"
-import { StandingsTable } from "./standings-table"
+import { TeamFollow } from "./team-follow"
 
-/** Every stage with its table or its bracket: the latest stage first, since it decides. */
+/** Every stage with its table or its bracket. One team can be followed through them all, and the address says which. */
 export function CompetitionStandings({ view }: { view: CompetitionView }) {
   const { text } = useStreamLocale()
-  const { plan, standings } = view.content
-  const stages = playedOrder(
-    plan.stages.filter((stage) => plan.matches.some((match) => match.stageCode === stage.code)),
-    plan.matches,
-  ).reverse()
-  const shown = stages.flatMap((stage) => {
-    const table = standings.find((item) => item.stageCode === stage.code)
-    return stage.format !== "ROUND_ROBIN" || table ? [{ stage, table }] : []
-  })
+  const { team, follow } = useStandingsAddress()
+  const lineups = useQuery(lineupsQuery(view.id))
+  const feed = useMemo(() => (lineups.data?.games.length ? gameFeed(view, lineups.data) : null), [view, lineups.data])
+  const shown = useMemo(() => shownStages(view), [view])
+  const teams = useMemo(() => teamOrder(view, shown), [view, shown])
+  const [hinted, setHinted] = useState<string | null>(null)
+  const followed = team && teams.includes(team) ? team : null
+  // The way of the team appears under the bracket, over the row that was pressed.
+  const hold = useHeldPlace(followed)
+  const toggle = (id: string, row: Element) => {
+    hold(row)
+    follow(followed === id ? null : id)
+  }
+  useAskedStage()
   if (!shown.length)
     return (
       <div className="hub-state">
@@ -32,23 +45,36 @@ export function CompetitionStandings({ view }: { view: CompetitionView }) {
         </p>
       </div>
     )
+  const first = shown.find(({ stepped }) => stepped)?.stage.code
   return (
     <div className="tn-stack">
-      {shown.map(({ stage, table }) => (
-        <Section
-          key={stage.code}
-          title={stageName(stage.name)}
-          note={
-            table
-              ? table.complete || allPlayed(view, table)
-                ? text("Đã hoàn tất", "Final")
-                : text("Tạm tính", "Provisional")
-              : codeName(STAGE_FORMAT_NAMES, stage.format, text)
-          }
-        >
-          {table ? <StandingsTable view={view} table={table} /> : <Bracket view={view} stage={stage} />}
-        </Section>
-      ))}
+      {teams.length > 1 && (
+        <TeamFollow view={view} teams={teams} followed={followed} onFollow={follow} onPoint={setHinted} />
+      )}
+      {shown.map(({ stage, table, stepped }) =>
+        table ? (
+          <StandingsStage
+            key={stage.code}
+            view={view}
+            stage={stage}
+            table={table}
+            stepped={stepped}
+            first={stage.code === first}
+            feed={feed}
+            followed={followed}
+            hinted={hinted}
+            onFollow={toggle}
+          />
+        ) : (
+          <Section
+            key={stage.code}
+            title={stageName(stage.name)}
+            note={codeName(STAGE_FORMAT_NAMES, stage.format, text)}
+          >
+            <Bracket view={view} stage={stage} followed={followed} hinted={hinted} />
+          </Section>
+        ),
+      )}
       <FinalRanking view={view} />
     </div>
   )

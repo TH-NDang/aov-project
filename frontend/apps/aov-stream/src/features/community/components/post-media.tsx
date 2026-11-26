@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { watch } from "../../../components/watch-session"
 import { videoEmbed, videoPoster, type VideoEmbed } from "../model/post-media-model"
 import { PostViewer } from "./post-viewer"
 import "./post-media.css"
@@ -37,7 +38,10 @@ export function PostVideo({ url, title }: { url: string; title: string }) {
             type="button"
             className="cp-video-poster"
             aria-label={text(`Phát video: ${title}`, `Play video: ${title}`)}
-            onClick={() => setPlaying(true)}
+            onClick={() => {
+              watch.pause()
+              setPlaying(true)
+            }}
           >
             <Poster embed={embed} />
             <span className="cp-video-play" aria-hidden="true">

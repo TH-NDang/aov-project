@@ -11,12 +11,20 @@
   flex-direction: column;
   gap: 14px;
 }
+/* The room of the match, in place of its head. */
+.tn-match-room {
+  min-width: 0;
+}
 .tn-match-page[aria-busy="true"] > :not(.tn-match-top) {
   opacity: 0.5;
 }
 .tn-duel-skeleton {
   height: 260px;
   border-radius: var(--hub-radius);
+}
+/* While the match is on its way the page is as tall as the window, so the footer waits under it and does not jump. */
+.tn-match-page:has(> .tn-duel-skeleton) {
+  min-height: 100svh;
 }
 /* Where a game's record comes from: there for who asks, out of the way of who reads. */
 .tn-notes {
@@ -25,13 +33,18 @@
   font-size: 13px;
   line-height: 20px;
 }
+/* Laid out as a line, the summary has no marker; its chevron says that it opens, and turns once it is open. */
 .tn-notes > summary {
   display: inline-flex;
   min-height: 36px;
   align-items: center;
+  gap: 6px;
   color: var(--hub-text-soft);
   font-weight: 600;
   cursor: pointer;
+}
+.tn-notes[open] > summary > svg {
+  transform: rotate(180deg);
 }
 .tn-notes > p {
   margin: 0 0 4px;

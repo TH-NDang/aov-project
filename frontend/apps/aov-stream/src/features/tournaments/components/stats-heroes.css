@@ -1,0 +1,151 @@
+.tn-heroes,
+.tn-heroes-list {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.tn-heroes {
+  gap: 24px;
+}
+.tn-heroes-list {
+  align-content: start;
+  gap: 16px;
+}
+/* A list narrowed to a few heroes still fills the window down to the foot, so what narrows it stays where it is. */
+.tn-heroes-list[data-narrowed] {
+  min-height: calc(100svh - 280px);
+}
+.tn-heroes-bar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+.tn-heroes-search {
+  display: flex;
+  width: 240px;
+  min-width: 0;
+  height: 40px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--hub-text) 7%, transparent);
+  color: var(--hub-muted);
+}
+.tn-heroes-search:focus-within {
+  outline: 2px solid var(--hub-accent);
+}
+.tn-heroes-search > svg {
+  flex: none;
+}
+.tn-heroes-search > input {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--hub-text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  /* The pill draws the one ring; the field inside it draws none of its own. */
+  box-shadow: none;
+}
+/* The pill is a tinted ground, where the muted tone is too pale to read. */
+.tn-heroes-search > input::placeholder {
+  color: var(--hub-text-soft);
+  opacity: 1;
+}
+.tn-heroes-views {
+  margin-left: auto;
+}
+/* What orders the heroes, and at the end of the line what the parts of a bar mean. */
+.tn-heroes-orders {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+}
+.tn-heroes-orders > p {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-heroes-none {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 15px;
+  line-height: 22px;
+}
+.tn-heroes-none > a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-heroes-none > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-heroes-lane,
+.tn-heroes-view {
+  display: inline-flex;
+  min-height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--hub-text) 7%, transparent);
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-heroes-lane {
+  padding: 0 14px;
+}
+.tn-heroes-lane > svg:last-child {
+  color: var(--hub-muted);
+  transform: rotate(90deg);
+}
+.tn-heroes-view {
+  width: 40px;
+}
+@media (max-width: 899.98px) {
+  .tn-heroes {
+    gap: 20px;
+  }
+  .tn-heroes-list {
+    gap: 12px;
+  }
+  .tn-heroes-bar {
+    gap: 8px;
+  }
+  .tn-heroes-search {
+    width: auto;
+    flex: 1;
+  }
+  .tn-heroes-search > input {
+    font-size: 16px;
+  }
+  /* The meaning of the bar has a line of its own. */
+  .tn-heroes-orders {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+}

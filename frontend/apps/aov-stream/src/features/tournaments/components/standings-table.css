@@ -9,12 +9,33 @@
 }
 .tn-table-wrap {
   overflow-x: auto;
+  container-type: inline-size;
   border-radius: var(--hub-radius-sm);
   background: var(--hub-surface);
 }
+/* What the order of a table rests on, under it. */
+.tn-tables-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+/* Every figure has a column of its own width; the team takes what is left, and a name too long for it is cut. */
 .tn-table {
+  --rank: 64px;
+  --moved: 34px;
+  --form: 92px;
+  --record: 88px;
+  --games: 104px;
+  --diff: 78px;
+  --points: 92px;
+  --pad: 12px;
+  --table-start: 16px;
+  --table-end: 20px;
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
@@ -26,51 +47,76 @@
   line-height: 22px;
   text-align: left;
 }
-.tn-table th,
-.tn-table td {
-  padding: 10px 12px;
+.tn-table abbr {
+  text-decoration: none;
+}
+.tn-table thead th,
+.tn-table tr[data-team] > * {
+  padding: 10px var(--pad);
   border-bottom: 1px solid var(--hub-border);
   text-align: right;
   white-space: nowrap;
-}
-.tn-table :is(th, td):last-child {
-  padding-right: 20px;
-}
-.tn-table tbody tr:last-child > * {
-  border-bottom: 0;
 }
 .tn-table thead th {
   color: var(--hub-muted);
   font-size: 13px;
   font-weight: 500;
 }
-.tn-table abbr {
-  text-decoration: none;
+.tn-table tbody:last-child > tr:last-child > * {
+  border-bottom: 0;
 }
-.tn-table tbody tr:not(.tn-table-line):hover {
+.tn-table tr[data-team]:hover {
   background: var(--hub-hover);
 }
-/* What the order of the table rests on, under it. */
-.tn-tables-note {
-  grid-column: 1 / -1;
-  margin: -6px 0 0;
-  color: var(--hub-muted);
-  font-size: 13px;
-  line-height: 18px;
-}
-.tn-table :is(th, td).tn-rank {
-  width: 64px;
-  padding-inline: 16px 4px;
-  color: var(--hub-muted);
+.tn-table tr > .tn-table-rank {
+  min-width: var(--rank);
+  padding-inline: var(--table-start) 4px;
   text-align: center;
 }
-.tn-table tbody .tn-rank {
+.tn-table tbody .tn-table-rank {
   font-size: 16px;
   font-weight: 700;
 }
-.tn-table tr[data-qualified] .tn-rank {
-  color: var(--hub-success);
+.tn-table tr > .tn-table-moved {
+  min-width: var(--moved);
+  padding-inline: 2px 0;
+  text-align: left;
 }
+.tn-table tr > .tn-table-team {
+  width: 100%;
+  max-width: 0;
+  text-align: left;
+}
+.tn-table tr > .tn-table-form {
+  min-width: var(--form);
+}
+.tn-table-form > span {
+  display: flex;
+  justify-content: flex-end;
+}
+.tn-table tr > .tn-table-record {
+  min-width: var(--record);
+}
+.tn-table tr > .tn-table-games {
+  min-width: var(--games);
+}
+.tn-table tr > .tn-table-diff {
+  min-width: var(--diff);
+}
+.tn-table tr > .tn-table-points {
+  min-width: var(--points);
+  padding-right: var(--table-end);
+}
+.tn-table tr[data-team] > .tn-table-points {
+  font-size: 17px;
+  font-weight: 700;
+}
+/* Who is out steps back from those that go on. */
+.tn-table tr[data-out] > :is(.tn-table-rank, .tn-table-team) {
+  color: var(--hub-muted);
+}
+
+/* ---------- As a card ---------- */
 /* The first three stand on a wash of their medal, the leader in a taller line with a larger crest and name. */
 .tn-table tr[data-medal] {
   --medal: var(--aov-medal-bronze);
@@ -81,103 +127,154 @@
 }
 .tn-table tr[data-medal="gold"] {
   --medal: var(--aov-medal-gold);
+  --team-crest: 44px;
+  --team-size: 17px;
 }
-.tn-table tr[data-medal] > .tn-rank {
+.tn-table tr[data-medal] > .tn-table-rank {
   box-shadow: inset 3px 0 var(--medal);
 }
 .tn-table tr[data-medal="gold"] > * {
   padding-block: 14px;
 }
-.tn-table tr[data-medal="gold"] .tn-team {
-  --stream-image-size: 44px;
-  font-size: 17px;
-}
-.tn-table tr[data-medal="gold"] td > strong {
+.tn-table tr[data-medal="gold"] > .tn-table-points {
   font-size: 20px;
 }
-.tn-table :is(thead th:nth-child(2), tbody th) {
-  text-align: left;
+
+/* ---------- On the standings tab ---------- */
+/*
+ * Rows and headings of fixed heights on the page itself: the lines of the race end in the middle of the rows, which
+ * standings-race.tsx draws with the same numbers.
+ */
+.tn-table[data-look="race"] {
+  --rank: 50px;
+  --form: max(86px, 11cqi);
+  --record: max(76px, 10cqi);
+  --games: max(84px, 11cqi);
+  --diff: max(62px, 8.5cqi);
+  --points: max(72px, 9cqi);
+  --table-start: 0px;
+  --table-end: 14px;
+  --table-head: 32px;
+  --table-row: 52px;
+  --table-zone: 34px;
+  --team-crest: 30px;
 }
-.tn-table tbody th {
-  font-weight: 700;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
-.tn-table td > strong {
-  font-size: 17px;
-  font-weight: 700;
-}
-.tn-team {
-  --stream-image-size: 36px;
-  --stream-image-radius: var(--aov-radius-control);
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
-}
-.tn-team-name {
-  display: grid;
-  min-width: 0;
-}
-.tn-team-name > small {
-  color: var(--hub-muted);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 16px;
-}
-.tn-team a:hover {
-  color: var(--hub-accent-strong);
-}
-/* The line between the places that go on and the others, with what it means written on it. */
-.tn-table .tn-table-line > td {
-  padding: 0;
+.tn-table[data-look="race"] thead th {
+  height: var(--table-head);
+  padding-block: 0;
   border-bottom: 0;
-  text-align: left;
 }
-.tn-table-line span {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: -1px;
-  padding: 4px 0 4px 16px;
-  color: var(--hub-success);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
+.tn-table[data-look="race"] tr[data-team] {
+  cursor: pointer;
 }
-.tn-table-line span::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: var(--hub-success);
+.tn-table[data-look="race"] tr[data-team] > * {
+  height: var(--table-row);
+  padding-block: 0;
 }
-@media (max-width: 899.98px) {
-  .tn-wide-only {
+/* The heading after the last row of a zone brings a line of its own. */
+.tn-table[data-look="race"] tbody > tr:last-child > * {
+  border-bottom: 0;
+}
+.tn-table[data-look="race"] tr > .tn-table-rank {
+  padding-inline: 0;
+}
+.tn-table[data-look="race"] tr > .tn-table-team {
+  padding-inline: 0 8px;
+}
+.tn-table[data-look="race"] tr[data-lit] {
+  background: var(--hub-hover);
+}
+.tn-table[data-look="race"] tr[data-followed] {
+  background: var(--hub-accent-soft);
+}
+.tn-table[data-look="race"] tr[data-followed] > .tn-table-rank {
+  box-shadow: inset 3px 0 var(--hub-accent);
+}
+.tn-table[data-look="race"] tr[data-followed] > :is(.tn-table-rank, .tn-table-team) {
+  color: var(--hub-text);
+}
+/* Beside its race or another group, and on a phone, there is no room for the games, for wide figures, for the form. */
+@container (max-width: 729.98px) {
+  .tn-table .tn-table-games {
     display: none;
   }
+}
+@container (max-width: 659.98px) {
+  .tn-table[data-look="race"] {
+    --rank: 46px;
+    --moved: 30px;
+    --form: 76px;
+    --record: 64px;
+    --diff: 54px;
+    --points: 60px;
+  }
+}
+@container (max-width: 559.98px) {
+  .tn-table .tn-table-form {
+    display: none;
+  }
+}
+/* On a phone every pixel goes to the names: one of sixteen letters stands whole at 360 pixels. */
+@media (max-width: 899.98px) {
   .tn-table {
+    --rank: 42px;
+    --moved: 24px;
+    --form: max(86px, 11cqi);
+    --record: max(43px, 11cqi);
+    --games: max(84px, 11cqi);
+    --diff: max(37px, 9cqi);
+    --points: max(42px, 10cqi);
+    --pad: 2px;
+    --table-start: 7px;
+    --table-end: 12px;
+    --team-crest: 28px;
+    --team-gap: 8px;
     font-size: 14px;
   }
-  .tn-table th,
-  .tn-table td {
-    padding: 10px 6px;
+  .tn-table tr > .tn-table-moved {
+    padding-left: 0;
   }
-  .tn-table :is(th, td):last-child {
-    padding-right: 14px;
+  /* Narrow columns set their heads closer together; smaller heads and room before the points keep them apart. */
+  .tn-table thead th {
+    font-size: 12px;
   }
-  .tn-table :is(th, td).tn-rank {
-    width: 34px;
-    padding-inline: 10px 2px;
+  .tn-table tr > .tn-table-points {
+    padding-left: 6px;
   }
-  .tn-team {
-    --stream-image-size: 30px;
-    gap: 10px;
+  .tn-table tr[data-medal="gold"] {
+    --team-crest: 32px;
+    --team-size: 15px;
   }
-  .tn-table :is(th, td).tn-rank:has(.aov-rank) {
-    width: 48px;
+  @container (max-width: 347.98px) {
+    .tn-table tr[data-medal="gold"] {
+      --team-size: 14px;
+    }
   }
-  .tn-table tr[data-medal="gold"] .tn-team {
-    --stream-image-size: 36px;
-    font-size: 15px;
+  .tn-table tr[data-team] > .tn-table-points {
+    font-size: 16px;
+  }
+  .tn-table tr[data-medal="gold"] > .tn-table-points {
+    font-size: 18px;
+  }
+  .tn-table[data-look="race"] {
+    --rank: 31px;
+    --moved: 24px;
+    --record: max(44px, 12cqi);
+    --diff: max(37px, 10cqi);
+    --points: max(41px, 11cqi);
+    --pad: 0px;
+    --table-end: clamp(3px, 4cqi - 11px, 14px);
+    --table-row: 48px;
+    --table-zone: 40px;
+    --team-crest: 26px;
+  }
+  .tn-table[data-look="race"] tr > .tn-table-team {
+    padding-right: 4px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-table[data-look="race"] tr[data-followed] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
   }
 }

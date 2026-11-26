@@ -1,0 +1,136 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* The ten players over the editor of one of them. */
+  .esp-ten {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 8px 12px 6px 6px;
+  }
+  .esp-ten-side {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 34px));
+    gap: 6px;
+  }
+  .esp-ten-side[data-side="RED"] {
+    justify-content: end;
+  }
+  .esp-ten-seat {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    border-radius: var(--aov-radius-control);
+  }
+  .esp-ten-seat > :first-child {
+    border-radius: var(--aov-radius-control);
+    outline: 2px solid var(--side);
+    outline-offset: -2px;
+  }
+  .esp-ten-seat:hover > :first-child {
+    outline-color: color-mix(in oklch, var(--foreground) 50%, var(--side));
+  }
+  .esp-ten-seat[aria-pressed="true"] > :first-child {
+    outline-color: transparent;
+    box-shadow:
+      0 0 0 1px var(--card),
+      0 0 0 3px var(--foreground);
+  }
+  .esp-ten-seat:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  /* Who it is, and when the video showed the part on screen. */
+  .esp-seat-who-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding-inline: 12px 8px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .esp-seat-who-row > b {
+    flex: none;
+    max-width: 45%;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .esp-seat-hero {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--muted-foreground);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .esp-seen {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+  .esp-seen-time {
+    padding-inline: 2px;
+    border-radius: var(--aov-radius-control);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--foreground);
+  }
+  .esp-seen-time:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .esp-seen-time:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .esp-seat-parts {
+    display: flex;
+    align-items: stretch;
+    height: 40px;
+    border-block: 1px solid var(--border);
+  }
+  .esp-seat-top {
+    background: var(--card);
+  }
+  .esp-seat-part {
+    display: grid;
+    gap: 16px;
+    padding: 10px 12px 16px;
+  }
+  @media (min-width: 900px) {
+    .esp-seat-top {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+  }
+  @container dock (max-width: 359.98px) {
+    .esp-ten {
+      --dot: 4px;
+      gap: 6px;
+      padding-inline: 4px 8px;
+    }
+    .esp-ten-side {
+      gap: 3px;
+    }
+  }
+  @container dock (max-width: 419.98px) {
+    .esp-seen-words {
+      display: none;
+    }
+  }
+  @container dock (min-width: 760px) {
+    .esp-seat-part {
+      min-height: 100%;
+      border-left: 1px solid var(--border);
+    }
+  }
+}

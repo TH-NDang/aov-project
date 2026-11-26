@@ -1,0 +1,138 @@
+.tn-fate,
+.tn-fate-legend {
+  --fate-ground: var(--hub-bg);
+  --fate-won: var(--hub-accent);
+  --fate-lost: color-mix(in srgb, var(--hub-accent) 54%, var(--fate-ground));
+  --fate-open: color-mix(in srgb, var(--hub-accent) 22%, var(--fate-ground));
+  --fate-banned: color-mix(in srgb, var(--hub-muted) 78%, var(--fate-ground));
+}
+.tn-stage :is(.tn-fate, .tn-fate-legend) {
+  --fate-ground: var(--aov-stream-dusk);
+}
+.tn-fate {
+  display: flex;
+  width: 100%;
+  height: var(--fate-height, 10px);
+  gap: 2px;
+}
+.tn-fate > * {
+  min-width: 2px;
+  flex: var(--part) 1 0;
+  border-radius: 2px;
+  font-style: normal;
+}
+/* Only a part that leads somewhere stands over its row: a plain one leaves a press to the link the row is. */
+.tn-fate > a {
+  position: relative;
+}
+.tn-fate > [data-part="won"] {
+  background: var(--fate-won);
+}
+.tn-fate > [data-part="lost"] {
+  background: var(--fate-lost);
+}
+.tn-fate > [data-part="open"] {
+  background: var(--fate-open);
+}
+.tn-fate > [data-part="banned"] {
+  border: 1.5px solid var(--fate-banned);
+}
+.tn-fate > [data-part="left"] {
+  height: 1px;
+  align-self: center;
+  background: var(--hub-border-strong);
+}
+.tn-fate > [data-part="unknown"] {
+  height: 0;
+  align-self: center;
+  border-top: 2px dotted var(--hub-border-strong);
+  border-radius: 0;
+}
+/* A number too wide for its part falls to a line under it, where it is cut off. */
+.tn-fate[data-numbers] > * > span {
+  display: flex;
+  overflow: hidden;
+  height: 100%;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+}
+.tn-fate[data-numbers] > * > span::before {
+  content: "";
+  height: 100%;
+}
+.tn-fate[data-numbers] b {
+  padding: 0 3px 0 8px;
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tn-fate[data-numbers] > [data-part="won"] b {
+  color: var(--aov-stream-dusk);
+}
+/* A part that leads somewhere is pressed on a height of 40px, however low the bar is. */
+.tn-fate > a::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, (var(--fate-height, 10px) - 40px) / 2) 0;
+}
+.tn-fate > a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transition: background-color 120ms;
+}
+.tn-fate > a:is(:hover, :focus-visible)::before {
+  background: color-mix(in srgb, var(--hub-text) 16%, transparent);
+}
+.tn-fate-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px clamp(8px, 3.4vw, 16px);
+  margin: 0;
+  padding: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  list-style: none;
+}
+.tn-fate-legend > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.tn-fate-legend > li::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.tn-fate-legend > [data-part="won"]::before {
+  background: var(--fate-won);
+}
+.tn-fate-legend > [data-part="lost"]::before {
+  background: var(--fate-lost);
+}
+.tn-fate-legend > [data-part="banned"]::before {
+  border: 1.5px solid var(--fate-banned);
+}
+.tn-fate-legend > [data-part="left"]::before {
+  width: 14px;
+  height: 1px;
+  border-radius: 0;
+  background: var(--hub-border-strong);
+}
+.tn-fate-legend > [data-part="unknown"]::before {
+  width: 14px;
+  height: 0;
+  border-top: 2px dotted var(--hub-border-strong);
+  border-radius: 0;
+}
+@media (forced-colors: active) {
+  .tn-fate > *,
+  .tn-fate-legend > li::before {
+    forced-color-adjust: none;
+  }
+}

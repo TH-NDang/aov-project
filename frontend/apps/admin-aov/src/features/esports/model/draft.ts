@@ -157,3 +157,85 @@ export function earliestLive(draft: GameDraft) {
   const marks = [draft.startSecond, draft.lockedSecond, ...draft.turns.map((turn) => turn.atSecond)]
   return Math.max(0, ...marks.filter((value): value is number => value != null))
 }
+
+/** A ban or a hero of the line-ups as the game holds it, whatever turn it was taken in. */
+export type DraftedHero = { side: Side; kind: DraftKind; hero: Selection }
+
+const recordedHeroes = (content: GameContent): DraftedHero[] =>
+  content.sides.flatMap(({ side, bans, participants }) => [
+    ...bans.filter(present).map((hero) => ({ side, kind: "BAN" as const, hero })),
+    ...participants.flatMap(({ hero }) => (present(hero) ? [{ side, kind: "PICK" as const, hero }] : [])),
+  ])
+
+/** Bans or heroes without the order they were taken in, as in most imported games. */
+export const lacksTurns = (content: GameContent) =>
+  !readDraft(content).turns.length && recordedHeroes(content).length > 0
+
+/** Recorded bans and heroes that no turn of their team names. A game that has turns may not keep any of them. */
+export const unnamed = (content: GameContent, turns: DraftTurn[]): DraftedHero[] =>
+  recordedHeroes(content).filter(
+    (entry) =>
+      !turns.some((turn) => turn.side === entry.side && turn.kind === entry.kind && same(turn.hero, entry.hero)),
+  )
+
+/**
+ * The turns of a game that had none, written in one change. A hero of the line-ups takes the spelling of the turn that
+ * names it, because the service tells heroes by their id first and an imported line-up may only know the name.
+ */
+export function withCollectedTurns(content: GameContent, turns: DraftTurn[]): GameContent {
+  const next = withTurns(content, turns)
+  return {
+    ...next,
+    sides: next.sides.map((side) => ({
+      ...side,
+      participants: side.participants.map((participant) => {
+        const turn = turns.find(
+          (candidate) =>
+            candidate.kind === "PICK" && candidate.side === side.side && same(candidate.hero, participant.hero),
+        )
+        return turn?.hero ? { ...participant, hero: turn.hero } : participant
+      }),
+    })),
+  }
+}
+
+/** Puts the turns, the bans and the heroes of every lane back as they were; whatever else was recorded since stays. */
+export const restoreDraft =
+  (before: GameContent) =>
+  (content: GameContent): GameContent => ({
+    ...content,
+    draft: { ...readDraft(content), turns: readDraft(before).turns },
+    sides: content.sides.map((side) => {
+      const old = before.sides.find((candidate) => candidate.side === side.side && candidate.teamId === side.teamId)
+      if (!old) return side
+      return {
+        ...side,
+        bans: old.bans,
+        participants: side.participants.map((participant) => ({
+          ...participant,
+          hero: old.participants.find((candidate) => candidate.lane === participant.lane)?.hero ?? participant.hero,
+        })),
+      }
+    }),
+  })
+
+/**
+ * The video second a turn takes when it is recorded at `wanted`: after the draft start and the turns before it, before
+ * the turns after it, the lock and the game's 0:00, which is what the service accepts. Null without a draft start.
+ */
+export function turnSecond(
+  content: GameContent,
+  wanted: number,
+  index = readDraft(content).turns.length,
+): number | null {
+  const draft = readDraft(content)
+  if (draft.startSecond == null) return null
+  const timed = (turns: DraftTurn[]) => turns.flatMap((turn) => (turn.atSecond == null ? [] : [turn.atSecond]))
+  const min = Math.max(draft.startSecond, ...timed(draft.turns.slice(0, index)))
+  const max = Math.min(
+    draft.lockedSecond ?? Infinity,
+    content.sourceTimestampSeconds ?? Infinity,
+    ...timed(draft.turns.slice(index + 1)),
+  )
+  return max < min ? null : Math.min(max, Math.max(min, Math.floor(wanted)))
+}

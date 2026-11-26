@@ -1,0 +1,182 @@
+/* Two wings on either side of a hero: whoever stood beside it on the left, whoever stood against it on the right. */
+.tn-wings {
+  --line: color-mix(in srgb, var(--hub-border-strong) 60%, transparent);
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.tn-wings::before {
+  content: "";
+  position: absolute;
+  top: 60px;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--line);
+}
+.tn-wings-hero {
+  --portrait: 56px;
+  --portrait-radius: 10px;
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tn-wings-side {
+  min-width: 0;
+}
+.tn-wings-head {
+  display: flex;
+  height: 60px;
+  align-items: center;
+  gap: 24px;
+  padding-inline: 44px;
+}
+.tn-wings-head > h3 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-wings-side[data-wing="with"] > .tn-wings-head {
+  flex-direction: row-reverse;
+}
+.tn-wings-list {
+  min-width: 0;
+}
+.tn-wings-list > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-wings-row {
+  --portrait: 38px;
+  display: flex;
+  min-width: 0;
+  height: 50px;
+  align-items: center;
+  gap: 12px;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-wings-row > strong {
+  overflow: hidden;
+  width: 128px;
+  flex: none;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 120ms;
+}
+.tn-wings-row:is(:hover, :focus-visible) > strong {
+  color: var(--hub-accent-strong);
+}
+.tn-wings-marks {
+  display: grid;
+  min-width: 0;
+  flex: none;
+}
+.tn-wings-record {
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-wings-record > b {
+  font-size: 15px;
+  font-weight: 700;
+}
+.tn-wings-record > span {
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+.tn-wings-few {
+  display: flex;
+  height: 34px;
+  align-items: end;
+  padding-bottom: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-wings-side > .tn-wings-list {
+  padding-left: 20px;
+}
+/* The left wing is the mirror of the right one; its cells hold no words, so they are turned as they are. */
+.tn-wings-side[data-wing="with"] > .tn-wings-list {
+  padding: 0 20px 0 0;
+}
+.tn-wings-side[data-wing="with"] .tn-wings-row {
+  flex-direction: row-reverse;
+}
+.tn-wings-side[data-wing="with"] .tn-wings-row > strong {
+  text-align: right;
+}
+.tn-wings-side[data-wing="with"] .tn-wings-marks {
+  transform: scaleX(-1);
+}
+.tn-wings-side[data-wing="with"] .tn-wings-record {
+  flex-direction: row-reverse;
+}
+.tn-wings-side[data-wing="with"] .tn-wings-few,
+.tn-wings-side[data-wing="with"] > .tn-wings-list {
+  justify-content: flex-end;
+  text-align: right;
+}
+/*
+ * On a compact layout there is one list; what orders it stands over it, in two groups of words. Where the longer
+ * English ones leave no room, the second group goes under the first as a whole.
+ */
+.tn-wings-orders {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+@media (max-width: 899.98px) {
+  .tn-wings-list {
+    container: tn-wings-list / inline-size;
+  }
+  .tn-wings-row {
+    --portrait: 36px;
+    border-bottom: 1px solid var(--hub-border);
+  }
+  .tn-wings-row > strong {
+    width: 152px;
+    font-size: 15px;
+  }
+  .tn-wings-record {
+    margin-left: auto;
+  }
+}
+@container tn-wings-list (max-width: 639.98px) {
+  .tn-wings-row {
+    display: grid;
+    height: 62px;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 2px 12px;
+  }
+  .tn-wings-row > :first-child {
+    grid-row: 1 / 3;
+  }
+  .tn-wings-row > strong {
+    width: auto;
+    align-self: end;
+  }
+  .tn-wings-marks {
+    align-self: start;
+    grid-column: 2 / 4;
+    grid-row: 2;
+  }
+  .tn-wings-record {
+    align-self: end;
+    grid-column: 3;
+    grid-row: 1;
+  }
+}

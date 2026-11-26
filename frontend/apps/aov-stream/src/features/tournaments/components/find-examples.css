@@ -1,0 +1,61 @@
+/* Questions to start from: the pictures of whom they are about, the question in words, its games. */
+.tn-find-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0 -10px;
+  padding: 0;
+  list-style: none;
+}
+.tn-find-examples a {
+  --portrait: 36px;
+  --portrait-radius: 8px;
+  --stream-image-size: 36px;
+  --stream-image-radius: 8px;
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: var(--hub-radius-sm);
+  color: var(--hub-text);
+}
+.tn-find-examples a:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+}
+.tn-find-examples a > svg {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--hub-raised);
+  color: var(--hub-text-soft);
+}
+.tn-find-examples a > span:last-child {
+  display: grid;
+}
+.tn-find-examples b {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.tn-find-examples b::first-letter {
+  text-transform: uppercase;
+}
+.tn-find-examples small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-find-example-faces {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+@media (max-width: 599.98px) {
+  .tn-find-examples {
+    display: grid;
+    gap: 2px;
+  }
+}

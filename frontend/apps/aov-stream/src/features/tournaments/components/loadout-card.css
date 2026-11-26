@@ -1,0 +1,182 @@
+/* All that is recorded of one player, as a list of what it is and its lines: in a card, or in the phone's sheet. */
+.tn-loadout-card {
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-loadout-card > header {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+.tn-loadout-card > header > small {
+  align-self: start;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 24px;
+}
+.tn-loadout-face {
+  --side: var(--hub-blue);
+  --reference-size: 56px;
+  --reference-radius: var(--hub-radius-sm);
+  display: flex;
+  border-radius: var(--hub-radius-sm);
+  box-shadow: 0 0 0 2px var(--side);
+}
+.tn-loadout-face[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-loadout-card > dl {
+  margin: 0;
+  padding: 0 16px 6px;
+}
+.tn-loadout-card > dl > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--hub-border);
+}
+/* The second branch of the enchantments goes on from the first. */
+.tn-loadout-card > dl > [data-continued] {
+  padding-top: 0;
+  border-top: 0;
+}
+.tn-loadout-card dt {
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 32px;
+}
+.tn-loadout-card dt > small {
+  display: block;
+  margin-top: -6px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.tn-loadout-card [data-continued] > dt > small {
+  margin-top: 8px;
+}
+.tn-loadout-card dd {
+  min-width: 0;
+  margin: 0;
+}
+.tn-loadout-card dd > p,
+.tn-loadout-nothing {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-loadout-card dd > p:first-child {
+  line-height: 32px;
+}
+.tn-loadout-card dd > ul + p {
+  margin: 2px 0 4px;
+}
+.tn-loadout-nothing {
+  padding: 0 16px 18px;
+}
+.tn-loadout-card ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-loadout-card li {
+  --reference-size: 28px;
+  --build-item: 28px;
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 10px;
+}
+.tn-loadout-card li:is([data-kind="spells"], [data-kind="enchantments"]) {
+  --reference-radius: 50%;
+}
+.tn-loadout-card li > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+.tn-loadout-card li b {
+  font-weight: 600;
+}
+.tn-loadout-card li small {
+  margin-left: 6px;
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+.tn-loadout-card li[data-gone] b {
+  color: var(--hub-muted);
+  font-weight: 500;
+}
+.tn-loadout-card time {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+/* What an item grew from, under its name. */
+.tn-loadout-from {
+  --reference-size: 18px;
+  --reference-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-bottom: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-loadout-from > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+/* Under the sheet, the pages a name would open where there is room to press it. */
+.tn-loadout-doors {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--hub-border);
+}
+.tn-loadout-doors > a {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.tn-loadout-doors > a + a {
+  border-top: 1px solid var(--hub-border);
+}
+@media (max-width: 899.98px) {
+  /* The sheet has edges of its own. */
+  .tn-loadout-card > header {
+    grid-template-columns: 56px minmax(0, 1fr);
+    padding: 0 0 16px;
+  }
+  .tn-loadout-card > dl {
+    padding: 0;
+  }
+  .tn-loadout-card li {
+    --reference-size: 32px;
+    --build-item: 32px;
+    min-height: 40px;
+  }
+  .tn-loadout-card dt,
+  .tn-loadout-card dd > p:first-child {
+    line-height: 40px;
+  }
+  .tn-loadout-card dt > small {
+    margin-top: -9px;
+  }
+  .tn-loadout-card [data-continued] > dt > small {
+    margin-top: 12px;
+  }
+  .tn-loadout-nothing {
+    padding: 0 0 16px;
+  }
+}

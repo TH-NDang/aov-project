@@ -1,0 +1,37 @@
+/* Unfolding the rest of a list. */
+.tn-more {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-more > svg {
+  transform: rotate(90deg);
+}
+/* The number stands on a plate as large as the pictures beside it. */
+.tn-more-tile > span {
+  display: grid;
+  border-radius: var(--portrait-radius, var(--aov-radius-control));
+  background: color-mix(in srgb, var(--hub-text) 8%, transparent);
+  color: var(--hub-text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  place-items: center;
+}
+.tn-more-tile:hover > span {
+  background: color-mix(in srgb, var(--hub-text) 14%, transparent);
+}
+@media (max-width: 899.98px) {
+  .tn-more {
+    min-height: 40px;
+  }
+}

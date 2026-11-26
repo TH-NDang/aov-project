@@ -6,6 +6,7 @@ import { StreamShell } from "./components/stream-shell"
 import { useStreamLocale } from "./components/stream-locale"
 import { StreamNotFound } from "./components/stream-not-found"
 import { Travel } from "./components/travel"
+import { VideoFrame } from "./components/video-frame"
 import "./features/community/components/community.css"
 import "./features/tournaments/tournaments.css"
 import "./features/tournaments/components/schedule.css"
@@ -37,7 +38,12 @@ const PersonPage = named(() => import("./features/tournaments/pages/person-page"
 const CreditsPage = named(() => import("./features/tournaments/pages/credits-page"), "CreditsPage")
 
 export default function App() {
-  return <Travel>{(location) => <Pages location={location} />}</Travel>
+  return (
+    <>
+      <Travel>{(location) => <Pages location={location} />}</Travel>
+      <VideoFrame />
+    </>
+  )
 }
 
 /** What a page shows while its code is loaded for the first time. */

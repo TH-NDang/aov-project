@@ -41,6 +41,19 @@ test("another tab of the page is another part of it, and a filter is not", () =>
   assert.equal(opensPart({ ...within, action: "POP" }, "", "?tab=stats"), false)
 })
 
+test("the games of a hero or a team are another part of their page", () => {
+  const within = step({ from: "/competitions/a", to: "/competitions/a" })
+
+  assert.equal(opensPart(within, "?tab=stats&hero=h", "?tab=stats&hero=h&list=picks"), true)
+  assert.equal(opensPart(within, "?tab=stats&hero=h&list=picks", "?tab=stats&hero=h&list=picks&sort=short"), false)
+})
+
+test("the game chosen in the season of a team is no other part of its page", () => {
+  const within = step({ action: "REPLACE", from: "/competitions/a", to: "/competitions/a" })
+
+  assert.equal(opensPart(within, "?tab=stats&view=teams&club=t", "?tab=stats&view=teams&club=t&game=g"), false)
+})
+
 test("a search made again starts anew, and typing that replaces the address does not", () => {
   const within = step({ from: "/explore", to: "/explore" })
 

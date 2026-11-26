@@ -98,7 +98,7 @@ export function EntityRef({
         role="button"
         tabIndex={0}
         aria-label={`${entityKindLabels[kind]}: ${entity.name}`}
-        className="inline-flex cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-[var(--esp-gold)]"
+        className="inline-flex cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-ring"
         onClick={(event) => event.stopPropagation()}
       >
         {children}

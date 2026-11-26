@@ -20,7 +20,6 @@ import {
   rosterBoard,
   slotText,
   stepFromParam,
-  suggestedPlacements,
   workspaceChecks,
   zonedInputInstant,
   zonedInputTime,
@@ -270,84 +269,19 @@ test("only what readers would see differently is listed before publishing again"
   assert.deepEqual(pendingChanges(snapshot(played, moved), live), [{ kind: "schedule", text: "Đổi giờ đấu 1 trận" }])
 })
 
-test("final places follow the bracket and wait for matches that are not played", () => {
-  const standings = [
-    {
-      stageCode: "GROUP",
-      complete: true,
-      rows: Object.keys(teams).map((teamId, index) => ({
-        rank: index + 1,
-        teamId,
-        played: 12,
-        won: 0,
-        lost: 0,
-        gameWins: 0,
-        gameLosses: 0,
-        points: 0,
-        tied: false,
-        qualified: index < 6,
-      })),
-    },
-  ]
-  const lines = suggestedPlacements(plan(playoffs), played, standings, teams)
-  assert.deepEqual(
-    lines.map((line) => `${line.place}|${line.teamName}`),
-    ["1|", "2|", "3|", "4|BOX", "5-6|GAM", "5-6|FL", "7|ONE"],
-  )
-  assert.equal(lines[2]!.reason, "Chờ LF")
-  assert.equal(lines[3]!.reason, "Thua LS · 3–4")
-
-  const finished = played.map((entry) =>
-    entry.key === "LF" ? row("LF", "sgp", "bme", 4, 1) : entry.key === "GF" ? row("GF", "fpl", "sgp", 2, 4) : entry,
-  )
-  assert.deepEqual(
-    suggestedPlacements(plan(playoffs), finished, standings, teams)
-      .slice(0, 3)
-      .map((line) => `${line.place}|${line.teamName}`),
-    ["1|SGP", "2|FPL", "3|BME"],
-  )
-})
-
-test("the champion line carries the grand final score, so the podium can show it", async () => {
-  const { tournamentPodium } = await import("@aov/ui/lib/tournament-podium")
-  const finished = played.map((entry) =>
-    entry.key === "LF" ? row("LF", "sgp", "bme", 4, 1) : entry.key === "GF" ? row("GF", "fpl", "sgp", 2, 4) : entry,
-  )
-
-  const lines = suggestedPlacements(plan(playoffs), finished, [], teams)
-
-  assert.deepEqual(
-    lines.slice(0, 3).map((line) => [line.place, line.lastOpponent, line.lastScore]),
-    [
-      ["1", "FPL", "4–2"],
-      ["2", "SGP", "2–4"],
-      ["3", "SGP", "1–4"],
-    ],
-  )
-  const podium = tournamentPodium({
-    placements: lines.map((line) => ({
-      place: line.place,
-      teamId: line.teamId,
-      teamName: line.teamName,
-      lastOpponent: line.lastOpponent,
-      lastScore: line.lastScore,
-    })),
-  })
-  assert.deepEqual(podium, {
-    winner: { teamId: "sgp", name: "SGP" },
-    runnerUp: { teamId: "fpl", name: "FPL" },
-    score: "4–2",
-  })
-})
-
-test("only required checks block publishing, and final places wait until the last match", () => {
-  const checks = workspaceChecks({
+const checksOf = (more: Partial<Parameters<typeof workspaceChecks>[0]> = {}) =>
+  workspaceChecks({
     plan: plan(playoffs),
     resolved: played,
     rosters: [],
-    placements: 0,
+    over: false,
+    final: { detail: "Chờ giải kết thúc", state: "waiting" },
     now: Date.parse("2026-11-12T00:00:00Z"),
+    ...more,
   })
+
+test("only required checks block publishing, and final places read as the final step does", () => {
+  const checks = checksOf()
   const state = (id: string) => checks.find((check) => check.id === id)!
   assert.deepEqual(
     checks.filter((check) => check.required).map((check) => [check.id, check.state]),
@@ -361,6 +295,14 @@ test("only required checks block publishing, and final places wait until the las
   assert.equal(state("rosters").state, "todo")
   assert.equal(state("placements").state, "waiting")
   assert.equal(state("placements").detail, "Chờ giải kết thúc")
+})
+
+test("a match without a time asks for its score once the tournament is over and both its teams are known", () => {
+  const results = (over: boolean) => checksOf({ over }).find((check) => check.id === "results")!
+
+  assert.deepEqual([results(false).detail, results(false).state], ["Chưa có trận nào tới giờ", "waiting"])
+  // LF has both teams and no score; GF still waits for one.
+  assert.deepEqual([results(true).detail, results(true).state], ["6/7 trận", "todo"])
 })
 
 test("a roster reads as five positions, then the bench, then who left", () => {
@@ -397,36 +339,4 @@ test("a match time next to a clock change keeps the offset of its own day", () =
   // New York leaves summer time on 1 November 2026: 09:00 that morning is UTC-5, the evening before UTC-4.
   assert.equal(zonedInputInstant("2026-11-01T09:00", "America/New_York"), "2026-11-01T14:00:00.000Z")
   assert.equal(zonedInputInstant("2026-10-31T21:00", "America/New_York"), "2026-11-01T01:00:00.000Z")
-})
-
-test("the match for third place decides places three and four", () => {
-  const knockout = [
-    match("S1", 1, team("sgp"), team("bme")),
-    match("S2", 1, team("fpl"), team("fl")),
-    match("P3", 2, loser("S1"), loser("S2")),
-    match("F", 2, winner("S1"), winner("S2")),
-  ]
-  const resolved = [
-    row("S1", "sgp", "bme", 4, 1),
-    row("S2", "fpl", "fl", 4, 2),
-    row("P3", "bme", "fl", 4, 3),
-    row("F", "sgp", "fpl", 4, 0),
-  ]
-
-  const places = suggestedPlacements(
-    plan(knockout, { stages: [{ ...plan(playoffs).stages.at(-1)!, code: "PLAYOFF", format: "SINGLE_ELIMINATION" }] }),
-    resolved,
-    [],
-    teams,
-  )
-
-  assert.deepEqual(
-    places.map((line) => [line.place, line.teamId]),
-    [
-      ["1", "sgp"],
-      ["2", "fpl"],
-      ["3", "bme"],
-      ["4", "fl"],
-    ],
-  )
 })

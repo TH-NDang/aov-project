@@ -5,23 +5,14 @@ import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionMatches, competitionMatchHref, type CompetitionMatch } from "../../../lib/match-model"
 import { matchSides } from "../../../lib/match-schedule"
-import { meetings, standingGroups, teamForm, teamRecord } from "../../../lib/standings-model"
+import { comparedPlaces } from "../../../lib/place-zones"
+import { meetings, teamForm, teamRecord } from "../../../lib/standings-model"
 import { FormMarks } from "./form-marks"
 import "./match-compare.css"
 
 type Line = { label: string; a: ReactNode; b: ReactNode; ahead?: "a" | "b" | null }
 
 const better = (a: number, b: number) => (a === b ? null : a > b ? "a" : "b")
-
-/** The place of a team in the table of the competition both teams stand in. */
-function places(entry: CompetitionMatch, a: string, b: string) {
-  for (const table of entry.competition.content.standings) {
-    const rows = standingGroups(entry.competition, table).flatMap((group) => group.rows)
-    const [first, second] = [a, b].map((id) => rows.find((row) => row.teamId === id && row.played > 0))
-    if (first && second) return { a: first.rank, b: second.rank }
-  }
-  return null
-}
 
 /**
  * How two teams compare over the rest of the competition: their place, their record, their form and their meetings.
@@ -34,7 +25,7 @@ export function MatchCompare({ entry }: { entry: CompetitionMatch }) {
   const others = competitionMatches([entry.competition]).filter((item) => item.match.key !== entry.match.key)
   const [first, second] = [teamRecord(others, a.teamId), teamRecord(others, b.teamId)]
   if (!first.played || !second.played) return null
-  const rank = places(entry, a.teamId, b.teamId)
+  const rank = comparedPlaces(entry.competition, entry.match.stageCode, a.teamId, b.teamId)
   const rate = (record: typeof first) => record.won / record.played
   const games = (record: typeof first) => record.gamesWon - record.gamesLost
   const met = meetings(others, a.teamId, b.teamId)

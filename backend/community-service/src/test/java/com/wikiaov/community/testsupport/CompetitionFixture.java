@@ -61,6 +61,14 @@ public final class CompetitionFixture {
         return id;
     }
 
+    public String team(String side) {
+        return teams.get(side);
+    }
+
+    public String seriesId() {
+        return seriesId;
+    }
+
     /** One more match of the competition between its two teams, on a day not known yet. */
     public String series() throws Exception {
         return series(null);
@@ -129,6 +137,7 @@ public final class CompetitionFixture {
         private final Map<String, Object> content = new HashMap<>();
         private final Map<String, List<Map<String, String>>> picks = new HashMap<>();
         private final Map<String, List<Map<String, String>>> bans = new HashMap<>();
+        private final Map<String, Map<String, Object>> loadouts = new HashMap<>();
 
         private Game(String match, int number) {
             content.putAll(Map.of("seriesId", match, "number", number, "region", "VN", "locale", "vi-VN"));
@@ -153,6 +162,28 @@ public final class CompetitionFixture {
             return this;
         }
 
+        /** Records the draft: the bans of both sides in turn from the blue one, then their picks the same way. */
+        public Game drafted() {
+            var turns = new ArrayList<Map<String, Object>>();
+            for (var kind : Map.of("BAN", bans, "PICK", picks).entrySet().stream().sorted(Map.Entry.comparingByKey())
+                    .toList()) {
+                for (int place = 0; place < kind.getValue().get("BLUE").size(); place++) {
+                    for (var side : List.of("BLUE", "RED")) {
+                        turns.add(Map.of("order", turns.size() + 1, "kind", kind.getKey(), "side", side, "hero",
+                                kind.getValue().get(side).get(place)));
+                    }
+                }
+            }
+            content.put("draft", Map.of("turns", turns));
+            return this;
+        }
+
+        /** What a seat was seen with besides its hero, such as a spell, enchantments or equipment. */
+        public Game seen(String side, int seat, Map<String, Object> loadout) {
+            loadouts.put(side + seat, loadout);
+            return this;
+        }
+
         public Game lasting(int seconds) {
             content.put("durationSeconds", seconds);
             return this;
@@ -169,8 +200,11 @@ public final class CompetitionFixture {
             for (var side : List.of("BLUE", "RED")) {
                 var participants = new ArrayList<Map<String, Object>>();
                 for (int seat = 0; seat < LANES.size(); seat++) {
-                    participants.add(Map.of("playerId", player(side, seat), "lane", LANES.get(seat), "hero",
-                            picks.get(side).get(seat), "spell", Map.of("name", "Observed spell")));
+                    var participant = new HashMap<String, Object>(Map.of("playerId", player(side, seat), "lane",
+                            LANES.get(seat), "hero", picks.get(side).get(seat), "spell", Map.of("name",
+                                    "Observed spell")));
+                    participant.putAll(loadouts.getOrDefault(side + seat, Map.of()));
+                    participants.add(participant);
                 }
                 sides.add(Map.of("side", side, "teamId", teams.get(side), "bans", bans.get(side), "participants",
                         participants));

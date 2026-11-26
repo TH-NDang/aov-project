@@ -1,50 +1,27 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { DocumentView, GameContent } from "@aov/community-contracts"
-import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
-
-type GameWriter = Pick<typeof tournamentApi, "read" | "save">
-
-/** A link that reached only some games: says how many carry it, so the editor knows what is left to do. */
-export class SeriesVideoError extends Error {
-  readonly written: number
-  readonly total: number
-
-  constructor(written: number, total: number, cause: unknown) {
-    super(
-      `Không ghi được liên kết video vào mọi ván: đã ghi ${written} trên ${total} ván, các ván còn lại giữ liên kết cũ. ${tournamentError(cause)}`,
-      { cause },
-    )
-    this.name = "SeriesVideoError"
-    this.written = written
-    this.total = total
-  }
-}
+import type { GameSaver } from "./use-game-saver"
 
 /**
- * One broadcast for the whole match: the link is written to every game that does not carry it yet, each keeping its
- * own start second. Each game is read again first, so a game saved a moment ago is not overwritten with an old copy.
+ * The link of a broadcast for the games it is given, all of a match or one of them, each keeping its own start second.
+ * It is written through each game's own saver, after what is still being saved of that game, so it never meets the next
+ * change as a conflict and never writes an old copy. A game that refuses it says so in its saver; the games after it
+ * keep their link. Answers how many games of those that did not carry it carry it now.
  */
-export async function writeSeriesVideo(api: GameWriter, games: DocumentView<GameContent>[], url: string) {
-  const pending = games.filter((entry) => entry.content.sourceUrl !== url)
-
+export async function writeSeriesVideo(
+  saverOf: (entry: DocumentView<GameContent>) => Pick<GameSaver, "save">,
+  games: DocumentView<GameContent>[],
+  url: string,
+  what: string,
+) {
+  const pending = games.filter((entry) => (entry.content.sourceUrl ?? "") !== url)
   let written = 0
   for (const entry of pending) {
-    try {
-      const latest = await api.read("games", entry.id)
-      await api.save("games", latest, { ...latest.content, sourceUrl: url })
-    } catch (cause) {
-      throw new SeriesVideoError(written, pending.length, cause)
-    }
+    const carried = await saverOf(entry).save(
+      (content) => ((content.sourceUrl ?? "") === url ? content : { ...content, sourceUrl: url }),
+      what,
+    )
+    if (!carried) break
     written++
   }
-  return written
-}
-
-/** Writes the link through a mutation, so a failure reaches the editor once, in the shared error toast. */
-export function useSeriesVideo(games: DocumentView<GameContent>[]) {
-  const client = useQueryClient()
-  return useMutation({
-    mutationFn: (url: string) => writeSeriesVideo(tournamentApi, games, url),
-    onSettled: () => client.invalidateQueries({ queryKey: tournamentKeys.kind("games") }),
-  })
+  return { written, total: pending.length }
 }

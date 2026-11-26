@@ -1,0 +1,210 @@
+/*
+ * A team on a line of the list. The head and the lines share their columns: the marks take what the longest season
+ * needs, the name what is left.
+ */
+.tn-club-row,
+.tn-club-row-head {
+  --club-gap: clamp(14px, 2vw, 26px);
+  display: grid;
+  grid-template-columns: 40px minmax(var(--name, 208px), 1fr) minmax(0, var(--season, 560px)) 236px 120px;
+  align-items: center;
+  column-gap: var(--club-gap);
+}
+.tn-club-row:not([data-heroes]),
+.tn-club-row-head:not([data-heroes]) {
+  grid-template-columns: 40px minmax(var(--name, 208px), 1fr) minmax(0, var(--season, 560px));
+}
+.tn-club-row-head {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hub-border);
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.tn-club-row-head > :first-child {
+  grid-column: 1 / 3;
+}
+/* The background of a line pointed at reaches past the column, so the text stays level with the rest of the page. */
+.tn-club-row {
+  --stream-image-size: 40px;
+  --stream-image-radius: var(--aov-radius-control);
+  grid-template-areas:
+    "crest name season picks bans"
+    "crest record season picks bans";
+  margin-inline: -12px;
+  padding: 10px 12px;
+  border-radius: var(--aov-radius-card);
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.tn-club-row:not([data-heroes]) {
+  grid-template-areas:
+    "crest name season"
+    "crest record season";
+}
+.tn-club-row:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+}
+.tn-club-row:focus-visible {
+  outline-offset: -2px;
+}
+.tn-club-row > :first-child {
+  grid-area: crest;
+}
+.tn-club-row-name,
+.tn-club-row-record {
+  min-width: 0;
+  margin-left: calc(12px - var(--club-gap));
+}
+.tn-club-row-name {
+  grid-area: name;
+  align-self: end;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  text-wrap: balance;
+}
+.tn-club-row-record {
+  grid-area: record;
+  align-self: start;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+}
+.tn-club-row-record > b {
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}
+.tn-club-row-record > small {
+  font-size: inherit;
+}
+.tn-club-row-season {
+  display: grid;
+  min-width: 0;
+  grid-area: season;
+}
+/* The numbers under both kinds of faces stand on one line, though the banned ones are smaller. */
+.tn-club-row-faces {
+  --portrait: 40px;
+  --portrait-radius: 7px;
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
+  align-self: end;
+  gap: 9px;
+}
+.tn-club-row-faces[data-kind="picks"] {
+  grid-area: picks;
+}
+.tn-club-row-faces[data-kind="bans"] {
+  --portrait: 34px;
+  grid-area: bans;
+}
+.tn-club-row-faces > span {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.tn-club-row-faces small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+/* Short of room the marks take a line of their own, under the names and the faces. */
+@media (max-width: 1099.98px) {
+  .tn-club-row-head > :nth-child(2) {
+    display: none;
+  }
+  .tn-club-row,
+  .tn-club-row-head {
+    grid-template-columns: 40px minmax(0, 1fr) 236px 120px;
+  }
+  .tn-club-row {
+    grid-template-areas:
+      "crest name picks bans"
+      "crest record picks bans"
+      "season season season season";
+    row-gap: 0;
+    padding-block: 14px;
+  }
+  .tn-club-row:not([data-heroes]),
+  .tn-club-row-head:not([data-heroes]) {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .tn-club-row:not([data-heroes]) {
+    grid-template-areas:
+      "crest name"
+      "crest record"
+      "season season";
+  }
+  .tn-club-row-season {
+    margin-top: 10px;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-club-row,
+  .tn-club-row-head {
+    --club-gap: 12px;
+    grid-template-columns: 34px minmax(0, 1fr) 236px 120px;
+  }
+  .tn-club-row {
+    --stream-image-size: 34px;
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding-inline: var(--hub-gutter);
+    border-radius: 0;
+  }
+  .tn-club-row:not([data-heroes]),
+  .tn-club-row-head:not([data-heroes]) {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+}
+/* A phone: the name and the record, the marks, then the faces of both kinds from edge to edge, as the head says. */
+@media (max-width: 619.98px) {
+  .tn-club-row-head,
+  .tn-club-row-head:not([data-heroes]) {
+    display: flex;
+    justify-content: space-between;
+  }
+  .tn-club-row-head[data-heroes] > :first-child {
+    display: none;
+  }
+  .tn-club-row,
+  .tn-club-row:not([data-heroes]) {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "crest name record"
+      "season season season"
+      "picks picks bans";
+    row-gap: 9px;
+    padding-block: 12px;
+  }
+  .tn-club-row-name,
+  .tn-club-row-record {
+    align-self: center;
+    margin-left: 0;
+  }
+  .tn-club-row-record {
+    justify-self: end;
+  }
+  .tn-club-row-record > b {
+    color: var(--hub-text);
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .tn-club-row-record > small {
+    display: none;
+  }
+  .tn-club-row-season {
+    margin-top: 0;
+  }
+  .tn-club-row-faces {
+    --portrait: clamp(32px, 9.4vw, 36px);
+    gap: 6px;
+  }
+  .tn-club-row-faces[data-kind="bans"] {
+    --portrait: clamp(28px, 7.8vw, 30px);
+  }
+}

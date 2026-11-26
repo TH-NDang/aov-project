@@ -1,0 +1,122 @@
+.tn-room-story {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  margin-top: 10px;
+}
+.tn-room-story > h3 {
+  flex: none;
+  margin: 6px 0 0;
+  padding: 12px 0 6px;
+  border-top: 1px solid var(--room-line);
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.tn-room-moments {
+  margin: 0 -8px;
+  padding: 0;
+  list-style: none;
+}
+.tn-room-moment {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: var(--room-row);
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+}
+.tn-room-moment:focus-visible {
+  outline-offset: -2px;
+}
+.tn-room-moment > time {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-room-moment > span {
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.tn-room-moment b {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+/* What is pointed at plays. */
+.tn-room-moment::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  width: 5px;
+  height: 8px;
+  background: var(--hub-accent-strong);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  opacity: 0;
+}
+.tn-room-moment:is(:hover, :focus-visible) {
+  background: rgb(255 255 255 / 8%);
+}
+.tn-room-moment:is(:hover, :focus-visible)::before {
+  opacity: 1;
+}
+/* The last thing that happened. */
+.tn-room-moment[data-now] {
+  background: var(--room-fill);
+  color: var(--hub-text);
+}
+.tn-room-moment[data-now] > time {
+  color: var(--hub-text);
+}
+@media (forced-colors: active) {
+  .tn-room-moment[data-now] {
+    outline: 1px solid;
+    outline-offset: -1px;
+  }
+}
+/* Beside the video the list scrolls in what is left of the height, and fades where more of it is hidden. */
+.tn-room:is([data-shape="side"], [data-shape="turned"]) .tn-room-story {
+  min-height: 0;
+  flex: 1;
+}
+.tn-room:is([data-shape="side"], [data-shape="turned"]) .tn-room-moments {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-color: rgb(255 255 255 / 22%) transparent;
+  scrollbar-width: thin;
+}
+.tn-room:not([data-shape="stack"]) .tn-room-moments[data-above] {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--room-fade));
+}
+.tn-room:not([data-shape="stack"]) .tn-room-moments[data-below] {
+  mask-image: linear-gradient(to top, transparent, #000 var(--room-fade));
+}
+.tn-room:not([data-shape="stack"]) .tn-room-moments[data-above][data-below] {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--room-fade) calc(100% - var(--room-fade)), transparent);
+}
+.tn-room:is([data-density="mid"], [data-density="tight"]) .tn-room-story {
+  margin-top: 4px;
+}
+/* Where only a row or two fit, none of them is cut. */
+.tn-room[data-density="tight"] .tn-room-moments {
+  max-height: max(var(--room-row), round(down, 100%, var(--room-row)));
+}
+/* On a tablet it stands beside the board. */
+@container tn-room-side (min-width: 700px) {
+  .tn-room[data-shape="stack"] .tn-room-story {
+    margin-top: 0;
+  }
+  .tn-room[data-shape="stack"] .tn-room-story > h3 {
+    margin: 0;
+    padding-top: 6px;
+    border-top: 0;
+  }
+}

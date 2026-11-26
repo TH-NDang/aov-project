@@ -22,6 +22,7 @@ import { partDefaults, partLabel, type EventFamily } from "@/features/tournament
 import { competitionApi, competitionKeys } from "./competition-api"
 import { EventPartTabs } from "./workspace/event-parts"
 import { useStuck } from "@/lib/use-stuck"
+import { finalCheckState, finalOutcome, finalStateText } from "./workspace/final-state"
 import { FinalStep } from "./workspace/final-step"
 import { FormatStep } from "./workspace/format-step"
 import {
@@ -62,6 +63,9 @@ const STEP_ICONS: Record<WorkspaceStep, ComponentType<{ className?: string }>> =
   final: Trophy,
   publish: Send,
 }
+
+/** How a check reads as the state of its step. */
+const CHECK_TONES = { ok: "ok", todo: "todo", waiting: "neutral" } as const
 
 export function CompetitionWorkspace() {
   return <AccessGate>{(access) => <Loader access={access} />}</AccessGate>
@@ -223,7 +227,17 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   })
   const teams = useMemo(() => ({ ...pickedTeams, ...entry.content.teams }), [pickedTeams, entry.content.teams])
   const resolved = useMemo(() => resolvedIndex(entry.content.resolved), [entry.content.resolved])
-  const placements = tournament.data?.content.placements?.length ?? entry.content.tournament.placements?.length ?? 0
+  const final = useMemo(
+    () =>
+      finalOutcome({
+        tournament: tournament.data?.content ?? entry.content.tournament,
+        plan,
+        resolved: entry.content.resolved,
+        standings: entry.content.standings,
+        teams,
+      }),
+    [tournament.data, entry.content, plan, teams],
+  )
   const checks = useMemo(
     () =>
       workspaceChecks({
@@ -232,10 +246,11 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         rosters: (rosters.data ?? []).map((row) => row.content),
         organizerName: organization.data?.content?.name,
         organizerPublished: !!organization.data?.published,
-        placements,
+        over: final.over,
+        final: { detail: finalStateText(final.state), state: finalCheckState(final) },
         now: Date.now(),
       }),
-    [plan, entry.content.resolved, rosters.data, organization.data, placements],
+    [plan, entry.content.resolved, rosters.data, organization.data, final],
   )
   const pending = useMemo(
     () => (published.data ? pendingChanges(entry.content, published.data.content) : []),
@@ -321,11 +336,11 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     format: { detail: `${plan.stages.length} giai đoạn`, tone: plan.stages.length ? "ok" : "todo" },
     schedule: {
       detail: plan.matches.length ? `${scored}/${plan.matches.length} trận có tỷ số` : "Chưa có lịch",
-      tone: plan.matches.length && check("results")?.state === "ok" ? "ok" : "todo",
+      tone: plan.matches.length ? CHECK_TONES[check("results")?.state ?? "todo"] : "todo",
     },
     final: {
-      detail: placements ? `${placements} thứ hạng` : (check("placements")?.detail ?? ""),
-      tone: placements ? "ok" : check("placements")?.state === "waiting" ? "neutral" : "todo",
+      detail: finalStateText(final.state),
+      tone: CHECK_TONES[finalCheckState(final)],
     },
     publish: {
       detail: entry.publishedAt
@@ -448,7 +463,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         {step === "teams" && <TeamsStep key={`${focus.team}-${focus.open}`} ws={ws} tournament={tournament.data} />}
         {step === "format" && <FormatStep key={`${focus.stage}-${focus.open}`} ws={ws} />}
         {step === "schedule" && <ScheduleStep key={`${focus.match}-${focus.key}-${focus.open}`} ws={ws} />}
-        {step === "final" && <FinalStep ws={ws} tournament={tournament.data} />}
+        {step === "final" && <FinalStep ws={ws} tournament={tournament.data} outcome={final} />}
         {step === "publish" && (
           <PublishStep
             ws={ws}

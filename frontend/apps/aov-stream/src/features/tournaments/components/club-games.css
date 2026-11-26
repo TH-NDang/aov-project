@@ -1,0 +1,5 @@
+.tn-club-games {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+}

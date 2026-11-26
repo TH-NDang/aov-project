@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import type { GameContent } from "@aov/community-contracts"
 import { useSession } from "@/app/auth/auth-gate"
 import {
@@ -108,7 +108,10 @@ export function useGamePatches(tournamentId?: string) {
   })
 }
 
-/** The catalog a game is recorded in: its own season and patch, or those of its stage on the day it was played. */
+/**
+ * The catalog a game is recorded in: its own season and patch, or those of its stage on the day it was played. While
+ * another one is read, the one on screen stays, so the faces of a game do not give way to letters.
+ */
 export function useGameCatalog(content?: GameContent, scope?: GamePatchScope) {
   const actorKey = useActorKey()
   const scoped = content && catalogScopeOf(content, scope)
@@ -116,6 +119,7 @@ export function useGameCatalog(content?: GameContent, scope?: GamePatchScope) {
     queryKey: tournamentKeys.catalog(actorKey, scoped),
     queryFn: ({ signal }) => tournamentApi.catalog(scoped!, signal),
     enabled: !!content,
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
     retry: 1,
   })

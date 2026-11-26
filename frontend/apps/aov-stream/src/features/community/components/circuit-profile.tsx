@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, CompetitionView } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { FoldButton } from "../../../components/fold-button"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
@@ -202,11 +203,7 @@ function CircuitIntro({ text, about }: { text: string; about: string }) {
       >
         <ReferenceText text={text} about={[about]} />
       </p>
-      {foldable && (
-        <button type="button" className="tn-more pf-intro-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? ui("Thu gọn", "Show less") : ui("Xem thêm", "Show more")}
-        </button>
-      )}
+      <FoldButton fold={{ folds: foldable, open, toggle: () => setOpen(!open) }} more={ui("Xem thêm", "Show more")} />
     </div>
   )
 }

@@ -218,6 +218,10 @@ public class GameRecords {
                     add(itemIds, value.item());
                     add(itemIds, value.replacedItem());
                 });
+                participant.build().forEach(value -> {
+                    add(itemIds, value.item());
+                    value.from().forEach(part -> add(itemIds, part));
+                });
             }
         }
         return new Catalog(used(catalog.heroes(), heroIds), used(catalog.items(), itemIds),
@@ -231,8 +235,12 @@ public class GameRecords {
         }
     }
 
+    /** The entries a snapshot needs; what an item is made of helps while recording and is no part of a game. */
     private static List<Reference> used(List<Reference> references, Set<UUID> ids) {
-        return references.stream().filter(reference -> ids.contains(reference.id())).toList();
+        return references.stream().filter(reference -> ids.contains(reference.id()))
+                .map(found -> new Reference(found.id(), found.code(), found.name(), found.iconUrl(), found.tier(),
+                        found.color(), found.branchCode(), found.revisionId()))
+                .toList();
     }
 
     public Impact deletionImpact(UUID id) {

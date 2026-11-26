@@ -1,7 +1,7 @@
 import type { PublishedGame } from "@aov/community-contracts"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
-import { clock, referenceName, UNKNOWN_REFERENCE } from "../../../lib/tournament-model"
+import { clock, observationTimes, referenceName, UNKNOWN_REFERENCE } from "../../../lib/tournament-model"
 import { ReferenceArt } from "./reference-art"
 import "./equipment-events.css"
 
@@ -12,7 +12,10 @@ const EVENT_NAMES = {
   SWAP: ["Đổi ô", "Swap slots"],
 } as const
 
-/** The purchases and sales recorded on their own, newest first, folded away. Nothing shows without any. */
+/**
+ * The purchases and sales recorded on their own, newest first, folded away. Nothing shows without any, nor for a game
+ * of which a single moment was observed.
+ */
 export function EquipmentEvents({ game }: { game: PublishedGame }) {
   const { text } = useStreamLocale()
   const events = game.content.sides
@@ -26,7 +29,7 @@ export function EquipmentEvents({ game }: { game: PublishedGame }) {
       ),
     )
     .sort((a, b) => b.event.atSeconds - a.event.atSeconds)
-  if (!events.length) return null
+  if (!events.length || observationTimes(game.content.sides).length < 2) return null
   return (
     <details className="tn-events">
       <summary>
@@ -36,7 +39,7 @@ export function EquipmentEvents({ game }: { game: PublishedGame }) {
       </summary>
       <p>
         {text(
-          "Chỉ gồm giao dịch có ghi nhận riêng, không suy từ các ảnh chụp đồ.",
+          "Chỉ gồm giao dịch có ghi nhận riêng, không suy từ các ảnh chụp trang bị.",
           "Only transactions recorded on their own, not read from item screenshots.",
         )}
       </p>

@@ -2,7 +2,7 @@
  * Shared set-up of the esports screen tests: a page per test, one recorded game between two teams, its moments, and
  * stand-ins for what the browser or YouTube would provide.
  */
-import type { ReactNode } from "react"
+import { act, type ReactNode } from "react"
 import type { DOMWindow } from "jsdom"
 import type { GameView } from "../../src/features/esports/model/game-view"
 import type { TimelineEvent } from "../../src/features/esports/model/timeline"
@@ -90,12 +90,14 @@ export const events: TimelineEvent[] = [
 export const chapter = (start: number, end: number) => ({
   gameId: "g1",
   number: 1,
+  videoId: "R5rCsGqDJIg",
   from: start,
   start,
   end,
   duration: end - start,
   synced: true,
   live: true,
+  ended: true,
   draft: null,
   sync: { url: "", startSecond: start, pauses: [] },
   winner: "BLUE" as const,
@@ -105,9 +107,26 @@ export const chapter = (start: number, end: number) => ({
 /** Moments of game 1 as the broadcast axis names them. */
 export const onAxis = (list: TimelineEvent[]) => list.map((event) => ({ ...event, id: `g1|${event.id}` }))
 
+/** Takes the poll of the player out of the clock's hands; each call of the answer is one reading of it. */
+export function holdPoll() {
+  let read = () => {}
+  const timed = window.setInterval.bind(window)
+  window.setInterval = ((run: () => void, ms?: number) => {
+    if (ms !== 250) return timed(run, ms)
+    read = run
+    return 0
+  }) as typeof window.setInterval
+  return (times = 1) => act(async () => Array.from({ length: times }, () => read()) && undefined)
+}
+
 /** Installs a YouTube player API that records what the page asks of it; returns every player made so far. */
 export function mockYouTube() {
-  type PlayerEvents = { onReady(event: { target: FakePlayer }): void; onStateChange(event: { data: number }): void }
+  type PlayerEvents = {
+    onReady(event: { target: FakePlayer }): void
+    onStateChange(event: { data: number }): void
+    onError(event: { data: number }): void
+  }
+  type Video = { videoId: string; startSeconds: number }
   class FakePlayer {
     static instances: FakePlayer[] = []
     readonly events: PlayerEvents
@@ -139,13 +158,42 @@ export function mockYouTube() {
       return this.time
     }
 
+    duration = 20144
     getDuration() {
-      return 20144
+      return this.duration
     }
 
-    state = 2
+    readonly loaded: Video[] = []
+    loadVideoById(video: Video) {
+      this.loaded.push(video)
+    }
+
+    readonly cued: Video[] = []
+    cueVideoById(video: Video) {
+      this.cued.push(video)
+    }
+
+    volume = 100
+    setVolume(volume: number) {
+      this.volume = volume
+    }
+
+    /** What a player answers until its first play: the video is cued, and no frame of it is drawn. */
+    state = 5
     getPlayerState() {
       return this.state
+    }
+
+    /** Comes to another state, and tells the page of it. */
+    report(state: number) {
+      this.state = state
+      this.events.onStateChange({ data: state })
+    }
+
+    /** How much of the video has arrived. */
+    loadedFraction = 0
+    getVideoLoadedFraction() {
+      return this.loadedFraction
     }
 
     rates: number[] = []

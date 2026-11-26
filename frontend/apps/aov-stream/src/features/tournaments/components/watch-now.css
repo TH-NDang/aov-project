@@ -1,0 +1,142 @@
+.tn-room-now {
+  display: flex;
+  min-height: 48px;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--room-line);
+}
+.tn-room-game {
+  display: grid;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+/* As high as a button, without taking its room. */
+.tn-room-game > h2 {
+  overflow: hidden;
+  margin: -8px 0;
+  padding: 8px 0;
+  color: var(--hub-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-room-game > h2 > a {
+  padding-block: 9px;
+}
+.tn-room-game > h2 > a:focus-visible {
+  outline-offset: -2px;
+}
+.tn-room-game > small {
+  overflow: hidden;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-room-game > small[data-asked] {
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+  text-wrap: balance;
+  white-space: normal;
+}
+/* Short of room the words wrap before the name of the game is cut. */
+.tn-room-now > p {
+  min-width: 50px;
+  flex: 0 100000 auto;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-room-now > p[data-asked] {
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+/* What the board says too is left out first, and whole: short of room it wraps under the one line that is seen. */
+.tn-room-now > p[data-spare] {
+  display: flex;
+  flex-wrap: wrap;
+  height: 1lh;
+  overflow: hidden;
+  min-width: 0;
+  white-space: nowrap;
+}
+.tn-room-now > p[data-spare]::before {
+  content: "";
+  height: 1lh;
+}
+@container tn-room-side (max-width: 310px) {
+  .tn-room:is([data-phone], [data-shape="turned"]) .tn-room-now > p[data-spare] {
+    display: none;
+  }
+}
+/* The sign that ends the line keeps to the margin, not its area to press. */
+.tn-room-ahead {
+  display: flex;
+  flex: none;
+  margin: 0 -9px 0 auto;
+}
+.tn-room-leave {
+  display: flex;
+  flex: none;
+  margin: 0 -8px 0 auto;
+}
+.tn-room-ahead + .tn-room-leave {
+  margin-left: 0;
+}
+.tn-room-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tn-room-steps > time {
+  min-width: 62px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+.tn-room-took {
+  margin-right: 9px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-room[data-density="mid"] .tn-room-now {
+  min-height: 42px;
+}
+.tn-room[data-density="tight"] .tn-room-now {
+  min-height: 38px;
+  gap: 8px;
+}
+.tn-room[data-density="tight"] .tn-room-now > p {
+  font-size: 13px;
+  line-height: 16px;
+}
+.tn-room[data-phone] .tn-room-now {
+  min-height: 56px;
+  gap: 6px;
+}
+.tn-room[data-phone] .tn-room-now > p {
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-room[data-phone] .tn-room-ahead {
+  margin-right: 0;
+}
+.tn-room[data-phone] .tn-room-took {
+  margin-right: 4px;
+}
+.tn-room[data-phone] .tn-room-steps {
+  gap: 0;
+}

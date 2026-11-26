@@ -1,0 +1,11 @@
+.tn-hh-games {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  margin-top: -20px;
+}
+@media (max-width: 899.98px) {
+  .tn-hh-games {
+    margin-top: -16px;
+  }
+}

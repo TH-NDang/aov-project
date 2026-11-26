@@ -3,8 +3,10 @@ import type { ObjectiveKind, PublishedGame, Side } from "@aov/community-contract
 import { StreamIcon, type StreamIconName } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { WatchLink } from "../../../components/watch-link"
 import { trackLanes, type TimelineRow } from "../../../lib/series-model"
 import { clock } from "../../../lib/tournament-model"
+import { momentAt } from "../../../lib/watch-rows"
 import "./game-track.css"
 
 export const OBJECTIVE_NAMES: Record<ObjectiveKind, readonly [string, string]> = {
@@ -24,10 +26,21 @@ export const OBJECTIVE_ICONS: Record<ObjectiveKind, StreamIconName> = {
 
 /**
  * The objectives of a game along the time it took, one team above the line and the other below it. `order` is the side
- * drawn above, then the one below.
+ * drawn above, then the one below. With `labelOf`, which says what watching a moment shows, each leads into the video.
  */
-export function GameTrack({ game, rows, order }: { game: PublishedGame; rows: TimelineRow[]; order: [Side, Side] }) {
+export function GameTrack({
+  game,
+  rows,
+  order,
+  labelOf,
+}: {
+  game: PublishedGame
+  rows: TimelineRow[]
+  order: [Side, Side]
+  labelOf: ((row: Pick<TimelineRow, "event" | "side">) => string) | null
+}) {
   const { text } = useStreamLocale()
+  const { seriesId, number } = game.content
   const last = rows.at(-1)!.event.atSeconds
   const seconds = Math.max(game.content.durationSeconds ?? 0, last)
   const lanes = trackLanes(rows, seconds)
@@ -69,17 +82,36 @@ export function GameTrack({ game, rows, order }: { game: PublishedGame; rows: Ti
               {events.map(({ event, share, level }) => {
                 const kind = event.objective ?? "OTHER"
                 const named = text(...OBJECTIVE_NAMES[kind])
-                return (
-                  <li
-                    key={event.id}
-                    title={[`${clock(event.atSeconds)} ${named}`, event.note].filter(Boolean).join("\n")}
-                    style={{ "--at": share, "--level": level } as CSSProperties}
-                  >
+                const at = clock(event.atSeconds)
+                const mark = (
+                  <>
                     <span>
                       <StreamIcon name={OBJECTIVE_ICONS[kind]} size={18} />
                       <span className="sr-only">{named}</span>
                     </span>
-                    <time>{clock(event.atSeconds)}</time>
+                    <time>{at}</time>
+                  </>
+                )
+                return (
+                  <li key={event.id} style={{ "--at": share, "--level": level } as CSSProperties}>
+                    {labelOf ? (
+                      <WatchLink
+                        seriesId={seriesId}
+                        game={number}
+                        at={momentAt(event)}
+                        label={labelOf({ event, side })}
+                        className="tn-objectives-mark"
+                      >
+                        {mark}
+                      </WatchLink>
+                    ) : (
+                      <span
+                        className="tn-objectives-mark"
+                        title={[`${at} ${named}`, event.note].filter(Boolean).join("\n")}
+                      >
+                        {mark}
+                      </span>
+                    )}
                   </li>
                 )
               })}

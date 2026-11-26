@@ -7,6 +7,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -127,7 +128,9 @@ public class WikiCatalogClient implements WikiCatalogSource {
         }
         return new Reference(uuid(row.get("id")), string(row.get("code")),
                 name == null ? string(row.get("code")) : name, icon, integer(content.get("tier")),
-                string(content.get("color")), string(content.get("branchCode")), revision);
+                string(content.get("color")), string(content.get("branchCode")), revision,
+                maps(content.get("components")).stream().map(component -> uuid(component.get("itemId")))
+                        .filter(Objects::nonNull).distinct().toList());
     }
 
     private static @Nullable String url(Map<String, Object> asset) {

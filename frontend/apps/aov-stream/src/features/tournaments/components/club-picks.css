@@ -1,0 +1,116 @@
+/* The lanes side by side, each with its usual heroes. */
+.tn-club-picks {
+  display: grid;
+  grid-template-columns: repeat(var(--lanes), minmax(0, 1fr));
+  gap: 24px clamp(14px, 2.1vw, 28px);
+}
+.tn-club-picks > section {
+  min-width: 0;
+}
+.tn-club-picks ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-club-picks li {
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-club-pick {
+  --portrait: 40px;
+  --portrait-radius: 7px;
+  display: grid;
+  min-height: 58px;
+  grid-template-columns: 40px minmax(0, 92px) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "face name name score"
+    "face cells matches matches";
+  align-content: center;
+  align-items: center;
+  gap: 2px 8px;
+  color: var(--hub-text);
+}
+.tn-club-pick > :first-child {
+  grid-area: face;
+}
+/* A name too long for its column breaks into two lines rather than losing its end. */
+.tn-club-pick > strong {
+  grid-area: name;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-wrap: balance;
+}
+.tn-club-pick > b {
+  grid-area: score;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: right;
+}
+.tn-club-pick-cells {
+  display: grid;
+  min-width: 0;
+  grid-area: cells;
+  overflow: hidden;
+}
+.tn-club-pick > small {
+  grid-area: matches;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-align: right;
+  white-space: nowrap;
+}
+a.tn-club-pick:is(:hover, :focus-visible) > strong {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* In narrow columns the record stands under the name, beside the matches, and the cells give way. */
+@media (max-width: 1239.98px) {
+  .tn-club-pick {
+    --portrait: 36px;
+    grid-template-columns: 36px auto minmax(0, 1fr);
+    grid-template-areas:
+      "face name name"
+      "face score matches";
+    gap: 0 8px;
+  }
+  .tn-club-pick > :is(b, small) {
+    text-align: left;
+  }
+  .tn-club-pick-cells {
+    display: none;
+  }
+}
+@media (max-width: 959.98px) {
+  .tn-club-pick > small > span {
+    display: none;
+  }
+}
+/* One lane under another, as wide as the page: everything fits on a line again. */
+@media (max-width: 759.98px) {
+  .tn-club-picks {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .tn-club-pick {
+    --portrait: 40px;
+    grid-template-columns: 40px minmax(0, 92px) minmax(0, 1fr) auto;
+    grid-template-areas:
+      "face name name score"
+      "face cells matches matches";
+    gap: 2px 10px;
+  }
+  .tn-club-pick > :is(b, small) {
+    text-align: right;
+  }
+  .tn-club-pick > small > span {
+    display: inline;
+  }
+  .tn-club-pick-cells {
+    display: grid;
+  }
+}

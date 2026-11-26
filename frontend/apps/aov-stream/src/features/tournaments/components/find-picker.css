@@ -1,0 +1,141 @@
+/* The choice of a hero: a search and the lanes over the faces, which scroll under them. */
+.tn-find-picker {
+  width: min(420px, calc(100vw - 32px));
+}
+.tn-find-picker-body {
+  display: grid;
+  min-width: 0;
+}
+.tn-find-picker-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-find-search {
+  display: flex;
+  min-width: 0;
+  height: 40px;
+  flex: 1 1 120px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-sunken);
+  color: var(--hub-muted);
+}
+.tn-find-search:focus-within {
+  border-color: var(--hub-accent);
+}
+.tn-find-search > svg {
+  flex: none;
+}
+.tn-find-search > input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--hub-text);
+  font-size: 14px;
+}
+.tn-find-search > input::placeholder {
+  color: var(--hub-muted);
+}
+.tn-find-lanes {
+  display: flex;
+  flex: none;
+}
+.tn-find-lanes > button {
+  display: grid;
+  width: 36px;
+  height: 40px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-muted);
+  place-items: center;
+}
+.tn-find-lanes > button:hover {
+  color: var(--hub-text);
+}
+.tn-find-lanes > button[aria-pressed="true"] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.tn-find-tiles {
+  --portrait: 52px;
+  --portrait-radius: 8px;
+  display: grid;
+  max-height: min(392px, calc(var(--radix-popover-content-available-height, 460px) - 64px));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  padding: 10px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+}
+.tn-find-tiles > button {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  justify-items: center;
+  padding: 7px 2px 6px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+.tn-find-tiles > button:is(:hover, :focus-visible, [data-first]) {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.tn-find-tiles > button:focus-visible {
+  outline-offset: -2px;
+}
+.tn-find-tiles span:not(.tn-portrait, .stream-image) {
+  margin-top: 5px;
+  text-wrap: balance;
+}
+.tn-find-tiles small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-find-none {
+  margin: 0;
+  padding: 24px 16px 28px;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+@media (max-width: 899.98px) {
+  /* In the sheet the faces scroll with it, under a head that stays. */
+  .tn-find-picker[data-vaul-drawer] {
+    --public-bottom-body-padding: 0 0 max(12px, env(safe-area-inset-bottom));
+
+    width: 100%;
+  }
+  .tn-find-picker-head {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    padding: 0 16px 10px;
+    background: var(--hub-surface);
+  }
+  .tn-find-search > input {
+    font-size: 16px;
+  }
+  .tn-find-lanes > button {
+    width: 40px;
+  }
+  .tn-find-tiles {
+    max-height: none;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    overflow: visible;
+  }
+}

@@ -1,7 +1,5 @@
 import type { CompetitionView, Lane, ProfileMember } from "@aov/community-contracts"
-
-/** The lanes in the order a lineup is read. */
-const LANES: Lane[] = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"]
+import { LANES } from "./tournament-model.ts"
 
 /** One player of a starting lineup, with the page or the player record the name opens. */
 export type LineupSeat = { key: string; name: string; lane: Lane; captain: boolean; to: string | null }

@@ -1,0 +1,120 @@
+/*
+ * A season in bars, on a stage. Every bar is as wide as the others and stands after the steps of space before it, so the
+ * frame of the chosen game finds its bar at any width.
+ */
+.tn-club-season {
+  --season-won: var(--hub-accent);
+  --season-lost: color-mix(in srgb, var(--hub-accent) 54%, var(--aov-stream-dusk));
+  --spaces: calc(var(--steps) * var(--step));
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.tn-club-season-track {
+  position: relative;
+  width: min(100%, calc(var(--games) * 16px + var(--spaces)));
+  height: 44px;
+}
+.tn-club-season-bars,
+.tn-club-season-at,
+.tn-club-season-stages {
+  --bar: calc((100% - var(--spaces)) / var(--games));
+}
+.tn-club-season-bars {
+  position: absolute;
+  inset: 0;
+}
+.tn-club-season-bars > i {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--bar) * var(--bars) + var(--gaps) * var(--step));
+  width: calc(var(--bar) - 1px);
+  height: 42%;
+  border-radius: 1px;
+  background: var(--season-lost);
+}
+.tn-club-season-bars > i[data-won] {
+  height: 100%;
+  background: var(--season-won);
+}
+.tn-club-season-bars > i[data-open] {
+  border: 1px solid var(--season-lost);
+  background: none;
+}
+/* The frame around the game the line under the bars names. */
+.tn-club-season-at {
+  position: absolute;
+  inset-block: -5px;
+  left: calc(var(--bar) * var(--bars) + var(--gaps) * var(--step) - 4px);
+  width: calc(var(--bar) + 7px);
+  border: 2px solid var(--hub-text);
+  border-radius: 4px;
+  pointer-events: none;
+}
+/* The control lies over the bars, a little taller than they are for a finger. */
+.tn-club-season-track > input {
+  position: absolute;
+  inset: -10px 0;
+  width: 100%;
+  height: calc(100% + 20px);
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+  touch-action: pan-y;
+}
+/* The frame is what moves, so it carries the ring of the control. */
+.tn-club-season-track:has(input:focus-visible) > .tn-club-season-at {
+  outline: 2px solid var(--hub-accent-strong);
+  outline-offset: 2px;
+}
+.tn-club-season-stages {
+  display: flex;
+  width: min(100%, calc(var(--games) * 16px + var(--spaces)));
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+/* Each under its first game; one at the end with more words than room moves the others towards the start. */
+.tn-club-season-stages > span {
+  flex: 0 1 calc(var(--bar) * var(--bars) + var(--gaps) * var(--step));
+}
+.tn-club-season-stages > span:not(:last-child) {
+  padding-right: 8px;
+}
+.tn-club-season-game {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  line-height: 22px;
+}
+.tn-club-season-game > a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  flex: none;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+/* Room for a line and a half of words, so that nothing moves under the finger from one game to the next. */
+@media (max-width: 899.98px) {
+  .tn-club-season-game {
+    min-height: 48px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .tn-club-season-game > span {
+    min-width: 0;
+    flex: 1;
+  }
+}
+@media (forced-colors: active) {
+  .tn-club-season-bars > i {
+    forced-color-adjust: none;
+  }
+}

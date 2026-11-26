@@ -1,19 +1,10 @@
-import type { ReactNode } from "react"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@aov/ui/components/hover-card"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameSeat } from "../../model/game-view"
-import {
-  ARCANA_COLORS,
-  STONES_PER_COLOR,
-  TIER_NUMERALS,
-  arcanaLabel,
-  type ArcanaColor,
-  type LoadoutPart,
-} from "../../model/loadout"
-import { HeroIcon, LaneIcon } from "../primitives"
-import { LANE_LABELS } from "@/lib/lanes"
+import { ARCANA_COLORS, STONES_PER_COLOR, TIER_NUMERALS, arcanaLabel, type ArcanaColor } from "../../model/loadout"
+import { HeroIcon } from "../primitives"
 
-const stoneCounts = (loadout: GameSeat["arcana"]) =>
+/** How many stones of each colour an arcana page holds. */
+export const stoneCounts = (loadout: GameSeat["arcana"]) =>
   Object.fromEntries(
     ARCANA_COLORS.map((color) => [
       color.code,
@@ -103,7 +94,7 @@ export function EnchantmentCard({ loadout }: { loadout: GameSeat["enchantments"]
   return (
     <div className="space-y-1.5">
       <p className="font-semibold">
-        Phù hiệu <span className="font-normal text-muted-foreground">· {loadout.entries.length}/5</span>
+        Phù hiệu <span className="font-normal text-muted-foreground">{loadout.entries.length}/5</span>
       </p>
       <ul className="space-y-1">
         {rows.map((row, index) => (
@@ -138,7 +129,7 @@ export function ArcanaCard({ loadout }: { loadout: GameSeat["arcana"] }) {
       <p className="font-semibold">
         Bảng ngọc{" "}
         <span className="font-normal text-muted-foreground">
-          · {total}/{STONES_PER_COLOR * 3} viên
+          {total}/{STONES_PER_COLOR * 3} viên
         </span>
       </p>
       <ul className="space-y-1.5">
@@ -171,119 +162,10 @@ export function ArcanaCard({ loadout }: { loadout: GameSeat["arcana"] }) {
         })}
         {loose.map((entry, index) => (
           <li key={`loose-${index}`} className="text-muted-foreground">
-            ×{entry.count} {arcanaLabel(entry.name)} · chưa rõ màu
+            ×{entry.count} {arcanaLabel(entry.name)}, chưa rõ màu
           </li>
         ))}
       </ul>
     </div>
-  )
-}
-
-/** One icon of the row: its card on hover or focus and, while recording, a click that opens that part for editing. */
-function Peek({
-  label,
-  card,
-  onEdit,
-  children,
-}: {
-  label: string
-  card: ReactNode
-  onEdit?: () => void
-  children: ReactNode
-}) {
-  const shape = "inline-flex shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-[var(--esp-gold)]"
-  return (
-    <HoverCard openDelay={80} closeDelay={80}>
-      <HoverCardTrigger asChild>
-        {onEdit ? (
-          <button
-            type="button"
-            aria-label={`${label}. Bấm để sửa`}
-            onClick={onEdit}
-            className={cn(shape, "cursor-pointer hover:ring-2 hover:ring-[var(--esp-gold)]/60")}
-          >
-            {children}
-          </button>
-        ) : (
-          <span role="img" tabIndex={0} aria-label={label} className={shape}>
-            {children}
-          </span>
-        )}
-      </HoverCardTrigger>
-      <HoverCardContent side="top" align="start" className="w-auto max-w-72 min-w-36 p-3 text-xs">
-        {card}
-        {onEdit && <p className="mt-2 border-t pt-1.5 text-muted-foreground">Bấm để sửa</p>}
-      </HoverCardContent>
-    </HoverCard>
-  )
-}
-
-/**
- * What a player took into the game, as the row of icons under their name: lane, spell, the main emblem and the
- * arcana ring. Each icon shows what is recorded on hover; while recording, the last three open the recording panel
- * on that player and part.
- */
-export function SeatLoadout({
-  seat,
-  onEdit,
-  className,
-}: {
-  seat: GameSeat
-  onEdit?: (part: LoadoutPart) => void
-  className?: string
-}) {
-  const lane = LANE_LABELS[seat.lane].name
-  const emblem = seat.enchantments.entries.filter((entry) => entry.primary).at(-1) ?? seat.enchantments.entries[0]
-  const counts = stoneCounts(seat.arcana)
-  const stones = seat.arcana.entries.reduce((sum, entry) => sum + entry.count, 0)
-  const edit = (part: LoadoutPart) => (onEdit ? () => onEdit(part) : undefined)
-  return (
-    <span className={cn("flex items-center gap-1.5", className)} data-seat-loadout={seat.key}>
-      <Peek label={`Đường: ${lane}`} card={<p className="font-semibold">{lane}</p>}>
-        <LaneIcon lane={seat.lane} size={18} className="text-[var(--side)]" />
-      </Peek>
-      <Peek
-        label={seat.spell ? `Phụ trợ: ${seat.spell.name}` : "Phụ trợ: chưa ghi"}
-        onEdit={edit("spell")}
-        card={
-          <p>
-            <span className="font-semibold">Phụ trợ</span>{" "}
-            <span className={seat.spell ? undefined : "text-muted-foreground"}>· {seat.spell?.name ?? "chưa ghi"}</span>
-          </p>
-        }
-      >
-        {seat.spell ? (
-          <HeroIcon hero={seat.spell} size={20} title="" className="rounded-sm ring-1 ring-[var(--esp-gold)]/70" />
-        ) : (
-          <EmptySlot />
-        )}
-      </Peek>
-      <Peek
-        label={
-          seat.enchantments.status === "NOT_SHOWN"
-            ? "Phù hiệu: video không hiện"
-            : `Phù hiệu: ${seat.enchantments.entries.length} trên 5 ô`
-        }
-        onEdit={edit("enchantments")}
-        card={<EnchantmentCard loadout={seat.enchantments} />}
-      >
-        {emblem ? (
-          <HeroIcon hero={emblem} size={20} title="" className="rounded-full ring-1 ring-[var(--esp-gold)]/70" />
-        ) : (
-          <EmptySlot round />
-        )}
-      </Peek>
-      <Peek
-        label={
-          seat.arcana.status === "NOT_SHOWN"
-            ? "Bảng ngọc: video không hiện"
-            : `Bảng ngọc: ${stones} trên ${STONES_PER_COLOR * 3} viên`
-        }
-        onEdit={edit("arcana")}
-        card={<ArcanaCard loadout={seat.arcana} />}
-      >
-        <ArcanaRing counts={counts} />
-      </Peek>
-    </span>
   )
 }

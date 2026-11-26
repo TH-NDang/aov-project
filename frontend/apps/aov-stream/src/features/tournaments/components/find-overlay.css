@@ -1,0 +1,7 @@
+/* The panels of the board. Closed they are gone at once: the seat they hang on may have moved by then. */
+.tn-find-overlay {
+  padding: 0;
+}
+.tn-find-overlay[data-slot="popover-content"][data-state="closed"] {
+  animation: none;
+}
