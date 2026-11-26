@@ -456,6 +456,10 @@ export function parseHeroAiAnswer(text: string): ParsedAnswer {
   return { ok: false, message: `${where}${issue.message}` }
 }
 
+/** What a change shows on the left when nothing was there to replace. */
+export const NO_VALUE = "(trống)"
+export const NOT_YET = "(chưa có)"
+
 export interface HeroAiChange {
   section: Section
   label: string
@@ -472,8 +476,8 @@ export interface HeroAiResult {
 const present = (value: string | null | undefined): value is string => !!value?.trim()
 const number = (value: number | null | undefined): value is number => value != null && Number.isFinite(value)
 const clip = (value: string) => (value.length > 160 ? `${value.slice(0, 157)}…` : value)
-const textValue = (value: string | null | undefined) => (present(value) ? clip(value.trim()) : "(trống)")
-const numberValue = (value: number | null | undefined) => (number(value) ? formatGameNumber(value, 12) : "(trống)")
+const textValue = (value: string | null | undefined) => (present(value) ? clip(value.trim()) : NO_VALUE)
+const numberValue = (value: number | null | undefined) => (number(value) ? formatGameNumber(value, 12) : NO_VALUE)
 
 /**
  * Puts the assistant's answer into the content. Only written values count: a field left out, null or empty keeps what
@@ -516,7 +520,7 @@ export function applyHeroAiAnswer(content: Content, answer: HeroAiAnswer): HeroA
       changes.push({
         section: "PROFILE",
         label: "Vai trò",
-        before: current.roles.map((role) => ROLES[role]).join(", ") || "(trống)",
+        before: current.roles.map((role) => ROLES[role]).join(", ") || NO_VALUE,
         after: profile.roles.map((role) => ROLES[role]).join(", "),
       })
       current.roles = [...new Set(profile.roles)]
@@ -526,7 +530,7 @@ export function applyHeroAiAnswer(content: Content, answer: HeroAiAnswer): HeroA
       changes.push({
         section: "PROFILE",
         label: "Đường",
-        before: positions.map((position) => POSITIONS[position]).join(", ") || "(trống)",
+        before: positions.map((position) => POSITIONS[position]).join(", ") || NO_VALUE,
         after: profile.positions.map((position) => POSITIONS[position]).join(", "),
       })
       current.positions = [...new Set(profile.positions)]
@@ -561,7 +565,7 @@ export function applyHeroAiAnswer(content: Content, answer: HeroAiAnswer): HeroA
         label: RATING_LABELS[key],
         before: number(current[key])
           ? `${formatGameNumber(current[key] / scale.factor, 2)}/${scale.maximum}`
-          : "(trống)",
+          : NO_VALUE,
         after: `${formatGameNumber(stored / scale.factor, 2)}/${scale.maximum}`,
       })
       current[key] = stored
@@ -646,7 +650,7 @@ export function applyHeroAiAnswer(content: Content, answer: HeroAiAnswer): HeroA
         changes.push({
           section: "SKILLS",
           label: `Thêm kỹ năng ${skill.skillKey}`,
-          before: "(chưa có)",
+          before: NOT_YET,
           after: clip(skill.translations[0]!.name),
         })
         changed = true
@@ -717,7 +721,7 @@ export function applyHeroAiAnswer(content: Content, answer: HeroAiAnswer): HeroA
           ],
         }
         skins.push(skin)
-        changes.push({ section: "SKINS", label: "Thêm trang phục", before: "(chưa có)", after: clip(name) })
+        changes.push({ section: "SKINS", label: "Thêm trang phục", before: NOT_YET, after: clip(name) })
         changed = true
         continue
       }

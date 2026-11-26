@@ -18,6 +18,8 @@ import {
   heroAiData,
   heroAiGuide,
   heroAiPrompt,
+  NO_VALUE,
+  NOT_YET,
   parseHeroAiAnswer,
   type HeroAiResult,
 } from "../../model/ai-template/hero-ai-template"
@@ -298,7 +300,13 @@ function AnswerPreview({ result }: { result: HeroAiResult }) {
                   <li key={`${change.label}-${index}`} className="grid gap-1 px-3 py-2">
                     <span className="type-label">{change.label}</span>
                     <span className="type-body grid grid-cols-[1fr_auto_1fr] items-start gap-2">
-                      <span className="break-words text-muted-foreground line-through decoration-muted-foreground/50">
+                      <span
+                        className={cn(
+                          "break-words text-muted-foreground",
+                          // Only a value being replaced is struck out; an empty one is simply filled.
+                          ![NO_VALUE, NOT_YET].includes(change.before) && "line-through decoration-muted-foreground/50",
+                        )}
+                      >
                         {change.before}
                       </span>
                       <ArrowRight className="mt-0.5 size-4 text-muted-foreground" />
