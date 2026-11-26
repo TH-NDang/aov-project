@@ -1,16 +1,15 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import type {
+  CompetitionLineups,
   CompetitionStatistics,
   CompetitionView,
   CompetitionParticipant,
+  HeroBuilds,
   PageSlice,
   PublishedGame,
 } from "@aov/community-contracts"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { communityGetAll, communityRequest } from "./stream-api"
-
-/** Published games of a competition in which a hero was picked; either may be left out. */
-type GamesFilter = { tournamentId?: string; heroId?: string }
 
 /** Every query key of tournaments; reads and invalidation both use these. */
 export const tournamentKeys = {
@@ -22,9 +21,10 @@ export const tournamentKeys = {
   circuitCompetitions: (id: string) => ["circuit-competitions", id] as const,
   participants: (kind: string, q: string, size: number) => ["participants", kind, q, size] as const,
   seriesGames: (seriesId: string | null | undefined) => ["match-games", seriesId] as const,
-  games: (filters: GamesFilter) => ["community", "games", filters] as const,
   game: (id: string) => ["community", "game", id] as const,
   statistics: (id: string) => ["competition-statistics", id] as const,
+  lineups: (id: string) => ["competition-lineups", id] as const,
+  heroBuilds: (id: string, heroId: string) => ["competition-hero-builds", id, heroId] as const,
 }
 
 const read = <T>(path: string, signal: AbortSignal) => communityRequest<T>(path, { signal })
@@ -122,20 +122,25 @@ export const statisticsQuery = (id: string) =>
     retry: 1,
   })
 
-export function gamesQuery(filters: GamesFilter) {
-  return infiniteQueryOptions({
-    queryKey: tournamentKeys.games(filters),
-    initialPageParam: 0,
-    queryFn: ({ signal, pageParam }) => {
-      const params = new URLSearchParams({ page: String(pageParam), size: "12" })
-      for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value)
-      return read<PageSlice<PublishedGame>>(`/games?${params}`, signal)
-    },
-    getNextPageParam: nextPageOf,
-    staleTime: 60_000,
+/** Who picked and banned what in every published game of a competition, all in one answer. */
+export const lineupsQuery = (id: string) =>
+  queryOptions({
+    queryKey: tournamentKeys.lineups(id),
+    queryFn: ({ signal }) => read<CompetitionLineups>(`/competitions/${encodeURIComponent(id)}/lineups`, signal),
+    staleTime: 5 * 60_000,
     retry: 1,
   })
-}
+
+/** What a hero was played with in a competition. */
+export const heroBuildsQuery = (id: string, heroId: string) =>
+  queryOptions({
+    queryKey: tournamentKeys.heroBuilds(id, heroId),
+    queryFn: ({ signal }) =>
+      read<HeroBuilds>(`/competitions/${encodeURIComponent(id)}/heroes/${encodeURIComponent(heroId)}/builds`, signal),
+    staleTime: 5 * 60_000,
+    retry: 1,
+  })
+
 export const gameQuery = (id: string) =>
   queryOptions({
     queryKey: tournamentKeys.game(id),

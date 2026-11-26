@@ -1,0 +1,155 @@
+/*
+ * The way of each team: a row a team, a column a round; the names stay in place where the rounds scroll sideways.
+ * Positioned so the hidden words of the marks stay inside it: they would otherwise escape the scroller and widen the
+ * page on phones.
+ */
+.tn-meet-path-wrap {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.tn-meet-path {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+.tn-meet-path :is(th, td) {
+  padding: 0;
+  border-bottom: 1px solid var(--hub-border);
+  text-align: left;
+  vertical-align: middle;
+}
+.tn-meet-path thead td {
+  width: var(--path-first);
+}
+.tn-meet-path thead th {
+  height: 34px;
+  padding-left: 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.tn-meet-path :is(thead td, tbody th) {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+  background: var(--hub-bg);
+}
+.tn-meet-who {
+  --stream-image-size: 30px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding-left: 10px;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-meet-who > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tn-meet-stop {
+  --stream-image-size: 24px;
+  --stream-image-radius: 5px;
+  display: flex;
+  min-height: 51px;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  /* Clear of what is pinned above the page, and of the names that stay in place. */
+  scroll-margin: calc(var(--hub-stack, 0px) + 8px) 0 8px calc(var(--path-first) + 2px);
+  transition: background-color 120ms;
+}
+.tn-meet-stop:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+}
+.tn-meet-stop:focus-visible {
+  outline-offset: -2px;
+}
+.tn-meet-result {
+  display: grid;
+  width: 7px;
+  flex: none;
+}
+/* The names share their width, so the scores of a round stand in one line. */
+.tn-meet-rival {
+  width: var(--path-rival);
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-meet-end {
+  color: var(--meet-faint, var(--hub-muted));
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tn-meet-stop[data-outcome="won"] > .tn-meet-end {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-meet-stop[data-outcome="level"] > .tn-meet-end {
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}
+.tn-meet-stop[data-met] > .tn-meet-rival {
+  color: var(--hub-accent-strong);
+  font-weight: 700;
+}
+.tn-meet-path tr[data-followed] > * {
+  --meet-faint: color-mix(in srgb, var(--hub-muted) 60%, var(--hub-text-soft));
+  background: color-mix(in srgb, var(--hub-accent) 16%, var(--hub-bg));
+}
+/* Two lines in a narrow column: whom the team met, then the score. */
+.tn-meet-path[data-look="stack"] .tn-meet-stop {
+  display: grid;
+  min-height: 47px;
+  grid-template-columns: 7px minmax(0, 1fr);
+  align-content: center;
+  gap: 0 5px;
+  padding: 4px 2px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-meet-path[data-look="stack"] .tn-meet-result {
+  grid-row: 1 / 3;
+  align-self: center;
+}
+.tn-meet-path[data-look="stack"] .tn-meet-rival {
+  display: -webkit-box;
+  width: auto;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.tn-meet-path[data-look="stack"] .tn-meet-end {
+  grid-column: 2;
+}
+.tn-meet-path[data-look="stack"] .tn-meet-who {
+  --stream-image-size: 20px;
+  --stream-image-radius: 4px;
+  gap: 6px;
+  padding-left: 2px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-meet-path[data-look="stack"] thead th {
+  height: 30px;
+  padding-left: 2px;
+  font-size: 12px;
+}

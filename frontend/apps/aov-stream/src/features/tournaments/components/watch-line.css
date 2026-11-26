@@ -1,0 +1,94 @@
+.tn-room-line {
+  --stream-image-size: 30px;
+  --stream-image-radius: 6px;
+  --stream-image-plate: transparent;
+  display: flex;
+  width: var(--room-video-w);
+  height: 56px;
+  container: tn-room-line / inline-size;
+  align-items: center;
+  gap: 16px;
+  padding-inline: var(--room-pad);
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.tn-room-line > :first-child {
+  flex: none;
+}
+.tn-room-line-score {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+.tn-room-line-score > span:nth-child(2) {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--hub-text);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 32px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+.tn-room-line-score > span:nth-child(2) > i {
+  color: rgb(255 255 255 / 46%);
+  font-size: 0.7em;
+  font-style: normal;
+  font-weight: 400;
+}
+.tn-room-line-team {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  color: var(--hub-text);
+  font-size: 17px;
+  line-height: 22px;
+}
+.tn-room-line-team[data-team="B"] {
+  flex-direction: row-reverse;
+}
+.tn-room-line-team > b {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+.tn-room-line-round {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 899.98px) {
+  .tn-room-line {
+    gap: 12px;
+  }
+}
+/* Under a video this narrow, also on a phone that is turned, there is no room for the round. */
+@container tn-room-line (max-width: 599.98px) {
+  .tn-room-line-round {
+    display: none;
+  }
+}
+/* On a phone the dot alone says that the stream is on. */
+@media (max-width: 599.98px) {
+  .tn-room-line-live {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+  }
+  .tn-room-line-score,
+  .tn-room-line-team {
+    gap: 8px;
+  }
+}
+@media (max-width: 359.98px) {
+  .tn-room-line-team > :first-child {
+    display: none;
+  }
+}

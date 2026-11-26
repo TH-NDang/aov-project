@@ -1,11 +1,14 @@
+import { useQuery } from "@tanstack/react-query"
 import type { CompetitionView, Lane, RosterMembershipContent } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
-import { EntityPageLink } from "../../../components/go-link"
+import { EntityPageLink, GoLink } from "../../../components/go-link"
 import { Stage } from "../../../components/stage"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionMatches, type CompetitionMatch } from "../../../lib/match-model"
+import { statsHref } from "../../../lib/statistics-routes"
 import { teamForm, teamRecord } from "../../../lib/standings-model"
+import { statisticsQuery } from "../../../lib/tournament-api"
 import { LANE_NAMES } from "../../../lib/tournament-model"
 import { TeamStaff } from "./competition-people"
 import { FormMarks } from "./form-marks"
@@ -45,8 +48,21 @@ function Member({ view, row }: { view: CompetitionView; row: RosterMembershipCon
   )
 }
 
-/** A team of a competition: its logo on a stage of its own light, how it is doing, its roster and its staff. */
-function Squad({ view, teamId, entries }: { view: CompetitionView; teamId: string; entries: CompetitionMatch[] }) {
+/**
+ * A team of a competition: its logo on a stage of its own light, how it is doing, its roster and its staff. Where the
+ * competition counts published games, a team that has played leads to its own statistics.
+ */
+function Squad({
+  view,
+  teamId,
+  entries,
+  counted,
+}: {
+  view: CompetitionView
+  teamId: string
+  entries: CompetitionMatch[]
+  counted: boolean
+}) {
   const { text } = useStreamLocale()
   const { tournament, plan, teams, rosters, people } = view.content
   const team = teams[teamId]
@@ -72,6 +88,14 @@ function Squad({ view, teamId, entries }: { view: CompetitionView; teamId: strin
             <span>
               {text(`${record.won} thắng, ${record.lost} thua`, `${record.won} won, ${record.lost} lost`)}
               <FormMarks marks={teamForm(entries, teamId)} />
+              {counted && (
+                <GoLink
+                  to={statsHref(view.id, { part: "teams", team: teamId })}
+                  aria-label={text(`Thống kê của ${name} ở giải này`, `Statistics of ${name} in this tournament`)}
+                >
+                  {text("Thống kê", "Statistics")}
+                </GoLink>
+              )}
             </span>
           ) : null}
         </div>
@@ -92,6 +116,8 @@ function Squad({ view, teamId, entries }: { view: CompetitionView; teamId: strin
 export function CompetitionTeams({ view }: { view: CompetitionView }) {
   const { text } = useStreamLocale()
   const { plan, rosters } = view.content
+  const statistics = useQuery(statisticsQuery(view.id))
+  const counted = (statistics.data?.games ?? 0) > 0
   if (!plan.entrants.length)
     return (
       <div className="hub-state">
@@ -116,7 +142,7 @@ export function CompetitionTeams({ view }: { view: CompetitionView }) {
       )}
       <div className="tn-squads">
         {ordered.map((entrant) => (
-          <Squad key={entrant.teamId} view={view} teamId={entrant.teamId} entries={entries} />
+          <Squad key={entrant.teamId} view={view} teamId={entrant.teamId} entries={entries} counted={counted} />
         ))}
       </div>
     </div>

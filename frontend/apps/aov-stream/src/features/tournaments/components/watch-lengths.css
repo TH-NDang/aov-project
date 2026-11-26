@@ -1,0 +1,42 @@
+.tn-room-lengths {
+  display: grid;
+  padding: 6px;
+}
+.tn-room-lengths > button {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  gap: 1px 12px;
+  padding: 6px 12px;
+  border-radius: var(--aov-radius-card);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: left;
+}
+.tn-room-lengths > button:hover {
+  background: rgb(255 255 255 / 7%);
+}
+.tn-room-lengths > button:focus-visible {
+  outline-offset: -2px;
+}
+.tn-room-lengths b {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: inherit;
+}
+.tn-room-lengths > button[aria-checked="true"] > b {
+  color: var(--hub-accent-strong);
+}
+.tn-room-lengths span {
+  font-variant-numeric: tabular-nums;
+}
+.tn-room-lengths small {
+  grid-column: 1 / -1;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+}

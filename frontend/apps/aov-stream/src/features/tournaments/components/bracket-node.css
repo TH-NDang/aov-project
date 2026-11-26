@@ -1,0 +1,155 @@
+/* A match of a bracket as a card; the bracket sets its place and its width. */
+.tn-node {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  width: var(--bracket-card);
+  height: 94px;
+  grid-template-rows: 24px 1fr 1fr;
+  overflow: hidden;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition:
+    border-color 160ms,
+    opacity 160ms;
+}
+.tn-node:is(:hover, :focus-visible) {
+  border-color: var(--hub-accent);
+}
+.tn-node[data-live] {
+  border-color: var(--hub-red);
+}
+/* The later the round, the stronger its cards; the final is gold. */
+.tn-node[data-weight="semi"] {
+  border-color: var(--hub-border-strong);
+}
+.tn-node[data-weight="closing"] {
+  border-color: var(--hub-accent-border);
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--hub-accent) 13%, transparent), transparent 62%), var(--hub-surface);
+}
+.tn-node[data-weight="final"] {
+  border-color: color-mix(in srgb, var(--aov-medal-gold) 72%, var(--hub-border));
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--aov-medal-gold) 20%, transparent), transparent 70%),
+    var(--hub-surface);
+}
+.tn-node[data-weight="final"]:is(:hover, :focus-visible) {
+  border-color: var(--aov-medal-gold);
+}
+/* The gold of the medal on a dark ground; on a light one it is darkened with the ink to be read at 4.5:1. */
+.tn-node[data-weight="final"] .tn-node-team[data-won] > :is(span:nth-child(2), b) {
+  color: light-dark(color-mix(in srgb, var(--aov-game-gold) 65%, var(--hub-text)), var(--aov-medal-gold));
+}
+.tn-node-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 12px 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.tn-node-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: 5px;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-node-team + .tn-node-team {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-node-blank {
+  width: 24px;
+  height: 24px;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: 5px;
+}
+.tn-node-team > span:nth-child(2) {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The place a team brought from the table, before its name in its first match. */
+.tn-node-team small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tn-node-team > b {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-node-team[data-won] > :is(span:nth-child(2), b) {
+  font-weight: 700;
+}
+.tn-node-team[data-won] > b {
+  color: var(--hub-accent-strong);
+}
+.tn-node-team:is([data-lost], [data-open]) {
+  color: var(--hub-muted);
+}
+.tn-node-team:is([data-lost], [data-open]) > :is(span:nth-child(2), b) {
+  font-weight: 500;
+}
+.tn-node-team[data-open] > span:nth-child(2) {
+  font-size: 13px;
+}
+/*
+ * Following one team: its cards stay, the others step back. Their words turn to the muted tone, which still reads at
+ * 4.5:1, rather than fading; only the logos and the frame fade.
+ */
+.tn-bracket-plan[data-follow] > .tn-node:not([data-on], :hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--hub-border) 55%, transparent);
+}
+.tn-bracket-plan[data-follow] > .tn-node:not([data-on]) .tn-node-team > :first-child {
+  opacity: 0.4;
+}
+.tn-bracket-plan[data-follow] > .tn-node:not([data-on]) .tn-node-team > :is(span:nth-child(2), b) {
+  color: var(--hub-muted);
+}
+.tn-bracket-plan[data-follow] > .tn-node[data-on] {
+  border-color: var(--hub-accent-border);
+}
+/* The number of a match on the followed team's way, on the corner of its card. */
+.tn-node-stop {
+  position: absolute;
+  top: 4px;
+  right: 46px;
+  display: grid;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  place-items: center;
+}
+.tn-node-team[data-active] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-text);
+}
+/* Where a card is narrower than its date and format together, the number takes the place of the format. */
+@media (max-width: 1159.98px) {
+  .tn-node-stop {
+    right: 10px;
+  }
+  .tn-node:has(.tn-node-stop) .tn-node-head > :last-child {
+    visibility: hidden;
+  }
+}

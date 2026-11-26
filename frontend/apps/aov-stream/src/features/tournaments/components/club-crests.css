@@ -1,0 +1,66 @@
+/* The teams in one row, which scrolls sideways where it is longer than the window. */
+.tn-club-crests {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  gap: 4px;
+  /* The first crest stands level with the page; room around the row keeps its focus ring whole. */
+  margin: -4px -4px -4px -12px;
+  padding: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tn-club-crests::-webkit-scrollbar {
+  display: none;
+}
+.tn-club-crests > a {
+  --stream-image-size: 36px;
+  --stream-image-radius: var(--aov-radius-control);
+  position: relative;
+  display: grid;
+  min-width: 52px;
+  flex: none;
+  justify-items: center;
+  gap: 4px;
+  padding: 4px 6px 9px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.tn-club-crests > a > :first-child {
+  opacity: 0.66;
+  transition: opacity 120ms;
+}
+.tn-club-crests > a:is(:hover, :focus-visible) {
+  color: var(--hub-text);
+}
+.tn-club-crests > a:is(:hover, :focus-visible, [aria-current]) > :first-child {
+  opacity: 1;
+}
+.tn-club-crests > a:focus-visible {
+  outline-offset: 0;
+}
+.tn-club-crests > a[aria-current] {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-club-crests > a[aria-current]::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: 0;
+  left: 8px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--hub-accent);
+}
+@media (max-width: 899.98px) {
+  .tn-club-crests {
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding-inline: calc(var(--hub-gutter) - 8px);
+  }
+}

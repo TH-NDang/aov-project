@@ -1,0 +1,78 @@
+.tn-club-head {
+  display: grid;
+  gap: 24px;
+  padding: 24px 28px 14px;
+}
+.tn-club-head-team {
+  --stream-image-size: 72px;
+  --stream-image-radius: var(--hub-radius);
+  --stream-image-initials: 22px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 18px;
+}
+.tn-club-head-team > div {
+  min-width: 0;
+}
+.tn-club-head h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.tn-club-head-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 2px;
+  color: var(--aov-medal-gold);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-club-head-record {
+  margin: 4px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  line-height: 22px;
+}
+.tn-club-head-record > a {
+  font-weight: 700;
+}
+/* A name and a number of one line are pressed more easily than they are tall. */
+.tn-club-head-team :is(h2, p) > a {
+  position: relative;
+}
+.tn-club-head-team :is(h2, p) > a::after {
+  content: "";
+  position: absolute;
+  inset: -6px -10px -10px;
+}
+.tn-club-head-team h2 > a::after {
+  inset: -8px 0 0;
+}
+@media (max-width: 899.98px) {
+  .tn-club-head {
+    gap: 18px;
+    padding: 16px 16px 8px;
+  }
+  .tn-club-head-team {
+    --stream-image-size: 56px;
+    --stream-image-radius: var(--aov-radius-card);
+    --stream-image-initials: 18px;
+    gap: 14px;
+  }
+  .tn-club-head h2 {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .tn-club-head-record {
+    margin-top: 2px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+}

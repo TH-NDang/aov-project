@@ -7,7 +7,7 @@
   --stream-image-size: 28px;
   --stream-image-radius: 5px;
   display: grid;
-  grid-template-columns: 34px 28px minmax(0, 1fr) auto;
+  grid-template-columns: 38px 28px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   min-height: 46px;
@@ -22,7 +22,7 @@
 .tn-ranking > li[data-medal] {
   --medal: var(--aov-medal-bronze);
   --stream-image-size: 36px;
-  grid-template-columns: 34px 36px minmax(0, 1fr) auto;
+  grid-template-columns: 38px 36px minmax(0, 1fr) auto;
   min-height: 56px;
   margin-inline: -12px;
   padding-inline: 12px;
@@ -47,6 +47,7 @@
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .tn-ranking strong {
   font-weight: 600;

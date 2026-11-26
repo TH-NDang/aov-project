@@ -1,0 +1,34 @@
+/* What stands over a list of games, the way to the finder at the end of its line. */
+.tn-game-bar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px 24px;
+}
+.tn-game-bar-more {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-game-bar-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 899.98px) {
+  .tn-game-bar-more {
+    min-height: 40px;
+  }
+}
+/* On a phone a switch between parts of the list takes a line of its own. */
+@media (max-width: 759.98px) {
+  .tn-game-bar {
+    flex-wrap: wrap;
+    column-gap: 12px;
+  }
+}

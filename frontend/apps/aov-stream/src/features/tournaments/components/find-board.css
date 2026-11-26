@@ -1,0 +1,184 @@
+/*
+ * The board of the finder: a draft on a stage lit by the logo of the tournament, on the columns of the lines below it.
+ */
+.tn-find-stage {
+  /* The plate of a hero without a picture, as dark as the stage in either theme. */
+  --stage-light-left: 9%;
+  --stage-light-right: 91%;
+  --stage-light-scale: 6;
+}
+/*
+ * The logo shines from both ends, the product's own light from above the bans. A logo without colours leaves the ends as
+ * dark as the page, so the stage keeps a floor and an edge of its own.
+ */
+.tn-find-stage::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      46% 130% at 50% -10%,
+      color-mix(in srgb, var(--aov-stream-periwinkle-deep) 40%, transparent),
+      transparent 72%
+    ),
+    rgb(255 255 255 / 4%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
+}
+.tn-find-board {
+  min-width: 0;
+  padding-block: 14px 6px;
+  container: tn-line / inline-size;
+}
+.tn-find-seats {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+/* Full text, since a pale or bright logo lights the stage behind these small words. */
+.tn-find-label {
+  color: var(--hub-text);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.tn-find-seats > div {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--pick-gap, 4px);
+}
+/* For who comes by keyboard: past the board, to what it found. */
+.tn-find-skip {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  left: 8px;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tn-find-skip:focus-visible {
+  width: auto;
+  height: auto;
+  padding: 8px 14px;
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-accent);
+  clip-path: none;
+  color: var(--aov-stream-night);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* Games without heroes are found by their teams alone. */
+.tn-find-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 22px;
+  padding: 8px 18px 4px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-find-pair > p {
+  margin: 0;
+  flex: 0 0 100%;
+  text-align: center;
+}
+
+/* ---------- Both sides facing each other, over the lines ---------- */
+@container tn-line (min-width: 760px) {
+  .tn-find-cols {
+    --seat: var(--pick);
+    align-items: start;
+    row-gap: 0;
+  }
+  .tn-find-cols > * {
+    grid-row: 1;
+  }
+  /* The teams stand level with the seats, under the words over them. */
+  .tn-find-cols > :is(:first-child, :last-child) {
+    margin-top: 23px;
+  }
+  .tn-find-cols > :first-child {
+    grid-column: 1 / a-end;
+    justify-self: end;
+  }
+  .tn-find-cols > :last-child {
+    grid-column: b-start / -1;
+    justify-self: start;
+  }
+  .tn-find-seats[data-slot="a"] {
+    grid-column: picks-a;
+  }
+  .tn-find-seats[data-slot="b"] {
+    grid-column: picks-b;
+  }
+  .tn-find-seats[data-slot="bans"] {
+    --seat: 34px;
+    --seat-radius: 8px;
+    grid-column: game;
+    justify-items: center;
+  }
+  .tn-find-seats[data-slot="bans"] > div {
+    min-height: var(--pick);
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tn-find-seats[data-slot="bans"][data-size="middle"] {
+    --seat: 26px;
+    --seat-radius: 7px;
+  }
+  .tn-find-seats[data-slot="bans"][data-size="small"] {
+    --seat: 24px;
+    --seat-radius: 6px;
+  }
+  .tn-find-seats[data-size="small"] > div {
+    max-width: 132px;
+    gap: 4px;
+  }
+}
+
+/* ---------- One side over the other ---------- */
+@container tn-line (max-width: 759.98px) {
+  .tn-find-cols {
+    --seat: clamp(40px, 12cqi, 44px);
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 16px;
+  }
+  .tn-find-cols > :is(:first-child, :last-child) {
+    justify-self: start;
+    margin-left: 74px;
+  }
+  .tn-find-seats {
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+  .tn-find-seats > div {
+    gap: 7px;
+  }
+  .tn-find-label {
+    font-size: 13px;
+  }
+  /* Blank seats would say nothing the plus does not. */
+  .tn-find-seats i {
+    display: none;
+  }
+  .tn-find-seats[data-slot="bans"] {
+    --seat: 40px;
+    --seat-radius: 8px;
+    margin-block: 12px;
+    padding-block: 10px;
+    border-block: 1px solid rgb(255 255 255 / 14%);
+  }
+  .tn-find-board[data-folded] > :not(.tn-find-strip) {
+    display: none;
+  }
+}

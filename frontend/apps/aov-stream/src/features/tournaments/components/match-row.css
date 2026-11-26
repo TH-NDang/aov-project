@@ -18,6 +18,11 @@
   line-height: 20px;
   transition: background-color 120ms;
 }
+/* Nothing to say beside the pairing, which then takes the whole row. */
+.tn-fixture[data-bare] {
+  grid-template-columns: 56px minmax(0, 1fr) 84px minmax(0, 1fr) auto;
+  grid-template-areas: "time a score b format";
+}
 .tn-fixture + .tn-fixture {
   border-top: 1px solid var(--hub-border);
 }
@@ -201,7 +206,8 @@
     display: inline;
   }
   /* Two lines: where and when the match is, then the pairing. */
-  .tn-fixture {
+  .tn-fixture,
+  .tn-fixture[data-bare] {
     grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
     grid-template-areas:
       "top top top"
@@ -216,8 +222,10 @@
     font-size: 12px;
     line-height: 16px;
   }
+  /* The meta spans the whole line under them, so they stand above it to take their own taps. */
   .tn-fixture-time,
   .tn-fixture-format {
+    z-index: 1;
     align-self: start;
   }
   .tn-fixture-time {

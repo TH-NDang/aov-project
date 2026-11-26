@@ -37,7 +37,7 @@
 }
 .tn-filter-panel {
   width: min(440px, calc(100vw - 32px));
-  max-height: min(70vh, 600px);
+  max-height: min(70vh, 600px, var(--radix-popover-content-available-height, 70vh));
   padding: 0;
   overflow-y: auto;
 }
@@ -49,50 +49,6 @@
   --stream-image-radius: 4px;
   display: grid;
   gap: 18px;
-}
-.tn-filter-groups > section {
-  display: grid;
-  gap: 8px;
-}
-.tn-filter-groups h3 {
-  margin: 0;
-  color: var(--hub-muted);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-}
-.tn-filter-groups section > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.tn-filter-groups button,
-.tn-filter-tokens > button {
-  display: inline-flex;
-  min-height: 32px;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  border: 1px solid var(--hub-border);
-  border-radius: var(--aov-radius-pill);
-  background: var(--hub-surface);
-  color: var(--hub-text-soft);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition:
-    border-color 120ms,
-    background-color 120ms;
-}
-.tn-filter-groups button:hover,
-.tn-filter-tokens > button:hover {
-  border-color: var(--hub-accent-border);
-  background: var(--hub-hover);
-}
-.tn-filter-groups button[aria-pressed="true"] {
-  border-color: var(--hub-accent);
-  background: var(--hub-accent);
-  color: var(--hub-on-accent);
 }
 .tn-filter-foot {
   position: sticky;
@@ -124,21 +80,4 @@
 }
 .tn-filter-tokens > button {
   flex: none;
-  border-color: var(--hub-accent-border);
-  background: var(--hub-accent-soft);
-  color: var(--hub-text);
-}
-.tn-filter-tokens > button > svg {
-  color: var(--hub-muted);
-}
-.tn-filter-tokens > [data-clear] {
-  border-color: transparent;
-  background: none;
-  color: var(--hub-accent-strong);
-}
-@media (max-width: 899.98px) {
-  .tn-filter-groups button {
-    min-height: 40px;
-    padding: 0 14px;
-  }
 }

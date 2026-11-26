@@ -1,0 +1,14 @@
+/* The way from a period that holds nothing of a hero or a team to the whole competition. */
+.tn-stats-whole {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-self: start;
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-stats-whole:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

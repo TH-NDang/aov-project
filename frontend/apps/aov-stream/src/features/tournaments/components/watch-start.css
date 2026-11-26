@@ -1,0 +1,110 @@
+/* What the head of a match offers to watch; it stands on the stage, which is dark in both themes. */
+.tn-start {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.tn-start-main,
+.tn-start-more {
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+  border-radius: var(--aov-radius-pill);
+  text-align: left;
+  white-space: nowrap;
+  transition: background-color 120ms;
+}
+.tn-start-main {
+  gap: 14px;
+  padding: 4px 24px 4px 4px;
+  background: var(--hub-accent);
+  color: var(--aov-stream-night);
+}
+.tn-start-main:is(:hover, :focus-visible) {
+  background: var(--hub-accent-strong);
+}
+.tn-start-sign {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--aov-stream-night);
+  color: var(--hub-accent-strong);
+}
+/* The weight of a triangle lies left of its middle. */
+.tn-start-sign[data-play] > svg {
+  margin-left: 3px;
+  fill: currentColor;
+}
+.tn-start-more {
+  padding: 4px 20px;
+  background: rgb(255 255 255 / 9%);
+  color: var(--hub-text);
+}
+.tn-start-more:is(:hover, :focus-visible) {
+  background: rgb(255 255 255 / 16%);
+}
+.tn-start :is(.tn-start-main, .tn-start-more) > span:last-child {
+  display: grid;
+}
+.tn-start b {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.tn-start small {
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-start-main small {
+  color: color-mix(in srgb, var(--aov-stream-night) 86%, transparent);
+}
+.tn-start-more small {
+  color: rgb(255 255 255 / 78%);
+}
+/* Most matches that were played have a video, so its place is kept while that is not known yet. */
+.tn-start-wait {
+  display: block;
+  width: 220px;
+  height: 56px;
+  border-radius: var(--aov-radius-pill);
+  background: linear-gradient(100deg, rgb(255 255 255 / 7%) 30%, rgb(255 255 255 / 13%) 48%, rgb(255 255 255 / 7%) 70%);
+  background-size: 250% 100%;
+  animation: stream-shimmer 1.4s infinite;
+}
+@media (max-width: 1079.98px) {
+  .tn-start {
+    gap: 8px;
+  }
+  .tn-start-main {
+    gap: 10px;
+    padding-right: 18px;
+  }
+  .tn-start-more {
+    padding-inline: 16px;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-start {
+    flex-wrap: wrap;
+  }
+  .tn-start b {
+    font-size: 15px;
+    line-height: 20px;
+  }
+  .tn-start-wait {
+    width: 190px;
+  }
+}
+/* Both stand on one row down to 360px in English and 320px in Vietnamese. */
+@media (max-width: 379.98px) {
+  .tn-start-main {
+    gap: 8px;
+    padding-right: 14px;
+  }
+  .tn-start-more {
+    padding-inline: 12px;
+  }
+}

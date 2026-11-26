@@ -1,0 +1,150 @@
+/* The buttons of the room: round ones, words to press, and the one thing to do next. */
+.tn-room-icon {
+  display: inline-grid;
+  width: var(--room-target, 36px);
+  height: var(--room-target, 36px);
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--hub-text-soft);
+  transition: background-color 120ms;
+}
+.tn-room-icon:is(:hover, :focus-visible) {
+  background: rgb(255 255 255 / 10%);
+  color: var(--hub-text);
+}
+/* The way ahead and back is a solid sign, like those of a player. */
+.tn-room-icon[data-solid] > svg {
+  fill: currentColor;
+}
+.tn-room-icon[data-words] {
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--room-fill);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.tn-room[data-phone] .tn-room-icon[data-words] {
+  padding: 0 8px;
+}
+.tn-room-icon[data-words]:is(:hover, :focus-visible) {
+  background: rgb(255 255 255 / 12%);
+}
+/* The narrowest phones have no room for the words, which are then only read out. */
+@container tn-room-side (max-width: 310px) {
+  .tn-room-icon[data-words] {
+    width: var(--room-target);
+  }
+  .tn-room-icon[data-words] > span {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+  }
+}
+.tn-room-ends {
+  display: flex;
+  flex: none;
+  margin: 0 -8px 0 auto;
+}
+.tn-room-press {
+  display: inline-flex;
+  min-height: var(--room-target, 36px);
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border-radius: var(--aov-radius-pill);
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 120ms;
+}
+.tn-room-press:is(:hover, :focus-visible) {
+  background: rgb(255 255 255 / 8%);
+}
+.tn-room-press > svg {
+  flex: none;
+  fill: currentColor;
+}
+@container tn-room-side (max-width: 310px) {
+  .tn-room[data-phone] .tn-room-press > svg {
+    display: none;
+  }
+}
+.tn-room-go {
+  position: relative;
+  display: flex;
+  min-height: 48px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 9px;
+  overflow: hidden;
+  padding: 6px 18px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--aov-stream-night);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+  transition: background-color 120ms;
+}
+.tn-room-go:is(:hover, :focus-visible) {
+  background: var(--hub-accent-strong);
+}
+.tn-room-go > * {
+  position: relative;
+  flex: none;
+}
+.tn-room-go > span {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-room-go > svg:first-child {
+  fill: currentColor;
+}
+.tn-room-go > small {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+@container tn-room-side (max-width: 250px) {
+  .tn-room-go {
+    gap: 0 7px;
+    padding-inline: 12px;
+  }
+}
+/* While the video is about to go on by itself a line fills along the foot of the button. */
+.tn-room-go[data-counting]::before {
+  content: "";
+  position: absolute;
+  inset: auto auto 0 0;
+  width: calc(var(--done) * 100%);
+  height: 4px;
+  background: var(--aov-stream-night);
+  opacity: 0.62;
+  transition: width 1s linear;
+}
+@media (forced-colors: active) {
+  .tn-room-go {
+    border: 1px solid;
+  }
+  .tn-room-go[data-counting]::before {
+    background: Highlight;
+    opacity: 1;
+  }
+}

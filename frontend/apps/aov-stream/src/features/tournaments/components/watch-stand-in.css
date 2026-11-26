@@ -1,0 +1,59 @@
+/* In the place of the companion while that is on its way, or where it could not be loaded. */
+.tn-room-way-out {
+  display: flex;
+  min-height: 40px;
+  flex: none;
+  align-items: center;
+}
+.tn-room-wait {
+  min-height: 24px;
+  flex: 1;
+  margin-block: 8px 20px;
+  border-radius: var(--hub-radius-sm);
+  background: linear-gradient(100deg, var(--room-fill) 30%, var(--room-line) 48%, var(--room-fill) 70%);
+  background-size: 250% 100%;
+  animation: stream-shimmer 1.4s infinite;
+}
+.tn-room-lost {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding-bottom: 20px;
+  text-align: center;
+}
+.tn-room-lost > p {
+  max-width: 28ch;
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  text-wrap: balance;
+}
+/* Under the video it is about as high as what comes in its place, so the page below hardly moves. */
+.tn-room[data-shape="stack"] .tn-room-wait {
+  min-height: 320px;
+}
+.tn-room[data-shape="stack"] .tn-room-lost {
+  min-height: 140px;
+}
+/* Under a video without a companion all of it is one line. */
+.tn-room[data-shape="bare"] > .tn-room-stand-in {
+  width: var(--room-video-w);
+  height: 56px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.tn-room[data-shape="bare"] :is(.tn-room-wait, .tn-room-lost) {
+  margin: 0;
+  padding: 0;
+}
+.tn-room[data-shape="bare"] .tn-room-lost {
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+  text-align: start;
+}

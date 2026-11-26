@@ -1,0 +1,14 @@
+/* The name of a column over the rule its list hangs from. */
+.tn-column-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hub-border-strong);
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+}

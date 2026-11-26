@@ -1,0 +1,50 @@
+/* The player over the hero. */
+.tn-loadout-names {
+  display: grid;
+  min-width: 0;
+  text-wrap: balance;
+}
+.tn-loadout-names > strong {
+  min-width: 0;
+  /* In the middle of a column the arrow of a link would push its name aside. */
+  padding-left: var(--names-even, 0);
+  color: var(--hub-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+.tn-loadout-names > :is(span, small) {
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-loadout-names > small {
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-loadout-mvp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+  color: var(--hub-accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+@media (max-width: 1159.98px) {
+  .tn-loadout-names > strong {
+    font-size: 16px;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-loadout-names > strong {
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .tn-loadout-names > :is(span, small) {
+    font-size: 12px;
+    line-height: 16px;
+  }
+}

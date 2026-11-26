@@ -1,0 +1,45 @@
+/* The order or the measure of a list, as words in a row, the one in use underlined. */
+.tn-choice-words {
+  display: inline-flex;
+  flex: none;
+  gap: 18px;
+}
+.tn-choice-words > * {
+  position: relative;
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: color 120ms;
+}
+.tn-choice-words > :is(:hover, [aria-current], [aria-pressed="true"]) {
+  color: var(--hub-text);
+}
+.tn-choice-words > :is([aria-current], [aria-pressed="true"])::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--hub-accent);
+}
+@media (max-width: 899.98px) {
+  .tn-choice-words > * {
+    min-height: 40px;
+  }
+  .tn-choice-words > :is([aria-current], [aria-pressed="true"])::after {
+    bottom: 6px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-choice-words > :is([aria-current], [aria-pressed="true"])::after {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+}

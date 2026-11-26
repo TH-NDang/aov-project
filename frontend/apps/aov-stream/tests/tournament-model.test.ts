@@ -3,16 +3,18 @@ import { test } from "node:test"
 import {
   clock,
   hasLoadout,
+  heroKey,
   nameInitials,
   observationTimes,
   plainNote,
-  recordedLoadouts,
+  present,
   seriesRound,
   seriesSides,
   seriesTeams,
   snapshotAt,
 } from "../src/lib/tournament-model.ts"
-import type { EquipmentSnapshot, GameSide, Participant, PublishedGame } from "@aov/community-contracts"
+import type { EquipmentSnapshot, GameSide, PublishedGame } from "@aov/community-contracts"
+import { catalogOf, participant as player, reference } from "./fixtures/loadout.ts"
 
 const snapshot = (atSeconds: number): EquipmentSnapshot => ({
   atSeconds,
@@ -84,7 +86,7 @@ test("a missing picture is replaced by two letters of the name", () => {
 test("a series name loses its pairing, which the teams beside it already show", () => {
   assert.equal(seriesRound({ name: "Vòng 18 · FPL vs SGP" }), "Vòng 18")
   assert.equal(seriesRound({ name: "Chung kết tổng" }), "Chung kết tổng")
-  assert.equal(seriesRound({ name: "Vòng 1 nhánh thua · 2" }), "Vòng 1 nhánh thua · 2")
+  assert.equal(seriesRound({ name: "Vòng 1 nhánh thua · 2" }), "Vòng 1 nhánh thua, trận 2")
   assert.equal(seriesRound({ name: "HEV vs. BĐ" }), null)
   assert.equal(seriesRound(undefined), null)
 })
@@ -92,8 +94,8 @@ test("a series name loses its pairing, which the teams beside it already show", 
 test("a series made from a generated match reads its title in the reader's language", () => {
   const series = { name: null, title: { kind: "LOWER_ROUND", round: 1, number: 2 } } as const
 
-  assert.equal(seriesRound(series, "vi-VN"), "Vòng 1 nhánh thua · 2")
-  assert.equal(seriesRound(series, "en-US"), "Lower bracket round 1 · 2")
+  assert.equal(seriesRound(series, "vi-VN"), "Vòng 1 nhánh thua, trận 2")
+  assert.equal(seriesRound(series, "en-US"), "Lower bracket round 1, match 2")
 })
 
 test("a note imported from a wiki is shown without its markup", () => {
@@ -114,17 +116,6 @@ test("a note imported from a wiki is shown without its markup", () => {
     "MVP trận: Anne (4.8/5)\nBình luận: Huy Popper",
   )
   assert.equal(plainNote("{{Unknown}}"), "")
-})
-
-const player = (extra: Partial<Participant> = {}): Participant => ({
-  lane: "TOP",
-  hero: { name: "Airi" },
-  spell: {},
-  arcana: { status: "UNKNOWN", entries: [] },
-  enchantments: { status: "NOT_SHOWN", entries: [] },
-  equipmentSnapshots: [],
-  equipmentEvents: [],
-  ...extra,
 })
 
 const game = (scoreA?: number, scoreB?: number, bestOf = 7) =>
@@ -189,24 +180,26 @@ test("a loadout counts as recorded only when the source showed something", () =>
   const empty = player({ arcana: { status: "PARTIAL", entries: [] } })
   const known = player({
     arcana: { status: "KNOWN", entries: [{ selection: { name: "Ngọc đỏ" }, count: 10 }] },
-    equipmentSnapshots: [snapshot(0)],
   })
   const guessed = player({
     enchantments: { status: "UNKNOWN", entries: [{ selection: { name: "Phù hiệu" }, primary: true, tier: 1 }] },
   })
   assert.equal(hasLoadout(empty, "arcana"), false, "a status without entries shows nothing")
   assert.equal(hasLoadout(known, "arcana"), true)
-  assert.equal(hasLoadout(known, "equipment"), true)
   assert.equal(hasLoadout(guessed, "enchantments"), false)
+})
 
-  const sides = (participants: Participant[]) => [{ side: "BLUE", teamId: "a", bans: [], participants }] as GameSide[]
-  assert.deepEqual(recordedLoadouts(sides([empty, guessed])), [])
-  assert.deepEqual(recordedLoadouts(sides([empty, known])), ["equipment", "arcana"])
-  assert.deepEqual(
-    recordedLoadouts(
-      sides([player({ equipmentEvents: [{ atSeconds: 30, type: "BUY", item: { name: "Kiếm ngắn" } }] })]),
-    ),
-    ["equipment"],
-    "a recorded purchase is shown even without a picture of the inventory",
-  )
+test("a hero is addressed by its code, and by what else names it while the wiki does not know it", () => {
+  const catalog = catalogOf({ heroes: [{ ...reference("airi"), id: "1" }] })
+  assert.equal(heroKey(catalog, { id: "1" }), "airi")
+  assert.equal(heroKey(catalog, { id: "2", name: "Marja" }), "2")
+  assert.equal(heroKey(catalog, { name: "Marja" }), "Marja")
+  assert.equal(heroKey(catalog, {}), null)
+})
+
+test("a selection names something by an entry of the wiki or by a name of its own", () => {
+  assert.equal(present({ id: "airi" }), true)
+  assert.equal(present({ name: "Airi" }), true)
+  assert.equal(present({ id: null, name: "  " }), false)
+  assert.equal(present(null), false)
 })

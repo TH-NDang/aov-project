@@ -1,0 +1,255 @@
+/*
+ * One player of a lane. The parts of the loadout and the names stand on one grid: the parts are the face of a button as
+ * large as the seat, the names lie on it. A seat at the left mirrors the one it faces, so both heroes meet at the lane.
+ * The lineup says how large its heroes are (--seat-art).
+ */
+.tn-loadout-seat {
+  --side: var(--hub-blue);
+  --seat-kit: 34px;
+  --kit-flow: column;
+  --seat-item: clamp(34px, calc(7.5vw - 53px), 40px);
+  --seat-row: 6;
+  --seat-gap: 4px;
+  --build-pack: start;
+  --more-pack: start;
+  --seat-items: calc(var(--seat-row) * (var(--seat-item) + var(--seat-gap)) - var(--seat-gap));
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: var(--seat-art) var(--seat-kit) minmax(0, 1fr) var(--seat-items);
+  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "art kit who ."
+    "art kit who items"
+    "art kit who more"
+    "art kit who .";
+  column-gap: 8px;
+  padding: 12px 20px 12px 8px;
+}
+.tn-loadout-seat[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-loadout-seat[data-slot="a"] {
+  grid-template-columns: var(--seat-items) minmax(0, 1fr) var(--seat-kit) var(--seat-art);
+  grid-template-areas:
+    ".     who kit art"
+    "items who kit art"
+    "more  who kit art"
+    ".     who kit art";
+  padding: 12px 8px 12px 20px;
+  text-align: right;
+}
+.tn-loadout-open {
+  display: grid;
+  min-width: 0;
+  grid-area: 1 / 1 / -1 / -1;
+  grid-template: subgrid / subgrid;
+  text-align: inherit;
+}
+.tn-loadout-parts {
+  display: contents;
+}
+/* The whole seat answers to the pointer, its padding with it. */
+button.tn-loadout-open::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  transition: background-color 120ms;
+}
+button.tn-loadout-open:is(:hover, [data-state="open"]) {
+  --build-ground: var(--hub-hover);
+}
+button.tn-loadout-open:is(:hover, [data-state="open"])::before {
+  background: var(--hub-hover);
+}
+.tn-loadout-open:focus-visible {
+  outline: none;
+}
+.tn-loadout-open:focus-visible::before {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: -3px;
+}
+.tn-loadout-art {
+  --reference-size: var(--seat-art);
+  --reference-radius: var(--hub-radius-sm);
+  position: relative;
+  display: block;
+  grid-area: art;
+  align-self: center;
+  border-radius: var(--hub-radius-sm);
+  box-shadow: 0 0 0 2px var(--side);
+}
+.tn-loadout-art > :first-child {
+  display: flex;
+}
+/* The MVP of the game wears a star on the corner towards the lane. */
+.tn-loadout-star {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  box-shadow: 0 0 0 2px var(--build-ground, var(--hub-surface));
+  color: var(--hub-on-accent);
+}
+.tn-loadout-seat[data-slot="a"]:not([data-board]) .tn-loadout-star {
+  right: -7px;
+  left: auto;
+}
+/* The names lie on the button and let the pointer through to it, but for the links among them. */
+.tn-loadout-who {
+  z-index: 1;
+  min-width: 0;
+  grid-area: who;
+  align-self: center;
+  margin-inline: 6px 8px;
+  pointer-events: none;
+}
+.tn-loadout-seat[data-slot="a"] > .tn-loadout-who {
+  margin-inline: 8px 6px;
+}
+.tn-loadout-who a {
+  pointer-events: auto;
+}
+.tn-loadout-panel {
+  width: 392px;
+  max-width: calc(100vw - 32px);
+  max-height: min(720px, var(--radix-popover-content-available-height));
+  padding: 0;
+  overflow-y: auto;
+}
+/* Six items in a row leave no room for a name: two rows of three, and what was given up runs on under the names. */
+@media (max-width: 1159.98px) {
+  .tn-loadout-seat {
+    --seat-kit: 38px;
+    --seat-item: 38px;
+    --seat-row: 3;
+    --more-pack: end;
+    grid-template-areas:
+      "art kit .    ."
+      "art kit who  items"
+      "art kit more more"
+      "art kit .    .";
+  }
+  .tn-loadout-seat[data-slot="a"] {
+    --more-pack: start;
+    grid-template-areas:
+      ".     .    kit art"
+      "items who  kit art"
+      "more  more kit art"
+      ".     .    kit art";
+  }
+}
+@media (max-width: 1039.98px) {
+  .tn-loadout-seat {
+    --seat-kit: 34px;
+    --seat-item: 34px;
+  }
+}
+@media (min-width: 900px) {
+  /* Without items the lanes stand side by side: the names away from the lane, the heroes next to it. */
+  .tn-loadout-seat[data-board] {
+    --seat-kit: 44px;
+    --kit-apart: 0 0 0 8px;
+    --names-even: 16px;
+    grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      ". art kit ."
+      "who who who who";
+    align-content: start;
+    gap: 12px 0;
+    padding: 10px 8px 22px;
+    text-align: center;
+  }
+  .tn-loadout-seat[data-board][data-slot="a"] {
+    grid-template-areas:
+      "who who who who"
+      ". art kit .";
+    align-content: end;
+    padding: 22px 8px 10px;
+  }
+  .tn-loadout-seat[data-board] > .tn-loadout-who,
+  .tn-loadout-seat[data-board][data-slot="a"] > .tn-loadout-who {
+    margin: 0;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-loadout-seat {
+    align-content: start;
+    padding: 12px 12px 12px 0;
+  }
+  .tn-loadout-seat[data-slot="a"] {
+    padding: 12px 0 12px 12px;
+  }
+  /* Nothing beside the hero but its names; the spell and the enchantment are as wide under it as it is. */
+  .tn-loadout-seat:not([data-shown="ITEMS"]) {
+    --seat-kit: calc((var(--seat-art) - 4px) / 2);
+    --kit-flow: row;
+    --kit-apart: 6px 0 0;
+    grid-template-columns: var(--seat-art) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "art who"
+      "kit kit";
+  }
+  .tn-loadout-seat:not([data-shown="ITEMS"])[data-slot="a"] {
+    --kit-pack: flex-end;
+    grid-template-columns: minmax(0, 1fr) var(--seat-art);
+    grid-template-areas:
+      "who art"
+      "kit kit";
+  }
+  .tn-loadout-seat:not([data-shown="ITEMS"]) > .tn-loadout-who {
+    margin: 0;
+  }
+}
+/* On a phone the items stand beside the hero, and under both who played it and with what. */
+@media (max-width: 759.98px) {
+  .tn-loadout-seat[data-shown="ITEMS"] {
+    /* The longest nicknames need every pixel beside the spell and the enchantment of a narrow phone. */
+    --seat-kit: clamp(20px, 10vw - 15px, 24px);
+    --seat-foot: calc(2 * var(--seat-kit) + 4px);
+    --kit-flow: row;
+    --kit-align: start;
+    --kit-apart: 8px 0 0;
+    --seat-item: minmax(0, 36px);
+    --seat-gap: 2px;
+    --build-apart: 0 0 0 6px;
+    --more-pack: start;
+    grid-template-columns: var(--seat-art) minmax(0, calc(118px - var(--seat-foot))) var(--seat-foot) minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "art items items ."
+      "who who kit ."
+      "more more more more";
+    column-gap: 0;
+  }
+  .tn-loadout-seat[data-shown="ITEMS"][data-slot="a"] {
+    --build-pack: end;
+    --build-apart: 0 6px 0 0;
+    --more-pack: end;
+    grid-template-columns: minmax(0, 1fr) var(--seat-foot) minmax(0, calc(118px - var(--seat-foot))) var(--seat-art);
+    grid-template-areas:
+      ". items items art"
+      ". kit who who"
+      "more more more more";
+  }
+  .tn-loadout-seat[data-shown="ITEMS"] > .tn-loadout-who {
+    align-self: start;
+    margin: 6px 4px 0 0;
+  }
+  .tn-loadout-seat[data-shown="ITEMS"][data-slot="a"] > .tn-loadout-who {
+    margin: 6px 0 0 4px;
+  }
+}
+/* A game of which no spell and no enchantment is known keeps no place for them. */
+.tn-loadout-seat[data-kitless] {
+  --seat-kit: 0px;
+}

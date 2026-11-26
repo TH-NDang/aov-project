@@ -1,4 +1,7 @@
-/* One line of heroes; on a phone it scrolls sideways. */
+/*
+ * One line of heroes; on a phone it scrolls sideways. A line that scrolls cuts what stands over its edges, so it keeps
+ * room for the keyboard's ring inside and gives it back outside.
+ */
 .tn-top-heroes {
   --portrait: 100%;
   display: grid;
@@ -6,8 +9,8 @@
   grid-auto-flow: column;
   overflow-x: auto;
   gap: 14px;
-  margin: 0;
-  padding: 0;
+  margin: -5px;
+  padding: 5px;
   list-style: none;
   scrollbar-width: none;
 }
@@ -28,17 +31,19 @@
 .tn-top-heroes a:hover > :first-child {
   filter: brightness(1.14);
 }
-.tn-top-heroes strong {
-  overflow: hidden;
-  font-size: 14px;
-  font-weight: 600;
+/* The figure over the name, as on the shelves of the statistics: a name of two lines then moves nothing. */
+.tn-top-heroes b {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
   line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .tn-top-heroes a > span:last-child {
-  color: var(--hub-muted);
+  color: var(--hub-text-soft);
   font-size: 13px;
-  font-variant-numeric: tabular-nums;
   line-height: 18px;
+  text-wrap: balance;
+}
+.tn-top-heroes a:hover > span:last-child {
+  color: var(--hub-text);
 }

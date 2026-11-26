@@ -1,0 +1,236 @@
+/* Both teams of a game: heads, bans and five seats each, while it is drafted and while it is played. */
+.tn-room-board {
+  display: grid;
+  min-width: 0;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--room-gap);
+}
+.tn-room-head {
+  --side: var(--hub-blue);
+  display: flex;
+  min-height: var(--room-head);
+  align-items: center;
+  gap: 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-room-head[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-room-head[data-side]::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 2px;
+  background: var(--side);
+  forced-color-adjust: none;
+}
+/* The side of the map gives way whole: what does not fit wraps under the one line that is seen. */
+.tn-room-head > p {
+  display: flex;
+  min-width: 0;
+  height: 20px;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  overflow: hidden;
+  margin: 0;
+}
+.tn-room-head > p > * {
+  max-width: 100%;
+  overflow: hidden;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-room-head > p > b {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+/* What a team is doing stays, and a long name gives way to it. */
+.tn-room-head > p[data-busy] {
+  flex-wrap: nowrap;
+}
+.tn-room-head > p > em {
+  flex: none;
+  color: var(--hub-accent-strong);
+  font-style: normal;
+  font-weight: 600;
+}
+.tn-room-bans {
+  display: flex;
+  flex: none;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-room-bans > li {
+  display: flex;
+}
+@container tn-room-side (max-width: 270px) {
+  .tn-room:not([data-density="tight"]) .tn-room-bans {
+    --room-ban: 28px;
+    gap: 4px;
+  }
+}
+.tn-room-ban {
+  --reference-size: 100%;
+  --reference-radius: var(--aov-radius-control);
+  position: relative;
+  display: flex;
+  width: var(--room-ban);
+  height: var(--room-ban);
+  flex: none;
+  border-radius: var(--aov-radius-control);
+}
+.tn-room-ban > * {
+  filter: grayscale(0.85);
+}
+.tn-room-ban > i {
+  width: 100%;
+  border-radius: inherit;
+  background: var(--hub-plate);
+}
+/* A ban is struck from corner to corner; the stroke has dark edges, so it shows on a pale picture too. */
+.tn-room-ban::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--hub-ban-stroke);
+  forced-color-adjust: none;
+}
+.tn-room-ban:has(> i)::after {
+  opacity: 0.4;
+}
+/* Drawn small, pressed at the size of every button. */
+button.tn-room-ban::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: calc((var(--room-ban) - var(--room-target)) / 2) -2.5px;
+}
+button.tn-room-ban:is(:hover, :focus-visible) {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+/* What is still to be decided; what is being decided now is ringed. */
+.tn-room-blank {
+  display: block;
+  width: 100%;
+  border: 1px dashed rgb(255 255 255 / 36%);
+  border-radius: var(--hub-radius-sm);
+  aspect-ratio: 1;
+}
+.tn-room-bans .tn-room-blank {
+  width: var(--room-ban);
+  border-radius: var(--aov-radius-control);
+}
+.tn-room-blank[data-open] {
+  border: 2px solid var(--hub-accent);
+}
+/* A seat of a game that has begun, whose hero nobody recorded. */
+.tn-room-blank[data-unknown] {
+  border: 0;
+  background: var(--hub-sunken);
+}
+/* The faces stand on both margins; a long name may hang over its face, but never onto the next one. */
+.tn-room-seats {
+  --between: max(8px, (100cqi - 5 * var(--room-face)) / 4);
+  --over: min(8px, (var(--between) - 3px) / 2);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, var(--room-face)));
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-room-seat {
+  --reference-size: 100%;
+  --reference-radius: var(--hub-radius-sm);
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  justify-items: center;
+  gap: var(--room-name-gap);
+  border-radius: var(--hub-radius-sm);
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+.tn-room-seat > span:nth-child(2) {
+  --start: var(--over);
+  --end: var(--over);
+  width: calc(100% + var(--start) + var(--end));
+  height: 16px;
+  margin-inline: calc(-1 * var(--start)) calc(-1 * var(--end));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Beside the first and the last face there are only the margins. */
+li:first-child > .tn-room-seat > span:nth-child(2) {
+  --start: 8px;
+}
+li:last-child > .tn-room-seat > span:nth-child(2) {
+  --end: 8px;
+}
+@container tn-room-side (max-width: 300px) {
+  .tn-room-seat {
+    letter-spacing: -0.03em;
+  }
+}
+.tn-room-seat > span[data-hero] {
+  color: var(--hub-muted);
+}
+button.tn-room-seat:is(:hover, :focus-visible) {
+  outline: none;
+  color: var(--hub-text);
+}
+button.tn-room-seat:is(:hover, :focus-visible) > :first-child {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+.tn-room-turn {
+  display: flex;
+  height: var(--room-axis);
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-room-turn:empty {
+  gap: 0;
+}
+.tn-room-turn::before,
+.tn-room-turn::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--room-line);
+}
+.tn-room-lanes {
+  display: grid;
+  height: var(--room-axis);
+  grid-template-columns: repeat(5, minmax(0, var(--room-face)));
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--hub-muted);
+}
+.tn-room-lanes > span {
+  display: grid;
+  place-items: center;
+}

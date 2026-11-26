@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { regionName } from "../../../components/community-ui"
+import { FoldButton } from "../../../components/fold-button"
 import { GoLink } from "../../../components/go-link"
 import { Jersey } from "../../../components/jersey"
 import { useSections } from "../../../components/place-trail"
@@ -216,14 +217,10 @@ function PlayerBody({ profile }: { profile: PlayerProfile }) {
             </SeasonLine>
           ))}
         </ul>
-        {seasons.length > SEASONS && (
-          <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {open
-              ? text("Thu gọn", "Show less")
-              : text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
-            <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
-          </button>
-        )}
+        <FoldButton
+          fold={{ folds: seasons.length > SEASONS, open, toggle: () => setOpen(!open) }}
+          more={text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
+        />
       </Part>
       <p className="tn-quiet">
         {text(

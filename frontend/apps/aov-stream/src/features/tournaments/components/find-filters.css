@@ -1,0 +1,44 @@
+/*
+ * The foot of the board. Its buttons are words on the stage; the shared filter button takes the colours of the stage
+ * from here, as its own follow the theme of the page.
+ */
+.tn-find-foot {
+  --hub-surface: transparent;
+  --hub-border: transparent;
+  --hub-hover: rgb(255 255 255 / 9%);
+  --hub-accent-border: transparent;
+  --hub-on-accent: var(--aov-stream-night);
+  --aov-surface: transparent;
+  --aov-line: transparent;
+  --aov-text: var(--aov-stream-cream);
+  --aov-accent: var(--aov-stream-lavender);
+  --aov-on-accent: var(--aov-stream-night);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  margin-top: 6px;
+  padding-inline: 4px;
+}
+.tn-find-act {
+  display: inline-flex;
+  min-height: var(--hub-control-height);
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: var(--aov-radius-pill);
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-find-act:hover {
+  background: var(--hub-hover);
+}
+/* The filter button of a phone's sheet is drawn as a field elsewhere; on the board it is one of these words. */
+.tn-find-filter {
+  border-radius: var(--aov-radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+}

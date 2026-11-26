@@ -1,0 +1,34 @@
+/* What a team has taken so far, at the head of its side. */
+.tn-room-counts {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-room-counts > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.tn-room-counts > span > svg {
+  flex: none;
+  color: var(--hub-text-soft);
+}
+.tn-room-counts > span[data-none] {
+  color: var(--hub-muted);
+  font-weight: 500;
+}
+/* The record stops before the video does, so there may be more. */
+.tn-room-counts[data-behind] > span {
+  color: var(--hub-muted);
+}
+@media (forced-colors: active) {
+  .tn-room-counts > span > svg {
+    color: CanvasText;
+  }
+}

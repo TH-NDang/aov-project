@@ -10,7 +10,7 @@ import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionChampion } from "../../../lib/champion-model"
 import { codeName, competitionStatus, TIER_NAMES } from "../../../lib/competition-model"
 import { dayMonth } from "../../../lib/match-time"
-import { seasonLanes, shareOfYear, type SeasonBar, type SeasonLane } from "../../../lib/season-map"
+import { seasonLanes, shareOfYear, topTier, type SeasonBar, type SeasonLane } from "../../../lib/season-map"
 import { seasonName, seasonOfYear, shortCompetitionName } from "../../../lib/season-name"
 import { useNow } from "../../../lib/use-now"
 import { Crest } from "../../../components/crest"
@@ -65,7 +65,8 @@ function Lane({ lane, year }: { lane: SeasonLane; year: number }) {
   const name = other ? text("Các giải khác", "Other tournaments") : circuit?.name || plan.circuit || tournament.name
   const drawn = views.map((view) => view.content.tournament).find((item) => item.logoUrl || item.logoDarkUrl)
   const regions = [...new Set(views.map((view) => view.content.tournament.region).filter((code) => !!code))]
-  const tier = codeName(TIER_NAMES, tournament.tier, text)
+  const top = topTier(views)
+  const tier = codeName(TIER_NAMES, top, text)
   return (
     <li className="tn-map-lane" style={{ "--lines": lines, "--tall": tall } as CSSProperties}>
       <div className="tn-map-head">
@@ -73,7 +74,7 @@ function Lane({ lane, year }: { lane: SeasonLane; year: number }) {
         <div>
           <h3>{circuit?.published && !other ? <GoLink to={`/pages/${circuit.code}`}>{name}</GoLink> : name}</h3>
           <p>
-            {!other && tier && <TierEmblem tier={tournament.tier} size={18} label={tier} />}
+            {!other && tier && <TierEmblem tier={top} size={18} label={tier} />}
             {regions.length > 3 ? (
               <RegionMark code="GLOBAL" size={16} />
             ) : (

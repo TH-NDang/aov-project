@@ -15,7 +15,7 @@ import { competitionRegionName } from "../../../lib/competition-filters"
 import { codeName, competitionStatus, TIER_NAMES } from "../../../lib/competition-model"
 import { competitionProgress } from "../../../lib/stage-phases"
 import { useNow } from "../../../lib/use-now"
-import { StageRail } from "./stage-rail"
+import { StageRail, type StageDoor } from "./stage-rail"
 import "./competition-head.css"
 
 /** The champion at the far end of the head, under the light of its own logo. */
@@ -69,12 +69,12 @@ export function CompetitionHead({
   view,
   trail,
   head,
-  openStages,
+  stages,
 }: {
   view: CompetitionView
   trail: ReactNode
   head: RefObject<HTMLDivElement | null>
-  openStages: () => void
+  stages: StageDoor
 }) {
   const { text, languageTag } = useStreamLocale()
   const { tournament, plan } = view.content
@@ -148,7 +148,7 @@ export function CompetitionHead({
           </div>
           {won ? <ChampionMark won={won} /> : status !== "FINISHED" && <ClockMark view={view} />}
         </header>
-        <StageRail view={view} open={openStages} />
+        <StageRail view={view} door={stages} />
       </Stage>
     </div>
   )

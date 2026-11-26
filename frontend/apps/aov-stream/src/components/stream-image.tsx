@@ -20,20 +20,20 @@ export function StreamImage({
   className?: string
 }) {
   const [failed, setFailed] = useState<string[]>([])
-  const [loaded, setLoaded] = useState<string>()
+  const [loaded, setLoaded] = useState<string[]>([])
   const usable = (url: string | null | undefined) => (url && !failed.includes(url) ? url : null)
   const light = usable(src)
   const dark = usable(darkSrc)
   const shown = light || dark
-  const fail = (url: string) => setFailed((current) => (current.includes(url) ? current : [...current, url]))
+  const add = (url: string) => (urls: string[]) => (urls.includes(url) ? urls : [...urls, url])
+  const load = (url: string) => setLoaded(add(url))
+  const fail = (url: string) => setFailed(add(url))
+  // The version of a logo the other theme shows never loads.
+  const ready = [logo ? dark : null, shown].some((url) => url && loaded.includes(url))
   return (
-    <span
-      className={`stream-image ${className}`}
-      data-logo={logo || undefined}
-      data-ready={(!!shown && loaded === shown) || undefined}
-    >
+    <span className={`stream-image ${className}`} data-logo={logo || undefined} data-ready={ready || undefined}>
       {shown && logo ? (
-        <ThemedLogo src={light} darkSrc={dark} alt={name} onLoad={() => setLoaded(shown)} onError={fail} />
+        <ThemedLogo src={light} darkSrc={dark} alt={name} onLoad={load} onError={fail} />
       ) : shown ? (
         <img
           key={shown}
@@ -41,7 +41,7 @@ export function StreamImage({
           alt={name}
           loading="lazy"
           decoding="async"
-          onLoad={() => setLoaded(shown)}
+          onLoad={() => load(shown)}
           onError={() => fail(shown)}
         />
       ) : (

@@ -1,0 +1,255 @@
+.tn-herotable-box {
+  min-width: 0;
+  container-type: inline-size;
+  isolation: isolate;
+}
+/* Every hero in numbers: hairlines between the lines, no boxes. The head stays in view under the bars of the page. */
+.tn-herotable {
+  width: 100%;
+  border-spacing: 0;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+}
+.tn-herotable thead th {
+  position: sticky;
+  z-index: 2;
+  top: var(--hub-stack);
+  height: 42px;
+  padding: 0;
+  background: var(--hub-bg);
+  box-shadow: inset 0 -1px var(--hub-border);
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+.tn-herotable thead th:first-child,
+.tn-herotable thead [data-column="presence"] {
+  text-align: left;
+}
+/* The head hides the ground of a line pointed at, too, where it reaches past the columns. */
+.tn-herotable thead th:first-child {
+  box-shadow:
+    inset 0 -1px var(--hub-border),
+    -12px 0 var(--hub-bg);
+}
+.tn-herotable thead th:last-child {
+  box-shadow:
+    inset 0 -1px var(--hub-border),
+    12px 0 var(--hub-bg);
+}
+.tn-herotable thead abbr {
+  text-decoration: none;
+}
+/* The column in use is underlined, as the order of the shelves is. */
+.tn-herotable thead a {
+  position: relative;
+  display: inline-flex;
+  height: 42px;
+  align-items: center;
+}
+.tn-herotable thead a:hover,
+.tn-herotable thead [aria-sort="descending"] {
+  color: var(--hub-text);
+}
+.tn-herotable thead [aria-sort="descending"] > a::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--hub-accent);
+}
+.tn-herotable tbody > tr > * {
+  height: 54px;
+  padding: 0;
+  border-bottom: 1px solid var(--hub-border);
+  text-align: right;
+  white-space: nowrap;
+}
+.tn-herotable tbody th {
+  position: relative;
+  width: 232px;
+  font-weight: 400;
+  text-align: left;
+}
+/* The ground of a line pointed at reaches past the columns, so its text stays level with the rest of the page. */
+.tn-herotable tbody th::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 auto 0 -12px;
+  width: calc(100cqi + 24px);
+  border-radius: var(--aov-radius-card);
+}
+.tn-herotable tbody > tr:not(.tn-herotable-rest):hover > th::before {
+  background: var(--hub-hover);
+}
+.tn-herotable-hero {
+  --portrait: 36px;
+  --portrait-radius: 8px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+/* Short of room, the lanes stand under the name. */
+.tn-herotable-hero > :last-child {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 10px;
+}
+.tn-herotable-hero a {
+  font-weight: 600;
+}
+/* The line opens the hero, from its first cell as wide as its ground; the numbers on it open their games. */
+.tn-herotable-hero a::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -12px;
+  width: calc(100cqi + 24px);
+  border-radius: var(--aov-radius-card);
+}
+.tn-herotable-hero a:focus-visible {
+  outline: 0;
+}
+.tn-herotable-hero a:focus-visible::after {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: -2px;
+}
+.tn-herotable tr:hover .tn-herotable-hero a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-herotable-lanes {
+  display: inline-flex;
+  gap: 5px;
+  color: var(--hub-muted);
+}
+.tn-herotable td[data-column="presence"] {
+  padding-right: 28px;
+  text-align: left;
+}
+.tn-herotable-fate {
+  display: inline-flex;
+  width: calc(100% - 62px);
+  margin-right: 14px;
+  vertical-align: middle;
+}
+.tn-herotable td > b {
+  font-weight: 600;
+}
+.tn-herotable td[data-column="presence"] > b {
+  display: inline-block;
+  width: 48px;
+}
+.tn-herotable :is([data-column="picks"], [data-column="bans"]) {
+  width: 72px;
+}
+.tn-herotable [data-column="wins"] {
+  width: 132px;
+}
+.tn-herotable :is([data-column="blue"], [data-column="red"]) {
+  width: 96px;
+}
+.tn-herotable thead [data-column="wins"] {
+  padding-right: 48px;
+}
+.tn-herotable-share {
+  display: inline-block;
+  width: 48px;
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+/* A number above the line's own link, with room around it to press. */
+.tn-herotable-count {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: flex-end;
+  font-weight: 600;
+}
+.tn-herotable-count:hover {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-herotable-none {
+  color: var(--hub-muted);
+}
+.tn-herotable tbody > .tn-herotable-rest > th {
+  height: 52px;
+  padding-top: 12px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+@media (forced-colors: active) {
+  .tn-herotable thead [aria-sort="descending"] > a::after {
+    forced-color-adjust: none;
+  }
+}
+@media (max-width: 1099.98px) {
+  .tn-herotable tbody th {
+    width: 208px;
+  }
+  .tn-herotable td[data-column="presence"] {
+    padding-right: 12px;
+  }
+  .tn-herotable :is([data-column="picks"], [data-column="bans"]) {
+    width: 58px;
+  }
+  .tn-herotable :is([data-column="blue"], [data-column="red"]) {
+    width: 78px;
+  }
+}
+/* Compact: the bar stands under the name, the numbers beside them. */
+@media (max-width: 899.98px) {
+  .tn-herotable thead th {
+    position: static;
+    height: 36px;
+  }
+  .tn-herotable tbody > tr > * {
+    height: 58px;
+  }
+  .tn-herotable tbody th {
+    width: auto;
+  }
+  .tn-herotable-hero > :last-child {
+    display: grid;
+    gap: 5px;
+    padding-right: 4px;
+  }
+  .tn-herotable-hero a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tn-herotable td[data-column="presence"],
+  .tn-herotable thead [data-column="presence"] {
+    padding-right: 0;
+    text-align: right;
+  }
+  .tn-herotable td[data-column="presence"] > b {
+    width: auto;
+  }
+  .tn-herotable :is([data-column="presence"], [data-column="picks"], [data-column="rate"]) {
+    width: 52px;
+  }
+  .tn-herotable [data-column="record"] {
+    width: 66px;
+  }
+  /* As wide as its English head and a gap, which would otherwise run into the record before it. */
+  .tn-herotable [data-column="bans"] {
+    width: 58px;
+  }
+}

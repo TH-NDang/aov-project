@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionView } from "@aov/community-contracts"
-import { championBanners, isLongMap, seasonLanes, shareOfYear } from "../src/lib/season-map.ts"
+import { championBanners, isLongMap, seasonLanes, shareOfYear, topTier } from "../src/lib/season-map.ts"
 import { partName, seasonOfYear } from "../src/lib/season-name.ts"
 import { competition } from "./fixtures/competition.ts"
 
@@ -100,6 +100,13 @@ test("lanes come by the tier of their circuit and competitions outside any close
     lanes(views).map((lane) => lane.key),
     ["World", "Small", "other"],
   )
+})
+
+test("a circuit has the tier of its main event, not of the part of it that ended last", () => {
+  const main = season("main", "2026-06-18", "2026-07-12", "a", { tier: "A" })
+  const queens = season("queens", "2026-07-01", "2026-07-19", "b", { tier: "B", parentTournamentId: "main" })
+  assert.equal(topTier([queens, main]), "A")
+  assert.equal(topTier([season("untiered", "2026-06-18", "2026-07-12")]), undefined)
 })
 
 test("a banner hangs for the latest champion of a circuit, with the titles it has won there", () => {

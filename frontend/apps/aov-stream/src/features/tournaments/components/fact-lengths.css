@@ -1,0 +1,129 @@
+.tn-fact-lengths {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+.tn-fact-lengths > p {
+  margin: -8px 0 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+}
+.tn-fact-lengths > p > b {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+/* A column for every minute from the shortest game to the longest, standing on one line. */
+.tn-fact-minutes {
+  display: grid;
+  height: 120px;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-template-rows: 1fr 20px;
+  column-gap: 2px;
+  background: linear-gradient(var(--hub-border-strong), var(--hub-border-strong)) 0 calc(100% - 20px) / 100% 1px
+    no-repeat;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+}
+.tn-fact-minutes > a {
+  display: flex;
+  grid-row: 1;
+  grid-column: var(--column);
+  align-items: flex-end;
+}
+.tn-fact-minutes > a > i {
+  width: 100%;
+  height: max(2px, var(--share) * 100%);
+  border-radius: 2px 2px 0 0;
+  background: var(--hub-accent);
+}
+.tn-fact-minutes > a:hover > i {
+  background: var(--hub-accent-strong);
+}
+.tn-fact-minutes > span {
+  grid-row: 2;
+  grid-column: var(--column);
+  justify-self: center;
+  white-space: nowrap;
+}
+.tn-fact-minutes > [data-end="first"] {
+  justify-self: start;
+}
+.tn-fact-minutes > [data-end="last"] {
+  justify-self: end;
+}
+.tn-fact-spans {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-fact-spans a {
+  display: grid;
+  min-height: 48px;
+  align-content: center;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}
+.tn-fact-spans b {
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.tn-fact-spans a:hover > b {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-fact-extremes {
+  --fact-row: 56px;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 8px 32px;
+}
+.tn-fact-extremes h3 {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-fact-extremes ol {
+  margin: 0;
+  padding: 0;
+}
+.tn-fact-clock {
+  width: 48px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+@container tn-highlights (max-width: 1035.98px) {
+  .tn-fact-extremes {
+    grid-auto-flow: row;
+    gap: 18px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-fact-minutes > a > i {
+    forced-color-adjust: none;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-fact-spans {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 12px;
+  }
+}

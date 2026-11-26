@@ -9,6 +9,8 @@
 }
 .tn-moments > li {
   --side: var(--hub-border-strong);
+}
+.tn-moment-row {
   display: grid;
   min-height: 42px;
   grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr);
@@ -34,13 +36,24 @@
   font-size: 14px;
   line-height: 20px;
 }
-.tn-moments > li[data-slot="b"] > .tn-moment {
+.tn-moments > li[data-slot="b"] .tn-moment {
   grid-column: 3;
   justify-content: flex-start;
 }
 .tn-moment > b {
+  min-width: 0;
   color: var(--hub-text);
   font-weight: 600;
+}
+/* The sign of an objective stays beside its words, also where they need two lines. */
+.tn-moment-taken {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.tn-moment-taken > svg {
+  flex: none;
+  color: var(--hub-text-soft);
 }
 .tn-moment > small {
   flex: 1 1 100%;
@@ -79,22 +92,61 @@
   font-size: 12px;
   line-height: 16px;
 }
+/* A moment that can be watched: its time reads as the link. */
+a.tn-moment-row {
+  border-radius: var(--aov-radius-control);
+}
+a.tn-moment-row .tn-moment-time > time {
+  color: var(--hub-accent-strong);
+}
+a.tn-moment-row:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--hub-text) 5%, transparent);
+}
+a.tn-moment-row:is(:hover, :focus-visible) .tn-moment-time > time {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a.tn-moment-row:focus-visible {
+  outline-offset: -2px;
+}
 @media (max-width: 899.98px) {
   .tn-moments {
     padding: 6px 12px;
   }
-  .tn-moments > li {
-    grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr);
+  .tn-moment-row {
+    grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
   }
   .tn-moment {
     --reference-size: 28px;
     font-size: 13px;
     line-height: 18px;
   }
-  .tn-moments > li:not([data-slot="b"]) > .tn-moment {
+  .tn-moments > li:not([data-slot="b"]) .tn-moment {
     text-align: right;
+  }
+  .tn-moment-taken {
+    gap: 5px;
+  }
+  .tn-moment-time > time {
+    min-width: 50px;
+    padding-inline: 6px;
   }
   .tn-moment-assists {
     display: none;
+  }
+}
+@media (max-width: 379.98px) {
+  .tn-moments {
+    padding-inline: 4px;
+  }
+  .tn-moment-row {
+    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+  }
+  .tn-moment-taken {
+    gap: 4px;
+  }
+  .tn-moment-time > time {
+    min-width: 44px;
+    padding-inline: 4px;
   }
 }

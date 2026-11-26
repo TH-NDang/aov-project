@@ -324,6 +324,21 @@
   .wy-trail > li + li::before {
     margin-inline: 10px;
   }
+  .wy-trail > li > a {
+    min-height: 40px;
+  }
+  /* A finger finds it on the height of the names beside it. */
+  .wy-switch {
+    position: relative;
+  }
+  .wy-switch::after {
+    content: "";
+    position: absolute;
+    inset: -3px 0;
+  }
+  .wy-steps > :is(a, i) {
+    height: 40px;
+  }
   /* The steps are their arrows alone; what they lead to is their accessible name. */
   .wy-steps > a {
     width: 44px;

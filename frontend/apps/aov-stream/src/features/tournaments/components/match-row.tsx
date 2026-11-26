@@ -84,15 +84,26 @@ function RowScore({ a, b }: { a: MatchSide; b: MatchSide }) {
 
 /**
  * One match on a line of a schedule: its time, both teams around the score, its round and how many games decide it.
- * The whole row opens the match. `competition` adds the competition's name, for a list that mixes several.
+ * The whole row opens the match. `competition` adds the competition's name, for a list that mixes several; `round`
+ * replaces what the row says of its round, and a `bare` row has no place for such words.
  */
-export function MatchRow({ entry, competition = false }: { entry: CompetitionMatch; competition?: boolean }) {
+export function MatchRow({
+  entry,
+  competition = false,
+  round: said,
+  bare = false,
+}: {
+  entry: CompetitionMatch
+  competition?: boolean
+  round?: string | null
+  bare?: boolean
+}) {
   const { text, languageTag } = useStreamLocale()
   const { match, competition: view } = entry
   const { plan, tournament } = view.content
   const [a, b] = matchSides(entry, languageTag)
   const status = matchStatus(entry)
-  const round = matchRound(entry, languageTag)
+  const round = said === undefined ? matchRound(entry, languageTag) : said
   const meta: ReactNode[] = [
     status === "PENDING" && <em key="state">{text(...matchStateLabels.PENDING)}</em>,
     round && <RoundLabel key="round" entry={entry} label={round} />,
@@ -108,6 +119,7 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
       className="tn-fixture"
       to={competitionMatchHref(view.id, match.key)}
       data-live={status === "LIVE" || undefined}
+      data-bare={bare || undefined}
     >
       <span className="tn-fixture-time">
         <LocalTime
@@ -121,7 +133,7 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
       <RowTeam team={a} />
       <RowScore a={a} b={b} />
       <RowTeam team={b} />
-      <span className="tn-fixture-meta">{meta}</span>
+      {!bare && <span className="tn-fixture-meta">{meta}</span>}
       <span className="tn-fixture-format">BO{match.bestOf}</span>
     </Link>
   )

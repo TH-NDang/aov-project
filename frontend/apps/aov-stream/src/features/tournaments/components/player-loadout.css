@@ -1,88 +1,85 @@
-/* What a player built, beside or under their name. */
+/*
+ * What a player brought and built, at a glance. The seat it stands in places the three parts and says how large their
+ * tiles are (--seat-kit, --seat-item), how many of them make a row (--seat-row) and which end they keep to.
+ */
+.tn-loadout-kit {
+  --reference-size: var(--seat-kit);
+  --reference-radius: 50%;
+  display: flex;
+  min-width: 0;
+  flex-direction: var(--kit-flow);
+  align-self: var(--kit-align, center);
+  justify-content: var(--kit-pack, normal);
+  gap: 4px;
+  grid-area: kit;
+  margin: var(--kit-apart, 0);
+}
+/* An enchantment is a figure cut out of its picture, so it stands on a plate of the spell's shape. */
+.tn-loadout-emblem {
+  background: color-mix(in srgb, var(--hub-text) 8%, transparent);
+}
+.tn-loadout-none,
+.tn-build-place {
+  /* Drawn where the system replaces the colours of the page. */
+  border: 1px solid transparent;
+  background: var(--hub-sunken);
+}
+.tn-loadout-none {
+  width: var(--seat-kit);
+  flex: none;
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
 .tn-build {
   display: grid;
   min-width: 0;
-  grid-area: build;
+  grid-area: items;
+  grid-template-columns: repeat(var(--seat-row), var(--seat-item));
+  align-content: start;
+  align-items: start;
+  justify-content: var(--build-pack);
+  gap: var(--seat-gap);
+  margin: var(--build-apart, 0);
+}
+.tn-build[data-blank] {
+  align-self: center;
+  grid-template-columns: minmax(0, 1fr);
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: var(--build-pack);
+  text-wrap: balance;
+}
+.tn-build-place {
+  border-radius: var(--aov-radius-control);
+  aspect-ratio: 1;
+}
+/* What is no part of the build: smaller, behind the word for what became of it. */
+.tn-build-more {
+  --build-item: 24px;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: var(--more-pack);
+  gap: 4px 10px;
+  grid-area: more;
+  margin-top: 8px;
+}
+.tn-build-more > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
+}
+.tn-build-more small {
+  margin-right: 2px;
   color: var(--hub-muted);
   font-size: 12px;
   line-height: 16px;
 }
-.tn-slots {
-  --reference-size: 100%;
-  --reference-radius: var(--aov-radius-control);
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 34px));
-  gap: 4px;
-}
-.tn-slot {
-  display: grid;
-  overflow: hidden;
-  place-items: center;
-  border-radius: var(--aov-radius-control);
-  background: var(--hub-sunken);
-  color: var(--hub-muted);
-  font-size: 13px;
-  aspect-ratio: 1;
-}
-.tn-slot[data-unknown] {
-  border: 1px dashed var(--hub-border-strong);
-  background: none;
-}
-.tn-runes {
-  --reference-size: 28px;
-  --reference-radius: 50%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  color: var(--hub-text-soft);
-  font-weight: 600;
-}
-.tn-runes > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-/* The primary branch stands a step larger than the other. */
-.tn-runes > span[data-branch] {
-  --reference-size: 34px;
-}
-[data-slot="b"] > .tn-build {
-  justify-items: end;
-}
-[data-slot="b"] > .tn-build > .tn-runes {
-  justify-content: flex-end;
-}
-/* Under the name, a build starts on the side of its hero. */
-@media (max-width: 1179.98px) {
-  [data-slot="a"] > .tn-build {
-    justify-items: end;
-  }
-  [data-slot="a"] > .tn-build > .tn-runes {
-    justify-content: flex-end;
-  }
-  [data-slot="b"] > .tn-build {
-    justify-items: start;
-  }
-  [data-slot="b"] > .tn-build > .tn-runes {
-    justify-content: flex-start;
-  }
-}
 @media (max-width: 899.98px) {
-  .tn-slots {
-    width: 100%;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 2px;
-  }
-  .tn-slot {
+  .tn-build[data-blank] {
     font-size: 12px;
-  }
-  .tn-runes {
-    --reference-size: 22px;
-    gap: 3px 5px;
-  }
-  .tn-runes > span[data-branch] {
-    --reference-size: 26px;
+    line-height: 16px;
   }
 }

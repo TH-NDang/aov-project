@@ -1,7 +1,7 @@
 import type { CompetitionStage, CompetitionView } from "@aov/community-contracts"
-import { dayKeyInZone, currentTimeZone, isValidTimeZone } from "@aov/ui/lib/time-zone"
+import { dayKeyInZone } from "@aov/ui/lib/time-zone"
 import { competitionStatus, playedOrder } from "./competition-model.ts"
-import { competitionMatches, matchState, type CompetitionMatch } from "./match-model.ts"
+import { competitionMatches, matchState, planZone, type CompetitionMatch } from "./match-model.ts"
 
 export type StagePhase = {
   stage: CompetitionStage
@@ -21,7 +21,7 @@ const decided = (entry: CompetitionMatch) => {
 /** The stages of a competition that have matches, in the order they are played, with how far each has come. */
 export function stagePhases(view: CompetitionView, now = Date.now()): StagePhase[] {
   const { plan } = view.content
-  const zone = isValidTimeZone(plan.timezone) ? plan.timezone : currentTimeZone()
+  const zone = planZone(plan)
   const entries = competitionMatches([view])
   const over = competitionStatus(view.content, now) === "FINISHED"
   return playedOrder(plan.stages, plan.matches).flatMap((stage): StagePhase[] => {

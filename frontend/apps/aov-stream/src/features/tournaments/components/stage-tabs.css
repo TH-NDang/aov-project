@@ -1,0 +1,69 @@
+/* The parts of a page under its stage, in one underlined row that scrolls sideways where it does not fit. */
+.tn-stage-tabs {
+  position: relative;
+  display: flex;
+  gap: 26px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--hub-border);
+  scrollbar-width: none;
+}
+.tn-stage-tabs::-webkit-scrollbar {
+  display: none;
+}
+.tn-stage-tabs > a {
+  position: relative;
+  display: inline-flex;
+  min-height: 42px;
+  flex: none;
+  align-items: center;
+  color: var(--hub-muted);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: color 120ms;
+}
+.tn-stage-tabs > a:is(:hover, [aria-current]) {
+  color: var(--hub-text);
+}
+.tn-stage-tabs > a[aria-current] {
+  font-weight: 700;
+}
+.tn-stage-tabs > a[aria-current]::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--hub-accent);
+}
+.tn-stage-tabs > a:focus-visible {
+  outline-offset: -3px;
+}
+@media (max-width: 899.98px) {
+  .tn-stage-tabs > a {
+    min-height: 44px;
+  }
+}
+@media (max-width: 759.98px) {
+  .tn-stage-tabs {
+    gap: 18px;
+  }
+  .tn-stage-tabs > a {
+    font-size: 14px;
+  }
+}
+@media (max-width: 559.98px) {
+  .tn-stage-tabs {
+    gap: 14px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-stage-tabs > a[aria-current]::after {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+}

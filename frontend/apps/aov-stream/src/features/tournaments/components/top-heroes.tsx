@@ -1,7 +1,9 @@
 import { Link } from "react-router"
 import type { CompetitionStatistics, CompetitionView } from "@aov/community-contracts"
 import { useStreamLocale } from "../../../components/stream-locale"
-import { heroHref, heroLines, percent } from "../../../lib/statistics-model"
+import { shareOrGames } from "../../../lib/shares"
+import { mostSeen } from "../../../lib/statistics-model"
+import { statsHref } from "../../../lib/statistics-routes"
 import { HeroPortrait } from "./hero-portrait"
 import { Section } from "./section"
 import "./top-heroes.css"
@@ -19,24 +21,28 @@ export function TopHeroes({
   statistics: CompetitionStatistics
   open: () => void
 }) {
-  const { text } = useStreamLocale()
-  const heroes = heroLines(statistics)
-    .filter((line) => line.id)
-    .slice(0, SHOWN)
+  const { text, languageTag } = useStreamLocale()
+  // Presence says little where some games do not show their bans; picks are known of every game.
+  const seen = statistics.withBans === statistics.games
+  const heroes = mostSeen(statistics, SHOWN, seen ? "presence" : "picks")
   if (!heroes.length) return null
   return (
     <Section
-      title={text("Tướng có mặt nhiều nhất", "Most present heroes")}
-      note={text("chọn hoặc cấm", "picked or banned")}
+      title={
+        seen
+          ? text("Tướng có mặt nhiều nhất", "Most present heroes")
+          : text("Tướng được chọn nhiều nhất", "Most picked heroes")
+      }
+      note={seen ? text("chọn hoặc cấm", "picked or banned") : text("số ván được chọn", "games picked in")}
       more={{ label: text("Thống kê", "Statistics"), open }}
     >
       <ol className="tn-top-heroes">
         {heroes.map((hero) => (
           <li key={hero.key}>
-            <Link to={heroHref(view.id, hero)}>
+            <Link to={statsHref(view.id, { hero })}>
               <HeroPortrait hero={hero} />
-              <strong>{hero.name}</strong>
-              <span>{percent(hero.presence, statistics.games)}%</span>
+              <b>{shareOrGames(seen ? hero.presence : hero.picks, statistics.games, text, languageTag)}</b>
+              <span>{hero.name}</span>
             </Link>
           </li>
         ))}

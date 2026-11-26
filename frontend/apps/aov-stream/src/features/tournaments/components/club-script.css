@@ -1,0 +1,76 @@
+/* The parts of a draft side by side, in the order they are played; in each the team stands over its opponents. */
+.tn-club-script {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px clamp(18px, 2.6vw, 36px);
+}
+.tn-club-script > section {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 14px;
+}
+.tn-club-script h4 {
+  margin: 0 0 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.tn-club-script ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* The hero leads to its page; the count beside it is no part of the link, as it opens no games. */
+.tn-club-script li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-club-script li > a {
+  --portrait: 32px;
+  --portrait-radius: 6px;
+  display: grid;
+  min-height: 40px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.tn-club-script li strong {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-club-script li > b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.tn-club-script li > a:is(:hover, :focus-visible) strong {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* One part under another; the team and its opponents stand side by side. */
+@media (max-width: 899.98px) {
+  .tn-club-script {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .tn-club-script > section {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 20px;
+  }
+  .tn-club-script > section > :first-child {
+    grid-column: 1 / -1;
+  }
+  .tn-club-script li,
+  .tn-club-script li > a {
+    gap: 8px;
+  }
+}

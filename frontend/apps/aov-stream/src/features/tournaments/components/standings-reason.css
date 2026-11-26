@@ -1,0 +1,18 @@
+/* Why the border between two zones fell where it fell. */
+.tn-reason {
+  display: grid;
+  max-width: 88ch;
+  gap: 4px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-reason > p {
+  margin: 0;
+  text-wrap: pretty;
+}
+.tn-reason b {
+  color: var(--hub-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

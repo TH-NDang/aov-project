@@ -9,50 +9,6 @@ import { bracketRoundName, type BracketLayout } from "../../../lib/bracket-model
 import { competitionMatchHref } from "../../../lib/match-model"
 import "./bracket-journey.css"
 
-/** The teams of a bracket as a row of crests: one press keeps a team's way lit, pressing it again lets go. */
-export function BracketTeams({
-  view,
-  teams,
-  chosen,
-  onChoose,
-  onPoint,
-}: {
-  view: CompetitionView
-  teams: string[]
-  chosen: string | null
-  onChoose: (team: string | null) => void
-  onPoint: (team: string | null) => void
-}) {
-  const { text } = useStreamLocale()
-  return (
-    <div
-      className="tn-crests"
-      role="group"
-      aria-label={text("Theo dõi đường đi của một đội", "Follow a team's way")}
-      onPointerLeave={() => onPoint(null)}
-    >
-      {teams.map((id) => {
-        const team = view.content.teams[id]
-        const name = team?.name ?? text("Đội", "Team")
-        return (
-          <button
-            key={id}
-            type="button"
-            className="tn-crest"
-            aria-pressed={chosen === id}
-            title={name}
-            onClick={() => onChoose(chosen === id ? null : id)}
-            onPointerEnter={(event) => event.pointerType === "mouse" && onPoint(id)}
-          >
-            <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
-            <span>{team?.shortName || name}</span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 const ENDS: Record<JourneyEnd, readonly [vi: string, en: string] | null> = {
   champion: ["Vô địch", "Champion"],
   "runner-up": ["Á quân", "Runner-up"],
@@ -74,7 +30,8 @@ export function JourneyStrip({
 }) {
   const { text, languageTag } = useStreamLocale()
   const team = view.content.teams[teamId]
-  const end = journeyEnd(layout, stops)
+  // Where no match leads to another, a lost one says nothing of what comes next.
+  const end = layout.links.length ? journeyEnd(layout, stops) : "open"
   const word = ENDS[end]
   return (
     <div className="tn-journey" data-end={end} aria-live="polite">

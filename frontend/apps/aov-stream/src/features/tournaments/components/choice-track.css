@@ -1,0 +1,92 @@
+/* A switch between parts or views: one track, the one in view raised on it. */
+.tn-choice-track {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--hub-text) 7%, transparent);
+}
+.tn-choice-track > * {
+  position: relative;
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-radius: var(--aov-radius-pill);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* A press counts on the whole height of the track. */
+.tn-choice-track > *::after {
+  content: "";
+  position: absolute;
+  inset: -3px 0;
+}
+.tn-choice-track > [data-mark] {
+  width: 42px;
+  padding: 0;
+}
+.tn-choice-track > :hover {
+  color: var(--hub-text);
+}
+.tn-choice-track > :is([aria-current], [aria-pressed="true"]) {
+  background: var(--hub-raised);
+  box-shadow: 0 0 0 1px var(--hub-border-strong);
+  color: var(--hub-text);
+}
+/* A count takes the tone of its choice, as muted text is too pale on the tinted track; its weight sets it back. */
+.tn-choice-track small {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tn-choice-track[data-size="large"] > * {
+  padding: 0 18px;
+  font-size: 14px;
+}
+.tn-choice-track[data-size="small"] > * {
+  min-height: 30px;
+}
+@media (max-width: 899.98px) {
+  .tn-choice-track > * {
+    min-height: 40px;
+  }
+  .tn-choice-track[data-size="large"] > * {
+    font-size: 13px;
+  }
+  .tn-choice-track[data-size="small"] > * {
+    min-height: 34px;
+  }
+  .tn-choice-track[data-fill="compact"] {
+    display: grid;
+    width: 100%;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+  }
+  .tn-choice-track[data-fill="compact"] > * {
+    padding: 0 4px;
+  }
+}
+@media (max-width: 759.98px) {
+  .tn-choice-track[data-fill="phone"] {
+    display: grid;
+    width: 100%;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+  }
+  .tn-choice-track[data-fill="phone"] > * {
+    padding: 0 6px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-choice-track > :is([aria-current], [aria-pressed="true"]) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

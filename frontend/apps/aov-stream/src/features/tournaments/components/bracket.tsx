@@ -1,29 +1,28 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react"
-import { Link } from "react-router"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import type { CompetitionStage, CompetitionView } from "@aov/community-contracts"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@aov/ui/components/hover-card"
 import { PublicDrawer, PublicDrawerContent } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { MatchStatus } from "../../../components/match-card"
 import { StreamIcon } from "../../../components/stream-icon"
-import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { bracketTeams, journeyEnd, teamJourney, type JourneyStop } from "../../../lib/bracket-journey"
 import {
   bracketRoundName,
   roundWeight,
-  stageBracket,
   type BracketLayout,
   type BracketLink,
   type BracketNode,
 } from "../../../lib/bracket-model"
-import { matchUnderway, matchWinner } from "../../../lib/competition-model"
+import { stageDrawing } from "../../../lib/bracket-rounds"
+import { matchWinner } from "../../../lib/competition-model"
 import { stageName } from "../../../lib/match-labels"
-import { competitionMatchHref, type CompetitionMatch } from "../../../lib/match-model"
-import { matchSides, type MatchSide } from "../../../lib/match-schedule"
-import { useNow } from "../../../lib/use-now"
-import { BracketTeams, JourneyStrip, JourneyTrail, useCardWidth } from "./bracket-journey"
+import type { CompetitionMatch } from "../../../lib/match-model"
+import { placesBefore, type TablePlace } from "../../../lib/place-zones"
+import { useEntryState } from "../../../lib/use-entry-state"
+import { JourneyStrip, JourneyTrail, useCardWidth } from "./bracket-journey"
+import { BracketMatch } from "./bracket-node"
 import { MatchPeek } from "./match-peek"
+import { roundAnchor, stageAnchor } from "./standings-anchors"
+import { TeamFollow } from "./team-follow"
 import "./bracket.css"
 
 /** The measures of the drawing in pixels; the width of a card follows the room there is, so it lives in the sheet. */
@@ -37,7 +36,7 @@ const GAP = 36
 /** The top edge of a card. A lane starts lower by the room its heading takes; the final stands between two lanes. */
 function topOf(node: BracketNode, laned: boolean) {
   const lane = !laned ? 0 : node.lane === "lower" ? LANE + HEAD : node.lane === "final" ? (LANE + HEAD) / 2 : 0
-  return HEAD + node.row * ROW + lane + (node.lane === "third" ? HEAD : 0)
+  return HEAD + node.row * ROW + lane + (node.lane === "place" ? HEAD : 0)
 }
 
 const left = (column: number) => `calc(${column} * (var(--bracket-card) + ${GAP}px))`
@@ -47,7 +46,7 @@ function headings(layout: BracketLayout, laned: boolean) {
   const found = new Map<string, { node: BracketNode; top: number }>()
   for (const node of layout.nodes) {
     const key = `${node.lane}:${node.column}`
-    const alone = node.lane === "final" || node.lane === "third"
+    const alone = node.lane === "final" || node.lane === "place"
     const start = layout.lanes.find((lane) => lane.key === node.lane)?.row ?? node.row
     const top = topOf(alone ? node : { ...node, row: start }, laned) - HEAD
     const known = found.get(key)
@@ -55,89 +54,6 @@ function headings(layout: BracketLayout, laned: boolean) {
     else known.top = Math.min(known.top, top)
   }
   return [...found]
-}
-
-function Team({ team, active }: { team: MatchSide; active: boolean }) {
-  return (
-    <span
-      className="tn-node-team"
-      data-team={team.teamId ?? undefined}
-      data-active={active || undefined}
-      data-won={team.won || undefined}
-      data-lost={team.lost || undefined}
-      data-open={!team.known || undefined}
-    >
-      {team.known ? (
-        <StreamImage src={team.logoUrl} darkSrc={team.logoDarkUrl} logo name={team.name} />
-      ) : (
-        <span className="tn-node-blank" aria-hidden="true" />
-      )}
-      <span title={team.fullName}>{team.brief}</span>
-      {team.score != null && <b>{team.score}</b>}
-    </span>
-  )
-}
-
-/**
- * A match of the bracket. Pointing at it shows the match at a glance beside it; on a phone a tap opens that in a
- * sheet (`onPeek`), where the way on to the match's page is.
- */
-function Node({
-  node,
-  top,
-  team,
-  stop,
-  onPeek,
-}: {
-  node: BracketNode
-  top: number
-  team: string | null
-  /** Which match of the followed team's way this is, from 1. */
-  stop?: number
-  onPeek?: (entry: CompetitionMatch) => void
-}) {
-  const { languageTag } = useStreamLocale()
-  const now = useNow()
-  const { entry } = node
-  const sides = matchSides(entry, languageTag)
-  const peek = (event: MouseEvent) => {
-    if (!onPeek || event.metaKey || event.ctrlKey || event.shiftKey) return
-    event.preventDefault()
-    onPeek(entry)
-  }
-  const card = (
-    <Link
-      onClick={peek}
-      className="tn-node"
-      to={competitionMatchHref(entry.competition.id, entry.match.key)}
-      style={{ left: left(node.column), top }}
-      data-live={matchUnderway(entry, now) || undefined}
-      data-weight={roundWeight(node.round) ?? undefined}
-      data-on={(team != null && sides.some((side) => side.teamId === team)) || undefined}
-    >
-      <span className="tn-node-head">
-        <MatchStatus entry={entry} />
-        <span>BO{entry.match.bestOf}</span>
-      </span>
-      {sides.map((side) => (
-        <Team key={side.side} team={side} active={team != null && side.teamId === team} />
-      ))}
-      {stop != null && (
-        <span className="tn-node-stop" aria-hidden="true">
-          {stop}
-        </span>
-      )}
-    </Link>
-  )
-  if (onPeek) return card
-  return (
-    <HoverCard openDelay={280} closeDelay={120}>
-      <HoverCardTrigger asChild>{card}</HoverCardTrigger>
-      <HoverCardContent side="right" align="start" sideOffset={14} collisionPadding={12} className="tn-peek-card">
-        <MatchPeek entry={entry} />
-      </HoverCardContent>
-    </HoverCard>
-  )
 }
 
 /** The way from a match to the one its winner plays next: a straight run, then a turn in the gap before it. */
@@ -179,19 +95,46 @@ function currentColumn(layout: BracketLayout) {
   return open.length && open.length < layout.nodes.length ? Math.min(...open.map((node) => node.column)) : 0
 }
 
+/** For each match the teams that play their first one in it, with the place they brought from the table before. */
+function firstPlaces(layout: BracketLayout, teams: string[], places: Map<string, TablePlace>) {
+  const first = new Map<BracketNode, Map<string, TablePlace>>()
+  for (const team of teams) {
+    const place = places.get(team)
+    const node = place && teamJourney(layout, team)[0]?.node
+    if (node) first.set(node, new Map([...(first.get(node) ?? []), [team, place]]))
+  }
+  return first
+}
+
 /**
- * An elimination stage read from left to right, every match level with those that feed it and tied to them. Pointing
- * at a team lights its way through the bracket, and choosing its crest keeps it lit with the way in words below. On a
- * narrow screen it scrolls sideways and opens at the round played now.
+ * A stage without a table read from left to right: every match level with those that feed it and tied to them, or one
+ * round beside the other where none does. Pointing at a team lights its way through them, and following it keeps it lit
+ * with the way in words below. On a narrow screen it scrolls sideways and opens at the round played now.
  */
-export function Bracket({ view, stage }: { view: CompetitionView; stage: CompetitionStage }) {
+export function Bracket({
+  view,
+  stage,
+  followed,
+  hinted = null,
+}: {
+  view: CompetitionView
+  stage: CompetitionStage
+  /** The team the page follows; left out, the bracket offers its own teams and keeps the one chosen. */
+  followed?: string | null
+  /** The team the page points at. */
+  hinted?: string | null
+}) {
   const { text, languageTag } = useStreamLocale()
-  const layout = useMemo(() => stageBracket(view, stage.code), [view, stage.code])
+  const layout = useMemo(() => stageDrawing(view, stage), [view, stage])
   const laned = layout.lanes.some((lane) => lane.key === "lower")
   const teams = useMemo(() => bracketTeams(layout), [layout])
+  const first = useMemo(() => firstPlaces(layout, teams, placesBefore(view, stage.code)), [layout, teams, view, stage])
   const [pointed, setPointed] = useState<string | null>(null)
-  const [chosen, setChosen] = useState<string | null>(null)
-  const team = pointed ?? chosen
+  const [kept, setKept] = useEntryState<string | null>(`bracket team:${stage.code}`, null)
+  // The page may follow a team that does not play here.
+  const known = (id: string | null) => (id && teams.includes(id) ? id : null)
+  const chosen = followed === undefined ? kept : known(followed)
+  const team = pointed ?? known(hinted) ?? chosen
   const stops = useMemo(() => (team ? teamJourney(layout, team) : []), [layout, team])
   const stopOf = new Map<BracketNode, number>(stops.map((stop, index) => [stop.node, index + 1]))
   const [peek, setPeek] = useState<CompetitionMatch | null>(null)
@@ -210,13 +153,18 @@ export function Bracket({ view, stage }: { view: CompetitionView; stage: Competi
   const name = stageName(stage.name)
   return (
     <>
-      <BracketTeams view={view} teams={teams} chosen={chosen} onChoose={setChosen} onPoint={setPointed} />
+      {followed === undefined && teams.length > 1 && (
+        <div className="tn-bracket-teams">
+          <TeamFollow view={view} teams={teams} followed={chosen} onFollow={setKept} onPoint={setPointed} />
+        </div>
+      )}
       <div
         ref={scroller}
+        id={stageAnchor(stage.code)}
         className="tn-bracket"
         tabIndex={0}
         role="group"
-        aria-label={text(`Nhánh đấu ${name}`, `${name} bracket`)}
+        aria-label={layout.links.length ? text(`Nhánh đấu ${name}`, `${name} bracket`) : name}
       >
         <div
           ref={plan}
@@ -229,6 +177,8 @@ export function Bracket({ view, stage }: { view: CompetitionView; stage: Competi
           {headings(layout, laned).map(([key, { node, top }]) => (
             <h3
               key={key}
+              id={roundAnchor(stage.code, node.round)}
+              tabIndex={-1}
               className="tn-bracket-title"
               data-weight={roundWeight(node.round) ?? undefined}
               style={{ left: left(node.column), top }}
@@ -255,12 +205,14 @@ export function Bracket({ view, stage }: { view: CompetitionView; stage: Competi
             />
           )}
           {layout.nodes.map((node) => (
-            <Node
+            <BracketMatch
               key={node.entry.match.key}
               node={node}
-              top={topOf(node, laned)}
+              place={{ left: left(node.column), top: topOf(node, laned) }}
               team={team}
               stop={stopOf.get(node)}
+              anchor={roundAnchor(stage.code, node.round)}
+              places={first.get(node)}
               onPeek={compact ? setPeek : undefined}
             />
           ))}

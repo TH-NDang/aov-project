@@ -1,0 +1,195 @@
+/*
+ * Shelves of faces. All shelves stand on one grid as wide as the wall: --at-96 to --at-52 say how many faces of a size
+ * fill a row, and a shelf is as wide as its faces, so two short ones share a row.
+ */
+.tn-shelves {
+  min-width: 0;
+  container-type: inline-size;
+}
+.tn-shelves-wall {
+  --face-gap: 14px;
+  --at-96: 11;
+  --at-80: 13;
+  --at-64: 15;
+  --at-52: 18;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px 28px;
+}
+.tn-shelf {
+  --across: var(--at-96);
+  --face: calc((100cqi + var(--face-gap)) / var(--across) - var(--face-gap));
+  width: min(100%, (var(--face) + var(--face-gap)) * var(--count) - var(--face-gap));
+  max-width: 100%;
+  flex: none;
+}
+.tn-shelf[data-face="80"] {
+  --across: var(--at-80);
+}
+.tn-shelf[data-face="64"] {
+  --across: var(--at-64);
+}
+.tn-shelf[data-face="52"] {
+  --across: var(--at-52);
+}
+.tn-shelf > h3 {
+  margin: 0 0 11px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.tn-shelf > h3 > span {
+  margin-left: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+/* A hair short of its face: rounding must not push the last one off its row. */
+.tn-shelf > ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, calc(var(--face) - 0.05px));
+  gap: 0 var(--face-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-shelf > ol > li {
+  min-width: 0;
+  padding-bottom: 18px;
+}
+.tn-shelf a {
+  --portrait: 100%;
+  --portrait-radius: 8px;
+  --fate-height: 7px;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  color: var(--hub-text);
+  font-variant-numeric: tabular-nums;
+}
+.tn-shelf a > :first-child {
+  height: auto;
+  aspect-ratio: 1;
+  transition: filter 140ms;
+}
+.tn-shelf a:is(:hover, :focus-visible) > :first-child {
+  filter: brightness(1.14);
+}
+.tn-shelf[data-barred] a > :nth-child(2) {
+  margin-top: 6px;
+}
+/* The name comes last, so that one of two lines moves nothing; a long word may reach into the gap beside its face. */
+.tn-shelf-name,
+.tn-shelf-figure {
+  margin-right: -9px;
+}
+.tn-shelf-name {
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  line-height: 16px;
+  text-wrap: balance;
+}
+.tn-shelf[data-kind="NONE"] .tn-shelf-name {
+  margin-top: 5px;
+}
+.tn-shelf a:hover > .tn-shelf-name {
+  color: var(--hub-text);
+}
+.tn-shelf-figure {
+  display: flex;
+  margin-top: 5px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 4px;
+  font-size: 14px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.tn-shelf-figure > b {
+  font-weight: 700;
+}
+.tn-shelf-figure > span {
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 1;
+}
+/* Two shelves in a row leave each its title on one line, however few its faces. */
+@media (min-width: 900px) {
+  .tn-shelf {
+    min-width: min-content;
+  }
+  .tn-shelf > h3 {
+    white-space: nowrap;
+  }
+}
+@container (max-width: 1199.98px) {
+  .tn-shelves-wall {
+    --at-96: 10;
+    --at-80: 11;
+    --at-64: 14;
+    --at-52: 16;
+    column-gap: var(--face-gap);
+  }
+}
+@container (max-width: 1089.98px) {
+  .tn-shelves-wall {
+    --at-96: 9;
+    --at-80: 10;
+    --at-64: 12;
+    --at-52: 15;
+  }
+}
+@container (max-width: 979.98px) {
+  .tn-shelves-wall {
+    --at-96: 8;
+    --at-80: 9;
+    --at-64: 11;
+    --at-52: 13;
+  }
+}
+@container (max-width: 869.98px) {
+  .tn-shelves-wall {
+    --at-96: 7;
+    --at-80: 8;
+    --at-64: 10;
+    --at-52: 12;
+  }
+}
+@container (max-width: 699.98px) {
+  .tn-shelves-wall {
+    --at-96: 6;
+    --at-80: 7;
+    --at-64: 8;
+    --at-52: 9;
+  }
+}
+/* Five to a row on a phone, whatever the shelf. */
+@container (max-width: 559.98px) {
+  .tn-shelves-wall {
+    --face-gap: 10px;
+    --at-96: 5;
+    --at-80: 5;
+    --at-64: 5;
+    --at-52: 5;
+  }
+  .tn-shelf-figure[data-share] {
+    display: grid;
+  }
+  .tn-shelf-figure[data-share] > span {
+    line-height: 16px;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-shelf {
+    width: 100%;
+  }
+  .tn-shelf > ol > li {
+    padding-bottom: 14px;
+  }
+  /* Faces stand closer here: a name of two words breaks between them rather than running into the next name. */
+  .tn-shelf-name {
+    margin-right: -4px;
+  }
+}

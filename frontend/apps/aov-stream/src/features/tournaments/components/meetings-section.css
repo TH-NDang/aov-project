@@ -1,0 +1,51 @@
+/* The results of a group under its table. */
+.tn-meet {
+  min-width: 0;
+}
+/* On one line: the name, how to read it, and the switch at the end. */
+.tn-meet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin-bottom: 10px;
+}
+/* A part of its stage, so titled as the groups and the matches of a step are, under the title of the stage. */
+.tn-meet-head > :is(h3, h4) {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.tn-meet-head > p {
+  min-width: 0;
+  flex: 1 1 200px;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+/* The baseline of a pill is the one of its words, which would set it lower than the line it stands on. */
+.tn-meet-switch {
+  align-self: center;
+  margin-left: auto;
+}
+@media (max-width: 899.98px) {
+  .tn-meet-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .tn-meet-head > p {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 13px;
+    line-height: 18px;
+  }
+}
+.tn-meet[data-part] .tn-meet-head > h4 {
+  font-size: 15px;
+  line-height: 22px;
+}

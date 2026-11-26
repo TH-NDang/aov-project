@@ -1,0 +1,32 @@
+/* What stands between the games: who played best, what comes next and when. */
+.tn-room-next {
+  display: grid;
+  flex: none;
+  gap: 14px;
+  padding-top: 2px;
+}
+.tn-room-note {
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-room-note > a {
+  font-weight: 600;
+}
+.tn-room-coming {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 28px;
+  letter-spacing: -0.015em;
+}
+.tn-room-onward {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+.tn-room-onward > :first-child {
+  width: 100%;
+}

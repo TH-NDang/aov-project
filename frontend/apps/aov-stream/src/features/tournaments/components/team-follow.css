@@ -1,0 +1,57 @@
+/* The teams a reader can follow: crests, each as wide as its name; on a phone one row that scrolls sideways. */
+.tn-follow {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tn-follow-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: 5px;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 8px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color 160ms,
+    background-color 160ms,
+    color 160ms;
+}
+.tn-follow-team:hover {
+  border-color: var(--hub-border-strong);
+  color: var(--hub-text);
+}
+.tn-follow-team[aria-pressed="true"] {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent-soft);
+  color: var(--hub-text);
+}
+@media (max-width: 899.98px) {
+  .tn-follow {
+    flex-wrap: nowrap;
+    margin-inline: calc(-1 * var(--hub-gutter));
+    padding: 3px var(--hub-gutter);
+    margin-block: -3px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .tn-follow::-webkit-scrollbar {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .tn-follow-team[aria-pressed="true"] {
+    border-color: Highlight;
+  }
+}

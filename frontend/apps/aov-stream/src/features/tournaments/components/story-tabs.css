@@ -1,0 +1,78 @@
+/* The games of a video without times, across the whole bar; a row that is too long scrolls sideways. */
+.tn-story-tabs {
+  --stream-image-size: 24px;
+  --stream-image-radius: 5px;
+  position: relative;
+  display: flex;
+  height: 60px;
+  overflow-x: auto;
+  border-top: 1px solid rgb(255 255 255 / 12%);
+  scrollbar-width: none;
+}
+.tn-story-tabs::-webkit-scrollbar {
+  display: none;
+}
+.tn-story-tabs > button {
+  position: relative;
+  display: flex;
+  min-width: 96px;
+  flex: 1 0 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: left;
+  white-space: nowrap;
+}
+.tn-story-tabs > button + button {
+  border-left: 1px solid rgb(255 255 255 / 12%);
+}
+.tn-story-tabs > button:hover {
+  background: rgb(255 255 255 / 6%);
+}
+.tn-story-tabs > button:focus-visible {
+  outline-offset: -3px;
+}
+.tn-story-tabs > button > span:last-child {
+  display: grid;
+}
+.tn-story-tabs small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-story-tabs > button[aria-selected="true"] {
+  background: rgb(255 255 255 / 8%);
+  color: var(--hub-text);
+}
+.tn-story-tabs > button[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--hub-accent);
+}
+/* Narrow enough that a part of the next game shows at the edge of a phone. */
+.tn-story-tabs[data-phone] {
+  --stream-image-size: 20px;
+  height: 56px;
+}
+.tn-story-tabs[data-phone] > button {
+  min-width: 84px;
+  gap: 8px;
+  padding: 0 8px;
+}
+@media (forced-colors: active) {
+  .tn-story-tabs > button[aria-selected="true"]::after {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}

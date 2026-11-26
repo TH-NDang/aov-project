@@ -1,0 +1,67 @@
+/*
+ * The matches of two teams in a cell: one group a match, its marks over its score. Around it, --meet-column says how wide
+ * its column is, --meet-leg what a match takes at least, and --meet-faint what becomes of muted text on a tint.
+ */
+.tn-meet-legs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px clamp(9px, 1vw, 14px);
+}
+/* Scores alone take the size their column has room for. */
+.tn-meet-leg {
+  display: grid;
+  min-width: var(--meet-leg, 28px);
+  justify-items: center;
+  gap: 5px;
+  color: var(--meet-faint, var(--hub-muted));
+  font-size: clamp(12px, calc(var(--meet-column, 48px) * 0.29), 14px);
+  font-weight: 500;
+  line-height: 18px;
+  text-align: center;
+}
+.tn-meet-legs[data-kind="marks"] > .tn-meet-leg {
+  font-size: 13px;
+  line-height: 16px;
+}
+/* A day is wider than a score, and says less. */
+.tn-meet-legs > .tn-meet-leg:not([data-outcome]) {
+  font-size: 12px;
+}
+.tn-meet-legs[data-kind="stack"] {
+  display: grid;
+  gap: 0;
+}
+.tn-meet-legs[data-kind="stack"] > .tn-meet-leg {
+  min-width: 0;
+  line-height: 16px;
+}
+/* A match to come, where its day has no room. */
+.tn-meet-ahead {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  vertical-align: 1px;
+}
+/* The sums of neighbouring columns stay apart where the columns get narrow. */
+.tn-meet-sum {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: var(--meet-faint, var(--hub-muted));
+  font-size: clamp(12px, calc(var(--meet-column, 48px) * 0.41), 17px);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+:is(.tn-meet-leg, .tn-meet-sum)[data-outcome="won"] {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+:is(.tn-meet-leg, .tn-meet-sum)[data-outcome="level"] {
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}

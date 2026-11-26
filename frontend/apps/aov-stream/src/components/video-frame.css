@@ -1,0 +1,136 @@
+/*
+ * The one frame of every match's video. It is made once and stays where it is in the document, as a frame that is
+ * moved loads again: only how it is laid out changes. Parked, it keeps its player for the next match.
+ */
+.hub-video {
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 356px;
+  height: 200px;
+  visibility: hidden;
+  pointer-events: none;
+}
+.hub-video-box {
+  height: 100%;
+  background: var(--aov-stream-night);
+}
+/* A frame that asks for a dark page paints a white one under itself until YouTube's own is there. */
+.hub-video-host,
+.hub-video-host > iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  color-scheme: normal;
+}
+
+/* Over its place in the room; the numbers are written by video-frame.tsx. Only its picture takes a press. */
+.hub-video[data-form="room"] {
+  position: absolute;
+  z-index: 5;
+  top: var(--video-y);
+  left: var(--video-x);
+  width: var(--video-w);
+  height: var(--video-h);
+  visibility: visible;
+  view-transition-name: stream-video;
+}
+.hub-video[data-form="room"] > .hub-video-box {
+  pointer-events: auto;
+}
+
+/* What a page scrolls to, and what takes the focus in it, stands under a video that sticks to the top of the window. */
+html {
+  scroll-padding-top: var(--video-cover, auto);
+}
+/* On a track from its place down to the end of the page, along which it sticks to the top of the window. */
+.hub-video[data-form="pinned"] {
+  position: absolute;
+  z-index: 35;
+  top: var(--video-y);
+  bottom: 0;
+  left: var(--video-x);
+  width: var(--video-w);
+  height: auto;
+  visibility: visible;
+}
+.hub-video[data-form="pinned"] > .hub-video-box {
+  position: sticky;
+  top: 0;
+  height: var(--video-h);
+  pointer-events: auto;
+  transition: transform 200ms;
+  view-transition-name: stream-video;
+}
+.hub-video[data-away] > .hub-video-box {
+  transform: translateY(-100%);
+}
+
+/* Small in the corner, with a row of its own under the picture. */
+.hub-video[data-form="mini"] {
+  z-index: 45;
+  top: auto;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: auto;
+  height: 248px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-media);
+  background: var(--aov-stream-dusk);
+  box-shadow: var(--hub-shadow-lg);
+  visibility: visible;
+  pointer-events: auto;
+  view-transition-name: stream-video;
+}
+.hub-video[data-form="mini"] > .hub-video-box {
+  height: 200px;
+}
+
+/* The way out of the frame for the keyboard: seen while it has the focus, under the video and never over it. */
+.hub-video-back {
+  display: block;
+  position: sticky;
+  top: calc(var(--video-h) + 8px);
+  min-height: 36px;
+  margin: 8px;
+  padding: 0 14px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--aov-stream-night);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  pointer-events: auto;
+}
+.hub-video-back:not(:focus) {
+  overflow: hidden;
+  width: 1px;
+  min-height: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The video is where it is: a page that gives way to another neither photographs it nor moves it. */
+::view-transition-group(stream-video),
+::view-transition-new(stream-video) {
+  animation: none;
+}
+::view-transition-old(stream-video) {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .hub-video[data-form="mini"] {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .hub-video {
+    display: none;
+  }
+}
