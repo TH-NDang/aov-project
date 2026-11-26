@@ -483,25 +483,31 @@ export function HeroImport({
           ))}
         </ol>
       </div>
-      <div
-        role={pendingTransfer ? "alert" : "note"}
-        className="mx-5 mt-5 flex items-start gap-2 rounded-lg border border-(--aov-warning)/30 bg-(--aov-warning-soft) p-3 text-sm"
-      >
-        <AlertCircle className="mt-0.5 size-4 shrink-0" />
-        <div>
-          <p className="font-medium">
-            {pendingTransfer
-              ? "Chưa xác nhận chuyển xong tác vụ đến máy chủ — hãy giữ trang mở."
-              : "Tải ảnh lên cần giữ trang mở"}
-          </p>
-          <p className="mt-1 text-muted-foreground">
-            Khi đang chuẩn bị hoặc tải ảnh lên, đừng tải lại trang, đóng tab trình duyệt hoặc đóng tab nhập. Tiến trình
-            tải lên sẽ tạm dừng khi đóng trang. Phiên đã lưu cho phép chọn lại gói ảnh và tiếp tục, không tải lại ảnh đã
-            xong. Sau khi hiện “Đã gửi đến máy chủ”, bạn có thể đóng trang và xem lại tiến trình nhập dữ liệu khi quay
-            lại.
-          </p>
+      {/* The full warning shows while closing the page would interrupt something; before that one line is enough. */}
+      {busy || pendingTransfer ? (
+        <div
+          role={pendingTransfer ? "alert" : "note"}
+          className="mx-5 mt-5 flex items-start gap-2 rounded-lg border border-(--aov-warning)/30 bg-(--aov-warning-soft) p-3 text-sm"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <div>
+            <p className="font-medium">
+              {pendingTransfer
+                ? "Chưa xác nhận chuyển xong tác vụ đến máy chủ — hãy giữ trang mở."
+                : "Đang tải lên: hãy giữ trang mở"}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              Đừng tải lại hay đóng trang. Nếu lỡ đóng, mở lại và chọn lại gói ảnh để tiếp tục phiên đã lưu; ảnh đã xong
+              không phải tải lại.
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="type-meta mx-5 mt-4">
+          Ảnh được tải từ máy bạn nên cần giữ trang mở cho đến khi hiện “Đã gửi đến máy chủ”; sau đó có thể đóng trang,
+          tiến trình vẫn chạy và hiện ở menu bên trái.
+        </p>
+      )}
       {!context && (
         <div className="mx-5 mt-5 flex items-start gap-2 rounded-lg border border-(--aov-warning)/30 bg-(--aov-warning-soft) p-3 text-sm">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
