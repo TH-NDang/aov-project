@@ -38,7 +38,7 @@ import { warehousePath } from "../../lib/wiki-catalog"
 const NO_ENTRIES: PublishedWarehouseRecord[] = []
 /** The entry of the catalog that is open, in whichever catalog is on screen. */
 const OPEN_ENTRY =
-  ':is(.shop-item-select, .wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"]'
+  '.shop-item-select[aria-pressed="true"], :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-current="true"]'
 
 export default function WarehousePage() {
   const scope = useWikiContext()
@@ -56,7 +56,7 @@ export default function WarehousePage() {
   const search = kind === "enchantments" ? "" : (params.get("q") ?? "")
   const group = params.get("group") ?? ""
   const selectedId = entryCode ?? null
-  const trigger = useRef<HTMLButtonElement | null>(null)
+  const trigger = useRef<HTMLElement | null>(null)
   const main = useRef<HTMLDivElement>(null)
   // Where an entry stood on screen before the panel beside the catalog came or went.
   const held = useRef<{ element: HTMLElement; top: number } | null>(null)
@@ -135,7 +135,7 @@ export default function WarehousePage() {
     if (top < 72 || bottom > window.innerHeight - 16) card.scrollIntoView({ block: "center" })
   }, [selectedKey])
 
-  function select(entry: WarehouseEntry, button?: HTMLButtonElement) {
+  function select(entry: WarehouseEntry, button?: HTMLElement) {
     if (button) trigger.current = button
     // A press inside the catalog keeps that entry in place; a step from the panel brings the next one into view.
     if (button && main.current?.contains(button)) hold(button)
@@ -158,7 +158,7 @@ export default function WarehousePage() {
 
   function clearSelection() {
     // The entry being closed takes focus back, also when it was opened from a link or reached by stepping.
-    const open = main.current?.querySelector<HTMLButtonElement>(OPEN_ENTRY)
+    const open = main.current?.querySelector<HTMLElement>(OPEN_ENTRY)
     if (open) trigger.current = open
     hold(open)
     // An item opened from a link chose the board; the board stays on it once the item closes.
@@ -230,6 +230,7 @@ export default function WarehousePage() {
         <WarehouseHeading
           kind={kind}
           title={sectionName}
+          entryOpen={!!selectedEntry}
           count={catalog.isPending ? undefined : entries.length}
           version={version}
           showcase={(intro) =>

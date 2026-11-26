@@ -23,9 +23,12 @@ export function WarehouseHeading({
   count,
   version,
   showcase,
+  entryOpen = false,
 }: {
   kind: WarehouseKind
   title: string
+  /** The address names one entry, whose panel then carries the page's h1. */
+  entryOpen?: boolean
   /** Entries on screen; left out while the catalog loads. */
   count?: number
   version?: ReactNode
@@ -38,6 +41,7 @@ export function WarehouseHeading({
     count: count !== undefined && count > 0 ? `${count} ${text(...UNITS[kind])}` : undefined,
     corner: version,
     wide: usePageLayout() === "wide",
+    titleIsHeading: !entryOpen,
   }
   return showcase ? showcase(intro) : <CatalogShowcase {...intro} />
 }

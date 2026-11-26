@@ -12,6 +12,7 @@ import {
   type WarehouseArcana,
 } from "./use-item-catalog"
 import { WarehouseArtwork } from "./warehouse-artwork"
+import { WarehouseEntryLink } from "./warehouse-entry-link"
 import { fillStyle } from "./warehouse-grid"
 import { ArcanaColorArt, arcanaColorName, EmptyGroup, FoldedGroup, GroupHeading, romanTier } from "./warehouse-parts"
 import {
@@ -65,21 +66,22 @@ function ArcanaRow({
   chosen: ReadonlySet<string>
   dimmed: boolean
   selected: boolean
-  onOpen: (entry: WarehouseEntry, button: HTMLButtonElement) => void
+  onOpen: (entry: WarehouseEntry, element: HTMLElement) => void
 }) {
   const { locale } = useWikiContext()
   return (
-    <button
-      type="button"
+    <WarehouseEntryLink
+      kind="arcana"
+      entry={entry}
+      selected={selected}
+      onOpen={onOpen}
       className="wiki-arcana-row arcana-card"
-      aria-pressed={selected}
       data-dimmed={(dimmed && !selected) || undefined}
       aria-label={wikiText(locale, `Xem ${warehouseName(entry, locale)}`, `View ${warehouseName(entry, locale)}`)}
-      onClick={(event) => onOpen(entry, event.currentTarget)}
     >
       <WarehouseArtwork entry={entry} kind="arcana" />
       <ArcanaStatLines entry={entry} pieces={pieces} chosen={chosen} />
-    </button>
+    </WarehouseEntryLink>
   )
 }
 
@@ -142,7 +144,7 @@ function ArcanaTier({
   matches: ReadonlySet<string> | null
   allEntries: PublishedWarehouseRecord[]
   selectedId: string | null
-  onOpen: (entry: WarehouseEntry, button: HTMLButtonElement) => void
+  onOpen: (entry: WarehouseEntry, element: HTMLElement) => void
 }) {
   const { locale } = useWikiContext()
   const family = (key: ArcanaFamily) => wikiText(locale, ...FAMILY_NAMES[key])
@@ -251,7 +253,7 @@ export function ArcanaCatalog({
   params: URLSearchParams
   searching: boolean
   selectedId: string | null
-  onSelect: (entry: WarehouseEntry, button?: HTMLButtonElement) => void
+  onSelect: (entry: WarehouseEntry, button?: HTMLElement) => void
   onFilters: (filters: Record<string, string | null>) => void
 }) {
   const { locale } = useWikiContext()

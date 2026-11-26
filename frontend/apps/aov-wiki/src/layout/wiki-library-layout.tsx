@@ -26,6 +26,7 @@ export function WikiLibraryLayout() {
   const isModes = useMatch("/modes/*")
   const isModeDetail = useMatch("/modes/:code/*")
   const isPatchDetail = useMatch("/updates/:patchCode")
+  const isWarehouseEntry = useMatch("/warehouse/:tab/:entryCode")
   const active = isModes
     ? "modes"
     : isTerms
@@ -45,13 +46,14 @@ export function WikiLibraryLayout() {
       {/* On phones the bar starts clear on every page of the library, over a catalog's scene or the page itself, and
           frosts as the page scrolls. */}
       {/* On phones a mode's page keeps the buttons drawn for artwork, on a bar that is solid from the first pixel. */}
-      {/* One mode or one update names itself in its own h1; the header then only says which section it belongs to. */}
+      {/* One mode, one update or one armory entry names itself in its own h1; the header then only says which section
+          it belongs to. */}
       <WikiHeader
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
         solid={Boolean(isModeDetail)}
         clear={layout === "compact" && !isModeDetail}
         pageTitle={pageTitle}
-        pageTitleIsHeading={!isModeDetail && !isPatchDetail}
+        pageTitleIsHeading={!isModeDetail && !isPatchDetail && !isWarehouseEntry}
         section={active}
       />
       {layout === "compact" ? (
