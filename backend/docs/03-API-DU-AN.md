@@ -2510,7 +2510,7 @@ và effectiveOn (YYYY-MM-DD). Ngày không có giờ được lưu DATE, effecti
 không tự áp dụng vào nửa đêm. POST admin/patch-releases/{id}/confirm (patch:publish) xác nhận
 đang áp dụng ở thời điểm server, chỉ khi ngày đã tới, đúng ruleset/lịch mùa và không đảo thứ tự.
 Từ 26/11/2026, ngày phát hành trước hôm nay theo múi giờ thị trường là bản ghi lịch sử: mốc kích hoạt
-và confirmed_at là đầu ngày đó, để lưu trữ các mùa cũ được xác nhận sau mà vẫn đúng thứ tự; chỉ bản có
+và confirmed_at là đầu ngày đó (hoặc giờ mở mùa của thị trường nếu mùa mở muộn hơn trong chính ngày đó), để lưu trữ các mùa cũ được xác nhận sau mà vẫn đúng thứ tự; chỉ bản có
 ngày là hôm nay lấy thời điểm server. Admin xác nhận một lượt mọi bản chờ của thị trường, cũ trước.
 Ghi confirmed_at và mốc kích hoạt nội bộ effective_at; không biến thời điểm xác nhận thành
 thời điểm phát hành được nguồn công bố. Gọi lại xác nhận thành công là idempotent.
