@@ -30,11 +30,11 @@ jobs:
         working-directory: backend/wiki-service
     steps:
       # Skip Git LFS: no tracked file needs it since resources/ left git (ADR-030).
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: false
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
@@ -50,7 +50,7 @@ jobs:
 
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wiki-service-test-reports
           path: backend/wiki-service/target/surefire-reports/
@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload verified OpenAPI specification
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wiki-api-openapi
           path: backend/wiki-service/target/openapi/wiki-v1.json
@@ -79,7 +79,7 @@ jobs:
         working-directory: backend/wiki-service
         shell: powershell
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: false
       - name: Local launcher checks

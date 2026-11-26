@@ -24,13 +24,13 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: false
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: frontend/package.json
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: pnpm
@@ -46,7 +46,7 @@ jobs:
       # Every package runs all of its tests/*.test.* files, so a new test file is picked up without editing a list.
       - run: pnpm test
       - run: pnpm build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: frontend-builds
           path: frontend/apps/*/dist/
