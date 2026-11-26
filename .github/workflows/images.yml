@@ -56,7 +56,7 @@ jobs:
       - name: Name the image
         id: name
         run: echo "ref=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.image }}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
