@@ -188,14 +188,26 @@ test("the hidden static picture is lazy, so it is never fetched beside the app's
   assert.match(pageAt("/hero/airi")!.body, /<img src="https:\/\/cdn\.test\/airi\.jpg"[^>]* loading="lazy"/)
 })
 
-test("the home page preloads the banner the app shows that day", () => {
+test("the home page preloads the banner the app shows that day", async () => {
   const html = renderStaticPage(TEMPLATE, pageAt("/")!, SITE)
-  const script = /<script>(\(function\(\)\{[\s\S]*?\}\)\(\))<\/script>/.exec(html)?.[1]
-  assert.ok(script)
+  assert.doesNotMatch(html, /<script>/)
+  const banners = /<script src="\/banner-preload\.js" data-banners="([^"]*)" async><\/script>/
+    .exec(html)?.[1]
+    ?.replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+  assert.ok(banners)
+  const script = await readFile(new URL("../public/banner-preload.js", import.meta.url), "utf8")
   for (const day of ["2026-11-26T03:00:00Z", "2026-11-27T03:00:00Z", "2026-11-28T03:00:00Z"]) {
     const appended: { href?: string; rel?: string; as?: string }[] = []
     const link = { setAttribute() {} } as Record<string, unknown>
-    const document = { createElement: () => link, head: { appendChild: (node: never) => appended.push(node) } }
+    const document = {
+      currentScript: { dataset: { banners } },
+      createElement: () => link,
+      head: { appendChild: (node: never) => appended.push(node) },
+    }
     const RealDate = Date
     const FixedDate = class extends RealDate {
       constructor() {

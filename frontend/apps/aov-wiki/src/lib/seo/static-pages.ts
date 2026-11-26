@@ -157,19 +157,14 @@ function heroArtworkPreload(hero: PublishedHero, options: StaticPageOptions) {
 
 /**
  * The home page shows one banner a day, chosen by the reader's own date, so a script picks it before the app starts.
- * It repeats `bannerOfDay` in home-banners.ts; a test keeps the two choosing the same banner.
+ * The script is public/banner-preload.js, a file the content security policy allows; it repeats `bannerOfDay` in
+ * home-banners.ts, and a test keeps the two choosing the same banner.
  */
 export function homeBannerPreload(options: StaticPageOptions) {
   const urls = HOME_BANNERS.map((banner) =>
     resizedImageUrl(banner.image, HOME_BANNER_WIDTH, options.imageResize ?? false),
   )
-  return (
-    "<script>(function(){var u=" +
-    JSON.stringify(urls).replace(/</g, "\\u003c") +
-    ',n=new Date(),d=Math.floor((n.getTime()-n.getTimezoneOffset()*60000)/86400000),l=document.createElement("link");' +
-    'l.rel="preload";l.as="image";l.href=u[d%u.length];l.setAttribute("fetchpriority","high");' +
-    "document.head.appendChild(l)})()</script>"
-  )
+  return `<script src="/banner-preload.js" data-banners="${escapeHtml(JSON.stringify(urls))}" async></script>`
 }
 
 const contents = `<nav aria-label="Mục lục">${list(
