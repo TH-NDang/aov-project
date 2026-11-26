@@ -147,6 +147,10 @@ public final class TournamentContent {
         UNKNOWN
     }
 
+    /**
+     * A player's line in a team's roster for one tournament. {@code captain} marks the team's captain in that
+     * tournament; only {@code true} is kept, so a line without it, as every line written before it, is no captain.
+     */
     public record RosterMembership(
             UUID tournamentId,
             UUID teamId,
@@ -158,12 +162,14 @@ public final class TournamentContent {
             LocalDate endsOn,
             String sourceUrl,
             Verification verification,
-            String note
+            String note,
+            @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable Boolean captain
     ) {
         public RosterMembership {
             jerseyNumber = jerseyNumber == null ? null : jerseyNumber.strip();
             status = status == null ? RosterStatus.UNKNOWN : status;
             verification = verification == null ? Verification.UNVERIFIED : verification;
+            captain = Boolean.TRUE.equals(captain) ? Boolean.TRUE : null;
         }
     }
 
