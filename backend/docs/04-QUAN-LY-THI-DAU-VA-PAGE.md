@@ -48,7 +48,7 @@ Người dùng chọn Đấu Trường Danh Vọng Mùa Đông 2026 làm giải 
 | Đội & đội hình | Gộp hai bước "đội tham dự" và "đội hình": mỗi đội một khối có logo, trạng thái tham dự và đội hình ở giải này vẽ ra ngay (năm vị trí chính thức có ảnh và tên tuyển thủ, rồi dự bị, người đã rời); sửa đội hình mở bảng riêng. Biểu tượng bút ở dòng đội mở bảng sửa bản ghi đội và bản ghi các tuyển thủ trong đội hình của giải (18/11/2026), là nơi duy nhất sửa các bản ghi này từ khi màn Registry cũ bị bỏ |
 | Thể thức | Mỗi giai đoạn một thẻ tóm tắt; chọn thẻ mới mở phần sửa |
 | Lịch & kết quả | Tab theo giai đoạn. Vòng tròn: trận gom theo vòng hoặc theo ngày, bảng xếp hạng nằm cạnh. Loại trực tiếp và nhánh thắng/thua: sơ đồ nhánh dựng từ suất WINNER/LOSER |
-| Chung cuộc | Thứ hạng chung cuộc, tiền thưởng và giải thưởng của giải (`placements`, `awards`, `links`) |
+| Chung cuộc | Kết quả và thứ hạng chung cuộc, đối chiếu với các trận (25/11/2026); tiền thưởng và giải thưởng của giải (`placements`, `awards`, `links`) |
 | Công bố | Mục bắt buộc và mục nên bổ sung, nội dung sẽ công bố, thay đổi chưa công bố |
 
 Đường dẫn `?step=` nhận tên bước `overview`, `teams`, `format`, `schedule`, `final`, `publish`; số 0–5 của
@@ -115,8 +115,8 @@ nguồn và ghi chú của đội hình, người đã rời.
 | Đội & đội hình | Thêm nhiều đội bằng danh sách tên, tạo đội tại chỗ, chép từ giải khác, đổi thứ tự. Đội hình sửa cả bảng: vị trí và trạng thái một lần bấm, thêm nhiều người, chép từ giải khác, dán danh sách, tạo hồ sơ, cảnh báo trùng/thiếu vị trí, ghi một lần. Các đội chưa có đội hình chép từ giải gần nhất trong một lần xác nhận |
 | Thể thức | Đổi thứ tự giai đoạn, xếp theo ngày đấu, nhân đôi, năm mẫu, chọn đội của từng giai đoạn |
 | Lịch & kết quả | Lọc theo việc còn thiếu (chưa có tỷ số, giờ, video; thiếu ván; ván thiếu tuyển thủ; tỷ số lệch ván; lệch suất; chưa công bố). "Nhập kết quả": bảng tỷ số và video của nhiều trận, gõ số là sang ô kế, dán nhiều dòng, điền theo ván đã ghi, hỏi một lần khi ghi đè. "Xếp lịch": bảng giờ, vòng, cặp đấu, BO, thứ tự; dời giờ, xếp giờ lần lượt, đánh số vòng, chuyển giai đoạn, thêm/bỏ trận. Nối nhánh theo kết quả. Hạt giống lấy xen kẽ từ các bảng |
-| Chung cuộc | Giải thưởng gom theo tên giải, thêm người nhận cùng giải, điền đội theo đội hình của giải; trận tranh hạng ba cho hạng 3 và 4 |
-| Công bố | Đếm ván đủ dữ liệu, mục còn thiếu nhiều nhất, xuất bản mọi ván đủ dữ liệu của giải trong một lần, báo từng ván bị từ chối |
+| Chung cuộc | Giải thưởng gom theo tên giải, thêm người nhận cùng giải, điền đội theo đội hình của giải; trận tranh hạng ba cho hạng 3 và 4. Từ 25/11/2026 thứ hạng gợi ý đọc từ nhánh đấu và từ bảng xếp hạng, kết quả chưa nói rõ thì để trống kèm lý do; nhãn của bước nói còn thiếu gì (đã đủ đội, gợi ý chưa điền, kết quả chưa khớp, chờ giải kết thúc…). "Điền" chỉ thêm đội chưa có trong bảng; "Thay" đổi hạng lệch sau khi xác nhận cũ → mới, tiền thưởng đi theo đội; các trận cho thấy đội vô địch hoặc á quân khác với kết quả đã ghi thì không điền |
+| Công bố | Đếm ván đủ dữ liệu, mục còn thiếu nhiều nhất, xuất bản mọi ván đủ dữ liệu của giải trong một lần, báo từng ván bị từ chối. Từ 25/11/2026 ván công bố được nhưng còn thiếu dữ liệu là nhóm thứ hai, có nút xuất bản riêng (xem "Công bố ván còn thiếu dữ liệu") |
 
 Nối nhánh theo kết quả đọc trận trước đó của mỗi đội trong giai đoạn: đội thắng đi tiếp bằng suất `WINNER`, đội thua bằng
 `LOSER`. Chỉ nối khi trận trước có tỷ số và chưa suất nào dùng kết quả đó, nên cặp đấu và tỷ số không đổi; các trận của
@@ -465,7 +465,11 @@ chúng ghi nhận, không suy diễn số liệu:
   `awards` (giải cá nhân, người nhận, đội), `links` (nhãn, URL) và `localCurrency`. Tên trong các dòng này vẫn đọc
   được khi chưa có bản ghi liên kết. Từ 19/11/2026, `teamId`/`playerId` của các dòng này không còn là tham chiếu mềm:
   backend kiểm tra khi lưu và chặn xóa bản ghi được nhắc (xem "Liên kết giữa các bản ghi thi đấu").
-- Trận nhận BO2, BO4 là thể thức đấu đủ số ván: tổng hai vế bằng BO, được hòa. BO lẻ giữ quy tắc cũ.
+- Trận nhận BO2, BO4 là thể thức đấu đủ số ván: tổng hai vế bằng BO, được hòa. BO lẻ giữ quy tắc cũ. Trận hòa không có
+  đội thắng hay thua: suất chờ kết quả của nó vẫn trống, bảng xếp hạng tính là đã đá mà không tính thắng hay thua cho đội
+  nào, và đối đầu tính là một lượt đã đá (25/11/2026; trước đó suất chờ và đối đầu coi đội đứng sau là đội thắng, còn bảng
+  xếp hạng tính cả hai đội thua). Kế hoạch chưa có điểm hòa, nên hai đội nhận điểm thua của giai đoạn cho tới khi có luật
+  riêng.
 - Trận có `repeatPicksAllowed` khi được đấu không có luật cấm chọn lại tướng; chỉ khi đó backend và Admin mới
   bỏ qua luật này. Mặc định vẫn áp dụng luật.
 - Tuyển thủ thêm `birthDate`, `lane` (vị trí thường đánh; vị trí trong từng giải vẫn ở đội hình),
@@ -875,7 +879,9 @@ Chỉ đếm ván đã công bố, vì người xem phải mở được từng 
 giải theo snapshot lúc công bố, đúng như bộ lọc `tournamentId` của `GET /games`; ván đã thu hồi không tính, và ván đang
 công bố không đưa vào thùng rác được. Thống kê trong Admin đếm bản nháp nên có thể khác.
 
-- `games` là số ván, `decided` là số ván có bên thắng, `blueWins` là số ván bên xanh thắng trong đó.
+- `games` là số ván, `decided` là số ván có bên thắng, `blueWins` là số ván bên xanh thắng trong đó. `withBans` là số ván có
+  ghi lượt cấm: tỷ lệ cấm của một tướng chia cho số này, không chia cho mọi ván, vì ván không ghi lượt cấm nào là chưa rõ
+  chứ không phải không cấm.
 - `averageSeconds` là trung bình làm tròn của các thời lượng đã biết; `longest` và `shortest` là `{id,seconds}` của ván dài
   nhất và ngắn nhất, bằng nhau thì lấy ván công bố sau. Để trống hoặc 0 giây là chưa biết; không ván nào biết thì bỏ cả ba.
 - Tướng gộp theo `id`. Tướng chỉ ghi tên thì gộp theo tên (không phân biệt hoa thường); nếu trong giải đúng một tướng có
@@ -890,15 +896,87 @@ Trả `Cache-Control: max-age=300, public` và `ETag` như `/references`. Ván t
 tìm ván của một giải phải mở mọi snapshot. Service giữ bản đếm gần nhất của 64 giải trong bộ nhớ; mỗi lần gọi, một truy vấn
 không mở snapshot nào (số ván đang công bố và lần công bố mới nhất) cho biết có ván vừa công bố hoặc thu hồi hay không, có
 thì đếm lại giải đang được hỏi. `ETag` tính từ các ván của chính giải đó, nên ván của giải khác không làm đổi. Đo trên dữ
-liệu giả (3.000 ván, mỗi snapshot 50 KB, giải có 330 ván): truy vấn kiểm tra dưới 1 ms, đọc lại 0,12 giây.
+liệu giả (3.000 ván, mỗi snapshot 50 KB, giải có 330 ván): truy vấn kiểm tra dưới 1 ms. Thời gian đọc lại xem cuối mục "Bộ
+trang bị của một tướng trong giải", vì cả ba câu trả lời đi cùng một lần đọc. Những yêu cầu cùng chờ một lần đọc dùng chung
+lần đọc bắt đầu sau khi chúng tới, nên công bố hàng loạt không làm hàng chờ dài ra.
 
 Trên Stream, thống kê là một tab của trang giải và chỉ hiện khi `games` lớn hơn 0; tab Tổng quan nêu mười tướng có mặt nhiều
-nhất. Bấm một tướng mở các ván tướng đó được chọn. Trang liệt kê mọi ván (`/games`) bỏ, vì ván đã nằm trong trận của nó và
-trong thống kê; địa chỉ cũ chuyển hướng.
+nhất, hoặc được chọn nhiều nhất khi `withBans` nhỏ hơn `games`. Tab có bốn phần Tướng, Đội, Điểm nhấn, Tìm ván và trang
+riêng của một tướng, một đội; đếm cả giải, một giai đoạn hoặc một bản cập nhật trong giai đoạn. Con số trong tab được tính
+trên máy người xem từ "Đội hình của mọi ván" và "Bộ trang bị của một tướng trong giải" bên dưới, và dẫn tới các ván nó đếm.
+Trang liệt kê mọi ván (`/games`) bỏ, vì ván đã nằm trong trận của nó và trong thống kê; địa chỉ cũ chuyển hướng.
 
 `GET /games` nhận thêm `heroId`: chỉ ván có người chọn tướng đó, bị cấm không tính. Kết hợp được với `tournamentId` và
 `seriesId`; phân trang giữ nguyên. Tướng chỉ ghi tên thì không lọc được. Ván của trận diễn ra sau đứng trước, trong một trận
 thì ván sau đứng trước, trận chưa rõ ngày đứng cuối; trước đây xếp theo lúc công bố, nên công bố hàng loạt làm lộn thứ tự.
+
+### Đội hình của mọi ván
+
+`GET /competitions/{id}/lineups` trả mọi ván đã công bố của một giải ở dạng gọn, để Stream tự tính thống kê theo giai đoạn,
+bản cập nhật, đội, bên và tìm ván ngay trên máy người xem: một câu trả lời giữ cả mùa giải (đo trên 327 ván: 314 KB, khoảng
+41 KB khi nén). Không nhận tham số; giải chưa công bố thì 404 như trên.
+
+- `heroes` và `players` là hai danh sách; ván gọi tướng và tuyển thủ bằng vị trí trong danh sách. Tướng gộp như ở
+  `statistics`; tướng không có `id` là tướng chỉ ghi tên. Mỗi `players` là `{id,name?}`: `name` là nickname trong ván công bố
+  mới nhất có ghi, vì đội hình của giải không kể đủ người đã đấu.
+- Mỗi ván: `{id,seriesId,number,winner?,seconds?,mvp?,blue?,red?}`. Mỗi bên: `{teamId?,picks,bans}`. `picks` là
+  `{hero,lane?,player?,turn?}` xếp theo đường, `bans` là `{hero,turn?}` xếp theo lượt, một tướng cấm hai lần ở một bên tính một
+  lần. `turn` là thứ tự trong mọi lượt của ván, chỉ có khi ván ghi thứ tự cấm chọn. Điều chưa biết thì bỏ trống, không suy ra.
+  Ván mà hai bên đều không có `bans` nào là ván chưa ghi lượt cấm.
+- Giai đoạn, vòng, ngày và đối thủ lấy từ snapshot giải qua `seriesId`.
+
+### Bộ trang bị của một tướng trong giải
+
+`GET /competitions/{id}/heroes/{heroId}/builds` trả mọi lần tướng đó được chơi ở giải mà nguồn cho thấy phụ trợ, phù hiệu hay
+trang bị: `{spells,enchantments,items,builds}`. Ba danh sách đầu là `{id?,name,iconUrl?,tier?}`; mỗi `builds` là
+`{gameId,spell?,enchantment?,items,replaced?,situational?}` gọi chúng bằng vị trí.
+
+- `enchantment` là phù hiệu chính: ô của nhánh chính có cấp cao nhất đã ghi.
+- `items` là trang bị giữ đến cuối ván, `replaced` là trang bị đã đổi, `situational` là trang bị tình huống (xem "Trang bị đã
+  lên"). Ván chưa ghi `build` thì `items` là các ô đã thấy ở ảnh chụp trang bị cuối cùng, chỉ khi ảnh đó nằm trong một phút cuối
+  ván; ảnh giữa ván không nói gì về cuối ván. Ảnh chụp có thể có món cấp 1 và một món hai lần.
+- Tướng không ai chơi trả danh sách rỗng, không phải 404. Tên và ảnh lấy ở ván công bố mới nhất có phần đó.
+
+Ba câu trả lời của một giải đi cùng một lần đọc: `Cache-Control`, cách giữ trong bộ nhớ và `ETag` như `statistics`, mỗi loại
+một `ETag` riêng. Đo trên laptop với 2.007 ván đã công bố: lần đọc đầu của một giải 0,8 giây, các lần sau 13 ms.
+
+## Trang bị đã lên (25/11/2026)
+
+Người dùng muốn ghi những trang bị một tuyển thủ đã lên, không bó theo sáu ô và không đặt nặng thời gian. Mỗi người của ván
+có `build`, danh sách theo thứ tự lên:
+
+| Trường | Ý nghĩa |
+|---|---|
+| `item` | Trang bị, bắt buộc |
+| `from` | Các trang bị cấp thấp hơn đã ghép vào, cùng cấp chỉ khi công thức có món đó. Nhiều nhất 3, mỗi món ghi một lần, kể cả khi công thức cần hai. Trang bị cấp 2 sau thành cấp 3 thì nằm ở đây; nếu tuyển thủ đã giữ nó một thời gian thì nó còn có thể là một bước riêng với `place` là `REPLACED`, và bước đó chỉ cho biết giây đầu tiên có nó |
+| `place` | `KEPT` giữ đến cuối ván (mặc định), `REPLACED` đã đổi lấy món khác, `SITUATIONAL` mua cho một lúc, như để hồi sinh, không thuộc bộ trang bị chính |
+| `atSeconds` | Giây trong ván khi đã có món đó, chỉ ghi khi biết |
+
+- Chỉ ghi trang bị cấp 2 và 3; mua lại đúng món đã ghi thì không ghi thêm. Nhiều nhất 24 bước, 6 bước `KEPT`; một món không
+  ghép từ chính nó. Cấp của trang bị, cấp của món ghép so với trang bị và việc có trong patch của ván được kiểm tra khi công bố.
+- Danh sách trống là chưa ai ghi và không có trong JSON. Khi đó bộ trang bị của tướng đọc ảnh chụp lúc kết thúc ván, còn trang
+  của ván hiện ảnh chụp kèm mốc của nó. Ảnh chụp sáu ô và giao dịch mua bán theo giây vẫn giữ nguyên cho nguồn có chúng.
+- Mục của danh mục trang bị (`Reference`) thêm `components`: các món ghép thành nó theo công thức Wiki đã xác minh, để Admin gợi
+  ý "lên từ" và "nâng lên". Món không có công thức thì bỏ trường. Snapshot của ván không giữ `components`.
+- `build` nằm trong jsonb của ván nên không cần migration; ván cũ đọc là danh sách trống.
+- Chỉ khi chưa ván nào có `build` mới quay lui được về bản phát hành chưa biết trường này, vì bản đó từ chối trường lạ và trả
+  500 cho ván có `build`; đã có thì sửa bằng một commit mới.
+
+## Công bố ván còn thiếu dữ liệu (25/11/2026)
+
+Trước đây ván phải đủ tuyển thủ, phụ trợ và bốn lượt cấm mỗi bên mới công bố được, nên 1.281 trong 2.007 ván có đủ mười tướng
+của năm 2026 không lên được trang công khai. Người dùng muốn công bố trước, bổ sung sau. Từ nay:
+
+- **Chặn công bố:** thiếu trận, số ván, thị trường, ngôn ngữ, hai bên có đội, năm người mỗi bên có tướng và đường; phù hiệu hay
+  ngọc đánh dấu đã rõ mà chưa đủ; ảnh chụp trang bị chưa đủ sáu ô; mọi dữ liệu sai (trùng tướng, trùng người, tướng đã bị
+  cấm, đội không thuộc trận, mục không có trong patch kể cả ở phù hiệu và ngọc mới thấy một phần, thời điểm ngoài ván…). Tướng
+  bị cấm ở một lượt cấm chọn phải có trong các tướng bị cấm của bên đó, vì thống kê đếm ở đó.
+- **Không chặn:** tuyển thủ, phụ trợ, lượt cấm mà nguồn không cho thấy. `missingFields` không báo các mục này nữa; mục đã ghi
+  thì vẫn phải đúng, ví dụ phụ trợ phải có trong patch.
+- **Admin:** ván đủ để công bố nhưng chưa đủ dữ liệu là nhóm riêng "công bố được, còn thiếu", có nút xuất bản riêng và nói rõ
+  thiếu gì. Riêng Admin còn giữ lại ván chưa ghi bên thắng; API không chặn. Sau khi công bố, trận vẫn liệt kê phần còn
+  thiếu để bổ sung rồi xuất bản lại.
+- **Stream:** phần thiếu hiện là chưa rõ, không suy ra.
 
 ## Tuyển thủ trùng tên và gộp hồ sơ (20/11/2026)
 
@@ -1080,7 +1158,9 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /competitions?teamId=&playerId=&personPageId=&organizerPageId=&detail=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức. `detail=LIST` để trống `series`, `rosters`, `players`, `people` cho trang danh sách; mặc định FULL |
 | GET /competitions/participants?kind=&q=&country=&page=&size= | Đội (`kind=TEAM`), tuyển thủ (`PLAYER`) hoặc nhân sự (`PERSON`) của các giải đã công bố: [{id,kind,name,shortName,country,imageUrl,imageDarkUrl,competitions,competitionId,competitionName,team,roles}] |
 | GET /competitions/{id} | Snapshot giải |
-| GET /competitions/{id}/statistics | {games,decided,blueWins,averageSeconds?,longest?,shortest?,heroes:[{id?,code?,name,iconUrl?,picks,wins,bans,bluePicks}],mvps:[{playerId,games}]} đếm trên ván đã công bố (xem "Thống kê tướng của giải") |
+| GET /competitions/{id}/statistics | {games,decided,blueWins,withBans,averageSeconds?,longest?,shortest?,heroes:[{id?,code?,name,iconUrl?,picks,wins,bans,bluePicks}],mvps:[{playerId,games}]} đếm trên ván đã công bố (xem "Thống kê tướng của giải") |
+| GET /competitions/{id}/lineups | {heroes:[{id?,code?,name,iconUrl?}],players:[{id,name?}],games:[{id,seriesId,number,winner?,seconds?,mvp?,blue?,red?}]}: cấm chọn của mọi ván đã công bố (xem "Đội hình của mọi ván") |
+| GET /competitions/{id}/heroes/{heroId}/builds | {spells,enchantments,items,builds:[{gameId,spell?,enchantment?,items,replaced?,situational?}]} (xem "Bộ trang bị của một tướng trong giải") |
 | GET /games?tournamentId=&seriesId=&heroId=&page=&size= | Ván đã công bố, trận diễn ra sau đứng trước. `heroId` chỉ giữ ván có người chọn tướng đó |
 | GET /references, /references/people | {items:[{id,kind,name,shortName?,aliases?,path,circuitId?,teamIds?}]}: mọi tên văn bản có thể nhắc, không phân trang (xem "Tham chiếu trong văn bản") |
 | GET /references/{kind}/{id} | Thẻ xem trước. `kind`: CIRCUIT, ORGANIZATION, COMPETITION, TEAM, PLAYER, PERSON |

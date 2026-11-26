@@ -30,7 +30,8 @@ ranh giới đó, không thêm một dịch vụ cho từng nhóm dữ liệu ga
 - Ván chưa xác định mốc được ghi `unknown=true`; danh mục hiện tại chỉ là dữ liệu quan sát để
   chọn tham chiếu, không phải kết luận các đối tượng đã tồn tại trong một mùa cũ. Dữ liệu nền chưa
   rõ patch chỉ được kèm khi người nhập bật `includeUnscoped`, có nhãn trong bản đã xuất bản.
-- Lưu nháp thiếu dữ liệu; kiểm tra đầy đủ khi xuất bản. Bản nháp và bản công khai tách biệt:
+- Lưu nháp thiếu dữ liệu; kiểm tra đầy đủ khi xuất bản. Từ 25/11/2026, tuyển thủ, phụ trợ và lượt cấm nguồn không cho thấy
+  không chặn xuất bản nữa, còn dữ liệu sai vẫn chặn (04, "Công bố ván còn thiếu dữ liệu"). Bản nháp và bản công khai tách biệt:
   chỉnh nháp sau xuất bản không được lộ lên Stream. Dùng optimistic version để tránh ghi đè
   thay đổi đồng thời. Chỉ public các bản đã xuất bản.
 - Phù hiệu/bảng ngọc có trạng thái quan sát riêng: `UNKNOWN` chưa biết, `NOT_SHOWN` nguồn không
@@ -38,7 +39,8 @@ ranh giới đó, không thêm một dịch vụ cho từng nhóm dữ liệu ga
 - Trang bị lưu các ảnh chụp trạng thái theo giây trong ván, với sáu ô cố định và thông tin ô trống
   hay chưa quan sát được. Các giao dịch mua/bán/ghép/chuyển ô chỉ ghi như sự kiện khi có chứng
   cứ rõ; không tự suy ra mua/bán từ hai ảnh chụp khác nhau. Cho phép ghi trang bị cấp thấp từ đầu
-  và lưu nhiều mốc trong cùng ván, thay vì chỉ có một bộ “đồ cuối”.
+  và lưu nhiều mốc trong cùng ván, thay vì chỉ có một bộ “đồ cuối”. Từ 25/11/2026 ván ghi thêm các trang bị đã lên, không theo
+  mốc (04, "Trang bị đã lên").
 - Dữ liệu tham chiếu game đi qua HTTP public API wiki với timeout/cache có giới hạn. Không giữ
   transaction database mở trong lúc gọi wiki. Snapshot công khai chỉ lưu metadata của đối tượng
   thực sự dùng; không sao chép toàn bộ catalog vào mỗi ván.
@@ -190,8 +192,8 @@ và dữ liệu giữ nguyên.
   - bảng "Thông tin ván": thị trường, mùa và patch dùng để đọc danh mục của ván, số ván, ghi chú; lưu bằng một nút,
     chỉ gửi phần đã đổi. Cũng tại đây: gỡ bản công khai của ván (có xác nhận) và xóa ván. Xuất bản vẫn là bước xác
     nhận trong "Tiến độ";
-  - trang bị theo mốc và ghi chú của từng tuyển thủ nằm trong bảng "Phụ trợ, ngọc, trang bị", bên cạnh phù hiệu và
-    bảng ngọc của tuyển thủ đang chọn.
+  - trang bị theo mốc và ghi chú của từng tuyển thủ nằm trong phần sửa của tuyển thủ đó ở "Đội hình", bên cạnh phụ
+    trợ, phù hiệu và bảng ngọc.
   Đội của mỗi bên luôn là hai đội của trận; đổi bên xanh/đỏ bằng "Đổi bên" trong "Cấm chọn". Đường dẫn cũ
   `?view=data&game=` mở trang trận tại ván đó với bảng "Thông tin ván".
 - Phụ đề được tắt hoặc bật bên trong khung của YouTube, không phải từ trang này. Thử ngày 12/11/2026 trên video của
@@ -240,8 +242,8 @@ Quyết định:
   đường), phụ trợ, phù hiệu chính và một vòng ba màu cho bảng ngọc. Rê vào phù hiệu hiện đủ ba ô chính và hai ô phụ,
   ô chưa ghi hiện dấu "?". Rê vào vòng ngọc hiện từng màu với loại ngọc và số viên. Tên tướng không lặp lại vì ảnh
   tướng đã mở thẻ tướng.
-- Khi đang ghi, bấm vào phụ trợ, phù hiệu hoặc vòng ngọc của một tuyển thủ mở bảng "Phụ trợ, ngọc, trang bị" đúng
-  tuyển thủ và đúng phần đó. Đây là lối tắt vào cùng một bảng, không phải ô nhập thứ hai.
+- Khi đang ghi, bấm vào phụ trợ, phù hiệu hoặc vòng ngọc của một tuyển thủ trong "Đội hình" mở phần sửa đúng tuyển
+  thủ và đúng phần đó. Đây là lối vào cùng một chỗ nhập, không phải ô nhập thứ hai.
 - Hai bảng đội hiện đối xứng khi nằm cạnh nhau (làm thử theo đề nghị của người dùng, cùng ngày): bảng đội đỏ soi
   gương bảng đội xanh. Ảnh tướng nằm ở hai mép ngoài; tên và hàng biểu tượng canh về phía ảnh; KDA và trang bị nằm
   phía trong; ở đầu bảng, hai con số hạ gục đứng sát nhau ở giữa. Thứ tự soi gương cả trong hàng biểu tượng và sáu ô
@@ -259,13 +261,12 @@ của các đội còn lại không tìm được tuyển thủ theo vị trí v
 
 Quyết định:
 
-- Khi đang ghi, ghế chưa có tuyển thủ hiện nút "Ghi tuyển thủ" ở chỗ tên. Bấm mở bảng của tuyển thủ (đổi tên thành
-  "Tuyển thủ, ngọc, trang bị") đúng ghế đó. Đầu phần của mỗi ghế là ô chọn tuyển thủ trong đội hình đăng ký của đội ở
-  giải: người cùng vị trí lên đầu, đội hình chính trước dự bị, người đã rời ở cuối và có ghi chú. Đội chưa có đội
-  hình thì bảng nói rõ cần thêm ở bước "Đội & đội hình".
+- Khi đang ghi, chỗ tên của mỗi ghế trong "Đội hình" là ô chọn tuyển thủ trong đội hình đăng ký của đội ở giải, ghế
+  chưa có người hiện "Ghi tuyển thủ": người cùng vị trí lên đầu, đội hình chính trước dự bị, người đã rời ở cuối và có
+  ghi chú. Đội chưa có đội hình ở giải thì ô này chỉ có người đã ghi ở ghế.
 - Mỗi đội có nút "Điền tuyển thủ theo đội hình" khi còn ghế trống mà đội hình có người đúng vị trí. Nút chỉ điền ghế
   trống, chọn người đội hình chính trước dự bị, không điền người đã rời và không xếp một người vào hai ghế. Nút
   trong bảng "Cấm chọn" dùng cùng luật. Ván có người vào thay vẫn phải sửa tay ghế đó, vì dữ liệu chưa ghi ai thay ai
   ở ván nào.
-- Cạnh sáu ô trang bị của mỗi hàng có nút ghi trang bị, mở bảng đúng tuyển thủ ở phần "Trang bị theo mốc". Khi video
+- Cạnh sáu ô trang bị của mỗi hàng có nút ghi trang bị, mở bảng đúng tuyển thủ ở phần "Trang bị". Khi video
   đã đồng bộ, ô thời gian của mốc mới lấy sẵn thời điểm đang xem và có nút lấy lại thời điểm đó.
