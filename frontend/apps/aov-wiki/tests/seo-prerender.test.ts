@@ -9,6 +9,7 @@ import { ReleasedWithoutPages, runPrerenderJob } from "../scripts/prerender-job.
 import { PUBLISHED_BUNDLE, publishSite } from "../scripts/publish-site.mts"
 import { prerender } from "../scripts/prerender.mts"
 import { renderRobots } from "../src/lib/seo/head-tags.ts"
+import { bannerOfDay } from "../src/lib/home-banners.ts"
 import {
   buildStaticPages,
   renderSitemap,
@@ -136,11 +137,54 @@ test("a static hero page carries its head, its readable body and the app's scrip
   assert.match(html, /<meta data-seo property="og:image" content="https:\/\/cdn\.test\/airi\.jpg" \/>/)
   assert.match(html, /<link data-seo rel="canonical" href="https:\/\/wiki\.example\.test\/hero\/airi" \/>/)
   assert.ok(!html.includes("noindex"), "the template's noindex must be replaced")
-  assert.match(html, /<div id="root"><div data-prerendered>/)
+  assert.match(html, /<div id="root"><div data-prerendered data-hero-id="hero-1">/)
   assert.match(html, /<h1>Airi<\/h1>/)
   assert.match(html, /<strong>Phi tiêu<\/strong>: gây 280 sát thương/)
   assert.match(html, /<li>Ninja Xanh Lá<\/li>/)
   assert.match(html, /<script type="module" src="\/assets\/app\.js">/)
+})
+
+test("a hero page starts its artwork in the head, at the copies the page asks for", () => {
+  const resized = buildStaticPages(
+    { ...catalog, heroes: [{ ...catalog.heroes[0]!, media: { SPLASH: media("https://img.test/assets/a/airi.jpg") } }] },
+    { imageResize: true },
+  ).find((page) => page.path === "/hero/airi")!
+  const html = renderStaticPage(TEMPLATE, resized, SITE)
+  assert.match(
+    html,
+    /<link rel="preload" as="image" href="https:\/\/img\.test\/cdn-cgi\/image\/width=768,[^"]*\/assets\/a\/airi\.jpg" imagesrcset="[^"]*width=768,[^"]* 1x, [^"]*width=1536,[^"]* 2x" fetchpriority="high" \/>/,
+  )
+  assert.ok(html.indexOf('rel="preload"') < html.indexOf("<!-- /seo:head -->"))
+  // Without the image service the page asks for the stored picture, and so does the preload.
+  assert.match(
+    renderStaticPage(TEMPLATE, pageAt("/hero/airi")!, SITE),
+    /rel="preload" as="image" href="https:\/\/cdn\.test\/airi\.jpg"/,
+  )
+  assert.ok(!renderStaticPage(TEMPLATE, pageAt("/hero/alice")!, SITE).includes('rel="preload"'))
+})
+
+test("the hidden static picture is lazy, so it is never fetched beside the app's copy", () => {
+  assert.match(pageAt("/hero/airi")!.body, /<img src="https:\/\/cdn\.test\/airi\.jpg"[^>]* loading="lazy"/)
+})
+
+test("the home page preloads the banner the app shows that day", () => {
+  const html = renderStaticPage(TEMPLATE, pageAt("/")!, SITE)
+  const script = /<script>(\(function\(\)\{[\s\S]*?\}\)\(\))<\/script>/.exec(html)?.[1]
+  assert.ok(script)
+  for (const day of ["2026-11-26T03:00:00Z", "2026-11-27T03:00:00Z", "2026-11-28T03:00:00Z"]) {
+    const appended: { href?: string; rel?: string; as?: string }[] = []
+    const link = { setAttribute() {} } as Record<string, unknown>
+    const document = { createElement: () => link, head: { appendChild: (node: never) => appended.push(node) } }
+    const RealDate = Date
+    const FixedDate = class extends RealDate {
+      constructor() {
+        super(day)
+      }
+    }
+    new Function("document", "Date", script)(document, FixedDate)
+    assert.equal(appended[0]?.href, bannerOfDay(new RealDate(day)).image)
+    assert.equal(appended[0]?.rel, "preload")
+  }
 })
 
 test("published text cannot break out of the markup or act as a replacement pattern", () => {

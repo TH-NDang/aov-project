@@ -230,9 +230,11 @@ export interface PrerenderOptions {
   siteUrl: string
   apiBase: string
   retryDelayMs?: number
+  /** The build asks the image service for resized pictures, so the pages preload those copies. */
+  imageResize?: boolean
 }
 
-export async function prerender({ distDir, siteUrl, apiBase, retryDelayMs }: PrerenderOptions) {
+export async function prerender({ distDir, siteUrl, apiBase, retryDelayMs, imageResize }: PrerenderOptions) {
   const template = await readFile(path.join(distDir, "200.html"), "utf8").catch(() => {
     throw new Error(`${distDir} has no 200.html. Run the Wiki build first.`)
   })
@@ -240,7 +242,7 @@ export async function prerender({ distDir, siteUrl, apiBase, retryDelayMs }: Pre
   // Everything is prepared before anything is touched, so a failing API leaves the previous pages online.
   const catalog = await readPublishedCatalog(apiBase, retryDelayMs)
   if (!catalog.heroes.length) throw new NothingPublished("The public API returned no published heroes.")
-  const pages = buildStaticPages(catalog)
+  const pages = buildStaticPages(catalog, { imageResize })
   const files = pages.map((page) => ({
     file: staticFile(distDir, page),
     html: renderStaticPage(template, page, siteUrl),
@@ -270,7 +272,12 @@ async function main() {
     throw new Error("VITE_WIKI_URL must be the public origin of the Wiki, for example https://wiki.example.com.")
 
   const apiBase = env.WIKI_API_TARGET || "http://localhost:8080"
-  const { pages, catalog } = await prerender({ distDir: path.join(appRoot, "dist"), siteUrl, apiBase })
+  const { pages, catalog } = await prerender({
+    distDir: path.join(appRoot, "dist"),
+    siteUrl,
+    apiBase,
+    imageResize: env.VITE_IMAGE_RESIZE === "cloudflare",
+  })
 
   for (const repeated of repeatedMeta(pages)) console.warn(`Repeated ${repeated}`)
   console.log(

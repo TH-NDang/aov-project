@@ -7,7 +7,7 @@ import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { usePublishedChanges } from "../../lib/wiki-patch-changes"
 import { seasonUpdatesQuery } from "./home-api"
-import { bannerOfDay } from "./home-banners"
+import { bannerOfDay, HOME_BANNER_WIDTH } from "../../lib/home-banners"
 import { patchDayLabel } from "../../lib/patch-day-label"
 import { SITE_NAME } from "../../lib/seo/page-meta"
 
@@ -29,7 +29,7 @@ export function HomeIntro() {
       className="wiki-home-intro"
       style={
         {
-          "--home-art": `url("${resizedImageUrl(banner.image, 1536)}")`,
+          "--home-art": `url("${resizedImageUrl(banner.image, HOME_BANNER_WIDTH)}")`,
           "--home-art-position": banner.position,
         } as CSSProperties
       }

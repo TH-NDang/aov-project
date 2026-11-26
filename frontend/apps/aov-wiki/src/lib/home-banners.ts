@@ -1,5 +1,5 @@
 /** Hero artwork behind the home page's opening; `position` keeps the character in view when the band crops it. */
-const HOME_BANNERS = [
+export const HOME_BANNERS = [
   {
     image:
       "https://img.athahub.com/assets/6bd9e53a-97f0-49b1-a138-5d33bd2851c7/77f2495e-6bd4-446a-8fb8-beb226430adf.jpg",
@@ -19,6 +19,9 @@ const HOME_BANNERS = [
     position: "40% 28%",
   },
 ] as const
+
+/** The width the banner is asked for; the static home page preloads the same copy. */
+export const HOME_BANNER_WIDTH = 1536
 
 /** One picture a day, so the page looks fresh across visits without moving while it is read. */
 export function bannerOfDay(now = new Date()) {
