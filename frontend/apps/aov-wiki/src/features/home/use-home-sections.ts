@@ -47,7 +47,7 @@ function dayNumber() {
 }
 
 /**
- * Every section of the Wiki with its name, its count and real pictures from its catalog: hero portraits, skin artwork,
+ * Every section of the Wiki with its name, its count and real pictures from its catalog: hero portraits, skin cards,
  * finished (tier 3) equipment, the emblem of every enchantment branch, a tier-3 arcana of each colour, talent icons,
  * the faces of the heroes the version in force changed with the kind of their change, and a few glossary terms.
  */
@@ -70,7 +70,8 @@ export function useHomeSections(): HomeSection[] {
   const entities = references.data?.entities ?? []
   const asPictures = (urls: string[]) => urls.map((url) => ({ url }))
   const heroList = heroes.data?.items ?? []
-  const skinArt = (skins.data ?? []).flatMap((skin) => skin.art?.currentVersion?.url ?? [])
+  // The game's tall skin cards keep the face in their upper middle, so a narrow slice never cuts it off.
+  const skinCards = (skins.data ?? []).flatMap((skin) => skin.portrait?.currentVersion?.url ?? [])
   const finishedItems = (items.data ?? []).flatMap((item) =>
     item.kind === "items" && item.content.tier === 3 ? (warehouseImage(item) ?? []) : [],
   )
@@ -91,7 +92,7 @@ export function useHomeSections(): HomeSection[] {
         8,
       ),
     ),
-    skins: asPictures(skinArt.length >= 3 ? pick(skinArt, 6) : HOME_BANNERS.map((banner) => banner.image)),
+    skins: asPictures(skinCards.length >= 3 ? pick(skinCards, 6) : HOME_BANNERS.map((banner) => banner.image)),
     items: asPictures(pick(finishedItems, 8)),
     enchantments: asPictures(
       [...(branches.data ?? [])]

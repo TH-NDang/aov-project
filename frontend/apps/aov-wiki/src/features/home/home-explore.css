@@ -128,9 +128,10 @@
 .wiki-home-card-strip[data-shape="photo"] .wiki-home-card-frame > :first-child {
   border-radius: 0;
 }
+/* Portraits and skin cards keep the face in their upper middle. */
 .wiki-home-card-strip[data-shape="photo"] .wiki-home-card-picture {
   object-fit: cover;
-  object-position: 50% 20%;
+  object-position: 50% 18%;
 }
 .wiki-home-card[data-section="enchantments"] .wiki-home-card-frame > :first-child,
 .wiki-home-card[data-section="spells"] .wiki-home-card-frame > :first-child,
@@ -301,7 +302,7 @@
     width: 36px;
     height: 36px;
   }
-  .wiki-home-card[data-section="skins"] .wiki-home-card-frame:nth-child(n + 3) {
+  .wiki-home-card[data-section="skins"] .wiki-home-card-frame:nth-child(n + 5) {
     display: none;
   }
   .wiki-home-card-strip[data-shape="words"] {

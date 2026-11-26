@@ -12,7 +12,7 @@ import "./home-explore.css"
 /** How many pictures each section's strip holds; the wide cards hold more. */
 const STRIP_SIZE: Partial<Record<HomeSection["key"], number>> = {
   heroes: 8,
-  skins: 3,
+  skins: 5,
   enchantments: 8,
   updates: 8,
   terms: 6,
