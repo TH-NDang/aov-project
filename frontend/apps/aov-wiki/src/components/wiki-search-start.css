@@ -1,0 +1,124 @@
+/*
+ * The search's suggestions before any word, in groups. Heroes stand as round faces with their name under them (a
+ * changed hero carries the mark of its change), items as square icons, sections as chips with their mark, three to a
+ * row. The suggestion the arrow keys mark gets the accent ring.
+ */
+.wiki-search-start {
+  display: grid;
+  gap: 4px;
+  padding: 6px 12px 12px;
+}
+.wiki-search-start-title {
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  margin: 0;
+  padding: 8px 4px 6px;
+  color: var(--aov-muted);
+}
+.wiki-search-start-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.wiki-search-start-row > a {
+  display: grid;
+  width: 60px;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 2px;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text-soft);
+  text-decoration: none;
+}
+.wiki-search-start-row > a:hover,
+.wiki-search-start-row > a[aria-selected="true"] {
+  background: color-mix(in srgb, var(--aov-accent) 12%, transparent);
+  color: var(--aov-text);
+}
+.wiki-search-start-row > a[aria-selected="true"] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--aov-accent) 60%, transparent);
+}
+.wiki-search-start-picture {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+.wiki-search-start-picture > :first-child {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--aov-raised);
+}
+[data-look="icon"] .wiki-search-start-picture > :first-child {
+  border-radius: 8px;
+}
+.wiki-search-start-image {
+  object-fit: cover;
+}
+/* The kind of a hero's change, on a solid disc at the corner of its face. */
+.wiki-search-start-pip {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  border-radius: 50%;
+  background: var(--aov-popover);
+  box-shadow: 0 0 0 2px var(--aov-popover);
+}
+.wiki-search-start-label {
+  font: 400 0.75rem/1rem var(--wiki-font-reading);
+  max-width: 100%;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sections: chips with their mark and name, three to a row. */
+[data-look="chip"] .wiki-search-start-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+[data-look="chip"] .wiki-search-start-row > a {
+  font: var(--wiki-type-category);
+  display: flex;
+  width: auto;
+  height: 40px;
+  align-items: center;
+  justify-items: start;
+  gap: 8px;
+  padding: 0 10px;
+  color: var(--aov-text);
+}
+[data-look="chip"] .wiki-search-start-row > a > svg {
+  flex: none;
+  color: var(--aov-accent);
+}
+[data-look="chip"] .wiki-search-start-label {
+  font: inherit;
+  text-align: left;
+}
+@media (max-width: 899.98px) {
+  .wiki-search-start {
+    padding: 8px 12px 24px;
+  }
+  .wiki-search-start-row > a {
+    width: calc((100% - 8px) / 5);
+  }
+  .wiki-search-start-picture {
+    width: 48px;
+    height: 48px;
+  }
+  /* On a phone a section is a square target: its mark over its name. */
+  [data-look="chip"] .wiki-search-start-row > a {
+    display: grid;
+    height: auto;
+    justify-items: center;
+    gap: 6px;
+    padding: 10px 4px;
+  }
+  [data-look="chip"] .wiki-search-start-label {
+    text-align: center;
+  }
+}

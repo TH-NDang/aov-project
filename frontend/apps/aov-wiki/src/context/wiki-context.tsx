@@ -110,6 +110,12 @@ function normalizeOptions(value: CatalogContextResponse): WikiOptions {
   }
 }
 
+/** Markets the API lists that the Wiki does not offer; a request for one reads the default market instead. */
+const HIDDEN_MARKETS = new Set(["GLOBAL"])
+const DEFAULT_MARKET = "VN"
+/** A saved or linked market the Wiki does not offer reads as the default market. */
+const offered = (code: string) => (HIDDEN_MARKETS.has(code.toUpperCase()) ? DEFAULT_MARKET : code)
+
 function useWikiState() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
@@ -117,10 +123,10 @@ function useWikiState() {
   const section = wikiSection(pathname, params.get("tab"))
   const [preferences] = useState(readPreferences)
   const implied = useMemo(
-    () => ({ region: preferences.region || "VN", locale: supportedWikiLocale(preferences.locale) }),
+    () => ({ region: offered(preferences.region || DEFAULT_MARKET), locale: supportedWikiLocale(preferences.locale) }),
     [preferences],
   )
-  const region = params.get("region") || implied.region
+  const region = offered(params.get("region") || implied.region)
   const requestedLocale = params.get("locale") || preferences.locale
   const locale = supportedWikiLocale(requestedLocale)
   const seasonId = params.get("season") ?? ""
@@ -137,6 +143,17 @@ function useWikiState() {
       { replace: true },
     )
   }, [params, locale, setParams])
+  useEffect(() => {
+    if (!params.has("region") || params.get("region") === region) return
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        next.set("region", region)
+        return next
+      },
+      { replace: true },
+    )
+  }, [params, region, setParams])
   useEffect(() => {
     document.documentElement.lang = locale
   }, [locale])
@@ -211,10 +228,12 @@ function useWikiState() {
   const marketList = markets.data ?? context.data?.regions
   const regions = useMemo(
     () =>
-      (marketList ?? []).map((market) => ({
-        ...market,
-        displayName: marketName(market.code, locale, market.displayName),
-      })),
+      (marketList ?? [])
+        .filter((market) => !HIDDEN_MARKETS.has(market.code))
+        .map((market) => ({
+          ...market,
+          displayName: marketName(market.code, locale, market.displayName),
+        })),
     [marketList, locale],
   )
   return {

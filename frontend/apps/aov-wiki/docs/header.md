@@ -23,7 +23,11 @@
   "AOV Stream" dạng chữ thường, một dòng mô tả cắt bằng dấu ba chấm. Ứng dụng đang dùng có nền vàng nhạt và dấu tích;
   ứng dụng kia có mũi tên, sáng lên khi rê chuột. Chọn Stream mở frontend Stream trong cùng tab.
 - Giữa: ô tìm kiếm chung, cao 36px, rộng tối đa 420px, nằm giữa phần logo và phần tiện ích, hiện ở mọi bề rộng.
-- Phải: nút thị trường dữ liệu (cờ và mã thị trường, mở bảng chọn thị trường) và tài khoản.
+- Phải: nút thị trường và ngôn ngữ (cờ và mã thị trường) và tài khoản. Nút mở một bảng gọn rộng 280px, canh mép phải
+  với nút (`WikiPreferenceControls`, `src/context/wiki-preferences.tsx`): tiêu đề nhỏ "Thị trường", mỗi thị trường một
+  hàng cao 40px có cờ và tên, thị trường đang chọn có nền vàng nhạt và dấu ✓, thị trường chưa hỗ trợ mờ đi với chữ "Chưa
+  hỗ trợ" ở bên phải (lý do là tooltip); rồi tiêu đề nhỏ "Ngôn ngữ" và công tắc hai nửa Tiếng Việt | English, nửa đang
+  chọn nổi lên. Không có câu giải thích. Tab đi qua từng lựa chọn, Escape đóng. Chọn thị trường thì bảng đóng.
 - Ô tìm kiếm, nút thị trường và nút tài khoản cùng một kiểu: không viền, bo tròn, nền mờ `--aov-text` 6% (9% khi rê
   chuột). Ô tìm kiếm có viền vàng khi đang gõ.
 - Trang tướng (`variant="hero"`): thanh nằm trên ảnh tướng, trong suốt ở đầu trang; trong 100px cuộn đầu tiên nền, vạch
@@ -34,6 +38,14 @@
 
 - `WikiSearch` là ô tìm duy nhất của Wiki: trên thanh đầu trang (`size="bar"`), ô lớn ở trang không tìm thấy
   (`size="hero"`), và hàng tìm kiếm của header compact (`size="sheet"`).
+- Chữ mờ trong ô chỉ là "Tìm tướng, trang bị…" ("Search heroes, items…"); bảng gợi ý có ảnh đã cho thấy tìm được gì.
+- Bấm vào ô khi chưa gõ thì bảng gợi ý có ảnh mở ngay (`WikiSearchStart`, `src/components/wiki-search-start.tsx`),
+  theo nhóm: "Xem gần đây" (mặt các tướng người đọc mở gần nhất, lưu trong trình duyệt bởi `recent-heroes.ts`), "Thay
+  đổi ở bản này" (mặt các tướng đổi ở bản đang áp dụng, mỗi mặt có dấu loại thay đổi ở góc, từ `useChangedHeroes`),
+  "Trang bị cấp 3" (biểu tượng vài món đồ hoàn chỉnh, đổi theo ngày, mở khung trang bị) và "Các mục" (chín mục của Wiki,
+  mỗi mục có dấu). Nhóm chưa có dữ liệu thì không hiện. Dữ liệu là những câu trả lời Wiki đã giữ (danh sách tướng, thay
+  đổi đã công bố, danh mục tham chiếu, danh mục trang bị), chỉ tải khi bảng mở. Trên wide bảng rộng 520px; phím ↑ ↓ (và
+  ← → khi ô trống) đi qua mọi gợi ý theo thứ tự đọc, Enter mở gợi ý đang đánh dấu, Escape đóng.
 - Gõ chữ thì danh sách gợi ý mở dưới ô: tối đa 8 tên đã xuất bản thuộc tướng, trang bị, phù hiệu, bảng ngọc, phụ trợ và
   thuật ngữ, mỗi tên có hình và loại. Tên trùng khớp đứng trước, rồi tên bắt đầu bằng từ khóa, rồi tên chứa từ khóa; tìm
   không phân biệt dấu và tính cả tên khác. Tên lấy từ `GET /reference-catalog` theo thị trường, ngôn ngữ và mốc dữ liệu
@@ -55,9 +67,12 @@ Một hàng cao 48px (`WikiHeaderCompact`):
   khuất (prop `centre`); các trang khác ghi tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
   trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
   trang bị", bốn phần là dãy tab dính ngay dưới header.
-- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút quay lại và ô nhập bo tròn, và bên dưới header mở
-  một màn tìm kiếm phủ kín trang: chưa gõ thì có lưới "Đi nhanh tới" chín mục và một dòng gợi ý cách tìm; gõ chữ thì
-  danh sách gợi ý chiếm cả màn, mỗi hàng cao 52px.
+- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành ô nhập bo tròn (kính lúp bên trong, nút × khi đã gõ)
+  và nút chữ "Hủy" ("Cancel") cao 40px ở bên phải, và bên dưới header mở một màn tìm kiếm phủ kín trang: chưa gõ thì là
+  bảng gợi ý có ảnh như trên wide (năm mặt tướng một hàng, các mục thành ô vuông dấu trên tên, ba ô một hàng); gõ chữ
+  thì danh sách gợi ý chiếm cả màn, mỗi hàng cao 52px. Màn tìm kiếm là một mục riêng trong lịch sử trình duyệt: "Hủy",
+  Escape khi ô trống và cử chỉ quay lại của hệ thống đều đóng nó; chọn một gợi ý thì trang mới thay chỗ mục đó, nên
+  quay lại từ trang mới về thẳng trang trước khi tìm.
 - Mục lục (`LibraryContents` trong `src/components/library-contents.tsx`, cùng danh sách `LibraryNavigation` với sidebar
   của bố cục wide) mở tấm trượt từ phải, rộng tối đa 320px, liệt
   kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong
@@ -72,8 +87,8 @@ Một hàng cao 48px (`WikiHeaderCompact`):
 ### Menu "⋯"
 
 - Mở drawer dưới (`MoreMenu`) dùng chung `PublicPreferencesDrawer` với Stream: hàng tài khoản ở đầu
-  (`PublicAccountSummary`, không mở popup tài khoản lồng nhau), hai ô Wiki/Stream, rồi nhóm cài đặt ngôn ngữ, múi giờ,
-  định dạng ngày, tiền tệ và thị trường dữ liệu.
+  (`PublicAccountSummary`, không mở popup tài khoản lồng nhau), hai ô Wiki/Stream, rồi nhóm cài đặt ngôn ngữ (công tắc
+  hai nửa Tiếng Việt | English như trên wide, nút cao 38px), múi giờ, định dạng ngày, tiền tệ và thị trường dữ liệu.
 - Logo ứng dụng 32px; hàng cài đặt cao 48px. Nội dung cuộn khi màn hình thấp, giữ khoảng đệm theo vùng an toàn phía dưới.
 - Mọi drawer dưới trên điện thoại (`PublicDrawer` trong `@aov/ui`, dùng chung với Stream) cao vừa nội dung, tối đa 85%
   màn hình, nên phía trên luôn còn một dải trang phủ mờ; chạm vào đó, nhấn Escape, hoặc kéo drawer xuống từ bất kỳ đâu

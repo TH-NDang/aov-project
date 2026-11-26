@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
-import { Link } from "react-router"
+import { useEffect, useRef, type ReactNode, type RefObject } from "react"
+import { Link, useLocation, useNavigate } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
@@ -229,7 +229,14 @@ function WikiHeaderCompact({
 }: WikiHeaderProps) {
   const { href, locale } = useWikiContext()
   const t = useWikiText()
-  const [searching, setSearching] = useState(false)
+  // The open search is an entry of its own in the history, so the system back gesture closes it.
+  const location = useLocation()
+  const navigate = useNavigate()
+  const searching = Boolean((location.state as { wikiSearch?: boolean } | null)?.wikiSearch)
+  const here = location.pathname + location.search + location.hash
+  const openSearch = () => void navigate(here, { state: { wikiSearch: true } })
+  const closeSearch = () =>
+    void (location.key === "default" ? navigate(here, { replace: true, state: null }) : navigate(-1))
   const Title = pageTitleIsHeading ? "h1" : "p"
   // Over artwork the row starts clear and darkens during the first 100px of scroll.
   const headerRef = useRef<HTMLElement>(null)
@@ -239,15 +246,11 @@ function WikiHeaderCompact({
   if (searching)
     return (
       <header ref={headerRef} className="wiki-compact-header" data-variant="library" data-searching>
-        <button
-          type="button"
-          className="wiki-compact-button"
-          aria-label={wikiText(locale, "Đóng tìm kiếm", "Close search")}
-          onClick={() => setSearching(false)}
-        >
-          <WikiIcon name="chevronLeft" size={22} weight="bold" />
+        {/* A picked result replaces the search's history entry, so back from it returns to the page itself. */}
+        <WikiSearch size="sheet" autoFocus replace onCancel={closeSearch} />
+        <button type="button" className="wiki-compact-cancel" onClick={closeSearch}>
+          {wikiText(locale, "Hủy", "Cancel")}
         </button>
-        <WikiSearch size="sheet" autoFocus onDone={() => setSearching(false)} />
       </header>
     )
   return (
@@ -285,7 +288,7 @@ function WikiHeaderCompact({
           type="button"
           className="wiki-compact-button"
           aria-label={t("Tìm kiếm", "Search")}
-          onClick={() => setSearching(true)}
+          onClick={openSearch}
         >
           <WikiIcon name="search" weight="bold" />
         </button>

@@ -8,7 +8,8 @@ import { wikiReferencesQuery } from "../lib/wiki-references"
 import { WikiIcon } from "./wiki-icon"
 import { SITE_NAME } from "../lib/seo/page-meta"
 import { foldSearchText } from "@aov/ui/lib/search-text"
-import { SECTION_NAMES, wikiSections } from "../lib/wiki-sections"
+import { SECTION_NAMES } from "../lib/wiki-sections"
+import { WikiSearchStart, type StartEntry } from "./wiki-search-start"
 import "./wiki-search.css"
 
 const LIMIT = 8
@@ -78,18 +79,25 @@ function useMatches(search: string) {
 
 /**
  * The one search of the Wiki: it finds heroes, equipment, enchantments, arcana, talents and terms by name on every page.
- * Arrow keys move through the matching names and then the lists the keyword can filter; Enter opens the marked one.
+ * Before any word it offers suggestions with pictures (`WikiSearchStart`). Arrow keys move through the suggestions, or
+ * through the matching names and then the lists the keyword can filter; Enter opens the marked one.
  */
 export function WikiSearch({
   size = "bar",
   autoFocus = false,
+  replace = false,
   onDone,
+  onCancel,
 }: {
   /** `bar` sits in the header, `hero` is the large box on the not-found page, `sheet` fills the compact header. */
   size?: "bar" | "hero" | "sheet"
   autoFocus?: boolean
+  /** Opens a picked result in place of the current history entry, for a search that is an entry of its own. */
+  replace?: boolean
   /** Called after the reader picks a result or submits, so the caller can close what holds the search. */
   onDone?: () => void
+  /** Called when Escape is pressed on an empty field; without it the field just loses the focus. */
+  onCancel?: () => void
 }) {
   const navigate = useNavigate()
   const { locale, href } = useWikiContext()
@@ -98,12 +106,15 @@ export function WikiSearch({
   const [focused, setFocused] = useState(false)
   const [active, setActive] = useState(0)
   const input = useRef<HTMLInputElement>(null)
+  const startEntries = useRef<StartEntry[]>([])
   const listId = useId()
   const { matches, needle, pending, failed, retry } = useMatches(search)
   const open = focused && needle.length > 0
-  // On phones the search is a screen of its own while it is open: before any word it offers the sections.
+  // On phones the search is a screen of its own while it is open.
   const sheet = size === "sheet"
-  const panelShown = open || sheet
+  // Before any word, the panel offers suggestions with pictures.
+  const starting = (focused || sheet) && needle.length === 0
+  const panelShown = open || starting
   const lists = LISTS.map(([path, key]) => ({
     label: t(...SECTION_NAMES[key]),
     to: href(`${path}?${new URLSearchParams({ q: search.trim() })}`),
@@ -120,20 +131,28 @@ export function WikiSearch({
   }
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (!search.trim()) return
-    void navigate(destinations[marked]!)
+    const target = search.trim() ? destinations[marked] : startEntries.current[active]?.to
+    if (!target) return
+    void navigate(target, { replace })
     finish()
   }
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      if (!open) return
+    const sideways = starting && (event.key === "ArrowRight" || event.key === "ArrowLeft")
+    if (event.key === "ArrowDown" || event.key === "ArrowUp" || sideways) {
+      if (!open && !starting) return
       event.preventDefault()
-      const step = event.key === "ArrowDown" ? 1 : -1
-      const count = destinations.length
+      const step = event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1
+      const count = starting ? startEntries.current.length : destinations.length
+      if (!count) return
       // From the latest value, so keys pressed faster than the list redraws are all counted.
-      setActive((current) => (Math.min(current, count - 1) + step + count) % count)
+      setActive((current) =>
+        current < 0 ? (step > 0 ? 0 : count - 1) : (Math.min(current, count - 1) + step + count) % count,
+      )
     } else if (event.key === "Escape") {
-      if (search) setSearch("")
+      if (search) {
+        setSearch("")
+        setActive(-1)
+      } else if (onCancel) onCancel()
       else {
         input.current?.blur()
         onDone?.()
@@ -151,17 +170,11 @@ export function WikiSearch({
         aria-expanded={panelShown}
         aria-controls={listId}
         aria-autocomplete="list"
-        aria-activedescendant={open ? `${listId}-${marked}` : undefined}
-        aria-label={wikiText(locale, `Tìm trong ${SITE_NAME}`, `Search ${SITE_NAME}`)}
-        placeholder={
-          size === "bar"
-            ? wikiText(locale, "Tìm tướng, trang bị, thuật ngữ…", "Search heroes, items, terms…")
-            : wikiText(
-                locale,
-                "Tìm tướng, trang bị, phù hiệu, thuật ngữ…",
-                "Search heroes, items, enchantments, terms…",
-              )
+        aria-activedescendant={
+          open ? `${listId}-${marked}` : starting && active >= 0 ? `${listId}-${active}` : undefined
         }
+        aria-label={wikiText(locale, `Tìm trong ${SITE_NAME}`, `Search ${SITE_NAME}`)}
+        placeholder={wikiText(locale, "Tìm tướng, trang bị…", "Search heroes, items…")}
         enterKeyHint="search"
         autoComplete="off"
         maxLength={120}
@@ -172,7 +185,10 @@ export function WikiSearch({
           setActive(0)
           if (failed) retry()
         }}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true)
+          if (!search) setActive(-1)
+        }}
         onBlur={() => setFocused(false)}
         onKeyDown={onKeyDown}
       />
@@ -184,30 +200,24 @@ export function WikiSearch({
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => {
             setSearch("")
+            setActive(-1)
             input.current?.focus()
           }}
         >
           <WikiIcon name="close" size={16} />
         </button>
       )}
-      {sheet && !needle && (
-        <div className="wiki-search-panel" data-start>
-          <p className="wiki-search-start-title">{t("Đi nhanh tới", "Jump to")}</p>
-          <nav className="wiki-search-start" aria-label={t("Các mục của Wiki", "Wiki sections")}>
-            {wikiSections.map((section) => (
-              <Link key={section.key} to={href(section.path)} onClick={finish}>
-                <WikiIcon name={section.icon} size={30} />
-                {section.key === "updates" ? t("Cập nhật", "Updates") : t(...SECTION_NAMES[section.key])}
-              </Link>
-            ))}
-          </nav>
-          <p className="wiki-search-start-hint">
-            {wikiText(
-              locale,
-              "Gõ tên tướng, trang bị, phù hiệu, bảng ngọc, phụ trợ hoặc thuật ngữ để tìm.",
-              "Type the name of a hero, item, enchantment, arcana, talent or term.",
-            )}
-          </p>
+      {starting && (
+        // Keeps focus in the field while a suggestion is pressed, so the panel does not close before the click lands.
+        <div className="wiki-search-panel" data-start onMouseDown={(event) => event.preventDefault()}>
+          <WikiSearchStart
+            listId={listId}
+            marked={active}
+            entries={startEntries}
+            replace={replace}
+            onHover={setActive}
+            onPick={finish}
+          />
         </div>
       )}
       {(open || (sheet && needle)) && (
@@ -267,6 +277,7 @@ export function WikiSearch({
                     role="option"
                     aria-selected={index === marked}
                     to={list.to}
+                    replace={replace}
                     tabIndex={-1}
                     onClick={finish}
                     onMouseEnter={() => setActive(index)}

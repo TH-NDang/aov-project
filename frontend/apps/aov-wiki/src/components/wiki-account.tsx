@@ -37,7 +37,7 @@ export function WikiAccountMenu({ inline = false }: { inline?: boolean }) {
       <PublicAccountSummary {...accountProps} layout="sheet" />
     </div>
   ) : (
-    <PublicAccountMenu {...accountProps} />
+    <PublicAccountMenu {...accountProps} openOnHover={false} />
   )
 }
 
