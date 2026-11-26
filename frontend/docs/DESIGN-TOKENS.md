@@ -22,16 +22,25 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
   nên giữ tông riêng. Màu mạnh trên trang chỉ đến từ ảnh và icon của game.
 - Wiki và Stream mỗi app có bộ màu riêng trong `tokens.css`: `--aov-wiki-*` và `--aov-stream-*` (màu logo cú). `wiki.css`
   và `stream.css` gán bộ màu này vào các token chung, nên các thành phần dùng chung tự theo. Admin giữ bảng màu gốc.
+  `--aov-stream-blue`, `--aov-stream-red`, `--aov-stream-green`, `--aov-stream-rose` chỉ dùng trên sân khấu của Stream:
+  giá trị tối của `--aov-info`, `--aov-live`, `--aov-success` và `--aov-danger`, cho bên xanh, bên đỏ, thắng và thua.
 - Ba hạng đầu của một bảng dùng `RankBadge` (`@aov/ui/components/rank-badge`) với `--aov-medal-gold`,
   `--aov-medal-silver`, `--aov-medal-bronze` và số `--aov-on-medal`, cùng màu kim loại ở cả hai giao diện. Dòng của ba hạng
   đầu nằm trên dải màu huy chương nhạt dần; đội đứng đầu có dòng cao, logo và tên lớn hơn. Hạng chung như "3–4" và bảng
-  chưa đấu trận nào không có huy chương.
+  chưa đấu trận nào không có huy chương. Trên Stream hạng dừng bước cũng không có; ở tab BXH & nhánh đấu các hàng cao
+  bằng nhau để đường của cuộc đua chạy vào giữa hàng, không có dải màu, huy chương chỉ có khi giai đoạn đã xong, và khi
+  ấy đường của hạng nhất cũng màu `--aov-medal-gold`, dày 3px (pha với màu mực ở giao diện sáng).
 - Hạng giải dùng `TierEmblem` (`@aov/ui/components/tier-emblem`) ở Stream và Admin: mỗi hạng một hình dáng (S đội vương
   miện, A có cánh, B khiên, C khiên ngắn, D vòng rỗng) và một màu `--aov-tier-s` đến `--aov-tier-d`, nên vẫn phân biệt được
   khi không thấy màu. Tên hạng viết "Hạng S", không viết "S-Tier".
 - Vòng càng gần chức vô địch càng nổi: bán kết viền đậm hơn, chung kết nhánh dùng màu nhấn, chung kết tổng viền và chữ
-  `--aov-medal-gold` kèm cúp (`RoundLabel`, `roundWeight`). Theo một đội trên nhánh đấu: đường liền là thắng đi tiếp, đường
-  đứt màu đỏ là rơi xuống nhánh thua, đường vàng là hành trình của nhà vô địch.
+  `--aov-medal-gold` kèm cúp (`RoundLabel`, `roundWeight`). Chữ vàng chỉ là `--aov-medal-gold` trên nền tối; ở giao diện
+  sáng nó là `--aov-game-gold` pha 65% với màu chữ, để đọc được 4.5:1 (tên vòng, đội thắng chung kết tổng, "Vô địch"
+  của hành trình, bảng vàng của hệ thống giải). Theo một đội trên nhánh đấu: đường liền là thắng đi tiếp, đường đứt màu
+  đỏ là rơi xuống nhánh thua, đường vàng là hành trình của nhà vô địch; các trận không có đội đó lùi lại bằng chữ mờ
+  (`--hub-muted`), chỉ logo và viền nhạt đi, nên chữ vẫn đọc được. Ở tab BXH & nhánh đấu, đội được theo còn
+  có đường màu nhấn 4px trong cuộc đua với mỗi trận một chấm (thắng đặc, thua rỗng), các đường khác mờ đi; hàng của đội
+  trong bảng, hàng và cột của đội trong Đối đầu có nền nhấn nhạt.
 - Bộ màu Wiki "Đêm dịu": nền than chì gần như trung tính (không ánh xanh), thẻ sáng hơn nền một bậc, dấu nhấn vàng
   champagne dịu, luôn tối; màu mạnh để dành cho ảnh tướng và icon. `wiki.css` gán: nền trang `--aov-bg`, thẻ `--aov-surface`, rê chuột và điều khiển `--aov-raised`, ô chìm
   `--aov-sunken`, đường kẻ `--aov-line` và `--aov-line-strong`, chữ `--aov-text`, `--aov-text-soft`, `--aov-muted`, nhấn
@@ -73,6 +82,7 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Không dùng góc vàng, khung trang trí, vạch vàng trên đầu, họa tiết hay dải màu phía sau chữ và dữ liệu. Trên Stream,
   vàng dành cho nhà vô địch và chung kết tổng: viền huy hiệu đội (`Crest`), cờ của đương kim vô địch, cúp trên kệ
   (`TitleShelf`; năm bậc vàng của `Trophy` pha từ `--aov-medal-gold`, thủy tinh và men pha từ oải hương và đêm), số lần vô địch ở đầu trang và vạch của trận chung kết tổng.
+  Ngoài ra chỉ có hạng nhất của một bảng: huy chương và đường của cuộc đua.
 - Thanh trên và trang nằm trong cùng một cột: rộng tối đa `--aov-page-max` (1280px), lề `--aov-gutter` mỗi bên, nên logo
   và nội dung bắt đầu trên cùng một đường. Thanh trên cao `--aov-topbar` (56px), 48px trên compact. Đoạn văn dài có thể
   hẹp hơn, tối đa 72ch.
@@ -82,16 +92,28 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Mỗi trang danh sách mở bằng tiêu đề, tối đa một dòng chữ mờ bên dưới và tối đa một nút bên phải; không có banner, linh
   vật hay ảnh phía sau tiêu đề. Wiki dùng `CatalogHeading` (`apps/aov-wiki/src/layout/catalog-heading.tsx`), Stream dùng
   `.tn-page-head`.
-- Trên Stream, một giải, một trận, một nhà vô địch, đầu trang hồ sơ, bài tin tức, kệ cúp và các tướng dẫn đầu một giải đứng
-  trên sân khấu (`Stage`, `components/stage.tsx`). Đầu trang là sân khấu tràn hai mép cửa sổ (`bleeds`). Sân khấu nền đêm ở cả hai giao diện, được chiếu sáng bằng chính logo của ai đứng trên đó, làm nhòe
-  thành màu. Không có logo thì ánh sáng lấy màu sinh từ tên. Sân khấu chỉ dành cho thứ người xem tìm đến; hàng, bảng và
-  thẻ nhỏ đứng trên nền thẻ thường. Logo chỉ có bản cho nền kia thì mang theo nền của bản đó (ô nhạt ở giao diện tối và trên sân khấu), như Admin.
+- Trên Stream, một giải, một trận, một nhà vô địch, đầu trang hồ sơ, bài tin tức, kệ cúp và, trong thống kê của giải, các
+  tướng dẫn đầu, năm đường, bàn cấm chọn, một tướng, một đội đứng trên sân khấu (`Stage`, `components/stage.tsx`). Đầu
+  trang là sân khấu tràn hai mép cửa sổ (`bleeds`). Sân khấu nền đêm ở cả hai giao diện, được chiếu sáng bằng chính logo
+  hay ảnh tướng của ai đứng trên đó, làm nhòe thành màu; bàn cấm chọn được chiếu bằng logo của giải. Không có logo thì
+  ánh sáng lấy màu sinh từ tên. Sân khấu chỉ dành cho thứ người xem tìm đến; hàng, bảng và thẻ nhỏ đứng trên nền thẻ
+  thường. Logo chỉ có bản cho nền kia thì mang theo nền của bản đó (ô nhạt ở giao diện tối và trên sân khấu), như Admin.
   `.hub-art` (màu sinh từ tên) còn dùng cho ô chữ cái của giải chưa có logo và ảnh bìa của trang hồ sơ.
+- Bản dựng đổi `light-dark()` thành giá trị cố định ở gốc trang, nên `.tn-stage` và `.tn-night` (`components/stage.css`)
+  đặt lại bằng giá trị tối các `--hub-*` mà sân khấu dùng: màu nhấn, chữ, `--hub-blue`, `--hub-red`, `--hub-success`,
+  `--hub-danger`, đường kẻ (trắng mờ), ô đặt logo và `--hub-sunken` (đêm). Thành phần trên sân khấu cần thêm một biến đổi
+  theo giao diện thì thêm vào đó.
+- Phòng xem của một trận đứng trên `--aov-stream-night`, video thu nhỏ ở góc trên `--aov-stream-dusk`, ở cả hai giao diện
+  (`.tn-night`).
 - Chip cao 32px, bo tròn. Chip đang chọn: Wiki viền nhấn trên nền nhấn nhạt, Stream tô đặc màu nhấn (`.hub-pills`). Bộ lọc
   chỉ có icon thì ghi thêm tên ở những chỗ đủ rộng.
+- Trên Stream, thanh đổi phần hay cách xem (`ChoiceTrack`) bo tròn, nền `--hub-text` 7%, mục đang xem nền `--hub-raised` có
+  viền; thanh đổi thứ tự hay số đo (`ChoiceWords`) là chữ, mục đang dùng có vạch `--hub-accent` 2px bên dưới. Hai loại không
+  thay chỗ nhau.
 - Tab là tab gạch chân trên một hàng; trên compact hàng tab cuộn ngang, không xuống dòng.
 - Vùng bấm cao tối thiểu 36px, nên 40px trên compact. Ô nhập trên điện thoại dùng chữ 16px. Mọi thứ bấm được giữ viền
-  focus nhìn thấy được khi dùng bàn phím.
+  focus nhìn thấy được khi dùng bàn phím; trên Stream thứ nhận tiêu điểm dừng dưới các thanh đang ghim (`--hub-stack`,
+  trên compact gồm cả hàng tab ghim của giải và hồ sơ).
 
 ## Minh họa
 
