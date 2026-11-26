@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Production image of community-service. Tests run in CI (`mvnw verify`), not during the image build.
 
-FROM eclipse-temurin:21-jdk-noble AS build
+FROM eclipse-temurin:25-jdk-noble AS build
 WORKDIR /build
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
@@ -12,7 +12,7 @@ RUN --mount=type=cache,id=aov-maven,target=/root/.m2 \
 # Layers keep rarely changing dependencies apart from the application classes.
 RUN java -Djarmode=tools -jar target/*.jar extract --layers --launcher --destination /extracted
 
-FROM eclipse-temurin:21-jre-noble AS runtime
+FROM eclipse-temurin:25-jre-noble AS runtime
 RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin app
 WORKDIR /app
 COPY --from=build /extracted/dependencies/ ./
