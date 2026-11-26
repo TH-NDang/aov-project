@@ -156,11 +156,13 @@ export function GameLineup({ game }: { game: PublishedGame }) {
                   <span>{lane}</span>
                 </span>
               ) : (
-                <Tip label={lane}>
-                  <span className="tn-lane-mark">
-                    <HeroLaneIcon lane={duel.lane} size={24} />
-                  </span>
-                </Tip>
+                <span className="tn-lane-mark">
+                  <Tip label={lane}>
+                    <span className="tn-lane-icon">
+                      <HeroLaneIcon lane={duel.lane} size={24} />
+                    </span>
+                  </Tip>
+                </span>
               )}
               <LoadoutSeat {...seat} seat={duel.b} side={b} slot="b" told={told.b} />
             </div>
