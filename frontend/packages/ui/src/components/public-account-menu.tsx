@@ -23,18 +23,13 @@ export type PublicAccountOptionsProps = {
   onSignOut?: () => void
   children?: ReactNode
 }
-type Props = PublicAccountOptionsProps & {
-  triggerClassName?: string
-  /** False opens the menu on click only, like the other menus of an app that has no hover menus. */
-  openOnHover?: boolean
-}
+type Props = PublicAccountOptionsProps & { triggerClassName?: string }
 /** `sheet` gives the settings and the links the roomier rows of the preferences sheet phones open. */
 export type PublicAccountLayout = "menu" | "sheet"
 
 export function PublicAccountMenu(props: Props) {
   const mobile = usePageLayout() === "compact"
-  const { product, locale, name, avatarUrl, triggerClassName = "", openOnHover = true } = props
-  const hoverable = openOnHover && !mobile
+  const { product, locale, name, avatarUrl, triggerClassName = "" } = props
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const hovered = useRef(false)
@@ -53,7 +48,7 @@ export function PublicAccountMenu(props: Props) {
     return () => window.removeEventListener("resize", onResize)
   }, [open])
   function leave() {
-    if (!hoverable) return
+    if (mobile) return
     cancel()
     timer.current = setTimeout(() => {
       if (panel.current?.querySelector('[data-slot="select-trigger"][data-state="open"]')) return
@@ -69,7 +64,7 @@ export function PublicAccountMenu(props: Props) {
         data-account={name ? "signed-in" : "guest"}
         aria-label={text("Tài khoản và tùy chọn", "Account and preferences")}
         onPointerEnter={(event) => {
-          if (!hoverable || event.pointerType !== "mouse") return
+          if (mobile || event.pointerType !== "mouse") return
           cancel()
           if (!open)
             timer.current = setTimeout(() => {
@@ -210,7 +205,7 @@ function GuestFigure() {
 }
 
 /** The reader's picture, else the first letter of their name, else a figure; round and tinted with the app's accent. */
-function AccountAvatar({
+export function AccountAvatar({
   name,
   avatarUrl,
   className,
