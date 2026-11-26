@@ -247,6 +247,24 @@ class PatchReleaseWorkflowTests {
     }
 
     @Test
+    void confirmsAPastDateFromTheStartOfThatDayInTheMarket() {
+        LocalDate pastDay = LOCAL_TODAY.minusDays(6);
+        Instant dayStart = Instant.parse("2026-10-14T17:00:00Z");
+        var release = prepareConfirmation(pastDay);
+        when(releases.regionUsesRulesetAt(regionId, rulesetId, dayStart)).thenReturn(true);
+
+        workflow.confirm(releaseId);
+
+        verify(seasons).requireRelease(seasonId, regionId, dayStart);
+        verify(releases).contradictsTimeline(regionId, published, dayStart);
+        verify(audit).record(AuditEntry.of(actor, "PATCH_RELEASE_CONFIRMED", "PATCH", releaseId));
+        assertThat(release.getEffectiveAt()).isEqualTo(dayStart);
+        assertThat(release.getConfirmedAt()).isEqualTo(dayStart);
+        assertThat(release.getEffectiveOn()).isEqualTo(pastDay);
+        assertThat(release.getStatus()).isEqualTo(PatchReleaseStatus.SCHEDULED);
+    }
+
+    @Test
     void confirmedReleaseIsIdempotentAfterAcquiringItsLocks() {
         var release = prepareConfirmation(null);
         Instant originallyConfirmed = NOW.minusSeconds(100);
