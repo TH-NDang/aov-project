@@ -41,11 +41,16 @@ function ModeTags({ mode }: { mode: ModeCard }) {
   )
 }
 
+/** A card in the game frame: the art inside its inner line with the status on an angled tag, the name under it. */
 function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
   return (
-    <Link className="wiki-mode-card" to={to} data-closed={isClosed(mode.availability) || undefined}>
+    <Link
+      className="wiki-mode-card wiki-frame wiki-frame-hover"
+      to={to}
+      data-closed={isClosed(mode.availability) || undefined}
+    >
       <ModeArt className="wiki-mode-card-art" image={mode.art} name={mode.name} inCard>
         <span className="wiki-mode-badges">
           <ModeTags mode={mode} />
@@ -59,12 +64,19 @@ function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
   )
 }
 
-/** Phones scan a list faster than a grid of tall cards: a small picture, the name, the length and the status. */
+/**
+ * Phones scan a list faster than a grid of tall cards: a small framed row with the picture, the name, the length and
+ * the status.
+ */
 function ModeRow({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
   return (
-    <Link className="wiki-mode-row" to={to} data-closed={isClosed(mode.availability) || undefined}>
+    <Link
+      className="wiki-mode-row wiki-frame wiki-frame-hover"
+      to={to}
+      data-closed={isClosed(mode.availability) || undefined}
+    >
       <ModeArt className="wiki-mode-row-art" image={mode.art} name={mode.name} inCard />
       <div className="wiki-mode-row-body">
         <h3>{mode.name}</h3>
@@ -111,14 +123,14 @@ export function ModeCardsSkeleton({ count }: { count: number }) {
     return (
       <ul className="wiki-mode-list" aria-hidden="true">
         {items.map((at) => (
-          <li key={at} className="wiki-mode-row" data-skeleton="true" />
+          <li key={at} className="wiki-mode-row wiki-frame" data-skeleton="true" />
         ))}
       </ul>
     )
   return (
     <ul className="wiki-mode-grid" style={gridColumns(count)} aria-hidden="true">
       {items.map((at) => (
-        <li key={at} className="wiki-mode-card" data-skeleton="true">
+        <li key={at} className="wiki-mode-card wiki-frame" data-skeleton="true">
           <span className="wiki-mode-art wiki-mode-card-art" />
           <span className="wiki-mode-card-body" />
         </li>

@@ -100,41 +100,59 @@
   filter: grayscale(1);
 }
 
-/* A mode with a guide: one plain surface, the art on the left, that opens the guide wherever it is pressed. */
+/*
+ * A mode with a guide: a lit game frame, the art inside its inner line on the left, that opens the guide wherever it
+ * is pressed.
+ */
 .wiki-mode-feature {
+  --wiki-frame-cut: 14px;
   --mode-chip-bg: var(--aov-raised);
   --mode-chip-hover: var(--aov-wiki-panel-high);
-  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
-  overflow: hidden;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
-  transition: background 0.15s ease;
-}
-.wiki-mode-feature:has(.wiki-mode-cta:hover) {
-  background: var(--aov-raised);
+  grid-template-columns: minmax(0, 44%) minmax(0, 1fr);
+  gap: 4px 24px;
+  padding: 7px;
 }
 .wiki-mode-feature-art {
-  aspect-ratio: 16 / 9;
+  align-self: stretch;
+  min-height: 200px;
+  clip-path: polygon(
+    9px 0,
+    calc(100% - 9px) 0,
+    100% 9px,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    9px 100%,
+    0 calc(100% - 9px),
+    0 9px
+  );
+}
+.wiki-mode-feature-art > img {
+  transition: transform 0.4s ease;
+}
+.wiki-mode-feature:has(.wiki-mode-cta:hover) .wiki-mode-feature-art > img {
+  transform: scale(1.04);
 }
 .wiki-mode-feature-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: 6px;
-  padding: 16px 24px;
+  justify-items: start;
+  gap: 8px;
+  padding: 18px 20px 18px 0;
 }
 .wiki-mode-feature-kicker {
-  color: var(--aov-accent);
-  font: 600 0.75rem/1rem var(--wiki-font-reading);
-  letter-spacing: 0.08em;
+  --plate-cut: 9px;
+  font: 700 0.75rem/1rem var(--wiki-font-reading);
+  min-height: 24px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .wiki-mode-feature h2 {
-  font: 700 1.375rem/1.75rem var(--wiki-font-reading);
-  color: var(--aov-text);
+  font: 700 1.625rem/2rem var(--wiki-font-display);
+  color: var(--aov-wiki-gold-bright);
   letter-spacing: -0.01em;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
 }
 .wiki-mode-feature-meta {
   font: var(--wiki-type-meta);
@@ -146,20 +164,31 @@
 .wiki-mode-feature .wiki-mode-prose {
   max-width: 72ch;
 }
-.wiki-mode-feature .wiki-mode-chip-row {
+.wiki-mode-feature-links {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  margin-top: 1px;
+  gap: 10px 14px;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 6px;
 }
-/* The link that opens the guide covers the whole feature; the chips beside it stay on top. */
+.wiki-mode-feature-links > .wiki-mode-chip-row {
+  flex: 0 1 auto;
+}
+/* The link that opens the guide: a gold plate with cut corners. Its hit area covers the whole feature. */
 .wiki-mode-cta {
   font: var(--wiki-type-category);
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  margin-right: 10px;
-  color: var(--aov-accent);
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 20px;
+  background: linear-gradient(180deg, var(--aov-wiki-gold-bright), var(--aov-wiki-gold) 55%, var(--aov-wiki-bronze));
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+  color: var(--aov-wiki-bar);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -169,18 +198,22 @@
   inset: 0;
 }
 .wiki-mode-cta:hover {
-  color: var(--aov-accent-strong);
+  filter: brightness(1.08);
+}
+.wiki-mode-cta:focus-visible {
+  outline: none;
+  filter: brightness(1.15) drop-shadow(0 0 6px var(--aov-wiki-gold));
 }
 .wiki-mode-feature .wiki-mode-chip {
   position: relative;
   z-index: 1;
 }
 
-/* Wide: a grid of cards. Each group sets its own column count, so its rows fill. */
+/* Wide: a grid of framed cards. Each group sets its own column count, so its rows fill. */
 .wiki-mode-grid {
   display: grid;
   grid-template-columns: repeat(var(--mode-columns-narrow, 4), minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px 12px;
 }
 @media (min-width: 1180px) {
   .wiki-mode-grid {
@@ -191,61 +224,76 @@
   display: grid;
   min-width: 0;
 }
+/* A card in the game frame: the art 5px inside the rim with its own cut corners, the name under it. */
 .wiki-mode-card {
+  --wiki-frame-cut: 9px;
   display: grid;
   grid-template-rows: auto 1fr;
   min-width: 0;
-  overflow: hidden;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
+  padding: 5px;
   color: inherit;
   text-decoration: none;
-  transition: background 0.15s ease;
+  transition: transform 0.18s ease-out;
 }
 a.wiki-mode-card:hover {
-  background: var(--aov-raised);
+  transform: translateY(-2px);
+}
+a.wiki-mode-card:focus-visible {
+  outline: none;
+  background: var(--wiki-frame-rim-lit);
 }
 .wiki-mode-card-art {
   aspect-ratio: 16 / 9;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%, 0 6px);
 }
-/* Tags over a card's picture sit on their own dark backing above a soft shade, so they read on any art. */
-.wiki-mode-card-art:not([data-empty]):has(.wiki-mode-badges > *)::after {
+.wiki-mode-card-art > img {
+  transition: transform 0.4s ease;
+}
+a.wiki-mode-card:hover .wiki-mode-card-art > img {
+  transform: scale(1.05);
+}
+/* The art fades into the panel under it, where the name stands. */
+.wiki-mode-card-art:not([data-empty])::after {
   content: "";
   position: absolute;
-  inset: 0 0 auto;
-  height: 56%;
-  background: linear-gradient(rgb(12 14 18 / 55%), transparent);
+  inset: auto 0 0;
+  height: 36%;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--aov-wiki-panel-deep) 80%, transparent));
   pointer-events: none;
 }
 .wiki-mode-badges {
   position: absolute;
   z-index: 1;
-  top: 8px;
-  right: 8px;
-  left: 8px;
+  top: 6px;
+  right: 6px;
+  left: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
-/* One line makes a pill; a label too long for a narrow card wraps inside the same backing. */
+/* Each tag is an angled plate on the art's left edge, as the game tags its lobby tiles. */
 .wiki-mode-badges > * {
-  max-width: 100%;
-  padding: 3px 9px;
-  border-radius: var(--aov-radius-pill);
-  background: rgb(12 14 18 / 88%);
-  font-weight: 600;
+  font: 700 0.75rem/1.25rem var(--wiki-font-reading);
+  max-width: calc(100% - 8px);
+  padding: 0 12px 0 8px;
+  background: color-mix(in srgb, var(--aov-wiki-bar) 90%, transparent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
   white-space: normal;
+}
+.wiki-mode-badges > .wiki-mode-tag {
+  background: linear-gradient(90deg, var(--aov-wiki-gold), var(--aov-wiki-gold-bright));
+  color: var(--aov-wiki-bar);
 }
 .wiki-mode-card[data-closed] .wiki-mode-art > img,
 .wiki-mode-row[data-closed] .wiki-mode-art > img {
-  filter: saturate(0.5) brightness(0.75);
+  filter: saturate(0.4) brightness(0.65);
 }
 .wiki-mode-card-body {
   display: grid;
   align-content: start;
   gap: 2px;
-  min-height: 66px;
-  padding: 10px 12px 12px;
+  min-height: 60px;
+  padding: 8px 7px 6px;
 }
 .wiki-mode-card-body h3,
 .wiki-mode-row-body h3 {
@@ -253,35 +301,46 @@ a.wiki-mode-card:hover {
   color: var(--aov-text);
   overflow-wrap: anywhere;
 }
+a.wiki-mode-card:hover h3,
+a.wiki-mode-row:hover h3 {
+  color: var(--aov-wiki-gold-bright);
+}
 .wiki-mode-card-body p,
 .wiki-mode-row-body p {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
 
-/* Compact: a list of rows with a small picture. */
+/* Compact: a list of small framed rows with the picture on the left. */
 .wiki-mode-list {
   display: grid;
   gap: 8px;
 }
 .wiki-mode-row {
+  --wiki-frame-cut: 8px;
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 116px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  min-height: 79px;
-  padding: 8px;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
+  min-height: 78px;
+  padding: 5px;
   color: inherit;
   text-decoration: none;
 }
 a.wiki-mode-row:active {
-  background: var(--aov-raised);
+  background: var(--wiki-frame-rim-lit);
+}
+/* The picture keeps the row's height whatever the art's own shape: portrait lobby art is cropped like the rest. */
+.wiki-mode-row-art {
+  align-self: stretch;
+  min-height: 66px;
+}
+.wiki-mode-row-art > img {
+  position: absolute;
+  inset: 0;
 }
 .wiki-mode-row-art {
-  aspect-ratio: 16 / 9;
-  border-radius: var(--aov-radius-control);
+  clip-path: polygon(5px 0, 100% 0, 100% 100%, 5px 100%, 0 calc(100% - 5px), 0 5px);
 }
 .wiki-mode-row-art .wiki-mode-art-fallback > * {
   width: 22px;
@@ -291,7 +350,7 @@ a.wiki-mode-row:active {
   display: grid;
   gap: 2px;
   min-width: 0;
-  padding-right: 4px;
+  padding: 4px 8px 4px 0;
 }
 .wiki-mode-row-body .wiki-mode-row-tags {
   display: flex;
@@ -323,31 +382,15 @@ a.wiki-mode-row:active {
   color: var(--aov-muted);
 }
 
-/* One mode. The compact header has no cover to lie over here, so the layout asks for a solid one. */
-.wiki-mode-compact-head {
-  display: grid;
-  justify-items: start;
+/* One mode on wide screens: the trail, then the banner close under it. */
+.wiki-mode-detail > .wiki-mode-breadcrumb {
+  margin-bottom: -12px;
 }
-.wiki-mode-compact-head h1 {
-  font: var(--wiki-type-page);
-  color: var(--aov-text);
-  letter-spacing: -0.02em;
-}
-.wiki-mode-back {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 36px;
-  margin-left: -4px;
-  color: var(--aov-muted);
-  text-decoration: none;
-}
-/* Stands where the way back and the name will be while the mode loads. */
-.wiki-mode-skeleton-title {
-  width: min(60%, 320px);
-  height: 36px;
-  margin: 26px 0 4px;
+/* Stands where the trail will be while the mode loads. */
+.wiki-mode-skeleton-trail {
+  width: 220px;
+  height: 20px;
+  margin-bottom: -8px;
   border-radius: var(--aov-radius-control);
   background: var(--aov-surface);
 }
@@ -373,36 +416,34 @@ a.wiki-mode-row:active {
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
 }
-/* The page under the name: what the mode is, then each part as a section. */
+/* The page under the banner: what the mode is, then each part as a section. */
 .wiki-mode-overview {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 36px;
   min-width: 0;
 }
-/* The mode at a glance: its art as the large picture, what is recorded about it beside or under it. */
+/* The mode at a glance: the introduction, then the framed facts; side by side on wide screens. */
 .wiki-mode-intro {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-width: 0;
 }
-.wiki-mode-intro-art {
-  aspect-ratio: 2 / 1;
-  border-radius: var(--aov-radius-media);
-}
-/* One reading measure for the summary, the facts, the note and the sources, so their lines end together. */
 .wiki-mode-intro-body {
   font: var(--wiki-type-body);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: 16px;
+  gap: 14px;
   min-width: 0;
   max-width: 72ch;
 }
+.wiki-mode-intro-body:empty {
+  display: none;
+}
 .wiki-mode-intro-lead {
-  font: var(--wiki-type-body);
+  font: var(--wiki-type-prose);
   color: var(--aov-text-soft);
 }
 .wiki-mode-intro-note,
@@ -427,11 +468,17 @@ a.wiki-mode-row:active {
 .wiki-mode-intro[data-skeleton] .wiki-mode-intro-body > span:last-child {
   width: 60%;
 }
-/* Facts as cells, a label over its value: two across on a phone, as many as fit on a wide page. */
+/* The facts in a small game frame: cells two across on a phone, rows with a label and a value on wide screens. */
+.wiki-mode-facts-frame {
+  --wiki-frame-cut: 10px;
+  align-self: start;
+  min-width: 0;
+  padding: 14px 18px;
+}
 .wiki-mode-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 20px;
+  gap: 12px 20px;
 }
 .wiki-mode-facts > div {
   display: grid;
@@ -444,8 +491,10 @@ a.wiki-mode-row:active {
   grid-column: span 2;
 }
 .wiki-mode-facts dt {
-  font: var(--wiki-type-meta);
-  color: var(--aov-muted);
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  color: color-mix(in srgb, var(--aov-wiki-gold) 80%, var(--aov-muted));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .wiki-mode-facts dd {
   font: var(--wiki-type-body);
@@ -456,18 +505,21 @@ a.wiki-mode-row:active {
   font: inherit;
 }
 /*
- * Guide tabs: one row under the mode's name that stays under the header, whose height is --wiki-header-height, and
- * scrolls sideways when it is narrow. Sticky parts of the guide sit right under this row (--guide-tabs-height).
+ * Guide tabs: one row under the banner that stays under the header, whose height is --wiki-header-height, and
+ * scrolls sideways when it is narrow. The row sits on the dark bar over a gold rule; the open tab glows from below and
+ * stands on a brighter rule with a gem. Sticky parts of the guide sit right under this row (--guide-tabs-height).
  */
 .wiki-guide-tabs {
   position: sticky;
   top: var(--wiki-header-height);
   z-index: 5;
   display: flex;
-  gap: 28px;
+  gap: 4px;
   overflow-x: auto;
-  background: color-mix(in srgb, var(--aov-bg) 92%, transparent);
-  box-shadow: inset 0 -1px 0 var(--aov-line);
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent) 15% 85%, transparent)
+      left bottom / 100% 1px no-repeat,
+    color-mix(in srgb, var(--aov-wiki-bar) 90%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   scrollbar-width: none;
@@ -477,21 +529,37 @@ a.wiki-mode-row:active {
 }
 .wiki-guide-tab {
   font: var(--wiki-type-category);
+  position: relative;
   display: inline-flex;
   flex: none;
   align-items: center;
   min-height: 45px;
-  border-bottom: 2px solid transparent;
+  padding: 0 14px;
   color: var(--aov-text-soft);
   text-decoration: none;
   white-space: nowrap;
 }
 .wiki-guide-tab:hover {
-  color: var(--aov-text);
+  color: var(--aov-wiki-gold-bright);
 }
 .wiki-guide-tab[aria-current="page"] {
-  border-bottom-color: var(--aov-accent);
-  color: var(--aov-accent);
+  background: radial-gradient(
+    70% 90% at 50% 100%,
+    color-mix(in srgb, var(--aov-wiki-gold) 24%, transparent),
+    transparent 75%
+  );
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-guide-tab[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 6px 0;
+  height: 7px;
+  background:
+    linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze)) center / 7px 7px no-repeat,
+    linear-gradient(90deg, transparent, var(--aov-wiki-gold-bright) 30% 70%, transparent) center bottom / 100% 2px
+      no-repeat;
+  clip-path: polygon(0 calc(100% - 2px), 50% 0, 100% calc(100% - 2px), 100% 100%, 0 100%);
 }
 .wiki-guide-tab:focus-visible {
   outline-offset: -2px;
@@ -499,63 +567,73 @@ a.wiki-mode-row:active {
 @media (max-width: 899.98px) {
   /* The tabs run to the screen's edges, so the row scrolls under them; the first label keeps the page's gutter. */
   .wiki-guide-tabs {
-    gap: 22px;
     margin-inline: calc(-1 * var(--wiki-gutter));
-    padding-inline: var(--wiki-gutter);
+    padding-inline: calc(var(--wiki-gutter) - 12px);
+  }
+  .wiki-guide-tab {
+    padding: 0 12px;
   }
 }
 @media (min-width: 900px) {
-  /* The page title carries its own space below, so what follows it sits closer than the page's gap. */
+  /* Under the banner the tabs and the overview sit closer than the page's gap. */
   .wiki-mode-detail > .wiki-guide-tabs {
-    margin-top: -20px;
+    margin-top: -8px;
   }
-  .wiki-mode-detail > :first-child + .wiki-mode-overview {
-    margin-top: -12px;
-  }
-  .wiki-mode-intro[data-art] {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  .wiki-mode-intro:has(> .wiki-mode-facts-frame):has(> .wiki-mode-intro-body:not(:empty)) {
+    grid-template-columns: minmax(0, 7fr) minmax(280px, 5fr);
     gap: 40px;
   }
+  /* Beside the introduction the facts are rows, a label then its value, with a thin rule between them. */
   .wiki-mode-facts {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px 32px;
-  }
-  /* Beside the art the facts are rows, a label then its value, with a thin rule between them. */
-  .wiki-mode-intro[data-art] .wiki-mode-facts {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
-    border-top: 1px solid var(--aov-line);
   }
-  .wiki-mode-intro[data-art] .wiki-mode-facts > div {
-    grid-template-columns: 124px minmax(0, 1fr);
+  .wiki-mode-facts > div {
+    grid-template-columns: 112px minmax(0, 1fr);
     grid-column: auto;
     gap: 16px;
     align-items: baseline;
     padding: 9px 0;
-    border-bottom: 1px solid var(--aov-line);
+  }
+  .wiki-mode-facts > div + div {
+    border-top: 1px solid var(--aov-line);
   }
 }
-/* A long part that starts folded: a heading row that opens it, straight on the page. */
+/* A long part that starts folded: a small game frame whose heading row opens it. */
 .wiki-mode-fold {
+  --wiki-frame-cut: 10px;
   min-width: 0;
-  border-top: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
+  padding: 0 20px;
+}
+.wiki-mode-fold[open] {
+  padding-bottom: 20px;
 }
 .wiki-mode-fold > summary {
-  font: var(--wiki-type-section);
+  font: 700 1.125rem/1.5rem var(--wiki-font-display);
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  min-height: 52px;
-  color: var(--aov-accent);
+  min-height: 56px;
+  color: var(--aov-wiki-gold-bright);
   cursor: pointer;
   list-style: none;
+}
+.wiki-mode-fold > summary::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze));
+  transform: rotate(45deg);
+}
+.wiki-mode-fold > summary svg {
+  margin-left: auto;
 }
 .wiki-mode-fold > summary::-webkit-details-marker {
   display: none;
 }
 .wiki-mode-fold > summary:hover {
-  color: var(--aov-accent-strong);
+  color: var(--aov-text);
 }
 .wiki-mode-fold > summary svg {
   flex: none;
@@ -581,11 +659,15 @@ a.wiki-mode-row:active {
   gap: 10px;
   min-width: 0;
 }
+/* A group's name in gold small capitals over a rule that fades out to the right. */
 .wiki-mode-rule-group > h3,
 .wiki-mode-rule-group > summary {
-  font: var(--wiki-type-category);
-  border-bottom: 1px solid var(--aov-line);
-  color: var(--aov-text);
+  font: 700 0.8125rem/1.25rem var(--wiki-font-reading);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent), transparent) left
+    bottom / 100% 1px no-repeat;
+  color: var(--aov-wiki-gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .wiki-mode-rule-group > h3 {
   padding-bottom: 8px;
@@ -699,36 +781,51 @@ a.wiki-mode-row:active {
     margin-inline: calc(-1 * var(--wiki-gutter));
     padding-inline: var(--wiki-gutter);
   }
-  /* The guide as a short surface: a small picture beside its name, its links on a row that scrolls. */
+  /*
+   * The guide on a phone: its art across the frame's top, then the plate, the name and its length, the gold button
+   * across the frame, and the guide's parts on a row that scrolls.
+   */
   .wiki-mode-feature {
-    grid-template-columns: clamp(96px, 30vw, 128px) minmax(0, 1fr);
-    column-gap: 12px;
-    padding: 10px;
+    --wiki-frame-cut: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 6px;
   }
   .wiki-mode-feature-art {
-    grid-row: 1 / span 3;
-    align-self: center;
-    border-radius: var(--aov-radius-control);
+    min-height: 0;
+    aspect-ratio: 21 / 9;
   }
   .wiki-mode-feature-body {
-    display: contents;
+    gap: 6px;
+    padding: 4px 8px 10px;
+  }
+  .wiki-mode-feature-kicker {
+    margin-top: -18px;
   }
   .wiki-mode-feature h2 {
-    font: 700 1.25rem/1.625rem var(--wiki-font-reading);
+    font: 700 1.375rem/1.75rem var(--wiki-font-display);
   }
   .wiki-mode-feature .wiki-mode-prose {
     display: none;
   }
-  .wiki-mode-feature .wiki-mode-chip-row {
-    grid-column: 1 / -1;
-    margin: 5px -10px -5px;
-    padding-inline: 10px;
+  .wiki-mode-feature-links {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-self: stretch;
+    gap: 10px;
   }
   .wiki-mode-cta {
-    min-height: 36px;
+    min-height: 44px;
+  }
+  .wiki-mode-feature-links > .wiki-mode-chip-row {
+    margin-inline: -14px;
+    padding-inline: 14px;
   }
   .wiki-mode-feature[data-skeleton] {
-    min-height: 138px;
+    min-height: 300px;
+  }
+  /* Rows of a group sit closer than the cards of the wide grid. */
+  .wiki-mode-group {
+    gap: 12px;
   }
   .wiki-mode-overview {
     gap: 28px;
@@ -741,7 +838,10 @@ a.wiki-mode-row:active {
   }
 }
 
-/* Overview in pictures: the goal, a round and the cost of a loss. Each is a section whose figure sits on one surface. */
+/*
+ * Overview in pictures: the goal, a round and the cost of a loss. Each is a section whose figure sits in a game frame
+ * (wiki-frame).
+ */
 .wiki-mode-overview-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -754,9 +854,7 @@ a.wiki-mode-row:active {
   align-content: center;
   gap: 16px;
   min-width: 0;
-  padding: 20px;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
+  padding: 22px;
 }
 .wiki-mode-overview-copy {
   display: grid;

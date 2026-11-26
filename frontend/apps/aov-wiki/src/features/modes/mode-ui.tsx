@@ -287,7 +287,12 @@ export function ModeDialog({
       >
         <span className="wiki-mode-dialog-grip" aria-hidden="true" />
         <h2 className="wiki-mode-dialog-title">{title ?? label}</h2>
-        <button type="button" className="wiki-mode-dialog-close" aria-label={t("Đóng", "Close")} onClick={onClose}>
+        <button
+          type="button"
+          className="wiki-mode-dialog-close wiki-frame-socket"
+          aria-label={t("Đóng", "Close")}
+          onClick={onClose}
+        >
           <WikiIcon name="close" size={20} />
         </button>
       </header>

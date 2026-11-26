@@ -5,32 +5,26 @@ import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
-import { CatalogHeading } from "../../layout/catalog-heading"
+import { GameFrame } from "../../components/game-frame"
+import { WikiBreadcrumb } from "../../components/wiki-breadcrumb"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { AutoChessGuide } from "./auto-chess-guide"
 import { GUIDE_TABS, readGuideTab, type GuideTab } from "./auto-chess-model"
 import type { ModeImage } from "./auto-chess-model"
 import { AutoChessOverview } from "./auto-chess-overview"
+import { ModeBanner, ModeBannerSkeleton } from "./mode-banner"
 import { WikiApiError } from "../../lib/wiki-api"
 import { guideQuery, modeCardsQuery, modeQuery, type ModeContent } from "./mode-api"
 import { ModeCards } from "./mode-cards"
-import {
-  AvailabilityState,
-  durationText,
-  GROUP_NAMES,
-  hasSchedule,
-  isOpen,
-  ModeArt,
-  ModeHeading,
-  RuleList,
-} from "./mode-ui"
+import { durationText, hasSchedule, isOpen, ModeHeading, RuleList } from "./mode-ui"
 import "./modes.css"
 import "./mode-pages.css"
 
 /**
- * One mode: its name, then the art beside what is recorded about it, then its rules. A mode with a published guide
- * keeps the guide's tabs right under the name, so they stay in one place on every tab.
+ * One mode: the banner with its art and name, then what is recorded about it beside a framed panel of facts, then its
+ * rules. A mode with a published guide keeps the guide's tabs right under the banner, so they stay in one place on
+ * every tab.
  */
 export function ModeDetailPage() {
   const { code = "", tab } = useParams()
@@ -61,7 +55,7 @@ export function ModeDetailPage() {
   )
 
   const listHref = href("/modes")
-  if (mode.isPending) return <ModeDetailSkeleton />
+  if (mode.isPending) return <ModeDetailSkeleton wide={layout === "wide"} />
   if (mode.isError) {
     const missing = mode.error instanceof WikiApiError && mode.error.status === 404
     return (
@@ -98,33 +92,29 @@ export function ModeDetailPage() {
 
   return (
     <div className="wiki-mode-page wiki-mode-detail">
-      <CatalogHeading title={content.name} back={{ to: listHref, label: text("Chế độ chơi", "Game modes") }} />
-      {/* The compact header names the section only, so the page carries the way back and the mode's name itself. */}
-      {layout === "compact" && (
-        <header className="wiki-mode-compact-head">
-          <Link className="wiki-mode-back" to={listHref}>
-            <WikiIcon name="chevronLeft" size={16} />
-            {text("Tất cả chế độ", "All modes")}
-          </Link>
-          <h1>{content.name}</h1>
-        </header>
+      {/* The compact header names the section and leads back to it, so only wide screens show the trail. */}
+      {layout === "wide" && (
+        <WikiBreadcrumb
+          className="wiki-mode-breadcrumb"
+          steps={[
+            { label: text("Trang chủ", "Home"), to: href("/") },
+            { label: text("Chế độ chơi", "Game modes"), to: listHref },
+            { label: content.name },
+          ]}
+        />
       )}
+      <ModeBanner content={content} art={art} wide={layout === "wide"} short={activeTab !== "overview"} />
       {hasGuide && <GuideTabs code={code} active={activeTab} />}
 
       {activeTab === "overview" ? (
         <div className="wiki-mode-overview">
-          <section
-            className="wiki-mode-intro"
-            data-art={art ? "" : undefined}
-            aria-label={text("Thông tin chế độ", "About this mode")}
-          >
-            {art && <ModeArt className="wiki-mode-intro-art" image={art} name={content.name} eager />}
+          <section className="wiki-mode-intro" aria-label={text("Thông tin chế độ", "About this mode")}>
             <div className="wiki-mode-intro-body">
               {content.summary && <p className="wiki-mode-intro-lead">{content.summary}</p>}
-              <ModeFacts content={content} edition={guide.data?.content.edition} />
               <MissingNote content={content} art={art} hasGuide={hasGuide} />
               {layout === "wide" && <Sources content={content} />}
             </div>
+            <ModeFacts content={content} edition={guide.data?.content.edition} />
           </section>
 
           {guide.data && <AutoChessOverview guide={guide.data} code={code} />}
@@ -139,7 +129,7 @@ export function ModeDetailPage() {
 
           {rules.length > 0 &&
             (hasGuide ? (
-              <details className="wiki-mode-fold">
+              <details className="wiki-mode-fold wiki-frame">
                 <summary>
                   {text("Luật chơi đầy đủ", "Full rules")}
                   <WikiIcon name="chevron" size={20} />
@@ -246,23 +236,18 @@ function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
 }
 
 /**
- * What is recorded about the mode. A fact that is not recorded has no row: the note under the facts names it once.
- * The short facts pair up where they are shown as cells; the long ones, added last, take a whole row there.
+ * What else is recorded about the mode, in a small game frame: when it was seen, when it is open, the guide's
+ * edition and a note. The banner already shows the group, the length, the players and whether it is open. A fact that
+ * is not recorded has no row: the note beside the frame names it once. Short facts pair up where they are cells; long
+ * ones take a whole row there.
  */
 function ModeFacts({ content, edition }: { content: ModeContent; edition?: string | null }) {
   const { locale } = useWikiContext()
   const text = useWikiText()
-  const duration = durationText(content.duration, locale)
   const availability = content.availability
   // The schedule's days are calendar dates: they read as written, in the date format the reader chose.
   const day = (value: string) => <LocalTime value={value} locale={locale} />
-  const short: [string, ReactNode][] = [
-    [text("Nhóm", "Group"), text(GROUP_NAMES[content.group][0], GROUP_NAMES[content.group][1])],
-  ]
-  if (duration) short.push([text("Thời lượng", "Duration"), text(`${duration} / trận`, `${duration} / match`)])
-  if (content.playersLabel) short.push([text("Số người", "Players"), content.playersLabel])
-  if (hasSchedule(availability))
-    short.push([text("Tình trạng", "Availability"), <AvailabilityState availability={availability} />])
+  const short: [string, ReactNode][] = []
   if (availability?.observedOn) short.push([text("Ghi nhận", "Recorded"), day(availability.observedOn)])
   const long: [string, ReactNode][] = []
   const { startsOn, endsOn } = availability ?? {}
@@ -289,15 +274,18 @@ function ModeFacts({ content, edition }: { content: ModeContent; edition?: strin
     ])
   if (edition) long.push([text("Cẩm nang", "Guide"), edition])
   if (availability?.note) long.push([text("Ghi chú", "Note"), availability.note])
+  if (!short.length && !long.length) return null
   return (
-    <dl className="wiki-mode-facts">
-      {[...short, ...long].map(([term, value], at) => (
-        <div key={term} data-wide={at >= short.length || undefined}>
-          <dt>{term}</dt>
-          <dd>{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <GameFrame plain className="wiki-mode-facts-frame">
+      <dl className="wiki-mode-facts">
+        {[...short, ...long].map(([term, value], at) => (
+          <div key={term} data-wide={at >= short.length || undefined}>
+            <dt>{term}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </GameFrame>
   )
 }
 
@@ -384,8 +372,8 @@ function GuideTabSkeleton() {
   )
 }
 
-/** The loading state keeps the page's shape: the name, then the art beside the facts. */
-function ModeDetailSkeleton() {
+/** The loading state keeps the page's shape: the banner, then the lines of the introduction. */
+function ModeDetailSkeleton({ wide }: { wide: boolean }) {
   const { locale } = useWikiContext()
   return (
     <div
@@ -393,9 +381,9 @@ function ModeDetailSkeleton() {
       role="status"
       aria-label={wikiText(locale, "Đang tải chế độ", "Loading the mode")}
     >
-      <div className="wiki-mode-skeleton-title" />
-      <div className="wiki-mode-intro" data-art="" data-skeleton="true">
-        <span className="wiki-mode-art wiki-mode-intro-art" />
+      {wide && <div className="wiki-mode-skeleton-trail" />}
+      <ModeBannerSkeleton wide={wide} />
+      <div className="wiki-mode-intro" data-skeleton="true">
         <div className="wiki-mode-intro-body">
           <span />
           <span />

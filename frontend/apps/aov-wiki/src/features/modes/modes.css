@@ -16,20 +16,41 @@
   gap: 16px;
   min-width: 0;
 }
-/* A section's heading: its name in gold with an optional count, one muted line under it, a thin gold rule below. */
+/*
+ * A section's heading in the game frame's manner: a small gold gem, the name in gold with an optional count, one muted
+ * line under it, and a gold rule that fades out to the right.
+ */
 .wiki-mode-heading {
   display: grid;
   gap: 2px;
   padding-bottom: 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
+  background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent),
+      color-mix(in srgb, var(--aov-wiki-bronze) 45%, transparent) 35%,
+      transparent
+    )
+    left bottom / 100% 1px no-repeat;
 }
 .wiki-mode-heading h2 {
-  font: var(--wiki-type-section);
+  font: 700 1.125rem/1.5rem var(--wiki-font-display);
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 10px;
-  color: var(--aov-accent);
+  color: var(--aov-wiki-gold-bright);
+  letter-spacing: 0.01em;
+}
+.wiki-mode-heading h2:not(:has(.wiki-mode-heading-icon))::before {
+  content: "";
+  flex: none;
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  margin-right: 2px;
+  background: linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--aov-wiki-gold) 55%, transparent);
+  transform: rotate(45deg);
 }
 .wiki-mode-heading p {
   font: var(--wiki-type-meta);
@@ -229,7 +250,10 @@
   box-shadow: 0 0 0 1px rgb(0 0 0 / 40%);
 }
 
-/* Detail drawer: from the right on wide screens; the phone rule below turns it into a bottom sheet. */
+/*
+ * Detail drawer: from the right on wide screens, its left edge a gold rim; the phone rule below turns it into a bottom
+ * sheet under a gold rule with a gem, closed by a tap above it or a drag down.
+ */
 .wiki-mode-dialog {
   position: fixed;
   inset: 0 0 0 auto;
@@ -241,9 +265,12 @@
   padding: 0;
   overflow: hidden;
   border: 0;
-  border-left: 1px solid var(--aov-line-strong);
   border-radius: 0;
-  background: var(--aov-popover);
+  background:
+    linear-gradient(180deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze) 40%, var(--aov-wiki-gold)) left / 1px
+      100% no-repeat,
+    radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--aov-wiki-gold) 7%, transparent), transparent 70%),
+    linear-gradient(170deg, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep) 40%, var(--aov-wiki-bar));
   box-shadow: var(--aov-shadow-lg);
   color: var(--aov-text);
 }
@@ -265,28 +292,27 @@ html:has(.wiki-mode-dialog[open]) {
   flex: none;
   gap: 10px;
   align-items: center;
-  padding: 12px 12px 12px 18px;
-  border-bottom: 1px solid var(--aov-line);
+  padding: 12px 14px 12px 20px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent), transparent) left
+    bottom / 100% 1px no-repeat;
 }
 .wiki-mode-dialog-title {
-  font: var(--wiki-type-category);
+  font: 700 0.8125rem/1.25rem var(--wiki-font-reading);
   flex: 1;
   min-width: 0;
-  color: var(--aov-muted);
+  color: var(--aov-wiki-gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
+/* The close button is a hexagonal socket (game-frame.css) that lights under the pointer. */
 .wiki-mode-dialog-close {
-  display: inline-grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--aov-line);
-  border-radius: 50%;
-  background: var(--aov-surface);
-  color: var(--aov-text);
+  border: 0;
+  background: none;
   cursor: pointer;
 }
-.wiki-mode-dialog-close:hover {
-  border-color: var(--aov-accent);
+.wiki-mode-dialog-close:is(:hover, :focus-visible) {
+  color: var(--aov-wiki-gold-bright);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--aov-wiki-gold) 55%, transparent));
 }
 /* Hidden tooltips of icons near the edge must not make the drawer scroll sideways. */
 .wiki-mode-dialog-body {
@@ -330,17 +356,28 @@ html:has(.wiki-mode-dialog[open]) {
     width: 100vw;
     height: auto;
     max-height: 88dvh;
-    border-top: 1px solid var(--aov-line-strong);
-    border-left: 0;
     border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
+    background:
+      linear-gradient(90deg, transparent, var(--aov-wiki-gold) 25% 75%, transparent) top / 100% 1px no-repeat,
+      radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--aov-wiki-gold) 9%, transparent), transparent 70%),
+      linear-gradient(180deg, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep) 40%, var(--aov-wiki-bar));
     box-shadow: var(--aov-shadow-lg);
     transition: transform 0.18s ease-out;
+  }
+  /* A tap above the sheet or a drag down closes it; the button stays for keyboards and screen readers only. */
+  .wiki-mode-dialog-close:not(:focus-visible) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
   .wiki-mode-dialog[open] {
     animation-name: mode-drawer-up;
   }
   .wiki-mode-dialog-head {
-    padding: 18px 12px 10px 16px;
+    min-height: 52px;
+    padding: 20px 16px 10px;
     touch-action: none;
   }
   .wiki-mode-dialog-grip {
@@ -348,10 +385,10 @@ html:has(.wiki-mode-dialog[open]) {
     top: 7px;
     left: 50%;
     display: block;
-    width: 40px;
+    width: 44px;
     height: 4px;
     border-radius: var(--aov-radius-pill);
-    background: var(--aov-line-strong);
+    background: linear-gradient(90deg, var(--aov-wiki-bronze), var(--aov-wiki-gold), var(--aov-wiki-bronze));
     transform: translateX(-50%);
   }
   .wiki-mode-dialog-body {

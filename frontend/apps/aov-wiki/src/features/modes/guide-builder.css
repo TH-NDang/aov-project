@@ -17,13 +17,12 @@
   gap: 28px;
   min-width: 0;
 }
+/* The board being built, in a game frame (wiki-frame). */
 .wiki-guide-builder-card {
   display: grid;
   gap: 14px;
   min-width: 0;
-  padding: 16px;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
+  padding: 18px;
 }
 .wiki-guide-builder-card .wiki-guide-board,
 .wiki-guide-builder-card .wiki-guide-board-bench,
