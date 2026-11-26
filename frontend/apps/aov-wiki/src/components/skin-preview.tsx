@@ -327,6 +327,8 @@ export function SkinPreview({
                 className="wiki-skin-preview-set"
                 ref={rail.ref}
                 {...rail.handlers}
+                // The rail scrolls sideways; a drag on it never pulls the phone drawer down.
+                data-vaul-no-drag=""
                 role="group"
                 aria-label={
                   oneHero

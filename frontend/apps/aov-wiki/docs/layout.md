@@ -248,7 +248,9 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   khung vát góc, ảnh đang xem có viền sáng và nhích lên; dải kéo được bằng chuột, không hiện thanh cuộn, mờ dần ở hai
   mép; tên trang phục màu vàng sáng; nhãn thông tin là chữ hoa nhỏ vàng, các hàng ngăn bằng đường vàng mờ dần; huy hiệu
   bậc có ánh vàng. Trên drawer điện thoại ảnh trải hết bề ngang (cao tối đa 42% màn hình, ảnh splash phủ kín, không có
-  dải trống), nút đóng nằm trên góc ảnh, không có nút trước/sau (vuốt ảnh hoặc chạm dải ảnh). Nút bút chì cạnh tên là
+  dải trống), không có nút đóng hiện ra (chạm vùng trang tối phía trên hoặc kéo drawer xuống, kể cả kéo từ ảnh; nút đóng ẩn
+  vẫn có cho trình đọc màn hình), không có nút trước/sau (vuốt ảnh hoặc chạm dải ảnh); kéo dải ảnh sang ngang không kéo
+  drawer. Nút bút chì cạnh tên là
   Góp ý cho mọi người đọc, không phải nút sửa.
 - Trình xem là một mục riêng trong lịch sử trình duyệt: nút hoặc cử chỉ quay lại đóng trình xem thay vì rời trang; đóng
   bằng nút thì mục đó được gỡ; bấm liên kết sang trang tướng thì trang tướng thay chỗ mục đó.

@@ -137,6 +137,10 @@
   outline: 2px solid var(--aov-accent);
   outline-offset: -2px;
 }
+/* The phone drawer closes by a tap above it or a drag down, and keeps the shared drawer's hidden close button. */
+.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-close {
+  display: none;
+}
 /* The stage has the shape of the game's own splash pictures, so most of them fill it edge to edge. */
 .wiki-skin-preview-image {
   position: relative;
