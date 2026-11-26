@@ -30,8 +30,8 @@ function Bans({ game, side, places }: { game: PublishedGame; side: GameSide; pla
   if (!places) return null
   const unseen = text("Chưa rõ tướng bị cấm", "Banned hero not known")
   return (
-    <div className="tn-bans">
-      <p className="tn-bans-tray" role="group" aria-label={text("Cấm", "Bans")}>
+    <p className="tn-bans">
+      <span className="tn-bans-tray" role="group" aria-label={text("Cấm", "Bans")}>
         <span className="tn-bans-label" aria-hidden="true">
           <StreamIcon name="ban" size={13} />
           <span>{text("Cấm", "Bans")}</span>
@@ -46,8 +46,8 @@ function Bans({ game, side, places }: { game: PublishedGame; side: GameSide; pla
             </Tip>
           )
         })}
-      </p>
-    </div>
+      </span>
+    </p>
   )
 }
 

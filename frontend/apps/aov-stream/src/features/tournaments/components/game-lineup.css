@@ -260,14 +260,17 @@
     position: absolute;
     inset: -11px -8px;
   }
+  /* The tray keeps only the struck heroes, so four of them fit under half a lineup. */
   .tn-bans {
-    --reference-size: 28px;
+    --reference-size: 26px;
     grid-area: bans;
   }
-  .tn-bans-label {
-    padding: 0 3px;
+  .tn-bans-tray {
+    gap: 4px;
+    padding: 3px;
+    border-radius: 9px;
   }
-  .tn-bans-label > span {
+  .tn-bans-label {
     display: none;
   }
   .tn-lane-duel {
