@@ -131,7 +131,7 @@ export function GraphCard({
           type="button"
           aria-label={t(`Di chuyển ${name}`, `Move ${name}`)}
           title={t("Kéo để đổi ô", "Drag to another cell")}
-          className="cursor-grab touch-none self-stretch text-muted-foreground opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-foreground focus-visible:opacity-100 active:cursor-grabbing [@media(hover:none)]:opacity-100"
+          className="relative z-10 cursor-grab touch-none self-stretch text-muted-foreground opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-foreground focus-visible:opacity-100 active:cursor-grabbing [@media(hover:none)]:opacity-100"
           {...drag.listeners}
           {...drag.attributes}
         >
@@ -140,7 +140,8 @@ export function GraphCard({
       )}
       <button
         type="button"
-        className="shop-item-select group flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left focus-visible:outline-2 focus-visible:outline-ring"
+        // Its overlay stretches over the whole card, so a click anywhere on the card selects the item.
+        className="shop-item-select group flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left after:absolute after:inset-0 after:rounded-xl after:content-[''] focus-visible:outline-2 focus-visible:outline-ring"
         // A second click on the chosen card opens it: the first one shows its recipe on the board.
         onClick={selected && showOpenButton ? onOpen : onSelect}
         onDoubleClick={showOpenButton ? onOpen : undefined}

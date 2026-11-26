@@ -205,7 +205,7 @@ function GuestFigure() {
 }
 
 /** The reader's picture, else the first letter of their name, else a figure; round and tinted with the app's accent. */
-function AccountAvatar({
+export function AccountAvatar({
   name,
   avatarUrl,
   className,

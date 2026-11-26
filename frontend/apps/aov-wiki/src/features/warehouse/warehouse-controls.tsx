@@ -2,7 +2,7 @@ import type { CSSProperties } from "react"
 import { EnchantmentSetTools } from "./warehouse-enchantment-set-tools"
 import { ArcanaPageTools } from "./warehouse-arcana-page-tools"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
-import { useRef, type ReactNode } from "react"
+import type { ReactNode } from "react"
 import { ItemCategoryArtwork, itemCategoryTone } from "@aov/ui/components/item-category-icons"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
@@ -22,6 +22,7 @@ import {
 import { ChosenStats, StatBadge, StatFilterButton, type StatFilterState } from "./warehouse-stat-filter"
 import { itemMatchesCategory } from "./warehouse-item-layout"
 import { ArcanaColorArt, arcanaColorName } from "./warehouse-parts"
+import { PageSearch } from "../../components/page-search"
 import {
   warehouseText,
   type PublishedWarehouseRecord,
@@ -46,53 +47,15 @@ interface ControlsProps {
   loading: boolean
 }
 
-function SearchField({
-  value,
-  onChange,
-  label,
-  placeholder,
-  result,
-}: {
+/** The armory's search: the Wiki's page search at the armory's width. */
+function SearchField(props: {
   value: string
   onChange: (value: string) => void
   label: string
   placeholder: string
-  /** While a search is typed, how many entries it leaves, with their unit, such as "12 items". */
   result?: string
 }) {
-  const { locale } = useWikiContext()
-  const input = useRef<HTMLInputElement>(null)
-  return (
-    <label className="wiki-warehouse-search">
-      <WikiIcon name="search" size={18} />
-      <input
-        ref={input}
-        type="search"
-        aria-label={label}
-        value={value}
-        maxLength={120}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-      />
-      {value && result && (
-        <span className="wiki-warehouse-search-result" role="status">
-          {result}
-        </span>
-      )}
-      {value && (
-        <button
-          type="button"
-          aria-label={wikiText(locale, "Xóa từ khóa", "Clear search")}
-          onClick={() => {
-            onChange("")
-            input.current?.focus()
-          }}
-        >
-          <WikiIcon name="close" size={14} />
-        </button>
-      )}
-    </label>
-  )
+  return <PageSearch {...props} className="wiki-warehouse-search" />
 }
 
 function Chip({

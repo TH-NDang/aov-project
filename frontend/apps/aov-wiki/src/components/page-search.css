@@ -1,0 +1,97 @@
+/*
+ * The search field of every section page, as the armory first drew it: 40px high, a soft raised fill with a faint top
+ * light, the magnifier in muted ink that turns gold with the border and a soft ring while typing, a chip with what the
+ * search leaves, and a round cross. Its width comes from the page that holds it.
+ */
+.wiki-page-search {
+  display: flex;
+  min-width: 0;
+  height: 40px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--aov-line);
+  border-radius: 10px;
+  padding: 0 4px 0 12px;
+  background: linear-gradient(180deg, var(--aov-raised), var(--aov-surface));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--aov-text) 5%, transparent);
+  color: var(--aov-muted);
+  transition:
+    border-color 140ms,
+    box-shadow 140ms,
+    background 140ms;
+}
+.wiki-page-search:hover {
+  border-color: var(--aov-line-strong);
+}
+.wiki-page-search:focus-within {
+  border-color: var(--aov-accent);
+  background: var(--aov-sunken);
+  box-shadow: 0 0 0 3px var(--aov-accent-soft);
+  color: var(--aov-accent);
+}
+.wiki-page-search > svg {
+  flex: none;
+}
+.wiki-page-search input {
+  font: var(--wiki-type-body);
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--aov-text);
+  text-overflow: ellipsis;
+}
+.wiki-page-search input::placeholder {
+  color: var(--aov-muted);
+}
+.wiki-page-search input::-webkit-search-cancel-button {
+  display: none;
+}
+/* What the typed search leaves, before the clear button. */
+.wiki-page-search-result {
+  font: var(--wiki-type-meta);
+  flex: none;
+  border-radius: var(--aov-radius-pill);
+  padding: 2px 8px;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wiki-page-search-clear {
+  position: relative;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--aov-muted);
+}
+.wiki-page-search-clear:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-page-search-clear:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: -2px;
+}
+.wiki-page-search[data-size="large"] {
+  height: 44px;
+}
+.wiki-page-search[data-size="large"] input {
+  font-size: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-page-search {
+    transition: none;
+  }
+}
+@media (max-width: 899.98px) {
+  /* Below 16px, iPhones zoom the page when the field takes focus. */
+  .wiki-page-search input {
+    font-size: 16px;
+  }
+}

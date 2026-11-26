@@ -96,66 +96,135 @@
   border-radius: 2px;
   object-fit: cover;
 }
+/*
+ * The market and language panel: short sections under small titles. Markets are rows of 40px (flag, name, a check
+ * on the current one, "Unavailable" on the right of one not yet supported); the two languages are a segmented switch.
+ */
 .wiki-preference-panel[data-slot="popover-content"] {
-  width: min(320px, calc(100vw - 24px));
+  display: grid;
+  width: min(300px, calc(100vw - 24px));
+  gap: 4px;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-card);
-  padding: 14px;
+  padding: 8px;
   background: var(--aov-popover);
   color: var(--aov-text);
   box-shadow: var(--aov-shadow-lg);
 }
-.wiki-preference-panel h2 {
-  font: var(--wiki-type-section);
-  margin-bottom: 10px;
-  color: var(--aov-accent);
+.wiki-preference-heading {
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  margin: 0;
+  padding: 6px 8px 2px;
+  color: var(--aov-muted);
+}
+.wiki-preference-heading:not(:first-child) {
+  margin-top: 6px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 10px;
+}
+.wiki-preference-status {
+  font: var(--wiki-type-meta);
+  padding: 8px;
+  color: var(--aov-muted);
 }
 .wiki-preference-options {
   display: grid;
-  max-height: 320px;
-  gap: 3px;
+  max-height: 280px;
+  gap: 2px;
   overflow-y: auto;
 }
 .wiki-preference-options > button {
+  font: var(--wiki-type-body);
   display: flex;
-  min-height: 40px;
+  height: 40px;
   align-items: center;
   gap: 10px;
-  border: 1px solid transparent;
   border-radius: var(--aov-radius-control);
-  padding: 8px;
+  padding: 0 10px;
+  color: var(--aov-text);
   text-align: left;
 }
 .wiki-preference-options > button > span {
   min-width: 0;
   flex: 1;
-}
-.wiki-preference-options strong {
-  font: var(--wiki-type-body);
-  display: block;
-  color: var(--aov-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .wiki-preference-options small {
   font: var(--wiki-type-meta);
-  display: block;
-  margin-top: 4px;
+  flex: none;
   color: var(--aov-muted);
 }
 .wiki-preference-options > button[aria-pressed="true"] {
   background: var(--aov-accent-soft);
+  font-weight: 600;
+}
+.wiki-preference-options > button[aria-pressed="true"] > svg {
+  flex: none;
   color: var(--aov-accent);
 }
-.wiki-preference-options > button:hover:not(:disabled) {
+.wiki-preference-options > button:hover:not(:disabled, [aria-pressed="true"]) {
   background: var(--aov-raised);
 }
 .wiki-preference-options > button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  color: var(--aov-muted);
 }
-.wiki-preference-options > button > svg {
-  flex-shrink: 0;
+.wiki-preference-options > button:disabled .wiki-preference-flag {
+  opacity: 0.5;
 }
-.wiki-preference-note,
+:is(.wiki-preference-options, .wiki-preference-segment) > button:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: -2px;
+}
+/* Display settings: a label on the left, its select on the right, one 36px row each. */
+.wiki-preference-display {
+  display: grid;
+  gap: 4px;
+  padding-inline: 2px;
+}
+.wiki-preference-display > label {
+  font: var(--wiki-type-meta);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--aov-text-soft);
+}
+.wiki-preference-display .wiki-preference-select {
+  font: var(--wiki-type-meta);
+  width: 172px;
+  min-height: 34px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 8px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+/* The two languages as one control: a sunken track, the current one raised on it. */
+.wiki-preference-segment {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  border-radius: var(--aov-radius-control);
+  padding: 3px;
+  background: var(--aov-sunken);
+}
+.wiki-preference-segment > button {
+  font: var(--wiki-type-category);
+  height: 34px;
+  border-radius: calc(var(--aov-radius-control) - 2px);
+  color: var(--aov-text-soft);
+}
+.wiki-preference-segment > button:hover:not([aria-pressed="true"]) {
+  color: var(--aov-text);
+}
+.wiki-preference-segment > button[aria-pressed="true"] {
+  background: var(--aov-raised);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+  color: var(--aov-text);
+}
 .wiki-preferences-mobile > p {
   font: var(--wiki-type-meta);
   margin-top: 10px;
@@ -271,9 +340,27 @@
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   backdrop-filter: blur(16px) saturate(140%);
 }
+/* While searching: the field fills the row, a text button on its right closes the search. */
 .wiki-compact-header[data-searching] {
-  gap: 6px;
-  padding-inline: 6px 12px;
+  gap: 4px;
+  padding-inline: var(--wiki-gutter) 4px;
+}
+.wiki-compact-cancel {
+  font: 600 1rem/1.5rem var(--wiki-font-reading);
+  display: inline-flex;
+  min-height: 40px;
+  flex: none;
+  align-items: center;
+  border-radius: var(--aov-radius-control);
+  padding-inline: 10px;
+  color: var(--aov-accent);
+}
+.wiki-compact-cancel:active {
+  background: var(--aov-raised);
+}
+.wiki-compact-cancel:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: -2px;
 }
 /* The bar centres the page title, or the wordmark where a page has none, on the screen rather than between its buttons:
    the two sides share what the middle leaves, so one button on the left and three on the right still frame it evenly.
@@ -350,4 +437,11 @@
 .wiki-compact-header:is([data-variant="hero"], [data-clear]) .wiki-compact-button::before {
   background: color-mix(in srgb, var(--aov-wiki-bar) calc((1 - var(--header-solid, 0)) * 55%), transparent);
   backdrop-filter: blur(calc((1 - var(--header-solid, 0)) * 4px));
+}
+/* In the phone's settings sheet the language switch takes the width of the selects beside it, with taller targets. */
+.wiki-preferences-mobile .wiki-preference-segment {
+  width: 47%;
+}
+.wiki-preferences-mobile .wiki-preference-segment > button {
+  height: 38px;
 }

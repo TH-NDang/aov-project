@@ -45,19 +45,18 @@ export function WikiLibraryLayout() {
     <div className="wiki-library-shell">
       {/* On phones the bar starts clear on every page of the library, over a catalog's scene or the page itself, and
           frosts as the page scrolls. */}
-      {/* On phones a mode's page keeps the buttons drawn for artwork, on a bar that is solid from the first pixel. */}
+      {/* On phones a mode's page keeps the buttons drawn for artwork: its banner runs under the clear bar too. */}
       {/* One mode, one update or one armory entry names itself in its own h1; the header then only says which section
           it belongs to. */}
       <WikiHeader
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
-        solid={Boolean(isModeDetail)}
         clear={layout === "compact" && !isModeDetail}
         pageTitle={pageTitle}
         pageTitleIsHeading={!isModeDetail && !isPatchDetail && !isWarehouseEntry}
         section={active}
       />
       {layout === "compact" ? (
-        <main id="main" className="wiki-library-main-compact" data-cover={isModeDetail ? "" : undefined} tabIndex={-1}>
+        <main id="main" className="wiki-library-main-compact" tabIndex={-1}>
           <Outlet />
         </main>
       ) : (

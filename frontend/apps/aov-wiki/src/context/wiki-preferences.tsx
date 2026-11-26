@@ -32,7 +32,7 @@ const LANGUAGE_NAMES: Record<string, string> = { "vi-VN": "Tiếng Việt", "en-
 
 export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean }) {
   const context = useWikiContext()
-  const { region, locale, regions, regionsPending, regionsError, setRegion, setLocale } = context
+  const { region, locale, regions, regionsPending, regionsError, setRegion } = context
   const t = localeText(locale)
   const [marketOpen, setMarketOpen] = useState(false)
   const current = regions.find((market) => market.code === region)
@@ -46,18 +46,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
             <WikiIcon name="globe" size={16} />
             {t("Ngôn ngữ", "Language")}
           </span>
-          <Select value={locale} onValueChange={setLocale}>
-            <SelectTrigger className="wiki-preference-mobile-select" aria-label={t("Ngôn ngữ", "Language")}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent drawerTitle={t("Ngôn ngữ", "Language")}>
-              {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
-                <SelectItem key={code} value={code}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <LanguageSwitch />
         </div>
         <div className="wiki-preference-row">
           <span>
@@ -123,12 +112,15 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
       </div>
     )
 
+  const languageName = LANGUAGE_NAMES[locale] ?? locale
+  const marketLabel = current ? marketName(current.code, english ? "en-US" : "vi-VN", current.displayName) : region
+
   return (
     <div className="wiki-preferences-desktop">
       <Popover open={marketOpen} onOpenChange={setMarketOpen}>
         <PopoverTrigger
           className="wiki-preference-trigger"
-          aria-label={`${t("Thị trường dữ liệu", "Game market")}: ${region}`}
+          aria-label={`${t("Thị trường và ngôn ngữ", "Market and language")}: ${marketLabel}, ${languageName}`}
         >
           <MarketFlag code={region} />
           <span>{region}</span>
@@ -136,13 +128,15 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
         </PopoverTrigger>
         <PopoverContent
           className="wiki-preference-panel"
-          drawerTitle={t("Thị trường dữ liệu", "Game market")}
+          drawerTitle={t("Thị trường và ngôn ngữ", "Market and language")}
           align="end"
-          sideOffset={12}
+          sideOffset={10}
         >
-          <h2>{t("Thị trường dữ liệu", "Game market")}</h2>
+          <h2 className="wiki-preference-heading">{t("Thị trường", "Market")}</h2>
           {regionsPending ? (
-            <p role="status">{t("Đang tải…", "Loading…")}</p>
+            <p className="wiki-preference-status" role="status">
+              {t("Đang tải…", "Loading…")}
+            </p>
           ) : regionsError ? (
             <button className="wiki-preference-retry" type="button" onClick={() => void context.retryRegions()}>
               {t("Chưa tải được thị trường.", "Markets could not be loaded.")} {t("Thử lại", "Retry")}
@@ -163,30 +157,51 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
                 >
                   <MarketFlag code={market.code} />
                   <span>
-                    <strong>
-                      <MarketName region={market} english={english} />
-                    </strong>
-                    {!market.available && (
-                      <small>
-                        {!english && market.unavailableReason
-                          ? market.unavailableReason
-                          : t("Chưa hỗ trợ", "Unavailable")}
-                      </small>
-                    )}
+                    <MarketName region={market} english={english} />
                   </span>
-                  {market.code === region && <WikiIcon name="check" size={15} />}
+                  {market.available ? (
+                    market.code === region && <WikiIcon name="check" size={16} />
+                  ) : (
+                    <small>{t("Chưa hỗ trợ", "Unavailable")}</small>
+                  )}
                 </button>
               ))}
             </div>
           )}
-          <p className="wiki-preference-note">
-            {t(
-              "Thị trường và ngôn ngữ hiển thị được chọn độc lập.",
-              "Game market and display language are independent.",
-            )}
-          </p>
+          <h2 className="wiki-preference-heading">{t("Ngôn ngữ", "Language")}</h2>
+          <LanguageSwitch />
+          <h2 className="wiki-preference-heading">{t("Hiển thị", "Display")}</h2>
+          <div className="wiki-preference-display">
+            <label>
+              <span>{t("Múi giờ", "Time zone")}</span>
+              <PublicTimeZoneSelect locale={locale} product="wiki" triggerClassName="wiki-preference-select" />
+            </label>
+            <label>
+              <span>{t("Định dạng ngày", "Date format")}</span>
+              <PublicDateFormatSelect locale={locale} product="wiki" triggerClassName="wiki-preference-select" />
+            </label>
+            <label>
+              <span>{t("Tiền tệ", "Currency")}</span>
+              <PublicCurrencySelect locale={locale} product="wiki" triggerClassName="wiki-preference-select" />
+            </label>
+          </div>
         </PopoverContent>
       </Popover>
+    </div>
+  )
+}
+
+/** The two languages side by side, the current one filled; each is named in itself. */
+function LanguageSwitch() {
+  const { locale, setLocale } = useWikiContext()
+  const t = localeText(locale)
+  return (
+    <div className="wiki-preference-segment" role="group" aria-label={t("Ngôn ngữ", "Language")}>
+      {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
+        <button key={code} type="button" lang={code} aria-pressed={code === locale} onClick={() => setLocale(code)}>
+          {name}
+        </button>
+      ))}
     </div>
   )
 }

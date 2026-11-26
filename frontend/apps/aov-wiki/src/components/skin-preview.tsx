@@ -1,6 +1,8 @@
 import { preloadPicture, resizedImageUrl } from "../lib/sized-image"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Link } from "react-router"
+import { Link, useLocation, useNavigate } from "react-router"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { useDragScroll } from "../lib/use-drag-scroll"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
 import { WikiImage } from "./wiki-image"
 import { WikiImageCredit } from "./wiki-image-credit"
@@ -167,6 +169,31 @@ export function SkinPreview({
     .map((source) => source.ownerName?.trim() || source.label.trim())
     .find(Boolean)
 
+  const wide = usePageLayout() === "wide"
+  const rail = useDragScroll<HTMLDivElement>("horizontal")
+
+  // The open viewer is an entry of its own in the history, so the back button or gesture closes it.
+  const location = useLocation()
+  const navigate = useNavigate()
+  const here = location.pathname + location.search + location.hash
+  const inHistory = Boolean((location.state as { skinPreview?: boolean } | null)?.skinPreview)
+  // idle: no entry of ours; pushing: asked for one; in: the current entry is ours.
+  const entry = useRef<"idle" | "pushing" | "in">("idle")
+  useEffect(() => {
+    if (open && !inHistory && entry.current === "idle") {
+      entry.current = "pushing"
+      void navigate(here, { state: { skinPreview: true }, preventScrollReset: true })
+    } else if (inHistory && entry.current === "pushing") {
+      entry.current = "in"
+    } else if (!inHistory && entry.current === "in") {
+      // Back left the viewer's entry.
+      entry.current = "idle"
+      if (open) onClose()
+    }
+  }, [open, inHistory, here, navigate, onClose])
+  /** Closes the viewer by leaving its history entry when it has one, so the history holds no stale entry. */
+  const close = () => (entry.current === "in" ? void navigate(-1) : onClose())
+
   function step(delta: number) {
     if (canStep) onMove(list[(index + delta + list.length) % list.length])
   }
@@ -211,11 +238,11 @@ export function SkinPreview({
     <Dialog
       open={open}
       onOpenChange={(open) => {
-        if (!open) onClose()
+        if (!open) close()
       }}
     >
       <DialogContent
-        className="wiki-skin-preview"
+        className={wide ? "wiki-skin-preview wiki-frame" : "wiki-skin-preview"}
         showCloseButton={false}
         onCloseAutoFocus={(event) => {
           // Return to the skin last viewed, which may be several cards away from the one that opened the viewer.
@@ -233,7 +260,9 @@ export function SkinPreview({
               className="wiki-skin-preview-close"
               aria-label={text("Đóng ảnh trang phục", "Close skin preview")}
             >
-              <SkinIcon name="close" size={18} />
+              <span className="wiki-frame-socket wiki-skin-preview-close-socket">
+                <SkinIcon name="close" size={18} />
+              </span>
             </DialogClose>
             <div
               className="wiki-skin-preview-image"
@@ -274,7 +303,7 @@ export function SkinPreview({
                     title={text("Trang phục trước (←)", "Previous skin (←)")}
                     onClick={() => step(-1)}
                   >
-                    <span>
+                    <span className="wiki-frame-socket wiki-skin-preview-step-socket">
                       <SkinIcon name="chevronLeft" size={22} />
                     </span>
                   </button>
@@ -286,20 +315,20 @@ export function SkinPreview({
                     title={text("Trang phục sau (→)", "Next skin (→)")}
                     onClick={() => step(1)}
                   >
-                    <span>
+                    <span className="wiki-frame-socket wiki-skin-preview-step-socket">
                       <SkinIcon name="chevronRight" size={22} />
                     </span>
                   </button>
-                  <span className="wiki-skin-preview-count" aria-live="polite">
-                    <span className="sr-only">{skin.name} </span>
-                    {index + 1}/{list.length}
-                  </span>
                 </>
               )}
             </div>
             {list.length > 1 && (
               <div
                 className="wiki-skin-preview-set"
+                ref={rail.ref}
+                {...rail.handlers}
+                // The rail scrolls sideways; a drag on it never pulls the phone drawer down.
+                data-vaul-no-drag=""
                 role="group"
                 aria-label={
                   oneHero
@@ -330,7 +359,15 @@ export function SkinPreview({
             )}
             <div className="wiki-skin-preview-info">
               <div className="wiki-edit-heading wiki-skin-preview-heading">
-                <DialogTitle>{skin.name}</DialogTitle>
+                <div className="wiki-skin-preview-title">
+                  <DialogTitle>{skin.name}</DialogTitle>
+                  {canStep && (
+                    <span className="wiki-skin-preview-count" aria-live="polite">
+                      <span className="sr-only">{skin.name}: </span>
+                      {index + 1} / {list.length}
+                    </span>
+                  )}
+                </div>
                 <FeedbackDialog
                   target={`${skin.heroName} · ${skin.name}`}
                   identity={`${skin.heroCode}/${skin.skinKey}`}
@@ -348,7 +385,12 @@ export function SkinPreview({
                   <dt>{text("Tướng", "Hero")}</dt>
                   <dd>
                     {heroLink ? (
-                      <Link className="wiki-skin-preview-hero" to={scope.href(`/hero/${skin.heroCode}`)}>
+                      <Link
+                        className="wiki-skin-preview-hero"
+                        to={scope.href(`/hero/${skin.heroCode}`)}
+                        // The hero page takes the viewer's place in the history, so back returns to the skins.
+                        replace={inHistory}
+                      >
                         <HeroHead skin={skin} />
                         {skin.heroName}
                         <SkinIcon name="arrow" size={14} />

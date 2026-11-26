@@ -1,0 +1,148 @@
+/*
+ * Guide tabs (guide-tabs.tsx): one row under the banner that stays under the header, whose height is
+ * --wiki-header-height, and scrolls sideways when it is narrow. The row sits on the dark bar over a gold rule; the open tab glows from below and
+ * stands on a brighter rule with a gem. Sticky parts of the guide sit right under this row (--guide-tabs-height).
+ */
+.wiki-guide-tabs {
+  position: sticky;
+  top: var(--wiki-header-height);
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent) 15% 85%, transparent)
+      left bottom / 100% 1px no-repeat,
+    color-mix(in srgb, var(--aov-wiki-bar) 90%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  scrollbar-width: none;
+}
+.wiki-guide-tabs::-webkit-scrollbar {
+  display: none;
+}
+.wiki-guide-tab {
+  font: var(--wiki-type-category);
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 45px;
+  padding: 0 14px;
+  color: var(--aov-text-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wiki-guide-tab:hover {
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-guide-tab[aria-current="page"] {
+  background: radial-gradient(
+    70% 90% at 50% 100%,
+    color-mix(in srgb, var(--aov-wiki-gold) 24%, transparent),
+    transparent 75%
+  );
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-guide-tab[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 6px 0;
+  height: 7px;
+  background:
+    linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze)) center / 7px 7px no-repeat,
+    linear-gradient(90deg, transparent, var(--aov-wiki-gold-bright) 30% 70%, transparent) center bottom / 100% 2px
+      no-repeat;
+  clip-path: polygon(0 calc(100% - 2px), 50% 0, 100% calc(100% - 2px), 100% 100%, 0 100%);
+}
+.wiki-guide-tab:focus-visible {
+  outline-offset: -2px;
+}
+@media (min-width: 900px) {
+  /* Under the banner the tabs sit closer than the page's gap. */
+  .wiki-guide-tabs {
+    margin-top: -8px;
+  }
+}
+
+/*
+ * Phones: the bar runs to the screen's edges and sticks under the header; the tabs scroll inside it and fade at the
+ * right, where a button opens the sheet of every part.
+ */
+.wiki-guide-tabs-bar {
+  position: sticky;
+  top: var(--wiki-header-height);
+  z-index: 5;
+  display: flex;
+  align-items: stretch;
+  margin-inline: calc(-1 * var(--wiki-gutter));
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent) 15% 85%, transparent)
+      left bottom / 100% 1px no-repeat,
+    color-mix(in srgb, var(--aov-wiki-bar) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.wiki-guide-tabs-bar > .wiki-guide-tabs {
+  position: static;
+  flex: 1;
+  min-width: 0;
+  padding-inline: calc(var(--wiki-gutter) - 12px) 24px;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+}
+.wiki-guide-tabs-bar .wiki-guide-tab {
+  padding: 0 12px;
+}
+.wiki-guide-tabs-all {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
+  background: none;
+  color: var(--aov-wiki-gold);
+  cursor: pointer;
+}
+.wiki-guide-tabs-all:active {
+  background: color-mix(in srgb, var(--aov-wiki-gold) 14%, transparent);
+}
+
+/* The sheet of parts: three large tiles a row, each the part's mark over its name, the open part lit in gold. */
+.wiki-guide-tabs-sheet {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.wiki-guide-tabs-tile {
+  font: var(--wiki-type-category);
+  display: grid;
+  min-height: 84px;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 10px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  text-align: center;
+  text-decoration: none;
+}
+.wiki-guide-tabs-tile > svg {
+  color: var(--aov-wiki-gold);
+}
+.wiki-guide-tabs-tile:active {
+  background: var(--aov-raised);
+}
+.wiki-guide-tabs-tile[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent);
+  background:
+    radial-gradient(90% 80% at 50% 100%, color-mix(in srgb, var(--aov-wiki-gold) 22%, transparent), transparent 75%),
+    var(--aov-surface);
+  color: var(--aov-wiki-gold-bright);
+}

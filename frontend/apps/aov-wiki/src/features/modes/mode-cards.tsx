@@ -3,7 +3,7 @@ import { Link } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { ModeCard } from "./mode-api"
-import { AvailabilityState, durationText, isClosed, ModeArt } from "./mode-ui"
+import { AvailabilityState, durationText, isClosed, isOpen, ModeArt } from "./mode-ui"
 
 /**
  * How many cards go in a row when a row holds at most `max`: rows as even as possible, so a group fills its rows
@@ -41,6 +41,10 @@ function ModeTags({ mode }: { mode: ModeCard }) {
   )
 }
 
+/**
+ * A poster card: the art fills the card, the name and length stand on its dark foot, the status on a pill above; a gold
+ * line grows along the foot under the pointer.
+ */
 function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
@@ -59,12 +63,20 @@ function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
   )
 }
 
-/** Phones scan a list faster than a grid of tall cards: a small picture, the name, the length and the status. */
+/**
+ * Phones scan a list faster than a grid of tall cards: a strip with the name, the length and the status on the left
+ * and the art fading in from the right; an open mode has a green edge.
+ */
 function ModeRow({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
   return (
-    <Link className="wiki-mode-row" to={to} data-closed={isClosed(mode.availability) || undefined}>
+    <Link
+      className="wiki-mode-row"
+      to={to}
+      data-closed={isClosed(mode.availability) || undefined}
+      data-open={isOpen(mode.availability) || undefined}
+    >
       <ModeArt className="wiki-mode-row-art" image={mode.art} name={mode.name} inCard />
       <div className="wiki-mode-row-body">
         <h3>{mode.name}</h3>

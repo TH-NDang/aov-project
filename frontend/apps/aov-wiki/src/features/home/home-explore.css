@@ -1,0 +1,340 @@
+/* The sections block: its heading, then the cards. */
+.wiki-home-explore {
+  display: grid;
+  gap: 14px;
+}
+/*
+ * The sections as hero cards on four columns. Heroes and skins share the first row, the four armory catalogs the
+ * second, updates and the glossary the third. The pictures fill each card in the way that suits them: portraits and
+ * artwork side by side, icons and faces whole on a dark ground, glossary terms as words. A dark gradient rises from the
+ * foot of the card under a small metal plate with the name, the section's socket at its head and the count beside it;
+ * a thin inner light edge stands in for a frame. The heroes card ends with the roles (home-roles.css).
+ */
+.wiki-home-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-areas:
+    "heroes heroes skins skins"
+    "items enchantments arcana spells"
+    "updates updates terms terms";
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Once game modes are published, they share the last row with the glossary. */
+.wiki-home-cards:has(> [data-section="modes"]) {
+  grid-template-areas:
+    "heroes heroes skins skins"
+    "items enchantments arcana spells"
+    "updates updates terms modes";
+}
+.wiki-home-card[data-section="modes"] {
+  grid-area: modes;
+}
+.wiki-home-card[data-section="heroes"] {
+  grid-area: heroes;
+}
+.wiki-home-card[data-section="skins"] {
+  grid-area: skins;
+}
+.wiki-home-card[data-section="items"] {
+  grid-area: items;
+}
+.wiki-home-card[data-section="enchantments"] {
+  grid-area: enchantments;
+}
+.wiki-home-card[data-section="arcana"] {
+  grid-area: arcana;
+}
+.wiki-home-card[data-section="spells"] {
+  grid-area: spells;
+}
+.wiki-home-card[data-section="updates"] {
+  grid-area: updates;
+}
+.wiki-home-card[data-section="terms"] {
+  grid-area: terms;
+}
+.wiki-home-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--aov-wiki-panel-deep);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--aov-wiki-gold-bright) 45%, transparent);
+  color: var(--aov-text);
+  transition: transform 180ms ease-out;
+}
+.wiki-home-card:hover {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent),
+    inset 0 1px 0 var(--aov-wiki-gold-bright),
+    0 14px 30px -16px rgb(0 0 0 / 70%);
+  transform: translateY(-3px);
+}
+.wiki-home-card:has(.wiki-home-card-link:focus-visible) {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+
+/* The pictures fill the card; all but photos leave the foot to the plate. */
+.wiki-home-card-strip {
+  display: flex;
+  min-height: 176px;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+  padding-bottom: 52px;
+  background:
+    radial-gradient(90% 80% at 50% 30%, color-mix(in srgb, var(--aov-wiki-gold) 8%, transparent), transparent 70%),
+    var(--aov-wiki-bar);
+}
+.wiki-home-card-strip[data-shape="mark"] {
+  color: color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent);
+}
+.wiki-home-card-frame {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+}
+.wiki-home-card-frame > :first-child {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.wiki-home-card-picture {
+  object-fit: contain;
+}
+.wiki-home-card-strip[data-shape="photo"] {
+  align-items: stretch;
+  gap: 2px;
+  padding-bottom: 0;
+}
+.wiki-home-card-strip[data-shape="photo"] .wiki-home-card-frame {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  flex: 1;
+}
+.wiki-home-card-strip[data-shape="photo"] .wiki-home-card-frame > :first-child {
+  border-radius: 0;
+}
+/* Portraits and skin cards keep the face in their upper middle. */
+.wiki-home-card-strip[data-shape="photo"] .wiki-home-card-picture {
+  object-fit: cover;
+  object-position: 50% 18%;
+}
+.wiki-home-card[data-section="enchantments"] .wiki-home-card-frame > :first-child,
+.wiki-home-card[data-section="spells"] .wiki-home-card-frame > :first-child,
+.wiki-home-card-strip[data-shape="face"] .wiki-home-card-frame > :first-child {
+  border-radius: 50%;
+}
+.wiki-home-card[data-section="arcana"] .wiki-home-card-frame {
+  width: 56px;
+  height: 56px;
+}
+.wiki-home-card-strip[data-shape="face"] .wiki-home-card-frame {
+  width: 52px;
+  height: 52px;
+}
+.wiki-home-card-strip[data-shape="face"] .wiki-home-card-picture {
+  object-fit: cover;
+}
+/* The kind of a hero's change, on a solid disc at the corner of its face. */
+.wiki-home-card-pip {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  border-radius: 50%;
+  background: var(--aov-sunken);
+  box-shadow: 0 0 0 2px var(--aov-sunken);
+}
+.wiki-home-card-strip[data-shape="words"] {
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 8px;
+  padding-inline: 20px;
+}
+/* At most four terms, so the card keeps its height. */
+.wiki-home-card-strip[data-shape="words"] > :nth-child(n + 5) {
+  display: none;
+}
+/* A term's mark before its name, in the term's own colour as the glossary shows it. */
+.wiki-home-card-term-mark {
+  flex: none;
+  color: var(--term-color, var(--aov-wiki-gold));
+}
+.wiki-home-card-strip[data-shape="words"] > span {
+  font: italic 600 0.9375rem/1.375rem var(--wiki-font-display);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: 999px;
+  padding: 4px 12px;
+  color: var(--aov-text-soft);
+  white-space: nowrap;
+}
+
+/*
+ * An overlay on artwork: the foot of the card darkens under the plate. The body overlaps the pictures by its own height
+ * and stays out of positioning, so the link's overlay stretches over the whole card, not over the body.
+ */
+.wiki-home-card-body {
+  z-index: 1;
+  display: flex;
+  margin-top: -64px;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 14px 12px;
+  background: linear-gradient(180deg, transparent, rgb(8 10 14 / 92%) 55%);
+}
+.wiki-home-card-socket {
+  --socket-size: 38px;
+  z-index: 1;
+}
+/* The card's one link: its overlay makes the whole card the target. */
+.wiki-home-card-link {
+  display: flex;
+  min-width: 0;
+  margin-left: -18px;
+  color: var(--aov-wiki-gold-bright);
+  text-decoration: none;
+}
+/* The name on a small metal plate, the socket at its head. */
+.wiki-home-card-plate {
+  font: var(--wiki-type-entry);
+  min-width: 0;
+  overflow: hidden;
+  padding: 3px 14px 3px 22px;
+  background: linear-gradient(180deg, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--aov-wiki-gold-bright) 40%, transparent);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+  font-family: var(--wiki-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-home-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.wiki-home-card-link:focus-visible {
+  outline: none;
+}
+.wiki-home-card:hover .wiki-home-card-link {
+  color: var(--aov-accent-strong);
+}
+.wiki-home-card-count {
+  font: var(--wiki-type-meta);
+  flex: none;
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--aov-raised);
+  color: var(--aov-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-home-card-tally {
+  margin-left: auto;
+}
+/* Changed this season: an angled "New" tag on the card's top right, in the update blue. */
+.wiki-home-card-new {
+  font: 700 0.75rem/1rem var(--wiki-font-reading);
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  right: 8px;
+  padding: 1px 8px 1px 9px;
+  background: linear-gradient(180deg, var(--aov-info), color-mix(in srgb, var(--aov-info) 70%, var(--aov-wiki-bar)));
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  color: var(--aov-wiki-bar);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-home-card {
+    transition: none;
+  }
+  .wiki-home-card:hover {
+    transform: none;
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-home-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "heroes heroes"
+      "skins skins"
+      "items enchantments"
+      "arcana spells"
+      "updates updates"
+      "terms terms";
+    gap: 8px;
+  }
+  .wiki-home-cards:has(> [data-section="modes"]) {
+    grid-template-areas:
+      "heroes heroes"
+      "skins skins"
+      "items enchantments"
+      "arcana spells"
+      "updates updates"
+      "terms modes";
+  }
+  .wiki-home-card-strip {
+    min-height: 136px;
+    gap: 6px;
+    padding-bottom: 46px;
+  }
+  .wiki-home-card-frame {
+    width: 28px;
+    height: 28px;
+  }
+  .wiki-home-card[data-section="arcana"] .wiki-home-card-frame {
+    width: 40px;
+    height: 40px;
+  }
+  .wiki-home-card-strip[data-shape="face"] .wiki-home-card-frame {
+    width: 36px;
+    height: 36px;
+  }
+  .wiki-home-card[data-section="skins"] .wiki-home-card-frame:nth-child(n + 5) {
+    display: none;
+  }
+  .wiki-home-card-strip[data-shape="words"] {
+    gap: 6px;
+    padding-inline: 12px;
+  }
+  /* Two cards to a row leave little room: a smaller socket, plate and chip so the name keeps its letters. */
+  .wiki-home-card-body {
+    gap: 4px;
+    padding: 22px 8px 10px;
+  }
+  .wiki-home-card-socket {
+    --socket-size: 28px;
+  }
+  .wiki-home-card-body {
+    margin-top: -56px;
+  }
+  .wiki-home-card-link {
+    margin-left: -12px;
+  }
+  .wiki-home-card-plate {
+    padding: 2px 8px 2px 14px;
+  }
+  .wiki-home-card-count {
+    padding: 2px 6px;
+  }
+}

@@ -6,7 +6,6 @@ import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { termIcon } from "@aov/ui/components/gameplay-icons"
 import { gameIcon } from "@aov/ui/components/game-icons"
 import { createEntityIndex, defaultEntityColor, referenceTranslation } from "@aov/ui/lib/entity-rich-text"
-import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { TermsShowcase } from "./terms-showcase"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
@@ -14,6 +13,7 @@ import { notFoundMeta, termMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 import "./terms.css"
+import { PageSearch } from "../../components/page-search"
 
 /** A term with no picture of its own wears the glossary's mark. */
 const GlossaryMark = gameIcon("spell-book")
@@ -100,27 +100,13 @@ export function TermsPage() {
     <>
       <TermsShowcase terms={references.isSuccess ? terms.map(({ entity }) => entity) : undefined} />
       <div className="wiki-terms-tools">
-        <label className="wiki-terms-search">
-          <WikiIcon name="search" size={18} />
-          <input
-            type="search"
-            aria-label={text("Tìm thuật ngữ", "Search terms")}
-            value={search}
-            maxLength={120}
-            onChange={(event) => updateSearch(event.target.value)}
-            placeholder={text("Tìm thuật ngữ…", "Search terms…")}
-          />
-          {search && (
-            <button
-              type="button"
-              className="wiki-terms-clear"
-              aria-label={text("Xóa tìm kiếm", "Clear search")}
-              onClick={() => updateSearch("")}
-            >
-              <WikiIcon name="close" size={16} />
-            </button>
-          )}
-        </label>
+        <PageSearch
+          value={search}
+          onChange={updateSearch}
+          className="wiki-terms-search"
+          label={text("Tìm thuật ngữ", "Search terms")}
+          placeholder={text("Tìm thuật ngữ…", "Search terms…")}
+        />
         {/* The head counts the whole glossary; here only what a search leaves is counted. */}
         <p className="wiki-terms-count" role="status">
           {search &&

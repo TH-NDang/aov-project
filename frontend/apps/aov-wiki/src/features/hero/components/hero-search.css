@@ -1,62 +1,11 @@
-/*
- * The hero library's search field: a magnifier, the text, and at its end either a cross that empties it or, while it is
- * empty, the / key that brings the reader into it. The field lights gold while typing.
- */
+/* The hero library's search (`PageSearch`): the room its line leaves, and the / key that brings the reader into it. */
 .wiki-hero-searchbox {
-  display: flex;
-  min-width: 0;
-  height: 40px;
   flex: 1;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-  padding-inline: 12px 6px;
-  background: var(--aov-sunken);
-  color: var(--aov-muted);
-  transition:
-    border-color 160ms,
-    box-shadow 160ms;
 }
-.wiki-hero-searchbox > svg {
-  flex: none;
-}
-.wiki-hero-searchbox input {
-  width: 100%;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--aov-text);
-  font: var(--wiki-type-body);
-  outline: none;
-}
-.wiki-hero-searchbox input::placeholder {
-  color: var(--aov-muted);
-}
-.wiki-hero-searchbox:focus-within {
-  border-color: var(--aov-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--aov-accent) 18%, transparent);
-  color: var(--aov-accent);
-}
-.wiki-hero-searchbox-clear {
-  position: relative;
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: none;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--aov-muted);
-}
-.wiki-hero-searchbox-clear::before {
-  content: "";
-  position: absolute;
-  inset: -4px;
-}
-.wiki-hero-searchbox-clear:hover {
-  background: var(--aov-raised);
-  color: var(--aov-text);
+/* At the end of its line: the rest of the line up to a comfortable width, on the right. */
+.wiki-hero-searchbox-end {
+  max-width: 360px;
+  margin-left: auto;
 }
 /* The / key: a small keycap, shown only where there is a keyboard to press it. */
 .wiki-hero-searchbox-key {
@@ -65,7 +14,7 @@
   height: 22px;
   flex: none;
   place-items: center;
-  margin-right: 4px;
+  margin-right: 6px;
   border: 1px solid var(--aov-line-strong);
   border-bottom-width: 2px;
   border-radius: 5px;
@@ -76,16 +25,4 @@
   .wiki-hero-searchbox-key {
     display: none;
   }
-}
-/* A large field, for the bar pinned on phones: taller, and 16px text so iOS does not zoom in on focus. */
-.wiki-hero-searchbox[data-size="large"] {
-  height: 44px;
-}
-.wiki-hero-searchbox[data-size="large"] input {
-  font-size: 16px;
-}
-/* At the end of its line: the rest of the line up to a comfortable width, on the right. */
-.wiki-hero-searchbox[data-at-end] {
-  max-width: 360px;
-  margin-left: auto;
 }

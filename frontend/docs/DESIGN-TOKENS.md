@@ -79,6 +79,12 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
   viền 1px màu nhấn và nền nhấn rất nhạt. Riêng ô trận trong nhánh đấu của Stream (`.tn-node`) giữ viền mảnh vì nằm
   dày đặc; một trận trong lưới (`.tn-match`) không khung, chỉ có vạch phía trên cho biết sức nặng của vòng.
 - Các hàng của một danh sách ngăn nhau bằng đường 1px `--aov-line`.
+- Ngoại lệ của Wiki (quyết định của chủ dự án, 26/11/2026): Wiki dùng bộ khung kiểu game (`apps/aov-wiki/src/styles/game-frame.css`,
+  component `GameFrame`): khung vát góc với viền vàng chuyển sang đồng (`--aov-wiki-gold`, `--aov-wiki-gold-bright`,
+  `--aov-wiki-bronze`) mờ dần dọc cạnh, một đường viền trong thứ hai, viên đá nhỏ giữa cạnh trên và dưới, ánh sáng nhẹ
+  phía trong; ổ biểu tượng hình lục giác sáng viền vàng khi đang chọn; thanh tiêu đề vát hai đầu; đường ngăn có viên đá ở
+  giữa. Hình trang trí tự vẽ bằng CSS, không lấy ảnh từ game; ánh sáng chạy (nếu có) dừng khi người đọc chọn giảm chuyển
+  động. Chữ trên khung vẫn đạt tương phản AA. Câu dưới đây vẫn áp dụng cho Stream và Admin.
 - Không dùng góc vàng, khung trang trí, vạch vàng trên đầu, họa tiết hay dải màu phía sau chữ và dữ liệu. Trên Stream,
   vàng dành cho nhà vô địch và chung kết tổng: viền huy hiệu đội (`Crest`), cờ của đương kim vô địch, cúp trên kệ
   (`TitleShelf`; năm bậc vàng của `Trophy` pha từ `--aov-medal-gold`, thủy tinh và men pha từ oải hương và đêm), số lần vô địch ở đầu trang và vạch của trận chung kết tổng.

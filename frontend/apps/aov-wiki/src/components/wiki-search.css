@@ -113,6 +113,10 @@
   left: auto;
   width: max(100%, 380px);
 }
+/* Before any word the panel holds rows of pictures, so it is wider. */
+.wiki-search[data-size="bar"] .wiki-search-panel[data-start] {
+  width: max(100%, 520px);
+}
 /* On phones the open search is a screen of its own under the header, so the page behind it no longer shows. */
 .wiki-search[data-size="sheet"] .wiki-search-panel {
   position: fixed;
@@ -132,40 +136,6 @@
 }
 .wiki-search[data-size="sheet"] .wiki-search-panel ul a {
   min-height: 52px;
-}
-/* Before any word: every section as a large target, then a line on what can be found. */
-.wiki-search-start-title {
-  font: var(--wiki-type-meta);
-  margin: 0;
-  padding: 18px 16px 8px;
-  color: var(--aov-muted);
-  font-weight: 600;
-}
-.wiki-search-start {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 0 8px;
-}
-.wiki-search-start a {
-  font: var(--wiki-type-category);
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  padding: 12px 4px;
-  border-radius: var(--aov-radius-card);
-  color: var(--aov-text);
-  text-align: center;
-  text-decoration: none;
-}
-.wiki-search-start a:is(:hover, :active, :focus-visible) {
-  background: var(--aov-raised);
-}
-.wiki-search-start-hint {
-  font: var(--wiki-type-meta);
-  margin: 0;
-  padding: 16px;
-  color: var(--aov-muted);
 }
 .wiki-search-panel ul {
   margin: 0;

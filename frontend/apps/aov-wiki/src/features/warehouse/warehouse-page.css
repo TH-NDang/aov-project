@@ -48,76 +48,10 @@
 }
 /* Where the line runs short the field gives up its width first; the filters scroll only after it is at its least. */
 /* The search: a roomy field lit from above, gold when it has the cursor, with what it found at its right end. */
+/* The search (`PageSearch`) takes the room the toolbar leaves, from 220px to 340px. */
 .wiki-warehouse-search {
-  display: flex;
   min-width: 220px;
-  height: 40px;
   flex: 0 1000 340px;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--aov-line);
-  border-radius: 10px;
-  padding: 0 4px 0 12px;
-  background: linear-gradient(180deg, var(--aov-raised), var(--aov-surface));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--aov-text) 5%, transparent);
-  color: var(--aov-muted);
-  transition:
-    border-color 140ms,
-    box-shadow 140ms,
-    background 140ms;
-}
-.wiki-warehouse-search:hover {
-  border-color: var(--aov-line-strong);
-}
-.wiki-warehouse-search:focus-within {
-  border-color: var(--aov-accent);
-  background: var(--aov-sunken);
-  box-shadow: 0 0 0 3px var(--aov-accent-soft);
-  color: var(--aov-accent);
-}
-/* What the typed search leaves, before the clear button. */
-.wiki-warehouse-search-result {
-  flex: none;
-  border-radius: var(--aov-radius-pill);
-  padding: 2px 8px;
-  background: var(--aov-accent-soft);
-  color: var(--aov-accent-strong);
-  font: var(--wiki-type-meta);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.wiki-warehouse-search > svg {
-  flex: none;
-}
-.wiki-warehouse-search input {
-  font: var(--wiki-type-body);
-  min-width: 0;
-  height: 100%;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--aov-text);
-  text-overflow: ellipsis;
-}
-.wiki-warehouse-search input::placeholder {
-  color: var(--aov-muted);
-}
-.wiki-warehouse-search input::-webkit-search-cancel-button {
-  display: none;
-}
-.wiki-warehouse-search button {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--aov-muted);
-}
-.wiki-warehouse-search button:hover {
-  background: var(--aov-raised);
-  color: var(--aov-text);
 }
 /* Several filter groups on one line; where the line is too short they scroll sideways together. */
 .wiki-warehouse-filters {
@@ -636,7 +570,8 @@
   border-radius: var(--aov-radius-control);
 }
 .wiki-warehouse-search.wiki-skeleton {
-  border-color: transparent;
+  height: 40px;
+  border-radius: 10px;
 }
 
 /* ---------- Catalog and detail side by side ---------- */
@@ -1054,16 +989,9 @@
   }
   .wiki-warehouse-search {
     min-width: 0;
-    height: 40px;
     flex: 1 1 0;
-    padding-right: 1px;
-  }
-  /* Below 16px, iPhones zoom the page when the field takes focus. */
-  .wiki-warehouse-search input {
-    font-size: 16px;
   }
   /* Small controls grow to what a finger needs. */
-  .wiki-warehouse-search button,
   .wiki-warehouse-switch button {
     min-width: 36px;
     height: 36px;

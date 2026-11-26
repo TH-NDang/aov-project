@@ -10,10 +10,20 @@
   nội dung bắt đầu trên cùng một đường.
 - Trên wide, `WikiLibraryLayout` đặt sidebar các mục (`LibraryNavigation layout="sidebar"` trong
   `src/components/library-navigation.tsx`) bên trái trang: Trang chủ, rồi các mục theo nhóm Sổ tay nhân vật, Kho trang
-  bị, Lối chơi, Tham khảo. Rê chuột thì hàng có nền mờ; mục đang ở có nền vàng nhạt, chữ vàng đậm và một vạch tròn ngắn
-  ở mép trái. Sidebar rộng 200px, dính dưới thanh đầu trang và tự cuộn nếu cửa
-  sổ thấp; dưới 1180px chỉ còn icon (52px), tên mục hiện trong tooltip bên phải icon ngay khi rê chuột hoặc focus
-  bằng bàn phím. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng có sidebar trên
+  bị, Lối chơi, Tham khảo, như một sảnh game trong khung kiểu game (`GameFrame`, `src/styles/game-frame.css`): cả sidebar
+  là một khung vát góc viền vàng chuyển đồng, tên nhóm nằm giữa hai đường kẻ mờ dần (chữ hoa nhỏ vàng), mỗi mục là một ô
+  khung nhỏ, hai ô một hàng, dấu mục trong ổ lục giác phía trên tên (tên dài xuống hai dòng); Trang chủ là một ô rộng, ổ
+  bên cạnh tên. Không có số mục. Rê chuột thì viền ô sáng nhẹ; mục đang ở có viền sáng, ổ vàng đặc phát sáng và ô nhích
+  lên (`aria-current="page"`); focus bằng bàn phím có viền vàng. Mục có thay đổi trong mùa đang áp dụng có nhãn xiên
+  "MỚI" màu xanh cập nhật (`--aov-info`) ở góc trên phải, nhấp nháy nhẹ (đứng yên khi giảm chuyển động); dữ liệu từ
+  `useSeasonMarks` (`src/lib/season-updates.ts`): mỗi phần (Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ) một truy vấn
+  đọc tổng của trang một dòng `GET /patches/{id}/changes?domain=…` cho từng bản của mùa, giữ 5 phút, đang tải hoặc lỗi
+  thì không có nhãn. Rê chuột hoặc focus vào mục có nhãn (và mọi mục khi chỉ còn ổ) hiện chú thích sau 150ms: một khung
+  nhỏ có viên đá chỉ vào mục, tên mục đậm và một dòng ngắn: với Tướng là bản mới nhất có thay đổi kèm số tướng theo
+  loại có dấu màu ("Bản 17/11: 1 làm lại · 5 tăng · 1 giảm · 2 sửa lỗi"), với các phần kho là các bản đã đổi ("Đổi ở
+  bản 29/09"), với Ghi chú cập nhật là số bản của mùa. Sidebar rộng 200px, dính dưới thanh đầu trang và tự cuộn nếu cửa
+  sổ thấp; dưới 1180px chỉ còn các ổ 36px, nhãn "MỚI" thu thành viên đá xanh ở góc, tên và chi tiết nằm trong chú
+  thích. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng có sidebar trên
   wide: ảnh tướng nằm trong cột trang bên phải sidebar, vẫn bắt đầu dưới thanh đầu trang trong suốt. Phía trên tên tướng
   là breadcrumb Trang chủ › Tướng › tên tướng (`WikiBreadcrumb` trong `src/components/wiki-breadcrumb.tsx`) thay cho
   nút quay lại. Trên compact các mục nằm trong tấm mục lục mở từ header.
@@ -29,6 +39,11 @@
 - Cả trang dùng phông Be Vietnam Pro; cỡ chữ theo các vai trò trong `src/styles/typography.css` (xem
   `frontend/docs/DESIGN-TOKENS.md`). Ô nhập và nút thường dùng chung `src/styles/controls.css`: `.wiki-field`,
   `.wiki-input`, `.wiki-select`, `.wiki-button`, nút chính có `data-primary`.
+- Ô tìm trong trang của các mục (Tướng, Trang phục, bốn phần kho, Thuật ngữ, Chế độ chơi) là một component chung
+  `PageSearch` (`src/components/page-search.tsx`), theo kiểu ô tìm của Kho trang bị: cao 40px (44px ở thanh ghim của
+  Tướng trên điện thoại), bo 10px, nền nổi nhẹ, kính lúp bên trái, viền và kính lúp chuyển vàng kèm vòng sáng khi gõ,
+  chip số kết quả (ở kho) và nút × tròn khi đã gõ; chữ 16px trên compact. Mỗi trang chỉ đặt bề rộng của ô; Tướng thêm
+  phím / để vào ô. Các bộ lọc bên cạnh cao 40px cho thẳng hàng.
 - Trạng thái trống, lỗi và không tìm thấy dùng linh vật chuột chũi (`wiki-mascot-state`), một câu nói rõ chuyện gì xảy ra
   và bước tiếp theo.
 
@@ -38,33 +53,55 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Trang chủ
 
-- Thứ tự giống nhau ở hai bố cục (`src/features/home/wiki-home.tsx`): mở đầu → các mục của Wiki → thay đổi
-  của bản đang áp dụng → các bản cập nhật trong mùa và các vai trò. Hai bố cục chỉ khác tỉ lệ.
-- Mở đầu (`HomeIntro`): dòng nhỏ "AOV Wiki · Liên Quân Mobile", tiêu đề và một dòng về bản đang áp dụng (ngày, tên bản, số tướng thay đổi) dẫn tới ghi chú của bản đó. Phía sau là
-  ảnh tướng của ngày (`home-banners.ts`: mỗi ngày một trong ba ảnh, tên tướng ghi ở góc), phủ nửa phải và mờ dần vào
-  nền ở mép trái và mép dưới. Ảnh không tự chuyển trong lúc đọc. Trên compact ảnh nằm trên cùng, header trong suốt đè lên.
-- Các mục (`HomeSections`, dùng `WikiSectionTiles` trong `src/components/wiki-section-tiles.tsx`): chín ô Tướng, Trang
-  phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, Chế độ chơi, Cập nhật, Thuật ngữ, lấy từ `src/lib/wiki-sections.ts`. Sáu
-  ô đầu ghi số mục đã xuất bản, đọc từ tổng của một trang một dòng ở từng API danh mục (số tướng lấy từ danh sách tướng);
-  ba ô sau ghi một dòng mô tả. Mỗi ô không có nền card: icon ở trên, tên, rồi dòng phụ mờ; rê chuột thì tên chuyển vàng
-  và icon nhích lên. Luôn tối đa hai hàng: từ 1180px chín ô một hàng; 900–1179px năm rồi bốn; compact ba ô một hàng, hiện
-  hai hàng đầu và phần trên của hàng thứ ba mờ dần (không bấm được) để người đọc biết còn mục; mũi tên mờ đè lên đó mở
-  hàng thứ ba và đổi chiều để thu gọn. Trang không tìm thấy dùng cùng bộ ô này.
-- Thay đổi ở bản đang áp dụng (`HomePatchChanges`): các tướng có ghi chú thay đổi ở bản đang áp dụng, nhóm theo loại
-  thay đổi (mới, làm lại, tăng sức mạnh, giảm sức mạnh, rồi các loại khác), mỗi nhóm có hình và tên loại cùng số tướng.
-  Mỗi tướng là một thẻ nhỏ có ảnh, tên và vai trò, vạch màu của loại bên trái; tướng đã có hồ sơ công khai thì mở trang
-  tướng (đúng dạng tướng khi thay đổi ghi theo dạng, ADR-024), tướng chưa có hồ sơ vẫn được liệt kê nhưng không có liên
-  kết. Liên kết "Xem ghi chú đầy đủ" nằm ở đầu mục trên wide, cuối mục trên compact. Trong lúc chờ danh sách tướng, mục
-  giữ chỗ bằng các ô trống.
-- Các bản cập nhật (`SeasonUpdates`): các bản của mùa đang áp dụng, mới nhất trước, mỗi bản một hàng có ngày, tên và nhãn
-  Đang áp dụng, mở trang ghi chú của bản đó; liên kết "Tất cả" tới `/updates`. Dữ liệu lấy từ API public
+- Thứ tự giống nhau ở hai bố cục (`src/features/home/wiki-home.tsx`): mở đầu → bản đang áp dụng (kèm các bản của mùa) →
+  khám phá. Chữ trên trang ngắn: tiêu đề vài chữ, không có câu giải thích. Tiêu đề các phần màu chữ thường; vàng dành
+  cho số liệu nổi bật, mục đang áp dụng và liên kết. Compact có cách trình bày riêng cho từng khối (xem từng mục dưới),
+  không chỉ là bố cục wide co lại.
+- Mở đầu (`HomeIntro`): chỉ có tiêu đề "Cẩm nang Liên Quân Mobile" ("Liên Quân Mobile" màu vàng sáng, không ngắt dòng);
+  ô tìm kiếm nằm trên thanh đầu trang như mọi trang. Phía sau là một sân khấu tràn hết bề ngang cửa sổ, luôn tối ở cả hai
+  giao diện: ảnh trang phục của ngày (`home-banners.ts`, mỗi ngày một trong ba ảnh chọn sẵn, tên tướng ghi ở góc) đặt lớn
+  bên phải, phía sau là bản làm mờ và tăng màu của chính ảnh đó trải hết bề ngang nên bên trái cũng đầy màu, thêm một
+  lớp tối nhẹ sau tiêu đề và viền tối đều hai mép. Sân khấu chỉ mờ vào trang ở mép dưới. Lớp mờ trôi rất chậm, đứng yên
+  khi người đọc chọn giảm chuyển động. Compact: ảnh phủ kín sân khấu, cắt vào mặt tướng, header trong suốt đè lên; tiêu
+  đề 28px ngay dưới, không chừa khoảng trống thừa.
+- Bản đang áp dụng (`HomePatch`, `home-patch.tsx`) là một bề mặt gọn: dòng đầu có chấm xanh "Đang áp dụng", "Bản <ngày>",
+  tên bản, số tướng theo từng loại thay đổi (`ChangeTally`) và liên kết "Ghi chú đầy đủ" ở cuối dòng. Bên dưới, mỗi tướng
+  thay đổi là một thẻ chân dung nhỏ 4:5 (rộng 92px) trên một hàng cuộn ngang, dừng đúng từng thẻ, kéo được bằng chuột
+  (`useDragScroll`): chữ loại thay đổi (Buff, Nerf, Rework, Fix…) trên nền tối ở góc, tên trên lớp tối ở chân ảnh, vạch
+  màu của loại ở đáy ảnh; câu tóm tắt của ghi chú là tooltip của thẻ. Thứ tự: mới, làm lại, tăng sức mạnh, giảm sức
+  mạnh, rồi các loại khác; cùng loại theo tên. Tướng đã có hồ sơ công khai thì mở trang tướng (đúng dạng khi thay đổi ghi
+  theo dạng, ADR-024); tướng chưa có hồ sơ vẫn được liệt kê nhưng không có liên kết. Dữ liệu: `useChangedHeroes`
+  (`src/lib/use-changed-heroes.ts`, dùng chung với ô tìm kiếm) ghép thay đổi đã công bố của bản
+  (`GET /patches/{id}/changes?domain=HERO`) với danh sách tướng. Compact: bề mặt tràn hai mép màn hình; phần đầu thành ba
+  dòng ngắn (trạng thái và "Ghi chú đầy đủ" cùng dòng, rồi "Bản <ngày>" 20px và tên bản, rồi số tướng theo loại); hàng
+  thẻ vuốt ngang từ mép tới mép, thẻ rộng 108px để thẻ kế tiếp ló ra ở mép phải, không hiện thanh cuộn.
+- Cuối bề mặt đó, sau một đường mảnh, là các bản của mùa (`SeasonUpdates`): "Mùa <tên mùa>" và liên kết "Tất cả" tới
+  `/updates`, rồi một dòng thời gian ngang, mới nhất bên trái: mỗi bản một mốc trên một đường kẻ, ngày dưới mốc và tên
+  dưới ngày; bản đang áp dụng có mốc vàng sáng và nhãn "Đang áp dụng". Không đủ chỗ thì dòng thời gian cuộn ngang, dừng
+  đúng từng mốc, kéo được bằng chuột và mở sẵn ở bản đang áp dụng. Compact: tên mùa và "Tất cả" trên một dòng, dòng thời
+  gian vuốt từ mép tới mép, mỗi mốc rộng 150px. Dữ liệu lấy từ API public
   `GET /api/wiki/v1/seasons/current/updates?region=VN&locale=vi-VN&limit=4`, dùng TanStack Query: dữ liệu mới trong 60
   giây, tự kiểm tra lại mỗi 5 phút khi tab đang mở. Chỉ hiện patch đã công bố và có hiệu lực trong mùa áp dụng cho thị
   trường đang chọn; không suy đoán mùa nếu backend chưa xác nhận. Ngày patch giữ đúng độ chính xác backend. Lỗi kết nối
   có nút thử lại.
-- Vai trò (`HomeRoles`): sáu vai trò, mỗi ô có icon, tên và số tướng, mở `/hero?role=...`.
-- Wide: thay đổi của bản bên trái, cột phải 340px (300px dưới 1180px) chứa các bản cập nhật và vai trò. Compact: một cột,
-  thẻ tướng thay đổi xếp hai thẻ một hàng.
+- Khám phá (`HomeExplore`, `home-explore.tsx`): mỗi mục của Wiki là một thẻ kiểu thẻ tướng: ảnh thật của mục phủ kín
+  thẻ, chân thẻ tối dần, viền là một đường sáng mảnh bên trong (rê chuột thì sáng hơn và thẻ nhích lên); ở chân thẻ là
+  tấm kim loại nhỏ mang tên mục màu vàng sáng, ổ lục giác chứa dấu mục gắn ở đầu tấm, số mục thành chip bên phải. Cả thẻ
+  là một liên kết (bấm vào bất cứ đâu trên thẻ, một điểm dừng Tab); các chip vai trò trong thẻ Tướng là liên kết riêng
+  nằm trên. Mục có thay đổi trong mùa đang áp dụng có nhãn xiên "MỚI" màu xanh ở góc trên phải. Wide bốn cột: Tướng và
+  Trang phục mỗi thẻ hai cột ở hàng đầu, bốn phần kho mỗi thẻ một cột ở hàng hai, Cập nhật hai cột và Thuật ngữ hai cột
+  ở hàng ba; khi đã có chế độ chơi thì Thuật ngữ và Chế độ chơi mỗi thẻ một cột. Mục không có ảnh (Chế độ chơi) hiện dấu
+  mục lớn trong dải.
+  Dải ảnh (`useHomeSections`, `use-home-sections.ts`, chọn theo ngày bằng `dailySpread`): Tướng tám chân dung; Trang
+  phục ba ảnh trang phục từ một trang nhỏ của `GET /skins`; Trang bị bốn món cấp 3 (đồ hoàn chỉnh) từ danh mục trang bị;
+  Phù hiệu biểu tượng của mọi hệ (`GET /enchantment-branches`); Bảng ngọc ba viên cấp 3, mỗi màu đỏ, tím, xanh một viên;
+  Phụ trợ bốn biểu tượng; Cập nhật mặt các tướng đổi ở bản đang áp dụng, mỗi mặt có dấu loại thay đổi ở góc, và ở dòng
+  tên là các dấu kèm số tướng thay vì số mục; Thuật ngữ vài thuật ngữ thành chip chữ nghiêng. Thẻ Tướng kết thúc bằng
+  "Theo vai trò" (`HomeRoles`), tách khỏi dải ảnh bằng một đường kẻ để không bị hiểu là vai trò của các tướng trong ảnh:
+  sáu ô bằng nhau, mỗi ô có dấu, tên và số tướng, mở `/hero?role=...`. Số mục đọc từ tổng của một trang một dòng ở từng
+  API danh mục (`sectionCountsQuery`). Thẻ Chế độ chơi chỉ hiện khi `GET /game-modes` đã có chế độ nào. Rê chuột thì thẻ
+  nhích lên, viền và tên chuyển vàng. Compact hai cột: Tướng, Trang phục, Cập nhật, Thuật ngữ chiếm cả hàng, bốn phần kho
+  hai thẻ một hàng với dải ảnh thấp hơn; "Theo vai trò" là một hàng chip có đủ tên, vuốt ngang.
 
 ## Thư viện Tướng
 
@@ -207,8 +244,18 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   trang phục được ghi nhận theo từng bản. Xem cả mùa thì không có hàng này.
 - Chọn thẻ mở trình xem bằng Dialog (drawer dưới trên điện thoại), không điều hướng sang trang mới chỉ để xem ảnh. Khung
   ảnh theo tỉ lệ 13:8 của ảnh splash trong game và giữ nguyên khi đổi ảnh; bên dưới là dải ảnh của cùng danh sách, rồi
-  tên, các thông tin (tướng có liên kết, bậc, cách nhận kèm giá) và nguồn ảnh có nút xem chi tiết. Từ 1100px phần ảnh và
-  phần chữ chia hai cột.
+  tên kèm vị trí trong danh sách ("2 / 19"), các thông tin (tướng có liên kết, bậc, cách nhận kèm giá) và nguồn ảnh có
+  nút xem chi tiết. Từ 1100px phần ảnh và phần chữ chia hai cột. Trình xem theo khung kiểu game: trên wide cả trình xem
+  là một khung vát góc viền vàng chuyển đồng; nút đóng và nút trước/sau là ổ lục giác; mỗi ảnh nhỏ trong dải là một
+  khung vát góc, ảnh đang xem có viền sáng và nhích lên; dải kéo được bằng chuột, không hiện thanh cuộn, mờ dần ở hai
+  mép; tên trang phục màu vàng sáng; nhãn thông tin là chữ hoa nhỏ vàng, các hàng ngăn bằng đường vàng mờ dần; huy hiệu
+  bậc có ánh vàng. Trên drawer điện thoại ảnh trải hết bề ngang (cao tối đa 42% màn hình, ảnh splash phủ kín, không có
+  dải trống), không có nút đóng hiện ra (chạm vùng trang tối phía trên hoặc kéo drawer xuống, kể cả kéo từ ảnh; nút đóng ẩn
+  vẫn có cho trình đọc màn hình), không có nút trước/sau (vuốt ảnh hoặc chạm dải ảnh); kéo dải ảnh sang ngang không kéo
+  drawer. Nút bút chì cạnh tên là
+  Góp ý cho mọi người đọc, không phải nút sửa.
+- Trình xem là một mục riêng trong lịch sử trình duyệt: nút hoặc cử chỉ quay lại đóng trình xem thay vì rời trang; đóng
+  bằng nút thì mục đó được gỡ; bấm liên kết sang trang tướng thì trang tướng thay chỗ mục đó.
 - Trong trình xem có thể xem liên tiếp mà không cần đóng: nút trước/sau, phím ← →, vuốt ngang và dải ảnh. Thứ tự đi trong
   các trang phục của cùng tướng; trong lưới chung nhiều tướng thì đi theo danh sách kết quả. Ảnh kế tiếp được tải trước
   để chuyển không bị nháy. Đóng bằng nút đóng hoặc Escape, focus về thẻ của trang phục xem sau cùng, không phải thẻ đã
@@ -345,19 +392,46 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 - Dữ liệu lấy từ `/api/wiki/v1/game-modes`; đội hình riêng của người đọc đã đăng nhập lấy từ
   `/api/wiki/v1/users/me/game-modes`. Thứ tự từng phần trên hai bố cục nằm ở `frontend/docs/RESPONSIVE.md`.
-- `/modes` mở bằng `CatalogHeading` "Chế độ chơi", dòng mờ ghi số chế độ và nói rõ lịch mở là lịch ghi nhận từ sảnh game.
-  Ô tìm (`q`) và chip lọc (`loc`: Đang mở, PVP, Giải trí, Có cẩm nang) nằm trên một hàng; chip đang chọn được cuộn vào tầm
-  nhìn. Cẩm nang nổi bật đứng đầu, rồi các nhóm PVP và Chế độ giải trí, mỗi nhóm có tiêu đề vàng và số chế độ. Wide là lưới
-  thẻ có ảnh, số cột chọn để hàng cuối không còn một thẻ lẻ; compact là danh sách hàng gồm ảnh nhỏ, tên, thời lượng và
-  tình trạng.
-- `/modes/:code` mở bằng tên chế độ và đường quay lại. Chế độ có cẩm nang có hàng tab dính dưới header (`/modes/:code/:tab`,
-  cuộn ngang trên compact, tab đang mở được cuộn vào tầm nhìn). Tổng quan gồm ảnh, giới thiệu, thông tin nhanh, một câu
-  nêu những gì Wiki chưa ghi nhận về chế độ, nguồn, luật chơi (gấp theo nhóm trên compact) và tướng, vật phẩm riêng khi
-  có. Chế độ ít dữ liệu có thêm bốn chế độ khác cùng nhóm để đi tiếp. Mọi tab dùng địa chỉ của chế độ làm canonical; chỉ
-  trang chế độ được prerender.
+- Khung kiểu game (`GameFrame`) chỉ dùng cho cẩm nang nổi bật, để nó nổi lên; các thẻ khác có kiểu riêng, không lặp
+  một khung ở mọi chỗ. Tiêu đề từng phần có viên đá vàng, chữ vàng sáng và đường kẻ vàng mờ dần sang phải.
+- `/modes` mở bằng phần trưng bày (`ModesShowcase`, `modes-showcase.tsx`) như các trang danh sách khác: tiêu đề, số chế
+  độ, viên "N đang mở" màu xanh; cảnh là sảnh chọn chế độ, các tấm ảnh cao nghiêng viền vàng (cẩm nang trước, rồi chế độ
+  đang mở; chế độ đóng không lên sảnh), 6 tấm bên phải trên wide, 4 tấm phủ cả banner trên điện thoại. Chân banner wide ghi
+  số chế độ chưa rõ lịch mở và lịch mở là lịch ghi nhận từ sảnh game; điện thoại ghi câu này ở cuối danh sách. Ô tìm (`q`)
+  và chip lọc (`loc`: Đang mở, PVP, Giải trí, Có cẩm nang) nằm trên một hàng; chip đang chọn được cuộn vào tầm nhìn.
+- Cẩm nang nổi bật đứng đầu trong một khung sáng: wide là ảnh bên trái, bên phải là tấm biển "Cẩm nang", tên vàng, thời
+  lượng, tình trạng, giới thiệu, nút vàng vát góc "Mở cẩm nang" và chip các phần; điện thoại là ảnh trên cùng, tấm biển đè
+  lên mép ảnh, nút trải hết bề ngang, chip cuộn ngang, không có đoạn giới thiệu. Bấm đâu trên khung cũng mở cẩm nang.
+- Sau đó là các nhóm PVP và Chế độ giải trí. Wide là lưới thẻ poster tỉ lệ 4:3: ảnh phủ cả thẻ, tối dần ở chân, tên và
+  thời lượng nằm trên phần tối, tình trạng là viên nhỏ phía trên; rê chuột thì ảnh phóng nhẹ, tên chuyển vàng và một vạch
+  vàng chạy dọc chân thẻ; số cột chọn để hàng cuối không còn một thẻ lẻ. Điện thoại là danh sách dải ngang: tên, thời
+  lượng và tình trạng bên trái, ảnh hiện dần từ bên phải như danh sách chế độ trong game, chế độ đang mở có mép trái màu
+  xanh. Chế độ tạm đóng hoặc chưa mở khóa có ảnh nhạt màu.
+- `/modes/:code` trên wide mở bằng breadcrumb Trang chủ › Chế độ chơi › tên chế độ, rồi banner (`ModeBanner`,
+  `mode-banner.tsx`): cao 300px, viền mảnh bo góc như banner các trang danh sách, ảnh chế độ làm nền, góc dưới trái là tấm biển nhóm,
+  tên lớn màu vàng và thời lượng · số người · tình trạng; nút nguồn ảnh ở góc dưới phải. Trên điện thoại banner trải sát
+  hai mép, ảnh chạy lên sau thanh đầu trang trong suốt (thanh mờ dần khi cuộn), kết thúc bằng đường kẻ vàng có viên đá.
+  Chế độ chưa có ảnh dùng dấu mục mờ trên nền vàng tối. Ở các tab cẩm nang ngoài Tổng quan, banner thấp lại (148px trên
+  wide) để công cụ bắt đầu gần đầu trang.
+- Chế độ có cẩm nang có hàng tab dính dưới header (`/modes/:code/:tab`) trên nền thanh tối với đường kẻ vàng; tab đang
+  mở sáng vàng từ dưới lên, đứng trên vạch vàng có viên đá (`GuideTabs`, `guide-tabs.tsx`). Trên điện thoại chín tab
+  không vừa một hàng: hàng cuộn ngang, mờ dần ở mép phải, tab đang mở được cuộn vào tầm nhìn, và cuối thanh có nút bốn ô
+  mở tấm "Mục cẩm nang" từ dưới lên với chín ô lớn ba cột, mỗi ô có dấu và tên phần, ô đang mở sáng vàng; chọn một ô thì
+  tấm đóng và chuyển phần.
+- Tổng quan gồm giới thiệu, một câu nêu những gì Wiki chưa ghi nhận, nguồn, và khung nhỏ các thông tin còn lại (ngày
+  ghi nhận, thời gian mở, phiên bản cẩm nang, ghi chú; nhóm, thời lượng, số người, tình trạng đã có trên banner) trên một tấm nền, hai cột
+  trên wide, ô hai cột trên điện thoại. Luật chơi chia nhóm (tên nhóm chữ hoa nhỏ màu vàng, gấp theo nhóm trên điện
+  thoại); với chế độ có cẩm nang, "Luật chơi đầy đủ" là một dòng tiêu đề có viên đá, bấm để mở. Rồi tướng, vật phẩm riêng khi có. Chế độ ít dữ
+  liệu có thêm bốn chế độ khác cùng nhóm để đi tiếp. Mọi tab dùng địa chỉ của chế độ làm canonical; chỉ trang chế độ được
+  prerender.
 - Cẩm nang Cờ Liên quân có các tab Tổng quan, Quân cờ, Phe & Nghề, Trang bị, Chúc phúc, Nhiệm vụ, Đội hình, Xếp đội hình,
   Phân tích (`auto-chess-guide.tsx`, mỗi tab một file `guide-*.tsx`). Trong lúc cẩm nang tải, tab giữ khung gồm tiêu đề,
-  hàng điều khiển và lưới mục.
+  hàng điều khiển và lưới mục. Trên điện thoại ba bước "Mỗi hiệp" của Tổng quan là một hàng vuốt ngang, dừng từng
+  bước, bước sau ló ra ở mép, thay cho ba thẻ xếp dọc.
+- Chi tiết quân cờ, Phe/Nghề, trang bị mở trong ngăn kéo: từ bên phải trên wide, mép trái viền vàng, tiêu đề chữ hoa nhỏ
+  màu vàng, nút đóng là ổ lục giác. Trên điện thoại ngăn kéo trồi từ dưới lên dưới một đường kẻ vàng, không có nút đóng
+  hiện ra: chạm vùng trang tối phía trên hoặc kéo thanh trên cùng xuống để đóng (nút đóng vẫn còn cho bàn phím và trình
+  đọc màn hình).
 
 ## Liên hệ, tài khoản và trang không tìm thấy
 
@@ -500,6 +574,7 @@ năng` nằm trong kỹ năng đang chọn (xem Chi tiết Tướng).
 - `WikiFooter` (`src/components/wiki-footer.tsx`) dùng chung cho mọi trang, nằm trong cùng cột với trang trên nền màu
   thanh: bên trái logo, tên AOV Wiki và một câu giới thiệu; bên phải ba liên kết hỗ trợ: Góp ý trang này (mở
   `FeedbackDialog`), Liên hệ & nguồn ảnh (`/contact`), AOV Stream. Chân trang không lặp lại các mục của Wiki.
-- Dòng cuối ghi thuộc về Garena / Liên Quân Mobile và mốc dữ liệu đang xem kèm thị trường.
+- Dòng cuối ghi thuộc về Garena / Liên Quân Mobile và nguồn biểu tượng các mục (Game Icons, CC BY 3.0); chân trang không
+  ghi mốc dữ liệu hay thị trường.
 - Trên compact ba liên kết thành danh sách dưới phần giới thiệu, mỗi liên kết là một vùng bấm cao 40px. Trang có nút mục
   lục nổi (trang tướng dưới 1180px) chừa thêm khoảng trống cuối chân trang để nút không che liên kết.

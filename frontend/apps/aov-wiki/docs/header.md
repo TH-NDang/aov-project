@@ -23,7 +23,16 @@
   "AOV Stream" dạng chữ thường, một dòng mô tả cắt bằng dấu ba chấm. Ứng dụng đang dùng có nền vàng nhạt và dấu tích;
   ứng dụng kia có mũi tên, sáng lên khi rê chuột. Chọn Stream mở frontend Stream trong cùng tab.
 - Giữa: ô tìm kiếm chung, cao 36px, rộng tối đa 420px, nằm giữa phần logo và phần tiện ích, hiện ở mọi bề rộng.
-- Phải: nút thị trường dữ liệu (cờ và mã thị trường, mở bảng chọn thị trường) và tài khoản.
+- Phải: nút thị trường và ngôn ngữ (cờ và mã thị trường) và tài khoản. Nút mở một bảng gọn rộng 300px, canh mép phải
+  với nút (`WikiPreferenceControls`, `src/context/wiki-preferences.tsx`): tiêu đề nhỏ "Thị trường", mỗi thị trường một
+  hàng cao 40px có cờ và tên, thị trường đang chọn có nền vàng nhạt và dấu ✓, thị trường chưa hỗ trợ mờ đi với chữ "Chưa
+  hỗ trợ" ở bên phải (lý do là tooltip); rồi tiêu đề nhỏ "Ngôn ngữ" và công tắc hai nửa Tiếng Việt | English, nửa đang
+  chọn nổi lên; rồi tiêu đề nhỏ "Hiển thị" với ba hàng múi giờ, định dạng ngày, tiền tệ (nhãn bên trái, ô chọn bên phải).
+  Không có câu giải thích. Thị trường Global của API không được đưa ra; đường dẫn hay lựa chọn cũ `region=GLOBAL` đọc
+  thành Việt Nam. Tab đi qua từng lựa chọn, Escape đóng. Chọn thị trường thì bảng đóng.
+- Hai bảng của thanh rộng (thị trường và tài khoản) cùng kiểu: mở khi bấm, không mở khi rê chuột, cùng bề rộng và canh
+  mép phải với nút, cách nút 10px; mở bảng này thì bảng kia đóng; bấm ra ngoài, Escape hoặc sang trang khác thì đóng;
+  tiêu điểm vào bảng khi mở và về lại nút khi đóng.
 - Ô tìm kiếm, nút thị trường và nút tài khoản cùng một kiểu: không viền, bo tròn, nền mờ `--aov-text` 6% (9% khi rê
   chuột). Ô tìm kiếm có viền vàng khi đang gõ.
 - Trang tướng (`variant="hero"`): thanh nằm trên ảnh tướng, trong suốt ở đầu trang; trong 100px cuộn đầu tiên nền, vạch
@@ -34,6 +43,14 @@
 
 - `WikiSearch` là ô tìm duy nhất của Wiki: trên thanh đầu trang (`size="bar"`), ô lớn ở trang không tìm thấy
   (`size="hero"`), và hàng tìm kiếm của header compact (`size="sheet"`).
+- Chữ mờ trong ô chỉ là "Tìm tướng, trang bị…" ("Search heroes, items…"); bảng gợi ý có ảnh đã cho thấy tìm được gì.
+- Bấm vào ô khi chưa gõ thì bảng gợi ý có ảnh mở ngay (`WikiSearchStart`, `src/components/wiki-search-start.tsx`),
+  theo nhóm: "Xem gần đây" (mặt các tướng người đọc mở gần nhất, lưu trong trình duyệt bởi `recent-heroes.ts`), "Thay
+  đổi ở bản này" (mặt các tướng đổi ở bản đang áp dụng, mỗi mặt có dấu loại thay đổi ở góc, từ `useChangedHeroes`),
+  "Trang bị cấp 3" (biểu tượng vài món đồ hoàn chỉnh, đổi theo ngày, mở khung trang bị) và "Các mục" (chín mục của Wiki,
+  mỗi mục có dấu). Nhóm chưa có dữ liệu thì không hiện. Dữ liệu là những câu trả lời Wiki đã giữ (danh sách tướng, thay
+  đổi đã công bố, danh mục tham chiếu, danh mục trang bị), chỉ tải khi bảng mở. Trên wide bảng rộng 520px; phím ↑ ↓ (và
+  ← → khi ô trống) đi qua mọi gợi ý theo thứ tự đọc, Enter mở gợi ý đang đánh dấu, Escape đóng.
 - Gõ chữ thì danh sách gợi ý mở dưới ô: tối đa 8 tên đã xuất bản thuộc tướng, trang bị, phù hiệu, bảng ngọc, phụ trợ và
   thuật ngữ, mỗi tên có hình và loại. Tên trùng khớp đứng trước, rồi tên bắt đầu bằng từ khóa, rồi tên chứa từ khóa; tìm
   không phân biệt dấu và tính cả tên khác. Tên lấy từ `GET /reference-catalog` theo thị trường, ngôn ngữ và mốc dữ liệu
@@ -55,13 +72,17 @@ Một hàng cao 48px (`WikiHeaderCompact`):
   khuất (prop `centre`); các trang khác ghi tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
   trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
   trang bị", bốn phần là dãy tab dính ngay dưới header.
-- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút quay lại và ô nhập bo tròn, và bên dưới header mở
-  một màn tìm kiếm phủ kín trang: chưa gõ thì có lưới "Đi nhanh tới" chín mục và một dòng gợi ý cách tìm; gõ chữ thì
-  danh sách gợi ý chiếm cả màn, mỗi hàng cao 52px.
+- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành ô nhập bo tròn (kính lúp bên trong, nút × khi đã gõ)
+  và nút chữ "Hủy" ("Cancel") cao 40px ở bên phải, và bên dưới header mở một màn tìm kiếm phủ kín trang: chưa gõ thì là
+  bảng gợi ý có ảnh như trên wide (năm mặt tướng một hàng, các mục thành ô vuông dấu trên tên, ba ô một hàng); gõ chữ
+  thì danh sách gợi ý chiếm cả màn, mỗi hàng cao 52px. Màn tìm kiếm là một mục riêng trong lịch sử trình duyệt: "Hủy",
+  Escape khi ô trống và cử chỉ quay lại của hệ thống đều đóng nó; chọn một gợi ý thì trang mới thay chỗ mục đó, nên
+  quay lại từ trang mới về thẳng trang trước khi tìm.
 - Mục lục (`LibraryContents` trong `src/components/library-contents.tsx`, cùng danh sách `LibraryNavigation` với sidebar
   của bố cục wide) mở tấm trượt từ phải, rộng tối đa 320px, liệt
   kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong
-  `src/components/library-navigation.tsx`). Mục đang xem được đánh dấu; chọn một mục thì tấm đóng.
+  `src/components/library-navigation.tsx`), cùng kiểu sảnh game với sidebar nhưng ba ô một hàng: ô khung nhỏ, ổ lục
+  giác, tên, nhãn "MỚI" cho mục có thay đổi trong mùa. Mục đang xem sáng như sidebar; chọn một mục thì tấm đóng.
 - Nền: trên wide các trang danh sách có nền đặc. Trên điện thoại, mọi trang thư viện trừ trang một chế độ (`clear`) để
   thanh trong suốt, trên phần trưng bày hoặc trên chính trang, rồi phủ kính mờ dần (nền tối 58% và blur, vẫn thấy trang
   bên dưới) trong 100px cuộn đầu tiên; thanh công cụ ghim ngay dưới (Tướng, Trang phục) dùng cùng lớp kính. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt
@@ -72,8 +93,8 @@ Một hàng cao 48px (`WikiHeaderCompact`):
 ### Menu "⋯"
 
 - Mở drawer dưới (`MoreMenu`) dùng chung `PublicPreferencesDrawer` với Stream: hàng tài khoản ở đầu
-  (`PublicAccountSummary`, không mở popup tài khoản lồng nhau), hai ô Wiki/Stream, rồi nhóm cài đặt ngôn ngữ, múi giờ,
-  định dạng ngày, tiền tệ và thị trường dữ liệu.
+  (`PublicAccountSummary`, không mở popup tài khoản lồng nhau), hai ô Wiki/Stream, rồi nhóm cài đặt ngôn ngữ (công tắc
+  hai nửa Tiếng Việt | English như trên wide, nút cao 38px), múi giờ, định dạng ngày, tiền tệ và thị trường dữ liệu.
 - Logo ứng dụng 32px; hàng cài đặt cao 48px. Nội dung cuộn khi màn hình thấp, giữ khoảng đệm theo vùng an toàn phía dưới.
 - Mọi drawer dưới trên điện thoại (`PublicDrawer` trong `@aov/ui`, dùng chung với Stream) cao vừa nội dung, tối đa 85%
   màn hình, nên phía trên luôn còn một dải trang phủ mờ; chạm vào đó, nhấn Escape, hoặc kéo drawer xuống từ bất kỳ đâu
@@ -117,15 +138,19 @@ Wiki, nên chỗ nào dùng class Tailwind thì ghi bo góc bằng token hoặc 
 
 ## Tài khoản
 
-`PublicAccountMenu` dùng chung với Stream, hỗ trợ hover trên desktop và nhấn/bàn phím; popup gom ngôn ngữ, múi giờ, định
-dạng ngày, tiền tệ và đăng nhập. Compact dùng `PublicAccountSummary` ngay trong menu “⋯”, không mở popup tài khoản lồng
-nhau. Wiki không có thiết lập giao diện. Ngôn ngữ dùng `WikiContext`, giữ thị trường/bộ lọc hiện tại.
+Thanh rộng dùng `WikiAccountPopover` (`src/components/wiki-account-popover.tsx`): nút tròn có ảnh, chữ cái đầu của tên
+trên nền vàng, hoặc hình người khi chưa đăng nhập. Bảng chỉ có phần đầu (ảnh hoặc chữ cái, tên hoặc "Chưa đăng nhập", một
+dòng "Một tài khoản cho Wiki và Stream") và một việc: chưa đăng nhập là nút vàng "Đăng nhập"; đã đăng nhập là hai hàng
+40px "Cài đặt tài khoản" và "Đăng xuất". Cài đặt hiển thị nằm ở bảng thị trường, không lặp lại ở đây. Góp ý nằm ở chân
+trang và trên từng trang, không đặt trong bảng vì hộp góp ý không mở được từ một bảng đang đóng. Compact dùng
+`PublicAccountSummary` ngay trong menu “⋯”, không mở popup tài khoản lồng nhau. Wiki không có thiết lập giao diện. Ngôn ngữ dùng `WikiContext`, giữ thị trường/bộ lọc hiện tại.
 Đăng nhập qua trang AOV riêng tại máy chủ xác thực, public client `aov-wiki` với Code + PKCE S256.
 Callback `/auth/callback` đọc tên qua `/api/wiki/v1/users/me` rồi trở lại URL trước đăng nhập.
-Khi đã đăng nhập, popup tài khoản (desktop) và hàng tài khoản trong menu “⋯” (compact) có liên kết
+Khi đã đăng nhập, bảng tài khoản (desktop) và hàng tài khoản trong menu “⋯” (compact) có liên kết
 **Cài đặt tài khoản** tới `/account`: đổi mật khẩu bằng mã gửi email, xem/đăng xuất thiết bị và bật/tắt xác thực
 hai bước (ADR-028). Phần giao diện dùng chung `PublicAccountSecurity` của `@aov/ui`; bật/tắt 2FA chuyển sang trang
-Keycloak theme AOV bằng `kc_action` rồi quay lại `/account`.
+Keycloak theme AOV bằng `kc_action` rồi quay lại `/account`. Chưa đăng nhập thì `/account` chỉ là một thẻ giữa cột (hình người,
+tiêu đề, một dòng nói đăng nhập để làm gì và nút "Đăng nhập").
 Cấu hình `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` trước khi build; xem
 [cài đặt theme](../../../../backend/wiki-service/infra/local/keycloak-themes/README.md).
 

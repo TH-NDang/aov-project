@@ -1,0 +1,169 @@
+/*
+ * One mode's head: its art as the scene, the group on a plate, the name in gold and the facts a reader decides by,
+ * over a shade that is darkest where the text stands.
+ */
+.wiki-mode-banner {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+.wiki-mode-banner-scene {
+  position: absolute;
+  z-index: 0;
+  display: grid;
+  overflow: hidden;
+  place-items: center end;
+  background:
+    radial-gradient(70% 90% at 72% 46%, color-mix(in srgb, var(--aov-wiki-gold) 16%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--aov-wiki-panel-deep), var(--aov-wiki-bar));
+  color: color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
+}
+.wiki-mode-banner-scene > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Without art the emblem stands on the right, faint, clear of the name. */
+.wiki-mode-banner-scene > svg {
+  margin-right: 12%;
+}
+.wiki-mode-banner-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, color-mix(in srgb, var(--aov-bg) 88%, transparent), transparent 62%),
+    linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 70%, transparent), transparent 55%);
+  pointer-events: none;
+}
+.wiki-mode-banner-text {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+  gap: 6px;
+  text-shadow: 0 1px 14px var(--aov-bg);
+}
+.wiki-mode-banner-group {
+  --plate-cut: 9px;
+  font: 700 0.75rem/1rem var(--wiki-font-reading);
+  min-height: 24px;
+  letter-spacing: 0.08em;
+  text-shadow: none;
+  text-transform: uppercase;
+}
+.wiki-mode-banner h1 {
+  font: 700 2.25rem/2.75rem var(--wiki-font-display);
+  color: var(--aov-wiki-gold-bright);
+  letter-spacing: -0.01em;
+  text-shadow:
+    0 0 24px color-mix(in srgb, var(--aov-wiki-gold) 35%, transparent),
+    0 2px 12px var(--aov-bg);
+}
+.wiki-mode-banner-meta {
+  font: var(--wiki-type-category);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  color: var(--aov-text-soft);
+}
+.wiki-mode-banner-credit {
+  position: absolute;
+  z-index: 2;
+}
+
+/* Wide screens: a banner with the list pages' thin border and rounded corners. */
+.wiki-mode-banner[data-layout="wide"] {
+  min-height: 300px;
+  margin-top: 2px;
+  padding: 30px 34px;
+  overflow: hidden;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+}
+.wiki-mode-banner[data-layout="wide"] .wiki-mode-banner-scene {
+  inset: 0;
+}
+.wiki-mode-banner[data-layout="wide"] .wiki-mode-banner-text {
+  max-width: 62%;
+}
+/* The credit sits in the foot's corner, clear of the trail above the banner. */
+.wiki-mode-banner[data-layout="wide"] .wiki-mode-banner-credit {
+  right: 20px;
+  bottom: 18px;
+}
+
+/*
+ * Phones: edge to edge and tall, the art running up behind the clear header to the top of the screen, ending on a gold
+ * rule with a gem in its middle, as the game frames end.
+ */
+.wiki-mode-banner[data-layout="compact"] {
+  min-height: calc(var(--wiki-header-height) + 228px);
+  margin: calc(-12px - var(--wiki-header-height)) calc(-1 * var(--wiki-gutter)) 0;
+  padding: calc(var(--wiki-header-height) + 12px) var(--wiki-gutter) 20px;
+}
+.wiki-mode-banner[data-layout="compact"] .wiki-mode-banner-scene {
+  inset: 0;
+}
+.wiki-mode-banner[data-layout="compact"] .wiki-mode-banner-scene::after {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--aov-bg) 50%, transparent), transparent 26%),
+    linear-gradient(0deg, var(--aov-bg), color-mix(in srgb, var(--aov-bg) 70%, transparent) 30%, transparent 64%);
+}
+.wiki-mode-banner[data-layout="compact"]::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: auto 0 0;
+  height: 9px;
+  background:
+    linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze)) center / 7px 7px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent) 30% 70%, transparent)
+      center / 100% 1px no-repeat;
+  pointer-events: none;
+}
+.wiki-mode-banner[data-layout="compact"] h1 {
+  font: 700 1.75rem/2.125rem var(--wiki-font-display);
+}
+.wiki-mode-banner[data-layout="compact"] .wiki-mode-banner-scene > svg {
+  margin-right: 8%;
+}
+.wiki-mode-banner[data-layout="compact"] .wiki-mode-banner-credit {
+  right: var(--wiki-gutter);
+  bottom: 22px;
+}
+
+/* Over a guide's tools the banner stays low: the name and its facts on one band of the art. */
+.wiki-mode-banner[data-layout="wide"][data-short] {
+  min-height: 148px;
+  padding-block: 22px;
+}
+.wiki-mode-banner[data-layout="compact"][data-short] {
+  min-height: calc(var(--wiki-header-height) + 132px);
+  padding-bottom: 16px;
+}
+.wiki-mode-banner[data-short] h1 {
+  font-size: 1.75rem;
+  line-height: 2.125rem;
+}
+.wiki-mode-banner[data-layout="compact"][data-short] h1 {
+  font-size: 1.5rem;
+  line-height: 1.875rem;
+}
+
+/* While the mode loads: the frame and its height, a bar where the name will stand. */
+.wiki-mode-banner[data-skeleton][data-layout="compact"] {
+  background: linear-gradient(180deg, var(--aov-wiki-panel-deep), var(--aov-bg));
+}
+.wiki-mode-banner-bar {
+  width: min(60vw, 320px);
+  height: 36px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}

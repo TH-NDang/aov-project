@@ -1,11 +1,12 @@
 import { queryOptions } from "@tanstack/react-query"
 import type { HeroMedia } from "./hero-api"
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "./wiki-catalog"
-import { wikiGetPages } from "./wiki-api"
+import { wikiGet, wikiGetPages } from "./wiki-api"
 
 /** Every query key of skins; reads and invalidation both use these. */
 export const skinKeys = {
   collection: (scope: WikiCatalogScope) => ["wiki", "skin-collection", ...wikiScopeKey(scope)] as const,
+  sample: (scope: WikiCatalogScope) => ["wiki", "skin-sample", ...wikiScopeKey(scope)] as const,
   hero: (heroCode: string, scope: WikiCatalogScope) =>
     ["wiki", "hero-skins", heroCode, ...wikiScopeKey(scope)] as const,
 }
@@ -94,3 +95,17 @@ export function heroSkinsQuery(scope: WikiCatalogScope, heroCode: string) {
     retry: 1,
   })
 }
+
+/** One small page of skins, for their artwork on the home page and in the sidebar without loading the whole collection. */
+export const skinSampleQuery = (scope: WikiCatalogScope) =>
+  queryOptions({
+    queryKey: skinKeys.sample(scope),
+    queryFn: async ({ signal }) => {
+      const query = wikiCatalogParameters(scope, false)
+      query.set("page", "0")
+      query.set("size", "40")
+      return (await wikiGet<SkinCatalog>(`/skins?${query}`, signal)).page.items
+    },
+    staleTime: 5 * 60_000,
+    retry: 0,
+  })
