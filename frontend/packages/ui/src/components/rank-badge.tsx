@@ -19,7 +19,11 @@ export function RankBadge({ place, size = 28 }: { place: string | number; size?:
   const medal = medalOf(place)
   if (!medal) return <span className="aov-rank">{place}</span>
   return (
-    <span className="aov-rank" data-medal={medal} style={{ width: size, height: size, fontSize: size * 0.4 }}>
+    <span
+      className="aov-rank"
+      data-medal={medal}
+      style={{ width: size, height: size, fontSize: Math.max(12, size * 0.4) }}
+    >
       <svg viewBox="0 0 40 40" aria-hidden="true">
         {[1, -1].map((side) => (
           <g key={side} className="aov-rank-leaf" transform={side < 0 ? "matrix(-1 0 0 1 40 0)" : undefined}>

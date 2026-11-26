@@ -16,21 +16,34 @@ function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimiti
  */
 const PopoverPortalContainer = React.createContext<HTMLElement | null>(null)
 
+/**
+ * The element popovers and hover cards stay inside, scrolling where it is too low for them. A screen that shows
+ * something they must never cover, such as a video, gives the part they may open over; without one they use the whole
+ * window.
+ */
+const PopoverBoundary = React.createContext<HTMLElement | null>(null)
+
 function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
+  style,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const container = React.useContext(PopoverPortalContainer)
+  const boundary = React.useContext(PopoverBoundary)
   return (
     <PopoverPrimitive.Portal container={container ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
         sideOffset={sideOffset}
+        collisionBoundary={boundary ?? undefined}
+        collisionPadding={boundary ? 8 : undefined}
+        style={boundary ? { maxWidth: "var(--radix-popover-content-available-width)", ...style } : style}
         className={cn(
           "z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          boundary && "max-h-(--radix-popover-content-available-height) overflow-y-auto",
           className,
         )}
         {...props}
@@ -61,6 +74,7 @@ export {
   PopoverContent,
   PopoverAnchor,
   PopoverPortalContainer,
+  PopoverBoundary,
   PopoverHeader,
   PopoverTitle,
   PopoverDescription,
