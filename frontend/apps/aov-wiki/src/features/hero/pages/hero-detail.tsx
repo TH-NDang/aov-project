@@ -4,7 +4,14 @@ import { useEffect, useState, type CSSProperties } from "react"
 import { Link, Navigate, useLocation, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { HeroDetailLayout } from "../../../layout/wiki-library-layout"
-import { heroCatalogQuery, heroDetailQuery, type HeroListForm, type HeroListItem } from "../../../lib/hero-api"
+import {
+  hasPublishedBuild,
+  heroBuildsQuery,
+  heroCatalogQuery,
+  heroDetailQuery,
+  type HeroListForm,
+  type HeroListItem,
+} from "../../../lib/hero-api"
 import { HeroFormSwitch } from "../components/hero-form-switch"
 import {
   currentScope,
@@ -59,6 +66,8 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
   // A hero with forms is read one form at a time: its gameplay, history and images, under the shared name (ADR-024).
   const formDetail = detail && selectedForm(detail, form?.formKey)
   const page = detail && heroWithForm(detail, formDetail)
+  // The same reading the builds section shows; the title promises a build only once it is known to exist.
+  const builds = useQuery({ ...heroBuildsQuery(page?.code ?? hero.code, scope.region), enabled: !!page })
   const media = { ...detail?.media, ...formDetail?.media }
   const gameplay = form ?? hero
   const formRole = form && hero.forms ? formLabelRole(form, hero.forms) : undefined
@@ -210,17 +219,22 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
 
   return (
     <HeroDetailLayout
-      meta={heroMeta(
-        {
-          ...hero,
-          roles: gameplay.roles,
-          title: page?.content.profile?.title,
-          summary: page?.content.profile?.summary,
-          media,
-          form: form && hero.forms ? heroMetaForm(form, hero.forms, locale) : undefined,
-        },
-        locale,
-      )}
+      meta={
+        builds.isPending
+          ? null
+          : heroMeta(
+              {
+                ...hero,
+                roles: gameplay.roles,
+                title: page?.content.profile?.title,
+                summary: page?.content.profile?.summary,
+                media,
+                form: form && hero.forms ? heroMetaForm(form, hero.forms, locale) : undefined,
+                hasBuild: hasPublishedBuild(builds.data),
+              },
+              locale,
+            )
+      }
       backTo={returnTo}
       style={style}
       headerCentre={nameAway ? switcher : undefined}

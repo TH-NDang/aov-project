@@ -48,6 +48,15 @@ const catalog: PublishedCatalog = {
       media: { SPLASH: media("https://cdn.test/airi.jpg") },
       skills: [{ name: "Phi tiêu", description: "gây <color=#fff>280</color> sát thương" }, { name: null }],
       skins: [{ name: "Ninja Xanh Lá" }],
+      builds: [
+        {
+          source: "Cao thủ",
+          items: ["item-1", "item-2", "unknown"],
+          enchantments: ["ench-1"],
+          arcana: [{ id: "arc-1", quantity: 10 }],
+          spellId: "spell-1",
+        },
+      ],
     },
     {
       id: "hero-2",
@@ -131,7 +140,7 @@ test("older links by id preview the same page and name the code address as canon
 
 test("a static hero page carries its head, its readable body and the app's script", () => {
   const html = renderStaticPage(TEMPLATE, pageAt("/hero/airi")!, SITE)
-  assert.match(html, /<title>Airi — Ninja rồng \| AOV WiKi<\/title>/)
+  assert.match(html, /<title>Airi Liên Quân: lên đồ, bảng ngọc, kỹ năng \| AOV WiKi<\/title>/)
   assert.match(html, /<meta data-seo name="description" content="Airi — Ninja rồng: tướng Sát thủ/)
   assert.match(html, /<meta data-seo property="og:image" content="https:\/\/cdn\.test\/airi\.jpg" \/>/)
   assert.match(html, /<link data-seo rel="canonical" href="https:\/\/wiki\.example\.test\/hero\/airi" \/>/)
@@ -141,11 +150,23 @@ test("a static hero page carries its head, its readable body and the app's scrip
   assert.match(html, /<strong>Phi tiêu<\/strong>: gây 280 sát thương/)
   assert.match(html, /<li>Ninja Xanh Lá<\/li>/)
   assert.match(html, /<script type="module" src="\/assets\/app\.js">/)
+  assert.match(html, /<script data-seo type="application\/ld\+json">\{"@context":"https:\/\/schema\.org"/)
+})
+
+test("a static hero page lists its builds with a link to each published entry", () => {
+  const { body } = pageAt("/hero/airi")!
+  assert.match(body, /<h2>Lên đồ<\/h2><h3>Cao thủ<\/h3>/)
+  assert.ok(body.includes('Trang bị: <a href="/warehouse/items/ao-choang">Áo choàng</a></li>'))
+  assert.ok(body.includes('Bảng ngọc: <a href="/warehouse/arcana/do-1">Đỏ I</a> ×10'))
+  assert.ok(body.includes('Phụ trợ: <a href="/warehouse/spells/boc-pha">Bộc phá</a>'))
+  // A draft entry and an unknown id are left out rather than shown without a page.
+  assert.ok(!body.includes("ban-nhap") && !body.includes("unknown"))
+  assert.ok(!pageAt("/hero/alice")!.body.includes("Lên đồ"))
 })
 
 test("published text cannot break out of the markup or act as a replacement pattern", () => {
   const html = renderStaticPage(TEMPLATE, pageAt("/hero/alice")!, SITE)
-  assert.ok(html.includes("<title>Alice &lt;&amp;&gt; | AOV WiKi</title>"))
+  assert.ok(html.includes("<title>Alice &lt;&amp;&gt; Liên Quân: kỹ năng, trang phục | AOV WiKi</title>"))
   assert.ok(html.includes("<h1>Alice &lt;&amp;&gt;</h1>"))
   assert.ok(html.includes("&quot;dấu&quot; $&amp; lạ"))
   assert.ok(!html.includes("<&>"))
@@ -153,20 +174,21 @@ test("published text cannot break out of the markup or act as a replacement patt
 
 test("a game mode page previews its art, and the catalog links every published mode", () => {
   const html = renderStaticPage(TEMPLATE, pageAt("/modes/co-lien-quan")!, SITE)
-  assert.match(html, /<title>Cờ Liên quân — Chế độ chơi \| AOV WiKi<\/title>/)
+  assert.match(html, /<title>Cờ Liên quân — Chế độ chơi Liên Quân \| AOV WiKi<\/title>/)
   assert.match(html, /name="description" content="Xếp quân cờ, ghép Phe và Nghề\."/)
   assert.match(html, /property="og:image" content="https:\/\/cdn\.test\/co-lien-quan\.png"/)
   const withoutArt = renderStaticPage(TEMPLATE, pageAt("/modes/dau-truong-ulti")!, SITE)
   assert.match(withoutArt, /content="Đấu trường Ulti: chế độ chơi trong Liên Quân Mobile/)
-  assert.match(withoutArt, /og:image" content="https:\/\/wiki\.example\.test\/images\/mole-logo-v4\.png"/)
+  assert.match(withoutArt, /og:image" content="https:\/\/wiki\.example\.test\/images\/og-default\.jpg"/)
   const catalog = pageAt("/modes")!.body
   assert.ok(catalog.includes('href="/modes/co-lien-quan"') && catalog.includes('href="/modes/dau-truong-ulti"'))
   assert.ok(renderSitemap(pages, SITE).includes(`<loc>${SITE}/modes/co-lien-quan</loc><lastmod>2026-11-08</lastmod>`))
 })
 
-test("a hero without artwork previews the site logo", () => {
+test("a hero without artwork previews the site's wide card", () => {
   const html = renderStaticPage(TEMPLATE, pageAt("/hero/alice")!, SITE)
-  assert.match(html, /property="og:image" content="https:\/\/wiki\.example\.test\/images\/mole-logo-v4\.png"/)
+  assert.match(html, /property="og:image" content="https:\/\/wiki\.example\.test\/images\/og-default\.jpg"/)
+  assert.match(html, /name="twitter:card" content="summary_large_image"/)
 })
 
 test("the sitemap lists canonical addresses only, escaped and dated where a date is known", () => {
@@ -182,6 +204,16 @@ test("the sitemap lists canonical addresses only, escaped and dated where a date
 
   const escaped = renderSitemap([{ ...pages[0], meta: { ...pages[0].meta, path: "/a&b" } }], SITE)
   assert.ok(escaped.includes("/a&amp;b"))
+})
+
+test("the sitemap names each page's own art for image search, and dates a list by its newest entry", () => {
+  const sitemap = renderSitemap(pages, SITE)
+  assert.ok(
+    sitemap.includes(`<loc>${SITE}/hero/airi</loc><image:image><image:loc>https://cdn.test/airi.jpg</image:loc>`),
+  )
+  assert.ok(!sitemap.includes("og-default.jpg"), "the shared card is not a page's picture")
+  assert.ok(sitemap.includes(`<loc>${SITE}/warehouse/items</loc><lastmod>2026-11-04</lastmod></url>`))
+  assert.ok(sitemap.includes(`<loc>${SITE}/modes</loc><lastmod>2026-11-08</lastmod></url>`))
 })
 
 test("robots.txt keeps the API open for rendering and closes everything without a public address", () => {
@@ -204,6 +236,24 @@ const PUBLIC_API: Record<string, unknown> = {
       size: 100,
       totalElements: 1,
     },
+  },
+  "/builds": {
+    sources: [
+      {
+        sourceLabel: "Cao thủ",
+        builds: [
+          {
+            items: [
+              { slot: 2, itemId: "spell-1" },
+              { slot: 1, itemId: "item-1" },
+            ],
+            enchantments: [],
+            arcana: [],
+            spellId: "spell-1",
+          },
+        ],
+      },
+    ],
   },
   "/heroes/hero-1": {
     media: { SPLASH: media("https://cdn.test/airi.jpg") },
@@ -268,7 +318,7 @@ test("prerendering writes each page, the sitemap and robots.txt from anonymous p
   await prerender({ distDir, siteUrl: SITE, apiBase: api.url })
 
   const hero = await readFile(path.join(distDir, "hero", "airi", "index.html"), "utf8")
-  assert.match(hero, /<title>Airi — Ninja rồng \| AOV WiKi<\/title>/)
+  assert.match(hero, /<title>Airi Liên Quân: lên đồ, bảng ngọc, kỹ năng \| AOV WiKi<\/title>/)
   assert.match(hero, /property="og:image" content="https:\/\/cdn\.test\/airi\.jpg"/)
 
   const home = await readFile(path.join(distDir, "index.html"), "utf8")
@@ -282,10 +332,12 @@ test("prerendering writes each page, the sitemap and robots.txt from anonymous p
   assert.ok((await readFile(path.join(distDir, "robots.txt"), "utf8")).includes(`Sitemap: ${SITE}/sitemap.xml`))
 
   assert.ok(api.requests.every((url) => url.startsWith("/api/wiki/v1/") && !url.includes("/admin/")))
-  // Game modes have no region or language variant, and their endpoints accept no scope.
-  const scoped = api.requests.filter((url) => !url.startsWith("/api/wiki/v1/game-modes"))
+  // Game modes have no region or language variant, and their endpoints accept no scope; builds vary by market only.
+  const scoped = api.requests.filter((url) => !/^\/api\/wiki\/v1\/(game-modes|builds)\b/.test(url))
   assert.ok(scoped.every((url) => url.includes("region=VN") && url.includes("locale=vi-VN")))
-  assert.ok(api.requests.includes("/api/wiki/v1/game-modes?"))
+  assert.ok(api.requests.includes("/api/wiki/v1/game-modes"))
+  assert.ok(api.requests.includes("/api/wiki/v1/builds?hero=airi&region=VN"))
+  assert.match(hero, /<h2>Lên đồ<\/h2>/)
   assert.ok(await exists(path.join(distDir, "modes", "co-lien-quan", "index.html")))
   // The template stays neutral, so the step can run again without a new build.
   assert.equal(await readFile(path.join(distDir, "200.html"), "utf8"), TEMPLATE)

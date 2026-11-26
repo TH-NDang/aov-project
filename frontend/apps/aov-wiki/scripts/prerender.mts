@@ -16,6 +16,7 @@ import {
   renderStaticPage,
   repeatedMeta,
   STATIC_SCOPE,
+  type PublishedBuild,
   type PublishedCatalog,
   type PublishedEntry,
   type PublishedHero,
@@ -43,7 +44,7 @@ function apiReader(apiBase: string, retryDelayMs: number) {
   /** `scoped: false` for content that has no region or language variant, such as game modes. */
   return async function read<T>(apiPath: string, params: Record<string, string> = {}, scoped = true): Promise<T> {
     const query = new URLSearchParams({ ...(scoped ? STATIC_SCOPE : {}), ...params })
-    const url = `${apiBase.replace(/\/$/, "")}/api/wiki/v1${apiPath}?${query}`
+    const url = `${apiBase.replace(/\/$/, "")}/api/wiki/v1${apiPath}${query.size ? `?${query}` : ""}`
     let failure: unknown
     for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
       try {
@@ -118,27 +119,59 @@ interface HeroDetailResponse {
   forms?: (Omit<HeroDetailResponse, "forms"> & { id: string; formKey: string })[]
 }
 
+interface BuildReading {
+  sources: {
+    sourceLabel: string
+    builds: {
+      items: { slot: number; itemId: string }[]
+      enchantments: { slot: number; enchantmentId: string }[]
+      arcana: { arcanaId: string; quantity: number }[]
+      spellId: string | null
+    }[]
+  }[]
+}
+
+const bySlot = <T extends { slot: number }>(rows: readonly T[]) => [...rows].sort((a, b) => a.slot - b.slot)
+
+/** The first build of each source; a hero or form without one has an empty list. Builds vary by market only. */
+async function readBuilds(read: Reader, heroCode: string): Promise<PublishedBuild[]> {
+  try {
+    const reading = await read<BuildReading>("/builds", { hero: heroCode, region: STATIC_SCOPE.region }, false)
+    return reading.sources.flatMap((source) =>
+      source.builds.slice(0, 1).map((build) => ({
+        source: source.sourceLabel,
+        items: bySlot(build.items).map((row) => row.itemId),
+        enchantments: bySlot(build.enchantments).map((row) => row.enchantmentId),
+        arcana: build.arcana.map((row) => ({ id: row.arcanaId, quantity: row.quantity })),
+        spellId: build.spellId,
+      })),
+    )
+  } catch (error) {
+    if (error instanceof NotPublic) return []
+    throw error
+  }
+}
+
 async function readHeroes(read: Reader) {
   const rows = await readPages<HeroListRow>(read, "/heroes", (body) => (body as { page: Slice<HeroListRow> }).page)
   const heroes = await mapLimit(rows, DETAIL_CONCURRENCY, async (row): Promise<PublishedHero | null> => {
     try {
       const detail = await read<HeroDetailResponse>(`/heroes/${encodeURIComponent(row.id)}`)
       // A hero that holds forms is read form by form; the list names each published form in order (ADR-024).
-      const forms = (row.forms ?? []).flatMap((form) => {
+      const forms = []
+      for (const form of row.forms ?? []) {
         const formDetail = detail.forms?.find((candidate) => candidate.id === form.id)
-        return formDetail
-          ? [
-              {
-                ...form,
-                roles: form.roles ?? [],
-                summary: formDetail.content.profile?.summary,
-                media: formDetail.media,
-                skills: formDetail.content.skills?.skills ?? [],
-                skins: formDetail.content.skins?.skins ?? [],
-              },
-            ]
-          : []
-      })
+        if (formDetail)
+          forms.push({
+            ...form,
+            roles: form.roles ?? [],
+            summary: formDetail.content.profile?.summary,
+            media: formDetail.media,
+            skills: formDetail.content.skills?.skills ?? [],
+            skins: formDetail.content.skins?.skins ?? [],
+            builds: await readBuilds(read, form.code),
+          })
+      }
       return {
         ...row,
         forms: undefined,
@@ -147,6 +180,7 @@ async function readHeroes(read: Reader) {
         media: detail.media,
         skills: detail.content.skills?.skills ?? [],
         skins: detail.content.skins?.skins ?? [],
+        builds: forms.length ? [] : await readBuilds(read, row.code),
         ...(forms.length ? { forms } : {}),
       }
     } catch (error) {

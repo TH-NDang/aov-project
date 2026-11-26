@@ -293,6 +293,10 @@ export interface HeroBuildReading {
   sources: BuildSource[]
 }
 
+/** Whether any source of the reading holds a build: a source may have been read and found none. */
+export const hasPublishedBuild = (reading: HeroBuildReading | undefined) =>
+  !!reading?.sources.some((source) => source.builds.length > 0)
+
 export function heroBuildsQuery(heroCode: string, region: string) {
   return queryOptions({
     queryKey: heroKeys.builds(heroCode, region),
