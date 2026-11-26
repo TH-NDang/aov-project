@@ -456,6 +456,10 @@ Không trả toàn bộ skills/skins trong list.
 `MediaAssetReference`. Không trả trường ảnh khi chưa có binding, asset không còn hoạt động hoặc
 chưa có phiên bản hiện hành; không thay `portrait` bằng ảnh `head`. Chỉ tải metadata ảnh cho trang
 kết quả đang trả, gộp HEAD/PORTRAIT qua một lần đọc Media theo lô; không tải detail cho từng tướng.
+Từ 26/11/2026, mục (và dạng trong `forms`) có `portrait` trả `head.currentVersion.sources` rỗng: danh sách vẽ tướng
+bằng chân dung và ghi nguồn của chân dung, còn nguồn của ảnh đầu vẫn có ở hero detail. Mục chỉ có `head` giữ nguồn.
+Danh sách mặc định (danh mục hiện hành, không chọn mùa/variant/`includeUnscoped`) được giữ trong Redis vùng
+`PUBLIC_CATALOGS` (ADR-012) theo region, ruleset, variant hiện hành, locale và tham số lọc/phân trang.
 
 `difficulty` là độ khó trong đánh giá tổng quan của bản tướng được chọn, cùng giá trị và thang với
 `content.overviewRatings.difficulty` của hero detail; bản không có đánh giá tổng quan trả `null`. Mục nào cũng có
@@ -570,7 +574,9 @@ Danh sách sắp theo mã tướng, `displayOrder`, rồi `skinKey`; phân trang
 hoặc điều kiện lọc hiện tại. Phần trang dùng `PageSlice`, client tính số trang từ `totalElements/size`.
 Các phép chiếu revision, tên và binding được đọc theo lô bằng JPA; chỉ đọc metadata Media cho trang
 đang trả, gộp ảnh trang phục, ảnh tướng và icon nhãn trong một lần `MediaAssets.findAll`.
-Response dùng `Cache-Control: no-cache, public`; URL byte ảnh vẫn là URL phiên bản Media bất biến.
+Response dùng chính sách cache public của mục 51 (`max-age=60`, ETag); URL byte ảnh vẫn là URL phiên bản Media bất biến.
+Đọc mặc định (danh mục hiện hành, không chọn mùa/variant) được giữ trong Redis vùng `PUBLIC_CATALOGS` (ADR-012) theo
+region, ruleset, variant hiện hành và toàn bộ tham số lọc/phân trang.
 
 ---
 
@@ -882,6 +888,26 @@ GET /api/wiki/v1/items/{itemId}/changes/{changeSetId}
 ```
 
 Khuyến nghị: public list dùng normalized patch feed; detail dùng owner-domain endpoint để semantics rõ.
+
+### 11.1 Các bản cập nhật có thay đổi theo mảng (26/11/2026)
+
+```http
+GET /api/wiki/v1/patches/changed-variants?region=VN&domain=HERO
+```
+
+Query chỉ nhận `region` (mặc định `VN`) và `domain` (bắt buộc, `HERO`, `ITEM`, `ARCANA`, `ENCHANTMENT` hoặc `SPELL`);
+tham số khác trả 400, mảng không có nguồn thay đổi trả `INVALID_QUERY_PARAMETER` trước khi đọc dữ liệu.
+
+```json
+{ "domain": "HERO", "variantIds": ["...", "..."] }
+```
+
+`variantIds` là các variant `PUBLISHED` của ruleset đang áp dụng ở thị trường, không mới hơn variant hiện hành, mà
+trang thay đổi của nó (mục 11, cùng `domain`) có ít nhất một dòng: tướng có đánh giá tổng hoặc dòng thay đổi; mảng
+danh mục có dòng không phải `DATA_BASELINE`. Mới nhất trước. Wiki dùng danh sách này để đánh dấu menu phiên bản và
+chỉ tải `/patches/{id}/changes` của bản đang xem (hoặc của các bản có trong danh sách khi trang cần lịch sử), thay
+vì tải mọi bản rồi lọc. Kết quả nằm trong Redis vùng `PUBLIC_CATALOGS` (ADR-012) theo region, domain, ruleset và
+variant hiện hành; HTTP như mục 51.
 
 ---
 
@@ -1461,7 +1487,11 @@ Backend:
 4. kiểm tra dimensions/pixel count/size policy;
 5. cùng SHA-256 đã có trên asset → trả version cũ (`duplicate = true`);
 6. copy sang `assets/{assetId}/{versionId}.{ext}`, tạo `MediaAssetVersion` READY; version đầu tiên được activate tự động;
-7. ghi provenance/audit.
+7. ghi provenance/audit;
+8. khi `wiki.media.warm.widths` (`MEDIA_WARM_WIDTHS`) có giá trị và URL công khai là `http(s)://…/assets/…`: sau khi trả
+   lời, gọi nền `/cdn-cgi/image/width={w},fit=scale-down,format=auto,quality=82/assets/…` cho từng chiều rộng, một
+   lần với `Accept` AVIF và một lần WebP, để Cloudflare có sẵn bản đổi cỡ trước người đọc đầu tiên. Tham số phải giống
+   `resizedImageUrl` của Wiki. Lỗi chỉ ghi log, không ảnh hưởng upload; bản trùng (`duplicate`) không gọi.
 
 `200 OK`:
 
@@ -2204,8 +2234,14 @@ Response:
 
 ```http
 ETag: "..."
-Cache-Control: public, max-age=0, must-revalidate
+Cache-Control: max-age=60, must-revalidate, public
 ```
+
+Từ 26/11/2026 mọi đọc public dạng current/resolver (danh sách và chi tiết tướng, trang phục, kho, thay đổi theo bản,
+`catalog-context`, tham chiếu, cập nhật mùa, video, build) dùng chung chính sách này: trình duyệt giữ câu trả lời
+60 giây, sau đó hỏi lại bằng `If-None-Match`. ETag là SHA-256 của JSON trả về, nên nội dung không đổi thì nhận 304.
+Hệ quả: sau khi xuất bản, người đọc đang mở trang có thể thấy bản cũ tối đa 60 giây (cộng thời gian Redis của
+ADR-012); admin vẫn `no-store` nên người sửa thấy ngay. Đọc theo revision (mục 52) giữ `immutable`.
 
 Caller gửi:
 
@@ -2970,7 +3006,7 @@ trước khi tra cache. Thời điểm và patch context được dùng chung ch
 Các tên/mô tả/asset ID được đọc theo projection, Media đọc theo lô. Giao diện admin gọi một API này
 thay vì gọi preview từng tướng, còn metadata icon chỉ tải khi kết quả sắp đi vào vùng nhìn thấy.
 
-HTTP cache không đổi: admin `no-store`, public có ETag và yêu cầu revalidate. Redis chỉ cache read model
+HTTP cache: admin `no-store`, public có ETag và `max-age=60` (mục 51). Redis chỉ cache read model
 phía server: admin 30 giây, public catalog/thuật ngữ 2 phút mặc định; khóa tách admin/public, ruleset,
 region/locale và patch hiện hành. Quyền được kiểm tra trước lookup. Epoch DB đổi trong cùng transaction
 với audit để dữ liệu sửa/xuất bản/nâng phiên bản ảnh có hiệu lực cho request tiếp theo. Redis lỗi thì
@@ -3065,8 +3101,8 @@ hoặc dữ liệu admin để đoán mùa. Nếu chưa có context hoặc mùa,
 thị trường không hỗ trợ vẫn trả lỗi hiện hành. Patch tương lai, bản nháp và release đã hủy không xuất hiện.
 
 Release có ngày công bố `effectiveOn` thì giữ ngày đó, không trả giờ xác nhận thành giờ phát hành:
-`effectiveAt` trong kết quả là null. Response dùng `Cache-Control: no-cache, public` để trình duyệt
-kiểm tra lại thay đổi mùa khi tải trang. API không sửa dữ liệu, không cần migration hay quyền admin.
+`effectiveAt` trong kết quả là null. Response dùng chính sách cache public của mục 51 (`max-age=60`, ETag),
+nên trình duyệt kiểm tra lại thay đổi mùa sau tối đa 60 giây. API không sửa dữ liệu, không cần migration hay quyền admin.
 
 ## Xuất bản riêng ảnh trang phục
 
@@ -3185,7 +3221,7 @@ GET `/api/wiki/v1/videos` (công khai)
 - `subjectKind=HERO` trả cả video của kỹ năng và trang phục của tướng đó. `SKILL`, `SKIN` kèm
   `subjectKey` thu về một mục. `subjectKey` với loại khác trả 422 `VIDEO_INVALID`.
 - Trả `{items: [...]}`, tối đa 200 dòng `PUBLISHED`, theo `displayOrder` rồi ngày đăng mới nhất. Mỗi dòng
-  không có `status`, `origin`, `version`. Cache: `no-cache`, `public`. Lọc theo patch do client thực hiện.
+  không có `status`, `origin`, `version`. Cache: chính sách public của mục 51. Lọc theo patch do client thực hiện.
 
 Các API quản trị đều cần `catalog:read`. Ghi cần `hero:write` (tướng, kỹ năng, trang phục), `item:write`,
 `enchantment:write`, `arcana:write` hoặc `spell:write`. Đưa video vào hoặc ra khỏi `PUBLISHED` cần thêm
