@@ -1,0 +1,16 @@
+{
+  "name": "aov-page-reader",
+  "private": true,
+  "description": "Opens the one publisher page that only shows its posts after its scripts run, and answers with the page as a visitor's browser sees it.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "puppeteer-core": "25.17.0"
+  }
+}

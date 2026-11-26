@@ -43,6 +43,9 @@ jobs:
             context: frontend
             file: infra/web/Dockerfile
             target: web
+          - image: page-reader
+            context: infra/page-reader
+            file: infra/page-reader/Dockerfile
     steps:
       - uses: actions/checkout@v5
         with:

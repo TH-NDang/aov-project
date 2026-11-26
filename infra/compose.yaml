@@ -324,6 +324,31 @@ services:
         condition: service_healthy
     logging: *logging
 
+  # Patch watch (ADR-035): opens the Indonesian news page, which fills its list from scripts, in a headless Chromium
+  # the way a visitor's browser does, and only that page. wiki-service asks for it once per scheduled check; the
+  # browser starts for that read and stops after it. No port leaves this network.
+  page-reader:
+    image: aov/page-reader:${IMAGE_TAG:-local}
+    build:
+      context: ./page-reader
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      HOME: /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: ${PAGE_READER_MEM_LIMIT:-512m}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:8095/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+
   wiki-service:
     image: aov/wiki-service:${IMAGE_TAG:-local}
     build:
@@ -377,6 +402,8 @@ services:
       READ_MODEL_CACHE_ENABLED: "true"
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
+      # Patch watch (ADR-035): the page reader above; empty leaves the Indonesian news page unread.
+      PATCH_WATCH_PAGE_READER_URL: http://page-reader:8095
     mem_limit: ${WIKI_MEM_LIMIT:-1536m}
     # Spring finishes the requests in flight within 30 s once stopped; deploy.sh stops the old container this way.
     stop_grace_period: 40s

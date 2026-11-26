@@ -1,0 +1,62 @@
+# Tests infra/page-reader, the headless browser of the patch watch (ADR-035), and checks that its image starts
+# Chromium under the limits infra/compose.yaml gives it, so a broken image fails here instead of the morning read.
+name: page-reader
+
+on:
+  push:
+    paths:
+      - "infra/page-reader/**"
+      - ".github/workflows/page-reader.yml"
+  pull_request:
+    paths:
+      - "infra/page-reader/**"
+      - ".github/workflows/page-reader.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: page-reader-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: infra/page-reader
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Install
+        run: npm ci --ignore-scripts
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+      - name: Tests
+        run: npm test
+      - name: Build the image
+        run: docker build --tag page-reader:check .
+      # Same limits as the page-reader service of infra/compose.yaml.
+      - name: Start Chromium in the image
+        run: >-
+          docker run --rm --init --read-only --tmpfs /tmp --env HOME=/tmp --cap-drop ALL
+          --security-opt no-new-privileges:true --memory 512m page-reader:check node server.mjs --self-check
+      - name: Answer the health check
+        run: |
+          docker run --detach --name page-reader --init --read-only --tmpfs /tmp --env HOME=/tmp --cap-drop ALL \
+            --security-opt no-new-privileges:true --memory 512m page-reader:check
+          for attempt in $(seq 1 20); do
+            if docker exec page-reader wget --quiet --spider http://127.0.0.1:8095/health; then
+              docker rm --force page-reader >/dev/null
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs page-reader
+          exit 1
