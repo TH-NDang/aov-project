@@ -3,9 +3,11 @@
  * name and count. They sit above the card's stretched link, so each cell opens its own filtered list. On a phone they
  * become chips (mark, name, count) that keep their names and scroll sideways.
  */
+/* Only the chips take clicks; the gaps between them still open the heroes card. */
 .wiki-home-roles {
   position: relative;
   z-index: 1;
+  pointer-events: none;
   display: grid;
   gap: 6px;
   border-top: 1px solid var(--aov-line);
@@ -26,6 +28,7 @@
 }
 .wiki-home-roles a {
   --wiki-hero-glyph-size: 20px;
+  pointer-events: auto;
   --wiki-hero-glyph-color: var(--aov-accent);
   font: 600 0.75rem/1rem var(--wiki-font-reading);
   display: grid;
