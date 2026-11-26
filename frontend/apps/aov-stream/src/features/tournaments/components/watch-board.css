@@ -97,13 +97,13 @@
   border-radius: inherit;
   background: var(--hub-plate);
 }
-/* A ban is struck from corner to corner. */
+/* A ban wears the "no" sign on its corner. */
 .tn-room-ban::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--hub-ban-stroke);
+  background: var(--hub-ban-mark);
   forced-color-adjust: none;
 }
 .tn-room-ban:has(> i)::after {

@@ -81,7 +81,7 @@
   color: var(--hub-accent-strong);
   font-weight: 700;
 }
-/* The bans of a side in a tray of their own, behind a small struck circle and the word. */
+/* The bans of a side in a tray of their own, behind the "no" sign and the word. */
 .tn-bans {
   --reference-size: 32px;
   --reference-radius: 7px;
@@ -115,7 +115,7 @@
 .tn-bans-label > svg {
   color: var(--hub-red);
 }
-/* A ban is dimmed and struck by a thin line; pointed at, the hero comes back to colour and its card opens. */
+/* A ban is greyed with the sign on its corner; pointed at, the hero comes back to colour and its card opens. */
 .tn-ban {
   position: relative;
 }
@@ -128,19 +128,15 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--hub-ban-stroke);
+  background: var(--hub-ban-mark);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
   forced-color-adjust: none;
   pointer-events: none;
-  transition: opacity 160ms;
 }
 .tn-ban:hover > * {
   filter: none;
 }
-.tn-ban:hover::after {
-  opacity: 0.3;
-}
-/* A ban nobody saw: an empty place, its outline dashed, under a faint stroke. */
+/* A ban nobody saw: an empty place, its outline dashed, its sign faint. */
 .tn-ban[data-unseen] {
   width: var(--reference-size);
   border: 1px dashed var(--hub-border-strong);
@@ -260,7 +256,7 @@
     position: absolute;
     inset: -11px -8px;
   }
-  /* The tray keeps only the struck heroes, so four of them fit under half a lineup. */
+  /* The tray keeps only the banned heroes, so four of them fit under half a lineup. */
   .tn-bans {
     --reference-size: 26px;
     grid-area: bans;

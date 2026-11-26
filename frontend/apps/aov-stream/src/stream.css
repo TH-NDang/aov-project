@@ -69,18 +69,12 @@
   --hub-plate: light-dark(color-mix(in srgb, var(--aov-stream-ink) 6%, #fff), var(--aov-stream-indigo));
   --hub-on-plate: light-dark(var(--aov-stream-feather), var(--aov-stream-text-muted));
   /*
-   * A banned hero is dimmed and struck from corner to corner by a thin red line; the line has dark edges, so it shows
-   * on a pale picture too.
+   * A banned hero is greyed and dimmed and wears a small red "no" sign on its corner, a third of its size; the sign has
+   * a dark rim, so it shows on a pale picture too.
    */
-  --hub-ban-filter: grayscale(1) brightness(0.66);
-  --hub-ban-stroke: linear-gradient(
-    to top right,
-    transparent calc(50% - 2.5px),
-    rgb(0 0 0 / 45%) calc(50% - 2.5px) calc(50% - 1.25px),
-    var(--hub-red) calc(50% - 1.25px) calc(50% + 1.25px),
-    rgb(0 0 0 / 45%) calc(50% + 1.25px) calc(50% + 2.5px),
-    transparent calc(50% + 2.5px)
-  );
+  --hub-ban-filter: grayscale(1) brightness(0.72);
+  --hub-ban-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23e5484d' stroke='%23000' stroke-opacity='.35' stroke-width='1.5'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='5.6'/%3E%3Cpath d='M8 8l8 8'/%3E%3C/g%3E%3C/svg%3E")
+    right 6% bottom 6% / max(10px, 34%) no-repeat;
   --brand-wiki-ink: var(--aov-text);
   --brand-wiki-accent: var(--aov-accent);
   --brand-wiki-tint: var(--aov-accent-soft);
