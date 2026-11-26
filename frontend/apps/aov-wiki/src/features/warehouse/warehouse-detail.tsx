@@ -42,8 +42,17 @@ import {
   type WarehouseKind,
 } from "../../lib/warehouse-types"
 
-function PanelTitle(props: ComponentProps<"h2">) {
-  return <h2 data-slot="sheet-title" {...props} />
+/** The panel shows the entry the address names, so its name is the page's h1; the section above is only context. */
+function PanelTitle(props: ComponentProps<"h1">) {
+  return <h1 data-slot="sheet-title" {...props} />
+}
+
+function SheetPageTitle({ children, ...props }: ComponentProps<typeof SheetTitle>) {
+  return (
+    <SheetTitle asChild {...props}>
+      <h1>{children}</h1>
+    </SheetTitle>
+  )
 }
 
 /** The name as lists and headings show it: an arcana goes without the color and tier its group already states. */
@@ -446,7 +455,7 @@ export function WarehouseDetail({
   inline: boolean
   onClose: () => void
   onSelect: (entry: PublishedWarehouseRecord) => void
-  returnFocus: RefObject<HTMLButtonElement | null>
+  returnFocus: RefObject<HTMLElement | null>
 }) {
   const { locale } = useWikiContext()
   const ui = (vi: string, en: string) => wikiText(locale, vi, en)
@@ -577,7 +586,7 @@ export function WarehouseDetail({
               entries={entries}
               groups={groups}
               onSelect={onSelect}
-              Title={SheetTitle}
+              Title={SheetPageTitle}
               close={close}
             />
             <DetailStepper current={shown} order={order} onSelect={onSelect} />

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { StreamShell, WIKI_URL } from "../../../components/stream-shell"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { StreamHead } from "../../../components/stream-head"
 import "./credits-page.css"
 
 function Out({ href, children }: { href: string; children: ReactNode }) {
@@ -16,7 +17,13 @@ export function CreditsPage() {
   const { text } = useStreamLocale()
   return (
     <StreamShell>
-      <title>{text("Bản quyền và nguồn — AOV Stream", "Rights and sources — AOV Stream")}</title>
+      <StreamHead
+        title={text("Bản quyền và nguồn — AOV Stream", "Rights and sources — AOV Stream")}
+        description={text(
+          "Nguồn và giấy phép của logo, hình ảnh và dữ liệu dùng trên AOV Stream.",
+          "Sources and licences of the logos, images and data used on AOV Stream.",
+        )}
+      />
       <article className="cp-container cr-page">
         <h1>{text("Bản quyền và nguồn", "Rights and sources")}</h1>
         <section>

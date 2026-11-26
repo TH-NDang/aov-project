@@ -1,8 +1,10 @@
-import { SITE_NAME, type PageMeta } from "./page-meta.ts"
+import { LOGO_IMAGE, SITE_NAME, type PageMeta } from "./page-meta.ts"
 
 export interface HeadTag {
-  tag: "meta" | "link"
+  tag: "meta" | "link" | "script"
   attrs: Record<string, string>
+  /** The content of a script tag: structured data, already safe to place inside the tag. */
+  text?: string
 }
 
 /**
@@ -34,6 +36,63 @@ function named(name: string, content: string): HeadTag {
   return { tag: "meta", attrs: { name, content } }
 }
 
+/**
+ * Schema.org data for search results: the site and its publisher on the home page, the breadcrumb trail on every page
+ * below it, and the date of an article that has one. Nothing for a page that must not be indexed.
+ */
+export function structuredData(meta: PageMeta, siteUrl: string | null) {
+  if (!siteUrl || meta.noindex) return null
+  const canonical = `${siteUrl}${meta.path}`
+  const organization = { "@id": `${siteUrl}/#organization` }
+  const graph: Record<string, unknown>[] = []
+  if (meta.path === "/")
+    graph.push(
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        name: SITE_NAME,
+        url: canonical,
+        description: meta.description,
+        inLanguage: meta.locale,
+        publisher: organization,
+      },
+      {
+        "@type": "Organization",
+        ...organization,
+        name: SITE_NAME,
+        url: canonical,
+        logo: absoluteUrl(LOGO_IMAGE, siteUrl),
+      },
+    )
+  if (meta.breadcrumbs && meta.breadcrumbs.length > 1)
+    graph.push({
+      "@type": "BreadcrumbList",
+      itemListElement: meta.breadcrumbs.map((crumb, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: crumb.name,
+        item: `${siteUrl}${crumb.path}`,
+      })),
+    })
+  if (meta.type === "article" && meta.published) {
+    const image = meta.image && absoluteUrl(meta.image.url, siteUrl)
+    graph.push({
+      "@type": "Article",
+      headline: meta.heading,
+      description: meta.description,
+      datePublished: meta.published,
+      inLanguage: meta.locale,
+      mainEntityOfPage: canonical,
+      ...(image ? { image } : {}),
+      author: organization,
+      publisher: organization,
+    })
+  }
+  if (!graph.length) return null
+  // "<" never appears raw, so published text cannot close the script tag.
+  return JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\\u003c")
+}
+
 /** One list for the static pages and for the browser, so the two cannot describe a page differently. */
 export function headTags(meta: PageMeta, siteUrl: string | null): HeadTag[] {
   const canonical = siteUrl && `${siteUrl}${meta.path}`
@@ -63,6 +122,8 @@ export function headTags(meta: PageMeta, siteUrl: string | null): HeadTag[] {
   // Large cards crop to a wide image, which suits hero artwork but not icons or the square logo.
   const { width = 0, height = 0 } = meta.image ?? {}
   tags.push(named("twitter:card", image && width >= 600 && width > height ? "summary_large_image" : "summary"))
+  const data = structuredData(meta, siteUrl)
+  if (data) tags.push({ tag: "script", attrs: { type: "application/ld+json" }, text: data })
   return tags
 }
 
@@ -70,10 +131,11 @@ export function headTags(meta: PageMeta, siteUrl: string | null): HeadTag[] {
 export function applyPageHead(document: Document, meta: PageMeta, siteUrl: string | null) {
   document.title = meta.title
   for (const element of document.head.querySelectorAll("[data-seo]")) element.remove()
-  for (const { tag, attrs } of headTags(meta, siteUrl)) {
+  for (const { tag, attrs, text } of headTags(meta, siteUrl)) {
     const element = document.createElement(tag)
     element.setAttribute("data-seo", "")
     for (const [name, value] of Object.entries(attrs)) element.setAttribute(name, value)
+    if (text) element.textContent = text
     document.head.append(element)
   }
 }

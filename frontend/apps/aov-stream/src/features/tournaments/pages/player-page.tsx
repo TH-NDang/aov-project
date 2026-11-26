@@ -19,6 +19,7 @@ import { isTitleSeason, playerProfile, playerStints, type PlayerProfile } from "
 import { playerCompetitionsQuery } from "../../../lib/tournament-api"
 import { LANE_NAMES } from "../../../lib/tournament-model"
 import { ParticipantMissing, Part, SeasonLine, ShelfPart } from "../components/participant-parts"
+import { StreamHead } from "../../../components/stream-head"
 import "../../../components/participant-list.css"
 
 /** Seasons shown before the rest unfold. */
@@ -42,14 +43,25 @@ export function PlayerPage() {
   const profile = competitions.data ? playerProfile(competitions.data, id) : null
   return (
     <StreamShell>
-      <title>
-        {profile
-          ? text(
-              `${profile.player.nickname} — Tuyển thủ · AOV Stream`,
-              `${profile.player.nickname} — Player · AOV Stream`,
-            )
-          : text("Tuyển thủ — AOV Stream", "Player — AOV Stream")}
-      </title>
+      <StreamHead
+        title={
+          profile
+            ? text(
+                `${profile.player.nickname} — Tuyển thủ · AOV Stream`,
+                `${profile.player.nickname} — Player · AOV Stream`,
+              )
+            : text("Tuyển thủ — AOV Stream", "Player — AOV Stream")
+        }
+        description={
+          profile
+            ? text(
+                `${profile.player.nickname}, tuyển thủ Liên Quân Mobile: đội tuyển, các giải đã thi đấu và thành tích.`,
+                `${profile.player.nickname}, Arena of Valor player: teams, tournaments played and achievements.`,
+              )
+            : undefined
+        }
+        noindex={!profile && competitions.isSuccess && !page.isPending}
+      />
       <div className="cp-container pt-page">
         {competitions.isPending || page.isPending ? (
           <div

@@ -27,6 +27,7 @@ import { shortCompetitionName } from "../../../lib/season-name"
 import { competitionCatalogQuery, participantsQuery } from "../../../lib/tournament-api"
 import { ParticipantCard, ParticipantList } from "../../../components/participant-list"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import { StreamHead } from "../../../components/stream-head"
 import "../components/community.css"
 import "./community-explore.css"
 
@@ -76,7 +77,13 @@ export function CommunityExplore() {
           : undefined
       }
     >
-      <title>{text("Khám phá — AOV Stream", "Explore — AOV Stream")}</title>
+      <StreamHead
+        title={text("Khám phá — AOV Stream", "Explore — AOV Stream")}
+        description={text(
+          "Tìm đội tuyển, tuyển thủ, hệ thống giải và nhà tổ chức Liên Quân Mobile trên AOV Stream.",
+          "Find Arena of Valor teams, players, tournament circuits and organisers on AOV Stream.",
+        )}
+      />
       <div className="cp-container ex-page">
         {!query ? (
           <Browse />

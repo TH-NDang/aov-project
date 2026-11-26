@@ -57,7 +57,8 @@ test("the public address is an origin, so a path or a typo cannot produce wrong 
 
 test("a hero page names the hero, describes it and previews its own artwork", () => {
   const meta = heroMeta(hero, "vi-VN")
-  assert.equal(meta.title, "Airi — Ninja rồng | AOV WiKi")
+  assert.equal(meta.title, "Airi Liên Quân: kỹ năng, trang phục | AOV WiKi")
+  assert.equal(meta.heading, "Airi — Ninja rồng")
   assert.equal(meta.path, "/hero/airi")
   assert.match(meta.description, /^Airi — Ninja rồng: tướng Sát thủ trong Liên Quân Mobile\. Xông vào$/)
 
@@ -68,6 +69,13 @@ test("a hero page names the hero, describes it and previews its own artwork", ()
   assert.equal(attribute(tags, "twitter:card"), "summary_large_image")
   assert.equal(tags.find(({ attrs }) => attrs.rel === "canonical")?.attrs.href, `${SITE}/hero/airi`)
   assert.equal(attribute(tags, "robots"), undefined)
+})
+
+test("a hero with a published build is titled by what readers search for", () => {
+  const meta = heroMeta({ ...hero, hasBuild: true }, "vi-VN")
+  assert.equal(meta.title, "Airi Liên Quân: lên đồ, bảng ngọc, kỹ năng | AOV WiKi")
+  assert.ok(meta.title.length <= 60)
+  assert.equal(heroMeta({ ...hero, hasBuild: true, summary: "" }, "vi-VN").description.includes("lên đồ"), true)
 })
 
 test("a preview card names the site as the style guide writes it", () => {
@@ -85,7 +93,7 @@ test("hero artwork prefers the widest image and falls back to the site logo only
 
 test("an item page previews the item's own icon with its real size on a small card", () => {
   const meta = warehouseEntryMeta("items", item, "vi-VN")
-  assert.equal(meta.title, "Áo choàng — Trang bị | AOV WiKi")
+  assert.equal(meta.title, "Áo choàng — Trang bị Liên Quân | AOV WiKi")
   assert.equal(meta.path, "/warehouse/items/ao-choang")
   assert.equal(meta.description, "Áo choàng: Trang bị trong Liên Quân Mobile. Làm chậm. +200 Giáp +800 Máu")
   const tags = headTags(meta, SITE)
@@ -102,10 +110,10 @@ test("canonical links ignore locale and browsing scope, which only change the vi
 })
 
 test("library pages take their description from the address alone", () => {
-  assert.equal(libraryPageMeta("/hero", "vi-VN")?.title, "Tướng | AOV WiKi")
+  assert.equal(libraryPageMeta("/hero", "vi-VN")?.title, "Tướng Liên Quân Mobile | AOV WiKi")
   assert.equal(libraryPageMeta("/skins", "vi-VN")?.path, "/skins")
   assert.equal(libraryPageMeta("/warehouse", "vi-VN")?.path, "/warehouse/items")
-  assert.equal(libraryPageMeta("/warehouse/spells", "vi-VN")?.title, "Phụ trợ | AOV WiKi")
+  assert.equal(libraryPageMeta("/warehouse/spells", "vi-VN")?.title, "Phụ trợ Liên Quân Mobile | AOV WiKi")
   for (const detail of ["/hero/airi", "/warehouse/items/ao-choang", "/terms/giap", "/updates/2026-10-30", "/"])
     assert.equal(libraryPageMeta(detail, "vi-VN"), null)
 })
@@ -151,6 +159,58 @@ test("a patch without a written summary still gets its own description", () => {
   assert.equal(patchMeta({ code: "c", title: null }, "vi-VN").heading, "c")
 })
 
+test("titles name the game once, also when the patch title already does", () => {
+  assert.equal(homeMeta("vi-VN").title, "AOV WiKi — Sổ tay Liên Quân Mobile")
+  assert.equal(patchMeta({ code: "c", title: "Giữa mùa" }, "vi-VN").title, "Giữa mùa — Liên Quân Mobile | AOV WiKi")
+  assert.equal(
+    patchMeta({ code: "c", title: "Liên Quân Mobile 30/10" }, "vi-VN").title,
+    "Liên Quân Mobile 30/10 | AOV WiKi",
+  )
+  assert.equal(sectionMeta("arcana", "en-US").title, "Arena of Valor arcana | AOV WiKi")
+})
+
+const structured = (meta: Parameters<typeof headTags>[0]) => {
+  const script = headTags(meta, SITE).find(({ tag }) => tag === "script")
+  return script?.text ? (JSON.parse(script.text) as { "@graph": Record<string, unknown>[] })["@graph"] : []
+}
+
+test("the home page describes the site and its publisher for search results", () => {
+  const types = structured(homeMeta("vi-VN")).map((node) => node["@type"])
+  assert.deepEqual(types, ["WebSite", "Organization"])
+})
+
+test("a page below the home page carries its breadcrumb trail with canonical addresses", () => {
+  const [trail] = structured(warehouseEntryMeta("items", item, "vi-VN"))
+  assert.equal(trail["@type"], "BreadcrumbList")
+  assert.deepEqual(
+    (trail.itemListElement as { name: string; item: string }[]).map(({ name, item }) => [name, item]),
+    [
+      ["Trang chủ", `${SITE}/`],
+      ["Trang bị", `${SITE}/warehouse/items`],
+      ["Áo choàng", `${SITE}/warehouse/items/ao-choang`],
+    ],
+  )
+})
+
+test("patch notes are articles dated by when they took effect", () => {
+  const article = structured(patchMeta({ code: "c", title: "Giữa mùa", effectiveAt: "2026-10-30" }, "vi-VN")).find(
+    (node) => node["@type"] === "Article",
+  )
+  assert.equal(article?.datePublished, "2026-10-30")
+  assert.equal(article?.headline, "Giữa mùa")
+})
+
+test("structured data cannot close its script tag and is left out of pages kept from the index", () => {
+  const meta = { ...homeMeta("vi-VN"), description: "</script><b>" }
+  const text = headTags(meta, SITE).find(({ tag }) => tag === "script")?.text ?? ""
+  assert.ok(!text.includes("<"))
+  assert.equal(structured(notFoundMeta("vi-VN", "/hero/none", "heroes")).length, 0)
+  assert.equal(
+    headTags(homeMeta("vi-VN"), null).find(({ tag }) => tag === "script"),
+    undefined,
+  )
+})
+
 test("a build without a public address and a missing page both stay out of the index", () => {
   const unaddressed = headTags(homeMeta("vi-VN"), null)
   assert.equal(attribute(unaddressed, "robots"), "noindex")
@@ -181,6 +241,7 @@ test("client navigation replaces the static page's tags instead of adding to the
   class FakeElement {
     readonly attributes = new Map<string, string>()
     removed = false
+    textContent = ""
     setAttribute(name: string, value: string) {
       this.attributes.set(name, value)
     }
@@ -204,7 +265,7 @@ test("client navigation replaces the static page's tags instead of adding to the
   applyPageHead(document as unknown as Document, heroMeta(hero, "vi-VN"), SITE)
   applyPageHead(document as unknown as Document, sectionMeta("skins", "vi-VN"), SITE)
 
-  assert.equal(document.title, "Trang phục | AOV WiKi")
+  assert.equal(document.title, "Trang phục Liên Quân Mobile | AOV WiKi")
   assert.equal(stale.removed, true)
   const live = appended.filter((element) => !element.removed)
   const contents = live.map((element) => element.attributes.get("content") ?? element.attributes.get("href"))
