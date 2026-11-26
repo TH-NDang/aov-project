@@ -8,12 +8,17 @@ export const personRoleLabels = {
   INTERVIEWER: "Phỏng vấn",
   CASTER: "Bình luận viên",
   GUEST_ANALYST: "Khách mời phân tích",
+  CREATOR: "Nhà sáng tạo nội dung",
 } as const
 export type PersonRole = keyof typeof personRoleLabels
 export type PersonRoleFilter = PersonRole | "COACHING" | "BROADCAST"
 export const isIndividualProfile = (kind: ProfileKind) => kind === "PLAYER" || kind === "PERSON"
 export const isCommunityProfile = (kind: ProfileKind) => kind !== "CIRCUIT"
 export const isCoachingRole = (role: PersonRole) => role === "COACH" || role === "TEAM_ANALYST"
+/** The admin directory a staff role is kept in: the team's coaching staff, a tournament's crew, or creators. */
+export type PersonnelGroup = "COACHING" | "BROADCAST" | "CREATOR"
+export const personnelGroupOf = (role: PersonRole): PersonnelGroup =>
+  isCoachingRole(role) ? "COACHING" : role === "CREATOR" ? "CREATOR" : "BROADCAST"
 export type PageRole = "OWNER" | "EDITOR" | "MODERATOR"
 /** `official` marks a channel run by the organization, team or player itself. */
 export type ProfileLink = { label: string; url: string; official?: boolean | null }

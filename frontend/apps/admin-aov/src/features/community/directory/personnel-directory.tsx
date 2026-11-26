@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Link } from "react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import {
-  isCoachingRole,
+  personnelGroupOf,
   personRoleLabels,
   type CommunityProfile,
   type PersonRole,
@@ -33,7 +33,7 @@ import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { NativeSelect } from "@/components/native-select"
 
 const ROLES = Object.keys(personRoleLabels) as PersonRole[]
-const rolesOf = (group: PersonnelGroup) => ROLES.filter((role) => isCoachingRole(role) === (group === "COACHING"))
+const rolesOf = (group: PersonnelGroup) => ROLES.filter((role) => personnelGroupOf(role) === group)
 
 /** Newest stint first; entries without a date keep the order they were written in. */
 const latestStint = (entry: CommunityProfile) =>
@@ -84,6 +84,7 @@ function RoleTabs({
   role: PersonRoleFilter
   onChange: (role: string) => void
 }) {
+  if (rolesOf(group).length < 2) return null
   return (
     <FilterTabs label="Lọc theo vai trò">
       <FilterTab active={role === group} onClick={() => onChange("")}>
@@ -200,29 +201,59 @@ export function CoachDirectory({ access }: { access: Access }) {
   )
 }
 
+/** What a card directory of people says about its group. */
+const CARD_GROUPS = {
+  BROADCAST: {
+    section: directorySections[3],
+    defaultRole: "CASTER",
+    emptyTitle: "Chưa có ê-kíp broadcast",
+    emptyDescription: "Thêm bình luận viên, MC và khách mời phân tích của các giải.",
+    searchLabel: "Tìm thành viên broadcast",
+    noStint: "Chưa có giải đã tham gia.",
+  },
+  CREATOR: {
+    section: directorySections[4],
+    defaultRole: "CREATOR",
+    emptyTitle: "Chưa có nhà sáng tạo",
+    emptyDescription: "Thêm người làm video, livestream Liên Quân có kênh riêng.",
+    searchLabel: "Tìm nhà sáng tạo",
+    noStint: "Chưa có hoạt động.",
+  },
+} as const
+
 /** Broadcast talent is booked by face and channel, so the photo and social links lead. */
 export function BroadcastDirectory({ access }: { access: Access }) {
-  const { filters, role, sort, people, rows } = usePersonnel("BROADCAST", access)
+  return <PeopleCardDirectory group="BROADCAST" access={access} />
+}
+
+/** Creators are found by their channel, so the photo and the channel links lead, as for broadcast talent. */
+export function CreatorDirectory({ access }: { access: Access }) {
+  return <PeopleCardDirectory group="CREATOR" access={access} />
+}
+
+function PeopleCardDirectory({ group, access }: { group: keyof typeof CARD_GROUPS; access: Access }) {
+  const copy = CARD_GROUPS[group]
+  const { filters, role, sort, people, rows } = usePersonnel(group, access)
   const [editing, setEditing] = useState<CommunityProfile | null>(null)
   return (
     <DirectoryShell
-      section={directorySections[3]}
+      section={copy.section}
       access={access}
-      initialRoles={[role === "BROADCAST" ? "CASTER" : (role as PersonRole)]}
+      initialRoles={[role === group ? copy.defaultRole : (role as PersonRole)]}
     >
-      <RoleTabs group="BROADCAST" role={role} onChange={(value) => filters.setFilter("role", value)} />
+      <RoleTabs group={group} role={role} onChange={(value) => filters.setFilter("role", value)} />
       <DirectoryBody
         query={people}
         empty={{
           isEmpty: !rows.length,
-          title: filters.filtered ? "Không tìm thấy thành viên" : "Chưa có ê-kíp broadcast",
-          description: "Thêm bình luận viên, MC và khách mời phân tích của các giải.",
+          title: filters.filtered ? "Không tìm thấy thành viên" : copy.emptyTitle,
+          description: copy.emptyDescription,
         }}
         toolbar={
           <ManagementToolbar
             search={filters.values.q}
             onSearchChange={(value) => filters.setFilter("q", value)}
-            searchLabel="Tìm thành viên broadcast"
+            searchLabel={copy.searchLabel}
             placeholder="Tên hoặc mã hồ sơ…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
@@ -254,7 +285,7 @@ export function BroadcastDirectory({ access }: { access: Access }) {
                 <p className="type-meta">
                   <CountryLabel country={person.content?.country} />
                 </p>
-                <p className="type-meta w-full truncate">{stint ? stint.title : "Chưa có giải đã tham gia."}</p>
+                <p className="type-meta w-full truncate">{stint ? stint.title : copy.noStint}</p>
                 {!!person.content?.links.length && (
                   <div className="relative z-10 mt-auto flex flex-wrap justify-center gap-1">
                     {person.content.links.map((link) => (

@@ -123,7 +123,7 @@ export function OrganizationDirectory({ access }: { access: Access }) {
   const [editing, setEditing] = useState<CommunityProfile | null>(null)
   return (
     <DirectoryShell
-      section={directorySections[4]}
+      section={directorySections[5]}
       access={access}
       summary={rows.length ? `${rows.length} tổ chức · ${totalTournaments} giải đã gắn đơn vị tổ chức` : undefined}
     >
@@ -224,7 +224,7 @@ export function CircuitDirectory({ access }: { access: Access }) {
   const [editing, setEditing] = useState<CommunityProfile | null>(null)
   return (
     <DirectoryShell
-      section={directorySections[5]}
+      section={directorySections[6]}
       access={access}
       summary={rows.length ? `${rows.length} hệ thống giải · ${totalTournaments} mùa giải` : undefined}
     >

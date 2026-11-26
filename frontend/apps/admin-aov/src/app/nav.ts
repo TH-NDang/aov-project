@@ -191,7 +191,16 @@ export const NAV_GROUPS: NavGroup[] = [
             icon: "competitionProfile",
             to: "/organizations",
             description: "Tổ chức, đội tuyển và tuyển thủ",
-            activePaths: ["/organizations", "/circuits", "/teams", "/players", "/coaches", "/broadcast", "/pages"],
+            activePaths: [
+              "/organizations",
+              "/circuits",
+              "/teams",
+              "/players",
+              "/coaches",
+              "/broadcast",
+              "/creators",
+              "/pages",
+            ],
           },
           {
             title: "Giải đấu",
@@ -282,6 +291,7 @@ const profilePageIcons: Record<string, AovNavIconName> = {
   "/players": "players",
   "/coaches": "coaches",
   "/broadcast": "broadcast",
+  "/creators": "creators",
 }
 
 export function pageNavIcon(location: string): AovNavIconName {

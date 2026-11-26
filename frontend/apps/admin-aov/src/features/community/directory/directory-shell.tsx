@@ -2,7 +2,7 @@ import { useState, type ComponentProps, type ReactNode } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router"
 import { useQueries } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
-import type { PersonRole, ProfileKind } from "@aov/community-contracts"
+import type { PersonRole, PersonnelGroup, ProfileKind } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { PageHeader } from "@/components/page-header"
@@ -18,13 +18,14 @@ import { pageKeys } from "../api/page-api"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { formatNumber } from "@/lib/text"
 
-export type PersonnelGroup = "COACHING" | "BROADCAST"
+export type { PersonnelGroup }
 
 export const directorySections = [
   { kind: "TEAM", path: "/teams", label: "Đội tuyển", create: "Tạo đội tuyển", group: undefined },
   { kind: "PLAYER", path: "/players", label: "Tuyển thủ", create: "Tạo tuyển thủ", group: undefined },
   { kind: "PERSON", path: "/coaches", label: "Ban huấn luyện", create: "Tạo thành viên", group: "COACHING" },
   { kind: "PERSON", path: "/broadcast", label: "Broadcast", create: "Tạo thành viên", group: "BROADCAST" },
+  { kind: "PERSON", path: "/creators", label: "Nhà sáng tạo", create: "Tạo nhà sáng tạo", group: "CREATOR" },
   { kind: "ORGANIZATION", path: "/organizations", label: "Tổ chức", create: "Tạo tổ chức", group: undefined },
   { kind: "CIRCUIT", path: "/circuits", label: "Hệ thống giải", create: "Tạo hệ thống giải", group: undefined },
 ] as const satisfies readonly {

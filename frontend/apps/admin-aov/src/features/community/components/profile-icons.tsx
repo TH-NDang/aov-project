@@ -1,7 +1,15 @@
-import { ChartNoAxesCombined, ClipboardList, Headset, MessagesSquare, Mic, Presentation } from "lucide-react"
+import {
+  ChartNoAxesCombined,
+  Clapperboard,
+  ClipboardList,
+  Headset,
+  MessagesSquare,
+  Mic,
+  Presentation,
+} from "lucide-react"
 import type { ComponentType } from "react"
 import { NAV_ICONS } from "@/app/aov-nav-icon"
-import { isCoachingRole, type PersonRole, type PersonRoleFilter, type ProfileKind } from "@aov/community-contracts"
+import { personnelGroupOf, type PersonRole, type PersonRoleFilter, type ProfileKind } from "@aov/community-contracts"
 
 type ProfileIcon = ComponentType<{ className?: string }>
 
@@ -22,6 +30,7 @@ export const profileRoleIcons: Record<PersonRoleFilter, ProfileIcon> = {
   INTERVIEWER: MessagesSquare,
   CASTER: Headset,
   GUEST_ANALYST: Presentation,
+  CREATOR: Clapperboard,
 }
 
 export function ProfileRoleIcon({ role, className }: { role: PersonRoleFilter; className?: string }) {
@@ -42,7 +51,7 @@ export function ProfileTypeIcon({
   className?: string
 }) {
   const matchingRole = roles.find((role) =>
-    filter === "COACHING" ? isCoachingRole(role) : filter === "BROADCAST" ? !isCoachingRole(role) : role === filter,
+    filter === "COACHING" || filter === "BROADCAST" ? personnelGroupOf(role) === filter : role === filter,
   )
   const role = matchingRole || (kind === "PERSON" ? roles[0] : undefined)
   const Icon = role ? profileRoleIcons[role] : profileKindIcons[kind]

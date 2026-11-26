@@ -309,6 +309,14 @@ const routes: RouteObject[] = [
             },
           },
           {
+            path: "creators",
+            handle: title("Nhà sáng tạo"),
+            lazy: async () => {
+              const { PageDirectory } = await import("@/features/community/components/page-directory")
+              return { Component: () => <PageDirectory kind="PERSON" group="CREATOR" /> }
+            },
+          },
+          {
             path: "pages/:pageId",
             handle: title("Hồ sơ công khai"),
             lazy: async () => ({ Component: (await import("@/features/community/components/page-editor")).PageEditor }),
