@@ -4,12 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   profileKindLabels,
   type CommunityProfile,
+  type NotificationKind,
   type PageClaim,
   type PageManager,
   type PageViewer,
   type ProfilePresentation,
 } from "@aov/community-contracts"
-import { LocalTime } from "@aov/ui/components/local-time"
+import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,27 +21,32 @@ import { SOCIAL_PLATFORM_NAMES, SocialPlatformIcon, socialPlatformName } from "@
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { PlaceTrail } from "../../../components/place-trail"
 import { StreamShell } from "../../../components/stream-shell"
-import { StreamIcon } from "../../../components/stream-icon"
+import { StreamIcon, type StreamIconName } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { AccountProfile } from "../../../components/account/account-profile"
 import { AccountSettings } from "../../../components/account/account-settings"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
-import { useCommunitySession } from "../../../lib/stream-auth"
+import { signOut, useCommunitySession } from "../../../lib/stream-auth"
 import { CommunityFeed } from "../components/community-feed"
 import { openSignIn, SignInBenefits } from "../../../components/community-signin"
 import {
   useFollowedPages,
   useFollowPage,
+  useManagedPages,
   useNotificationInbox,
   useReadNotifications,
   useUnreadCount,
 } from "../../../lib/community-queries"
-import { followersLabel, profileKindEnglish } from "../../../components/community-ui"
+import { followersLabel, profileKindEnglish, TimeAgo } from "../../../components/community-ui"
 import { ProfileMark } from "../../../components/page-mark"
 import { AuthorMark } from "../components/post-comments"
 import { notificationText } from "../../../lib/notification-text"
+import { inboxDays, type InboxDay } from "../../../lib/account-model"
 import { StreamHead } from "../../../components/stream-head"
+import { AccountCard } from "../components/account-card"
+import owlMark from "../../../assets/stream-owl.svg"
+import "./community-account.css"
 
 const roleLabels: Record<PageManager["role"], readonly [string, string]> = {
   OWNER: ["Quản trị chính", "Owner"],
@@ -52,16 +58,25 @@ const claimLabels: Record<PageClaim["status"], readonly [string, string]> = {
   APPROVED: ["Đã chấp thuận", "Approved"],
   REJECTED: ["Chưa được chấp thuận", "Not approved"],
 }
+const claimMarks: Record<PageClaim["status"], StreamIconName> = {
+  PENDING: "clock",
+  APPROVED: "check",
+  REJECTED: "close",
+}
 
 type AccountTab = "profile" | "settings" | "follows" | "notifications" | "pages"
-const accountTabs: [AccountTab, [string, string]][] = [
-  ["profile", ["Hồ sơ", "Profile"]],
-  ["settings", ["Cài đặt", "Settings"]],
-  ["follows", ["Đang theo dõi", "Following"]],
-  ["notifications", ["Thông báo", "Notifications"]],
-  ["pages", ["Trang & yêu cầu", "Pages & requests"]],
+const accountTabs: [AccountTab, StreamIconName, readonly [string, string]][] = [
+  ["profile", "user", ["Hồ sơ", "Profile"]],
+  ["settings", "sliders", ["Cài đặt", "Settings"]],
+  ["follows", "heart", ["Đang theo dõi", "Following"]],
+  ["notifications", "bell", ["Thông báo", "Notifications"]],
+  ["pages", "building", ["Trang & yêu cầu", "Pages & requests"]],
 ]
 
+/**
+ * The reader's own screens: their card and the list of sections on the left (on a phone, the card on top and the
+ * sections as a row of chips), and the open section beside it.
+ */
 export function CommunityAccount() {
   const { text } = useStreamLocale()
   const session = useCommunitySession()
@@ -70,59 +85,28 @@ export function CommunityAccount() {
   const tab = accountTabs.some(([value]) => value === requested) ? requested! : "profile"
   const enabled = session.status === "authenticated"
   const unread = useUnreadCount()
+  const follows = useFollowedPages()
   const tabRow = useRef<HTMLElement>(null)
-  // A tab opened from a link may sit past the edge of the row on a phone, also once the unread count widens the row;
-  // the row scrolls sideways to it, and the page stays where it is.
+  const open = (value: AccountTab) => setParams(value === "profile" ? {} : { tab: value })
+  // On a phone the sections are a row of chips, and the one opened from a link may sit past its edge, also once the
+  // counts widen the row; the row scrolls sideways to it, and the page stays where it is.
   useEffect(() => {
     const row = tabRow.current
     const chosen = row?.querySelector<HTMLElement>("[aria-current]")
-    if (!row || !chosen) return
+    if (!row || !chosen || row.scrollWidth <= row.clientWidth) return
     const box = row.getBoundingClientRect()
     const shown = chosen.getBoundingClientRect()
     if (shown.left >= box.left && shown.right <= box.right) return
     row.scrollLeft += shown.left - box.left - (box.width - shown.width) / 2
   }, [tab, enabled, unread.data?.unread])
+  const counts: Partial<Record<AccountTab, number>> = {
+    follows: follows.data?.items.length,
+    notifications: unread.data?.unread,
+  }
   return (
     <StreamShell>
       <StreamHead title={text("Tài khoản — AOV Stream", "Account — AOV Stream")} noindex />
       <div className="cp-container">
-        <header className="tn-page-head">
-          <div>
-            <h1>{text("Tài khoản", "Account")}</h1>
-            <p>
-              {enabled
-                ? text(
-                    `${session.name} · hồ sơ và cài đặt dùng chung cho AOV Stream, Wiki và Admin`,
-                    `${session.name} · profile and settings shared by AOV Stream, Wiki and Admin`,
-                  )
-                : text(
-                    "Một tài khoản AOV dùng chung cho AOV Stream, Wiki và Admin.",
-                    "One AOV account shared by AOV Stream, Wiki and Admin.",
-                  )}
-            </p>
-          </div>
-        </header>
-        {enabled && (
-          <nav ref={tabRow} className="cp-tabs" aria-label={text("Mục tài khoản", "Account sections")}>
-            {accountTabs.map(([value, label]) => (
-              <button
-                key={value}
-                aria-current={tab === value ? "page" : undefined}
-                onClick={() => setParams(value === "profile" ? {} : { tab: value })}
-              >
-                {text(...label)}
-                {value === "notifications" && !!unread.data?.unread && (
-                  <span
-                    className="cp-tab-count"
-                    aria-label={text(`${unread.data.unread} chưa đọc`, `${unread.data.unread} unread`)}
-                  >
-                    {unread.data.unread}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-        )}
         {session.status === "loading" ? (
           <div
             className="hub-skeleton-rows"
@@ -130,23 +114,66 @@ export function CommunityAccount() {
             aria-label={text("Đang tải tài khoản", "Loading the account")}
           />
         ) : !enabled ? (
-          <SignInPrompt />
-        ) : tab === "settings" ? (
-          <AccountSettings />
-        ) : tab === "follows" ? (
-          <FollowedPages />
-        ) : tab === "notifications" ? (
-          <NotificationInbox />
-        ) : tab === "pages" ? (
-          <ManagedPages />
+          <SignInPrompt page />
         ) : (
-          <AccountProfile />
+          <div className="ac-home">
+            <aside className="ac-side">
+              <AccountCard onOpen={open} />
+              <nav ref={tabRow} className="ac-nav" aria-label={text("Mục tài khoản", "Account sections")}>
+                {accountTabs.map(([value, icon, label]) => {
+                  const count = counts[value]
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-current={tab === value ? "page" : undefined}
+                      onClick={() => open(value)}
+                    >
+                      <StreamIcon name={icon} size={17} />
+                      <span>{text(...label)}</span>
+                      {!!count && (
+                        <span
+                          className="ac-nav-count"
+                          data-tone={value === "notifications" ? "accent" : undefined}
+                          aria-label={
+                            value === "notifications"
+                              ? text(`${count} chưa đọc`, `${count} unread`)
+                              : text(`${count} trang`, `${count} pages`)
+                          }
+                        >
+                          {count > 99 ? "99+" : count}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+                <button type="button" className="ac-nav-exit" onClick={() => signOut()}>
+                  <StreamIcon name="logout" size={17} />
+                  <span>{text("Đăng xuất", "Sign out")}</span>
+                </button>
+              </nav>
+            </aside>
+            <div className="ac-main">
+              {tab === "settings" ? (
+                <AccountSettings />
+              ) : tab === "follows" ? (
+                <FollowedPages />
+              ) : tab === "notifications" ? (
+                <NotificationInbox />
+              ) : tab === "pages" ? (
+                <ManagedPages />
+              ) : (
+                <AccountProfile />
+              )}
+            </div>
+          </div>
         )}
       </div>
     </StreamShell>
   )
 }
 
+/** The pages the reader follows, as a wall of tiles: each opens its page and can be let go of in place. */
 function FollowedPages() {
   const { text, languageTag } = useStreamLocale()
   const follows = useFollowedPages()
@@ -156,15 +183,12 @@ function FollowedPages() {
     <section className="cp-section" aria-labelledby="account-follows">
       <div className="tn-heading" data-flush="">
         <h2 id="account-follows">
-          {text("Trang đang theo dõi", "Pages you follow")}{" "}
+          {text("Đang theo dõi", "Following")}{" "}
           {!!items.length && <small>{items.length.toLocaleString(languageTag)}</small>}
         </h2>
       </div>
       <p className="cp-section-lead">
-        {text(
-          "Bài mới của các trang này có ở mục Đang theo dõi trên bảng tin.",
-          "New posts from these pages appear under Following in the feed.",
-        )}
+        {text("Bài mới của các trang này có ở Bảng tin.", "New posts from these pages show in your feed.")}
       </p>
       {follows.isPending && (
         <div
@@ -175,7 +199,8 @@ function FollowedPages() {
       )}
       {follows.isError && <p className="cp-error">{follows.error.message}</p>}
       {follows.data && !items.length && (
-        <div className="cp-empty">
+        <div className="ac-blank">
+          <img src={owlMark} alt="" width={48} height={48} />
           <p>{text("Bạn chưa theo dõi trang nào.", "You are not following any pages yet.")}</p>
           <Link className="cp-button cp-primary" to="/explore">
             {text("Khám phá trang", "Explore pages")}
@@ -183,30 +208,37 @@ function FollowedPages() {
         </div>
       )}
       {!!items.length && (
-        <ul className="cp-rows">
-          {items.map((profile) => (
-            <li key={profile.id} className="cp-row">
-              <ProfileMark profile={profile} size={40} />
-              <Link to={`/pages/${profile.code}`} className="cp-row-text">
-                <strong>{profile.content?.name || profile.code}</strong>
-                <small>
-                  {text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])} ·{" "}
+        <ul className="ac-follows">
+          {items.map((profile) => {
+            const name = profile.content?.name || profile.code
+            return (
+              <li key={profile.id} className="ac-follow">
+                <ProfileMark profile={profile} size={48} />
+                <Link to={`/pages/${profile.code}`} className="ac-follow-name">
+                  {name}
+                </Link>
+                <small className="ac-follow-meta">
+                  {profile.live ? (
+                    <span className="ac-follow-live">{text("Đang phát", "Live")}</span>
+                  ) : (
+                    text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])
+                  )}
+                  {" · "}
                   {followersLabel(profile.followers)}
                 </small>
-              </Link>
-              <button
-                className="cp-button cp-quiet"
-                disabled={follow.isPending}
-                onClick={() => follow.mutate({ pageId: profile.id, following: false })}
-                aria-label={text(
-                  `Bỏ theo dõi ${profile.content?.name || profile.code}`,
-                  `Unfollow ${profile.content?.name || profile.code}`,
-                )}
-              >
-                {text("Bỏ theo dõi", "Unfollow")}
-              </button>
-            </li>
-          ))}
+                <button
+                  type="button"
+                  className="ac-follow-off"
+                  disabled={follow.isPending}
+                  onClick={() => follow.mutate({ pageId: profile.id, following: false })}
+                  aria-label={text(`Bỏ theo dõi ${name}`, `Unfollow ${name}`)}
+                >
+                  <StreamIcon name="heart" size={14} />
+                  {text("Bỏ theo dõi", "Unfollow")}
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
       {follow.isError && (
@@ -218,12 +250,31 @@ function FollowedPages() {
   )
 }
 
+/** The mark of each kind of notification: what happened, at a glance, in the colour of how it went. */
+const noteMarks: Record<NotificationKind, [StreamIconName, "accent" | "live" | "good" | "warn" | "plain"]> = {
+  PAGE_POST_PUBLISHED: ["feed", "accent"],
+  PAGE_LIVE_STARTED: ["play", "live"],
+  POST_COMMENTED: ["message", "accent"],
+  REPORT_RESOLVED: ["flag", "plain"],
+  PAGE_CLAIM_APPROVED: ["shield", "good"],
+  PAGE_CLAIM_REJECTED: ["shield", "warn"],
+  PAGE_OWNERSHIP_RECEIVED: ["building", "good"],
+  PAGE_MEMBERSHIP_REVOKED: ["ban", "warn"],
+}
+const dayNames: Record<InboxDay, readonly [string, string]> = {
+  today: ["Hôm nay", "Today"],
+  yesterday: ["Hôm qua", "Yesterday"],
+  earlier: ["Trước đó", "Earlier"],
+}
+
+/** The inbox, by day: unread lines stand out and can be marked read where they are. */
 function NotificationInbox() {
-  const { text, languageTag } = useStreamLocale()
+  const { text } = useStreamLocale()
   const inbox = useNotificationInbox(24)
   const notifications = inbox.data?.pages.flatMap((page) => page.items) ?? []
   const unread = useUnreadCount()
   const read = useReadNotifications()
+  const timeZone = useUserTimeZone()
   const count = unread.data?.unread ?? 0
   return (
     <section className="cp-section" aria-labelledby="account-notifications">
@@ -232,7 +283,7 @@ function NotificationInbox() {
         {count > 0 && (
           <button type="button" disabled={read.all.isPending} onClick={() => read.all.mutate()}>
             <StreamIcon name="check" size={15} />
-            {text("Đánh dấu đã đọc tất cả", "Mark all as read")}
+            {text("Đọc hết", "Mark all read")}
           </button>
         )}
       </div>
@@ -245,42 +296,52 @@ function NotificationInbox() {
       )}
       {inbox.isLoadingError && <p className="cp-error">{inbox.error.message}</p>}
       {inbox.data && !notifications.length && (
-        <p className="cp-section-lead">
-          {text(
-            "Chưa có thông báo. Theo dõi trang để nhận tin khi có bài mới.",
-            "No notifications yet. Follow pages to hear about their new posts.",
-          )}
-        </p>
+        <div className="ac-blank">
+          <img src={owlMark} alt="" width={48} height={48} />
+          <p>
+            {text(
+              "Chưa có thông báo. Theo dõi trang để biết khi có bài mới.",
+              "No notifications yet. Follow pages to hear about new posts.",
+            )}
+          </p>
+        </div>
       )}
-      {!!notifications.length && (
-        <ul className="cp-rows">
-          {notifications.map((item) => (
-            <li key={item.id} className="cp-row cp-note" data-unread={!item.read || undefined}>
-              <span className="cp-note-dot" aria-hidden="true" />
-              <span className="cp-row-text">
-                <Link to={`/pages/${item.pageId}`} onClick={() => !item.read && read.one.mutate(item.id)}>
-                  {!item.read && <span className="sr-only">{text("Chưa đọc: ", "Unread: ")}</span>}
-                  {notificationText(item, text)}
-                </Link>
-                <small>
-                  <LocalTime value={item.createdAt} locale={languageTag} />
-                </small>
-              </span>
-              {!item.read && (
-                <button
-                  className="hub-icon-button cp-note-read"
-                  disabled={read.one.isPending}
-                  onClick={() => read.one.mutate(item.id)}
-                  aria-label={text("Đánh dấu đã đọc", "Mark as read")}
-                  title={text("Đánh dấu đã đọc", "Mark as read")}
-                >
-                  <StreamIcon name="check" size={16} />
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {inboxDays(notifications, Date.now(), timeZone).map(({ day, items }) => (
+        <section key={`${day}-${items[0]!.id}`} className="ac-inbox-day" aria-label={text(...dayNames[day])}>
+          <h3>{text(...dayNames[day])}</h3>
+          <ul className="ac-inbox">
+            {items.map((item) => {
+              const [icon, tone] = (item.kind && noteMarks[item.kind]) || ["bell", "accent"]
+              return (
+                <li key={item.id} className="ac-note" data-unread={!item.read || undefined}>
+                  <span className="ac-note-mark" data-tone={tone} aria-hidden="true">
+                    <StreamIcon name={icon} size={16} />
+                  </span>
+                  <span className="ac-note-words">
+                    <Link to={`/pages/${item.pageId}`} onClick={() => !item.read && read.one.mutate(item.id)}>
+                      {!item.read && <span className="sr-only">{text("Chưa đọc: ", "Unread: ")}</span>}
+                      {notificationText(item, text)}
+                    </Link>
+                    <TimeAgo value={item.createdAt} />
+                  </span>
+                  {!item.read && (
+                    <button
+                      type="button"
+                      className="hub-icon-button ac-note-read"
+                      disabled={read.one.isPending}
+                      onClick={() => read.one.mutate(item.id)}
+                      aria-label={text("Đánh dấu đã đọc", "Mark as read")}
+                      title={text("Đánh dấu đã đọc", "Mark as read")}
+                    >
+                      <StreamIcon name="check" size={16} />
+                    </button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
       <InfiniteScroll
         query={inbox}
         label={text("Đang tải thêm thông báo", "Loading more notifications")}
@@ -290,13 +351,11 @@ function NotificationInbox() {
   )
 }
 
+/** The pages the reader runs, as cards with the way in, and the requests they sent with where each stands. */
 function ManagedPages() {
   const { text } = useStreamLocale()
   const session = useCommunitySession()
-  const managed = useQuery({
-    queryKey: communityKeys.managedPages(session.revision),
-    queryFn: () => communityApi.managedPages(),
-  })
+  const managed = useManagedPages()
   const claims = useQuery({
     queryKey: communityKeys.claims(session.revision),
     queryFn: () => communityApi.claims(),
@@ -317,30 +376,38 @@ function ManagedPages() {
         {managed.isError && <p className="cp-error">{managed.error.message}</p>}
         {managed.data &&
           (managed.data.length ? (
-            <ul className="cp-rows">
+            <ul className="ac-managed">
               {managed.data.map((profile) => (
-                <li key={profile.id}>
-                  <Link className="cp-row cp-row-link" to={`/manage/${profile.id}`}>
-                    <ProfileMark profile={profile} size={40} />
-                    <span className="cp-row-text">
-                      <strong>{profile.content?.name || profile.code}</strong>
-                      <small>{text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])}</small>
-                    </span>
-                    <span className="cp-row-go">
+                <li key={profile.id} className="ac-page">
+                  <ProfileMark profile={profile} size={52} />
+                  <span className="ac-page-words">
+                    <strong>{profile.content?.name || profile.code}</strong>
+                    <small>
+                      {text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])} ·{" "}
+                      {followersLabel(profile.followers)}
+                    </small>
+                  </span>
+                  <span className="ac-page-ways">
+                    <Link className="cp-button cp-primary" to={`/manage/${profile.id}`}>
+                      <StreamIcon name="edit" size={15} />
                       {text("Quản lý", "Manage")}
-                      <StreamIcon name="chevronRight" size={16} />
-                    </span>
-                  </Link>
+                    </Link>
+                    <Link className="cp-button" to={`/pages/${profile.code}`}>
+                      {text("Xem trang", "View page")}
+                    </Link>
+                  </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="cp-section-lead">
-              {text(
-                "Bạn chưa quản lý trang nào. Mở trang của đội hoặc tuyển thủ bạn đại diện và gửi yêu cầu quản lý từ nút ⋯.",
-                "You do not manage any pages yet. Open the page of the team or player you represent and send a management request from the ⋯ button.",
-              )}
-            </p>
+            <div className="ac-blank" data-size="small">
+              <p>
+                {text(
+                  "Bạn chưa quản lý trang nào. Mở trang đội hoặc tuyển thủ bạn đại diện, bấm ⋯ rồi gửi yêu cầu quản lý.",
+                  "You do not manage any pages yet. Open the page of the team or player you represent, press ⋯ and send a management request.",
+                )}
+              </p>
+            </div>
           ))}
       </section>
       <section className="cp-section" aria-labelledby="account-claims">
@@ -353,38 +420,55 @@ function ManagedPages() {
         {claims.isError && <p className="cp-error">{claims.error.message}</p>}
         {claims.data &&
           (claims.data.length ? (
-            <ul className="cp-rows">
+            <ol className="ac-claims">
               {claims.data.map((claim) => (
-                <li key={claim.id} className="cp-row">
-                  <span className="cp-row-text">
-                    <Link to={`/pages/${claim.pageId}`}>
-                      <strong>{claim.pageName}</strong>
-                    </Link>
-                    {claim.resolution && <small>{claim.resolution}</small>}
+                <li key={claim.id} className="ac-claim" data-status={claim.status}>
+                  <span className="ac-claim-mark" aria-hidden="true">
+                    <StreamIcon name={claimMarks[claim.status]} size={15} />
+                  </span>
+                  <span className="ac-claim-words">
+                    <Link to={`/pages/${claim.pageId}`}>{claim.pageName}</Link>
+                    <small>
+                      <TimeAgo value={claim.createdAt} />
+                    </small>
+                    {claim.resolution && <q>{claim.resolution}</q>}
                   </span>
                   <span className="cp-badge" data-status={claim.status}>
                     {text(...claimLabels[claim.status])}
                   </span>
                 </li>
               ))}
-            </ul>
+            </ol>
           ) : (
-            <p className="cp-section-lead">
-              {text("Bạn chưa gửi yêu cầu nào.", "You have not sent any requests yet.")}
-            </p>
+            <div className="ac-blank" data-size="small">
+              <p>{text("Bạn chưa gửi yêu cầu nào.", "You have not sent any requests yet.")}</p>
+            </div>
           ))}
       </section>
     </div>
   )
 }
 
-/** What an account gives a visitor, with the two ways in. The one prompt of the account screens. */
-export function SignInPrompt({ title }: { title?: string }) {
+/**
+ * What an account gives a visitor, with the two ways in. The one prompt of the account screens; on the account page
+ * itself (`page`) it is the head of the page, with the owl and the three things an account is for side by side.
+ */
+export function SignInPrompt({ title, page = false }: { title?: string; page?: boolean }) {
   const { text } = useStreamLocale()
   const [error, setError] = useState("")
   return (
-    <section className="cp-signin" aria-labelledby="signin-title">
-      <h2 id="signin-title">{title ?? text("Đăng nhập để tham gia cộng đồng", "Sign in to join the community")}</h2>
+    <section className="cp-signin" data-page={page || undefined} aria-labelledby="signin-title">
+      {page && <img className="cp-signin-mark" src={owlMark} alt="" width={56} height={56} />}
+      {page ? (
+        <h1 id="signin-title">{text("Tài khoản AOV", "Your AOV account")}</h1>
+      ) : (
+        <h2 id="signin-title">{title ?? text("Đăng nhập để tham gia cộng đồng", "Sign in to join the community")}</h2>
+      )}
+      {page && (
+        <p className="cp-signin-lead">
+          {text("Một tài khoản cho Stream, Wiki và Admin.", "One account for Stream, Wiki and Admin.")}
+        </p>
+      )}
       <SignInBenefits />
       <div className="cp-signin-actions">
         <button className="cp-button cp-primary" onClick={() => openSignIn(false, setError)}>

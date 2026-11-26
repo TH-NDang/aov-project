@@ -776,6 +776,50 @@
   font-size: 12px;
   line-height: 16px;
 }
+/* On the account page the prompt is the head of the page: the owl, a title, and the three uses side by side. */
+.cp-signin[data-page] {
+  justify-items: center;
+  gap: 14px;
+  max-width: none;
+  padding: 36px 28px 28px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: radial-gradient(60% 80% at 50% 0%, var(--hub-accent-soft), transparent 70%), var(--hub-surface);
+  text-align: center;
+}
+.cp-signin-mark {
+  filter: drop-shadow(0 8px 18px rgb(0 0 0 / 22%));
+}
+.cp-signin > h1 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 32px;
+}
+.cp-signin-lead {
+  margin: -6px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 15px;
+  line-height: 22px;
+}
+.cp-signin[data-page] .cp-benefits {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: 760px;
+  margin-block: 10px 6px;
+}
+.cp-signin[data-page] .cp-benefits li {
+  flex-direction: column;
+  padding: 18px 16px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-sunken);
+  text-align: center;
+}
+.cp-signin[data-page] .cp-signin-actions {
+  justify-content: center;
+}
 .cp-signin-dialog {
   max-width: min(420px, calc(100% - 32px));
   padding: 24px;
@@ -827,6 +871,21 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+/* The unread count beside Notifications in the account menu, matching the bell's. */
+.cp-session-count {
+  min-width: 20px;
+  height: 18px;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  text-align: center;
 }
 
 /* ---------- Featured pages on an empty feed ---------- */
@@ -947,6 +1006,22 @@
   .cp-signin-actions > .cp-button {
     flex: 1;
     min-width: 0;
+  }
+  .cp-signin[data-page] {
+    padding: 28px 16px 20px;
+  }
+  .cp-signin > h1 {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .cp-signin[data-page] .cp-benefits {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .cp-signin[data-page] .cp-benefits li {
+    flex-direction: row;
+    padding: 12px;
+    text-align: left;
   }
   /* The public page stays beside the name as a round arrow, so it never takes a row of its own. */
   .cp-manage-head {

@@ -1,0 +1,565 @@
+/*
+ * The account screens. Desktop: the reader's card and the sections on a sticky left column, the open section beside
+ * it. Phone: the card on top, the sections as a row of chips that scrolls sideways, then the section. Each section has
+ * its own shape: tiles for followed pages, a timeline by day for notifications, cards for managed pages and a status
+ * list for requests.
+ */
+.ac-home {
+  display: grid;
+  grid-template-columns: 288px minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+}
+.ac-side {
+  position: sticky;
+  top: calc(var(--hub-stack) + var(--hub-layout-gap));
+  display: grid;
+  gap: 12px;
+}
+.ac-main {
+  display: grid;
+  min-width: 0;
+  gap: var(--hub-layout-gap);
+}
+
+/* ---------- Sections ---------- */
+.ac-nav {
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+}
+.ac-nav > button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--hub-radius-sm);
+  background: transparent;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 140ms,
+    color 140ms;
+}
+.ac-nav > button > svg {
+  flex: none;
+  color: var(--hub-muted);
+  transition: color 140ms;
+}
+.ac-nav > button > span:first-of-type {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ac-nav > button:hover {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.ac-nav > button[aria-current] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.ac-nav > button[aria-current] > svg {
+  color: var(--hub-accent-strong);
+}
+.ac-nav > button[aria-current]::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--hub-accent);
+}
+.ac-nav > button:focus-visible {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: -2px;
+}
+.ac-nav-count {
+  flex: none;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-sunken);
+  color: var(--hub-muted);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  text-align: center;
+}
+.ac-nav-count[data-tone="accent"] {
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+/* Signing out closes the list, apart from the sections. */
+.ac-nav > .ac-nav-exit {
+  margin-top: 4px;
+  border-top: 1px solid var(--hub-border);
+  border-radius: 0 0 var(--hub-radius-sm) var(--hub-radius-sm);
+  color: var(--hub-muted);
+  font-weight: 600;
+}
+.ac-nav > .ac-nav-exit:hover {
+  background: var(--hub-danger-soft);
+  color: var(--hub-danger);
+}
+.ac-nav > .ac-nav-exit:hover > svg {
+  color: var(--hub-danger);
+}
+
+/* ---------- Empty sections: the owl and one line ---------- */
+.ac-blank {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px 20px;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: var(--hub-radius);
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  text-align: center;
+}
+.ac-blank > p {
+  max-width: 40ch;
+  margin: 0;
+  line-height: 20px;
+}
+.ac-blank[data-size="small"] {
+  justify-items: start;
+  padding: 16px;
+  text-align: left;
+}
+
+/* ---------- Followed pages: a wall of tiles ---------- */
+.ac-follows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ac-follow {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  justify-items: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+  transition:
+    border-color 140ms,
+    transform 140ms;
+}
+.ac-follow:hover {
+  border-color: var(--hub-border-strong);
+  transform: translateY(-1px);
+}
+.ac-follow > :first-child {
+  margin-bottom: 6px;
+}
+.ac-follow-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The whole tile opens the page; the button below stays its own. */
+.ac-follow-name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.ac-follow-name:focus-visible {
+  outline: none;
+}
+.ac-follow-name:focus-visible::after {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: -2px;
+}
+.ac-follow:hover .ac-follow-name {
+  color: var(--hub-accent-strong);
+}
+.ac-follow-meta {
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.ac-follow-live {
+  color: var(--hub-red);
+  font-weight: 700;
+}
+.ac-follow-off {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 10px 4px 8px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: transparent;
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  cursor: pointer;
+  transition:
+    background-color 140ms,
+    border-color 140ms,
+    color 140ms;
+}
+.ac-follow-off > svg {
+  color: var(--hub-accent-strong);
+  fill: currentColor;
+}
+.ac-follow-off:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--hub-danger-soft);
+  color: var(--hub-danger);
+}
+.ac-follow-off:hover:not(:disabled) > svg {
+  color: var(--hub-danger);
+  fill: none;
+}
+.ac-follow-off:disabled {
+  opacity: 0.55;
+}
+
+/* ---------- Notifications: a timeline cut by day ---------- */
+.ac-inbox-day {
+  display: grid;
+  gap: 8px;
+}
+.ac-inbox-day > h3 {
+  margin: 4px 0 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+.ac-inbox {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+  list-style: none;
+}
+.ac-note {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 12px 10px 14px;
+}
+.ac-note + .ac-note {
+  border-top: 1px solid var(--hub-border);
+}
+.ac-note[data-unread] {
+  background: color-mix(in srgb, var(--hub-accent-soft) 55%, transparent);
+}
+.ac-note[data-unread]::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--hub-accent);
+}
+.ac-note-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--hub-sunken);
+  color: var(--hub-text-soft);
+}
+.ac-note-mark[data-tone="accent"] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.ac-note-mark[data-tone="live"] {
+  background: color-mix(in srgb, var(--hub-red) 16%, transparent);
+  color: var(--hub-red);
+}
+.ac-note-mark[data-tone="good"] {
+  background: var(--hub-success-soft);
+  color: var(--hub-success);
+}
+.ac-note-mark[data-tone="warn"] {
+  background: var(--hub-danger-soft);
+  color: var(--hub-danger);
+}
+.ac-note-words {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ac-note-words > a {
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.ac-note[data-unread] .ac-note-words > a {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+/* The line opens its page from anywhere on the row. */
+.ac-note-words > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.ac-note-words > a:hover {
+  color: var(--hub-accent-strong);
+}
+.ac-note-words > a:focus-visible {
+  outline: none;
+}
+.ac-note-words > a:focus-visible::after {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: -2px;
+}
+.ac-note-words > time {
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.ac-note-read {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Managed pages: cards with the way in ---------- */
+.ac-managed {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ac-page {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 14px;
+  padding: 14px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: radial-gradient(120% 100% at 100% 0%, var(--hub-accent-soft), transparent 55%), var(--hub-surface);
+}
+.ac-page-words {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ac-page-words > strong {
+  overflow: hidden;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ac-page-words > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.ac-page-ways {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  gap: 8px;
+}
+
+/* ---------- Requests: where each one stands ---------- */
+.ac-claims {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+  list-style: none;
+}
+.ac-claim {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.ac-claim + .ac-claim {
+  border-top: 1px solid var(--hub-border);
+}
+.ac-claim-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.ac-claim[data-status="APPROVED"] .ac-claim-mark {
+  background: var(--hub-success-soft);
+  color: var(--hub-success);
+}
+.ac-claim[data-status="REJECTED"] .ac-claim-mark {
+  background: var(--hub-danger-soft);
+  color: var(--hub-danger);
+}
+.ac-claim-words {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ac-claim-words > a {
+  overflow: hidden;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ac-claim-words > a:hover {
+  color: var(--hub-accent-strong);
+}
+.ac-claim-words > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.ac-claim-words > q {
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-style: italic;
+  line-height: 18px;
+}
+
+@media (max-width: 899.98px) {
+  .ac-home {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .ac-side {
+    position: static;
+    gap: 10px;
+  }
+  /* The sections become a row of chips that scrolls sideways; signing out stays in the account menu. */
+  .ac-nav {
+    display: flex;
+    gap: 6px;
+    margin-inline: calc(var(--hub-gutter) * -1);
+    padding: 2px var(--hub-gutter);
+    overflow-x: auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    scrollbar-width: none;
+  }
+  .ac-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .ac-nav > button {
+    flex: none;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 13px;
+    border: 1px solid var(--hub-border);
+    border-radius: var(--aov-radius-pill);
+    background: var(--hub-surface);
+    font-size: 13px;
+  }
+  .ac-nav > button[aria-current] {
+    border-color: transparent;
+    background: var(--hub-text);
+    color: var(--hub-bg);
+  }
+  .ac-nav > button[aria-current] > svg {
+    color: inherit;
+  }
+  .ac-nav > button[aria-current]::before {
+    content: none;
+  }
+  .ac-nav > .ac-nav-exit {
+    display: none;
+  }
+  .ac-follows {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  /* On a phone a followed page is a row: mark, name and count, and the button at the end. */
+  .ac-follow {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 0 12px;
+    padding: 10px 12px;
+  }
+  .ac-follow > :first-child {
+    grid-row: 1 / 3;
+    margin: 0;
+  }
+  .ac-follow-name {
+    align-self: end;
+  }
+  .ac-follow-meta {
+    grid-column: 2;
+    align-self: start;
+  }
+  .ac-follow-off {
+    grid-row: 1 / 3;
+    grid-column: 3;
+    margin: 0;
+  }
+  .ac-follow:hover {
+    transform: none;
+  }
+  .ac-note {
+    gap: 10px;
+    padding: 10px 8px 10px 12px;
+  }
+}
