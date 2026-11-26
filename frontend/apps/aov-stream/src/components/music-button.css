@@ -1,0 +1,54 @@
+/* The music's button in the bar: round and filled like the bar's others, lit while a track is heard. */
+.hub-music-button {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--hub-bar-fill);
+  color: var(--hub-text-soft);
+}
+.hub-music-button:hover {
+  background: var(--hub-bar-fill-hover);
+  color: var(--hub-text);
+}
+.hub-music-button[data-playing],
+.hub-music-button[aria-expanded="true"] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent);
+}
+.hub-music-button-bars {
+  display: inline-flex;
+  height: 14px;
+  align-items: flex-end;
+  gap: 2px;
+}
+.hub-music-button-bars i {
+  width: 3px;
+  height: 40%;
+  border-radius: 1px;
+  background: currentColor;
+  animation: hub-music-button-bounce 760ms ease-in-out infinite alternate;
+}
+.hub-music-button-bars i:nth-child(2) {
+  animation-delay: -250ms;
+}
+.hub-music-button-bars i:nth-child(3) {
+  animation-delay: -500ms;
+}
+@keyframes hub-music-button-bounce {
+  from {
+    height: 25%;
+  }
+  to {
+    height: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-music-button-bars i {
+    height: 70%;
+    animation: none;
+  }
+}

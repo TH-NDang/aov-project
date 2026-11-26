@@ -1,0 +1,173 @@
+/* The rows under the music's video: what plays and the buttons that steer it. */
+.hub-music-row {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 6px 6px 12px;
+}
+.hub-music-deckbar {
+  padding-top: 0;
+  padding-left: 6px;
+}
+.hub-music-gap {
+  flex: 1;
+}
+.hub-music-now-words {
+  min-width: 0;
+  flex: 1;
+}
+.hub-music-title,
+.hub-music-artist {
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-music-title {
+  min-width: 0;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.hub-music-artist {
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  line-height: 16px;
+}
+.hub-music-artist[data-warn] {
+  color: var(--aov-stream-tan);
+}
+
+.hub-music-press {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--hub-text-soft);
+}
+.hub-music-press:hover {
+  background: rgb(255 255 255 / 8%);
+  color: var(--hub-text);
+}
+.hub-music-press[aria-pressed="true"] {
+  background: rgb(165 168 255 / 14%);
+  color: var(--aov-stream-lavender-bright);
+}
+.hub-music-press[data-solid] svg {
+  fill: currentColor;
+}
+.hub-music-press-big {
+  width: 44px;
+  height: 44px;
+  margin: 0 4px;
+  background: var(--aov-stream-lavender);
+  color: var(--aov-stream-night);
+  box-shadow: 0 0 0 4px rgb(165 168 255 / 16%);
+}
+.hub-music-press-big:hover {
+  background: var(--aov-stream-lavender-bright);
+  color: var(--aov-stream-night);
+}
+/* The corner it stands in rounds the rows off, so a ring stays inside what it is around. */
+.hub-music-press:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Three bars that dance while a track is heard. */
+.hub-music-bars {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  align-items: flex-end;
+  gap: 2px;
+  margin-right: 8px;
+}
+.hub-music-bars i {
+  width: 4px;
+  height: 30%;
+  border-radius: 1px;
+  background: var(--aov-stream-lavender);
+}
+.hub-music-bars i:nth-child(2) {
+  height: 60%;
+  background: color-mix(in srgb, var(--aov-stream-lavender) 50%, var(--aov-stream-gold));
+}
+.hub-music-bars i:nth-child(3) {
+  height: 45%;
+  background: var(--aov-stream-gold);
+}
+.hub-music-bars[data-playing] i {
+  animation: hub-music-bounce 820ms ease-in-out infinite alternate;
+}
+.hub-music-bars[data-playing] i:nth-child(2) {
+  animation-delay: -280ms;
+}
+.hub-music-bars[data-playing] i:nth-child(3) {
+  animation-delay: -560ms;
+}
+@keyframes hub-music-bounce {
+  from {
+    height: 20%;
+  }
+  to {
+    height: 100%;
+  }
+}
+
+.hub-music-loudness {
+  display: flex;
+  align-items: center;
+}
+.hub-music-loudness input {
+  width: 72px;
+  accent-color: var(--aov-stream-lavender);
+}
+
+/* Folded: the track's picture, its name and a way back. */
+.hub-music-bar {
+  padding-left: 8px;
+}
+.hub-music-thumb {
+  width: 64px;
+  height: 36px;
+  flex: none;
+  margin-right: 10px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+/* Shuffle and repeat with their words, where the phone keeps them: on the shelf. */
+.hub-music-modes {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 10px;
+}
+.hub-music-mode {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: var(--aov-radius-pill);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.hub-music-mode[aria-pressed="true"] {
+  border-color: rgb(165 168 255 / 40%);
+  background: rgb(165 168 255 / 14%);
+  color: var(--aov-stream-lavender-bright);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-music-bars[data-playing] i {
+    animation: none;
+  }
+}

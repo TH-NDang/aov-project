@@ -12,6 +12,7 @@ import { StreamIcon } from "./stream-icon"
 import { ListSearch, StreamSearch, type PageSearch } from "./stream-search"
 import { useStreamLocale } from "./stream-locale"
 import { CommunitySessionButton } from "./community-session"
+import { MusicButton } from "./music-button"
 import { SignInDialog } from "./community-signin"
 
 export const WIKI_URL = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
@@ -169,6 +170,7 @@ export function StreamShell({
             {text("Đóng", "Close")}
           </button>
           <div className="hub-topbar-actions">
+            <MusicButton />
             <button
               ref={searchTrigger}
               type="button"

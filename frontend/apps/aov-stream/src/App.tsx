@@ -6,6 +6,7 @@ import { StreamShell } from "./components/stream-shell"
 import { useStreamLocale } from "./components/stream-locale"
 import { StreamNotFound } from "./components/stream-not-found"
 import { Travel } from "./components/travel"
+import { MusicDeck } from "./components/music-deck"
 import { VideoFrame } from "./components/video-frame"
 import "./features/community/components/community.css"
 import "./features/tournaments/tournaments.css"
@@ -42,6 +43,7 @@ export default function App() {
     <>
       <Travel>{(location) => <Pages location={location} />}</Travel>
       <VideoFrame />
+      <MusicDeck />
     </>
   )
 }

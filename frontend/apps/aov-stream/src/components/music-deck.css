@@ -1,0 +1,126 @@
+/*
+ * The music player, beside every page. A track that is heard keeps its video in sight, never under 200 pixels each
+ * way, as YouTube asks of an embedded player: nothing is drawn over the frame.
+ */
+.hub-music {
+  position: fixed;
+  z-index: 44;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: 20px;
+  width: 356px;
+  color: var(--hub-text);
+  color-scheme: dark;
+}
+.hub-music[hidden] {
+  display: none;
+}
+.hub-music[data-folded] {
+  width: 320px;
+}
+.hub-music-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--aov-radius-media);
+  background: linear-gradient(180deg, var(--aov-stream-dusk), var(--aov-stream-night));
+  box-shadow:
+    var(--hub-shadow-lg),
+    inset 0 0 0 1px rgb(255 255 255 / 8%);
+}
+
+/* The frame, with a line of light under it from lavender to gold. Its own box stays 200 pixels high. */
+.hub-music-screen {
+  position: relative;
+  overflow: hidden;
+  height: 202px;
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--aov-stream-lavender), var(--aov-stream-gold)) 1;
+  background: #000;
+}
+.hub-music[data-folded] .hub-music-screen {
+  height: 2px;
+}
+.hub-music-host,
+.hub-music-host > iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  color-scheme: normal;
+}
+/* Before the first play the frame is not made: the track's picture and a play button stand in its place. */
+.hub-music-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.7) saturate(1.1);
+}
+.hub-music-start {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  margin: auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--aov-stream-lavender);
+  color: var(--aov-stream-night);
+  box-shadow:
+    0 0 0 8px rgb(165 168 255 / 24%),
+    0 10px 28px rgb(0 0 0 / 45%);
+  transition: transform 160ms;
+}
+.hub-music-start svg {
+  fill: currentColor;
+  transform: translateX(2px);
+}
+.hub-music-start:hover {
+  transform: scale(1.06);
+}
+.hub-music-tap {
+  margin: 0;
+  padding: 8px 12px 0;
+  color: var(--aov-stream-tan);
+  font-size: 13px;
+  line-height: 18px;
+}
+/* After every page, as high as the player, so that the end of the page can be scrolled above it. */
+.hub-music-room {
+  height: var(--music-cover, 0px);
+}
+html {
+  scroll-padding-bottom: var(--music-cover, 0px);
+}
+
+/* A narrow window has it across its foot. */
+@media (max-width: 899.98px) {
+  .hub-music,
+  .hub-music[data-folded] {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+  }
+  .hub-music-card {
+    padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 16px 16px 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-music-start {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .hub-music-card {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .hub-music,
+  .hub-music-room {
+    display: none;
+  }
+}
