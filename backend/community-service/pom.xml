@@ -72,6 +72,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- In-memory cache of YouTube answers (ADR-034) -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
         <!-- Tests: module boundaries, MVC slices with security, PostgreSQL through Testcontainers -->
         <dependency>
             <groupId>org.springframework.modulith</groupId>
