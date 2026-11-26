@@ -110,13 +110,15 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+/* Two lines at most: what tells seasons apart is often at the end of the name. */
 .hub-top-match-text > strong {
+  display: -webkit-box;
   overflow: hidden;
   font-size: 17px;
   font-weight: 700;
   line-height: 22px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .hub-top-match > svg {
   flex: none;

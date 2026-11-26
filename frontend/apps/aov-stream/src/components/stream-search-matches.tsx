@@ -2,7 +2,7 @@ import { Fragment, type CSSProperties } from "react"
 import { Link } from "react-router"
 import { personRoleLabels, profileKindLabels } from "@aov/community-contracts"
 import { CompetitionLogo, StatusBadge } from "./competition-card"
-import { dayRange, hueOf, personRoleEnglish, profileKindEnglish, regionName } from "./community-ui"
+import { dayRange, hueOf, personRoleEnglish, profileKindEnglish, regionKey, regionName } from "./community-ui"
 import { ProfileMark } from "./page-mark"
 import { PlayerMark } from "./player-mark"
 import { RegionMark } from "./region-mark"
@@ -82,10 +82,11 @@ function SuggestionMeta({ suggestion }: { suggestion: Suggestion }) {
     }
     case "PAGE": {
       const { kind, content } = suggestion.profile
+      const region = content?.country ? regionName(content.country, languageTag) : null
       return (
         <>
-          <span>{text(profileKindLabels[kind], profileKindEnglish[kind])}</span>
-          {content?.country && <RegionMark code={content.country} size={14} />}
+          {region && <RegionMark code={regionKey(content?.country)} size={14} />}
+          <span>{[text(profileKindLabels[kind], profileKindEnglish[kind]), region].filter(Boolean).join(" · ")}</span>
         </>
       )
     }

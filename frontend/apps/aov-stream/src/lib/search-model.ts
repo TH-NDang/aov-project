@@ -1,6 +1,6 @@
 import type { CompetitionView } from "@aov/community-contracts"
 import { foldSearchText } from "@aov/ui/lib/search-text"
-import { competitionStatus } from "./competition-model.ts"
+import { byRecency, competitionStatus } from "./competition-model.ts"
 import { aheadCompetitions } from "./directory-model.ts"
 import { shortCompetitionName } from "./season-name.ts"
 
@@ -25,7 +25,7 @@ const competitionNames = (entry: CompetitionView) => [
 
 /**
  * Published competitions whose name or circuit holds the search: the closest names first, then those not yet finished,
- * then the newest.
+ * then the newest season, then the latest to start.
  */
 export function matchingCompetitions(catalog: CompetitionView[], search: string, now = Date.now()) {
   const finished = (entry: CompetitionView) => Number(competitionStatus(entry.content, now) === "FINISHED")
@@ -36,7 +36,8 @@ export function matchingCompetitions(catalog: CompetitionView[], search: string,
       (a, b) =>
         a.rank - b.rank ||
         finished(a.entry) - finished(b.entry) ||
-        (b.entry.content.tournament.year || 0) - (a.entry.content.tournament.year || 0),
+        (b.entry.content.tournament.year || 0) - (a.entry.content.tournament.year || 0) ||
+        byRecency(a.entry, b.entry),
     )
     .map(({ entry }) => entry)
 }
