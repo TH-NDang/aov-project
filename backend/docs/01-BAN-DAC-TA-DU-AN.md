@@ -1671,6 +1671,12 @@ Không tin actor ID do client gửi trong request body.
 
 Backend chỉ kiểm tra **capability**. Vai trò là role tổng hợp (composite) trên identity provider; Keycloak bung vai trò thành client role của `wiki-service` trong token (`resource_access.wiki-service.roles`).
 
+Capability chỉ được đọc từ token do client quản trị cấp: claim `azp` phải nằm trong `wiki.security.capability-clients`
+(mặc định `admin-aov-backend`, `wiki-importer`; realm local thêm `admin-aov`, `wiki-local-cli`). community-service làm tương tự
+với `community.security.capability-clients`. Token của Wiki và Stream vẫn đăng nhập được cho `/users/**` và `/me/**` nhưng không
+mang capability nào, vì hai app đó chung origin với nội dung người dùng đăng: một script chèn vào đó không được hành động như
+admin đang đăng nhập. Realm cũng tắt `fullScopeAllowed` của `aov-wiki`, `aov-stream`.
+
 | Capability | Editor | Publisher | Patch manager | Admin | Importer |
 |---|:-:|:-:|:-:|:-:|:-:|
 | `catalog:read` | ✓ | ✓ | ✓ | ✓ | ✓ |

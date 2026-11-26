@@ -3,6 +3,7 @@ package com.wikiaov.access.internal.infrastructure;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,13 +17,18 @@ import org.springframework.util.StringUtils;
  * Maps {@code resource_access.<client>.roles} of a Keycloak token to authorities named after capabilities,
  * e.g. {@code hero:publish}. Realm roles are ignored: actor roles are composites that Keycloak expands into
  * client roles before issuing the token.
+ *
+ * <p>Only tokens issued to a capability client ({@code azp}) carry capabilities. The public Wiki and Stream run on the
+ * same origin as user content; a script injected there must not be able to act as an admin who signed in to them.
  */
 class KeycloakJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
     private final String resourceClientId;
+    private final Set<String> capabilityClients;
 
-    KeycloakJwtAuthenticationConverter(String resourceClientId) {
+    KeycloakJwtAuthenticationConverter(String resourceClientId, Set<String> capabilityClients) {
         this.resourceClientId = resourceClientId;
+        this.capabilityClients = Set.copyOf(capabilityClients);
     }
 
     /** Rejects tokens without a subject: audit identity is {@code (issuer, subject)}. */
@@ -35,6 +41,10 @@ class KeycloakJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthe
     }
 
     Collection<GrantedAuthority> authorities(Jwt jwt) {
+        String authorizedParty = jwt.getClaimAsString("azp");
+        if (authorizedParty == null || !capabilityClients.contains(authorizedParty)) {
+            return List.of();
+        }
         Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
         if (resourceAccess == null || !(resourceAccess.get(resourceClientId) instanceof Map<?, ?> client)) {
             return List.of();

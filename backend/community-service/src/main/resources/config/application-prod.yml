@@ -24,5 +24,7 @@ logging:
       # JSON logs on stdout (Elastic Common Schema).
       console: ecs
 community:
+  security:
+    capability-clients: ${COMMUNITY_CAPABILITY_CLIENTS:admin-aov-backend}
   wiki-base-url: ${WIKI_BASE_URL}
   allowed-origins: ${COMMUNITY_ALLOWED_ORIGINS}

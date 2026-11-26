@@ -32,6 +32,11 @@ management:
       exposure:
         include: health,info
 community:
+  security:
+    # Clients (the token's azp) whose tokens carry capabilities. Stream tokens sign people in without any: Stream shares
+    # the origin with user content, and a script injected there must not act as staff. The development realm also has
+    # the older admin-aov client and wiki-local-cli.
+    capability-clients: ${COMMUNITY_CAPABILITY_CLIENTS:admin-aov-backend,admin-aov,wiki-local-cli}
   wiki-base-url: ${WIKI_BASE_URL:http://localhost:8080}
   allowed-origins: ${COMMUNITY_ALLOWED_ORIGINS:http://localhost:5174,http://localhost:5175,http://127.0.0.1:5174,http://127.0.0.1:5175}
   exchange-rates:

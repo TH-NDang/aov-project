@@ -24,6 +24,9 @@ spring:
           issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081/realms/wikiaov}
 
 wiki:
+  security:
+    # The development realm also has the older admin-aov client and wiki-local-cli, which the local scripts sign in with.
+    capability-clients: ${JWT_CAPABILITY_CLIENTS:admin-aov-backend,wiki-importer,admin-aov,wiki-local-cli}
   account:
     mail:
       from: ${MAIL_FROM:AOV <no-reply@aov.localhost>}
