@@ -116,7 +116,8 @@ export const HeroCard = memo(function HeroCard({
           {undated && <span className="wiki-hero-card-note">{undated}</span>}
         </span>
       </Link>
-      {credit && imageUrl && media?.currentVersion && (
+      {/* The list leaves the head's credits to the hero's page when a portrait carries them (spec 03, section 4). */}
+      {credit && imageUrl && media?.currentVersion && (media === hero.portrait || !hero.portrait) && (
         <WikiImageCredit
           className="wiki-hero-card-credit"
           sources={media.currentVersion.sources}
