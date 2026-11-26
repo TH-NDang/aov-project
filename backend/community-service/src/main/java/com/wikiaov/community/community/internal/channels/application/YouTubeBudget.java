@@ -3,23 +3,17 @@ package com.wikiaov.community.community.internal.channels.application;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import org.springframework.stereotype.Component;
 
 /**
  * The Data API units spent today. Google's quota restarts at midnight Pacific time; once the configured share is spent,
  * or Google refuses for the quota, channels are shown from their feeds alone until then.
  */
-@Component
 class YouTubeBudget {
     private static final ZoneId QUOTA_DAY = ZoneId.of("America/Los_Angeles");
     private final int dailyUnits;
     private final Clock clock;
     private LocalDate day;
     private int spent;
-
-    YouTubeBudget(YouTubeSettings settings) {
-        this(settings.dailyUnits(), Clock.systemUTC());
-    }
 
     YouTubeBudget(int dailyUnits, Clock clock) {
         this.dailyUnits = dailyUnits;
