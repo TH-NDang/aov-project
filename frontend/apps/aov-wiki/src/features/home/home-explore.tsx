@@ -1,4 +1,8 @@
+import type { CSSProperties } from "react"
 import { Link } from "react-router"
+import { gameIcon } from "@aov/ui/components/game-icons"
+import { termIcon } from "@aov/ui/components/gameplay-icons"
+import { defaultEntityColor } from "@aov/ui/lib/entity-rich-text"
 import { ChangeKindMark } from "../../components/change-tag"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
@@ -8,6 +12,8 @@ import { HomeChangeCounts } from "./home-change-counts"
 import { HomeRoles } from "./home-roles"
 import { useHomeSections, type HomeSection } from "./use-home-sections"
 import "./home-explore.css"
+
+const GlossaryMark = gameIcon("spell-book")
 
 /** How many pictures each section's strip holds; the wide cards hold more. */
 const STRIP_SIZE: Partial<Record<HomeSection["key"], number>> = {
@@ -24,9 +30,17 @@ function Strip({ section }: { section: HomeSection }) {
   if (section.words.length > 0) {
     return (
       <span className="wiki-home-card-strip" data-shape="words" aria-hidden="true">
-        {section.words.slice(0, count).map((word) => (
-          <span key={word}>{word}</span>
-        ))}
+        {section.words.slice(0, count).map(({ name, term }) => {
+          // Each term carries the glossary's own mark for it, in its colour.
+          const Mark = termIcon(term) ?? GlossaryMark
+          const color = term.display?.color ?? defaultEntityColor(term)
+          return (
+            <span key={term.id} style={color ? ({ "--term-color": color } as CSSProperties) : undefined}>
+              <Mark size={16} className="wiki-home-card-term-mark" />
+              {name}
+            </span>
+          )
+        })}
       </span>
     )
   }

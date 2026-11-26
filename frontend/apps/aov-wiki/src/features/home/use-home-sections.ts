@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { referenceTranslation } from "@aov/ui/lib/entity-rich-text"
+import { referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { WikiIconName } from "../../components/wiki-icon"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { dailySpread } from "../../lib/daily-spread"
@@ -34,8 +34,8 @@ export interface HomeSection {
   shape: PictureShape
   /** Real pictures of the section, picked for the day; empty while they load or for a section without pictures. */
   pictures: SectionPicture[]
-  /** For the glossary, a few of its terms stand in for pictures. */
-  words: string[]
+  /** For the glossary, a few of its terms stand in for pictures, each with the term it names for its icon. */
+  words: { name: string; term: EntityReference }[]
   /** For updates, how many heroes the version in force changed in each way. */
   tally: [kind: string, count: number][]
 }
@@ -116,7 +116,10 @@ export function useHomeSections(): HomeSection[] {
   const words = pick(
     entities.filter((entity) => entity.kind === "term"),
     6,
-  ).flatMap((term) => referenceTranslation(term, locale)?.name ?? [])
+  ).flatMap((term) => {
+    const name = referenceTranslation(term, locale)?.name
+    return name ? [{ name, term }] : []
+  })
 
   const countOf = (key: WikiSectionKey) =>
     key === "heroes" ? (heroes.data ? heroList.length : undefined) : counts.data?.[key as keyof typeof counts.data]
