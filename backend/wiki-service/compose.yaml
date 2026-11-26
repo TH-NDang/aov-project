@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:8.2-alpine
+    image: redis:8.10-alpine
     command: ['redis-server', '--maxmemory', '128mb', '--maxmemory-policy', 'allkeys-lru', '--save', '', '--appendonly', 'no']
     ports:
       - '127.0.0.1:6379:6379'
@@ -10,7 +10,7 @@ services:
       timeout: 3s
       retries: 10
   postgres:
-    image: postgres:17.6
+    image: postgres:17.11
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-wiki}
       POSTGRES_USER: ${POSTGRES_USER:-wiki}
@@ -28,7 +28,7 @@ services:
   # service only starts with the "local-storage" profile: docker compose --profile local-storage up -d seaweedfs,
   # together with the Spring profiles "local,local-storage". Credentials live in infra/local/seaweedfs/s3.json.
   seaweedfs:
-    image: chrislusf/seaweedfs:4.48
+    image: chrislusf/seaweedfs:4.55
     profiles: [local-storage]
     command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
     ports:
@@ -56,7 +56,7 @@ services:
       - ./infra/local/keycloak-themes/aov-admin:/opt/keycloak/themes/aov-admin:ro
   # Catches account security email locally (ADR-028); not part of production.
   mailpit:
-    image: axllent/mailpit:v1.32.0
+    image: axllent/mailpit:v1.34.0
     profiles: [mail]
     ports:
       - '127.0.0.1:1025:1025' # SMTP
