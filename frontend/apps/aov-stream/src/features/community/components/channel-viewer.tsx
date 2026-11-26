@@ -47,6 +47,7 @@ function ChannelBody({ pageId, link, onClose }: { pageId: string; link: ProfileL
   const scroller = useRef<HTMLDivElement>(null)
   const [playing, setPlaying] = useState<YouTubeVideo | null>(null)
   const [olderWanted, setOlderWanted] = useState(false)
+  const [solid, setSolid] = useState(false)
   const channel = useQuery({
     queryKey: communityKeys.youtubeChannel(pageId, link.url),
     queryFn: () => communityApi.youtubeChannel(pageId, link.url),
@@ -63,10 +64,24 @@ function ChannelBody({ pageId, link, onClose }: { pageId: string; link: ProfileL
     retry: false,
   })
 
+  /**
+   * A video plays under the channel's head. A short's tall frame does not fit under it, so the list scrolls past the
+   * head and the frame sits under the top bar with its title in view.
+   */
   function play(video: YouTubeVideo) {
     watch.pause()
     setPlaying(video)
-    scroller.current?.scrollTo({ top: 0, behavior: "smooth" })
+    const list = scroller.current
+    const head = list?.querySelector(".pf-channel-head")
+    const bar = list?.querySelector<HTMLElement>(".pf-channel-top")
+    const top =
+      video.shortForm && list && head
+        ? head.getBoundingClientRect().bottom -
+          list.getBoundingClientRect().top +
+          list.scrollTop -
+          (bar?.offsetHeight ?? 0)
+        : 0
+    list?.scrollTo({ top, behavior: "smooth" })
   }
 
   const data = channel.data
@@ -82,8 +97,13 @@ function ChannelBody({ pageId, link, onClose }: { pageId: string; link: ProfileL
   const [feature, ...rest] = videos
 
   return (
-    <div className="pf-channel-scroll" ref={scroller}>
-      <ChannelHead channel={data} link={link} pending={channel.isPending} onClose={onClose} />
+    <div
+      className="pf-channel-scroll"
+      ref={scroller}
+      onScroll={(event) => setSolid(event.currentTarget.scrollTop > bannerUnderBar(event.currentTarget))}
+    >
+      <ChannelTop title={data?.title || link.label} solid={solid} onClose={onClose} />
+      <ChannelHead channel={data} link={link} pending={channel.isPending} />
       {playing && <Player video={playing} onClose={() => setPlaying(null)} />}
       {channel.isError ? (
         <div className="pf-channel-state" role="alert">
@@ -138,20 +158,47 @@ function ChannelBody({ pageId, link, onClose }: { pageId: string; link: ProfileL
   )
 }
 
+/** How far the list scrolls before the banner is under the top bar. */
+function bannerUnderBar(list: HTMLElement) {
+  const banner = list.querySelector<HTMLElement>(".pf-channel-banner")
+  const bar = list.querySelector<HTMLElement>(".pf-channel-top")
+  return (banner?.offsetHeight ?? 0) - (bar?.offsetHeight ?? 0)
+}
+
+/**
+ * The way out of the panel: a round button over the banner at first. Once the banner has scrolled under it, it becomes a
+ * bar with the channel's name, so a phone always shows how to go back.
+ */
+function ChannelTop({ title, solid, onClose }: { title: string; solid: boolean; onClose: () => void }) {
+  const { text } = useStreamLocale()
+  const mobile = usePageLayout() === "compact"
+  return (
+    <div className="pf-channel-top" data-solid={solid || undefined}>
+      <button
+        type="button"
+        className="pf-channel-close"
+        data-back={mobile || undefined}
+        aria-label={mobile ? text("Quay lại", "Back") : text("Đóng", "Close")}
+        onClick={onClose}
+      >
+        <StreamIcon name={mobile ? "arrow" : "close"} size={18} />
+      </button>
+      <strong aria-hidden="true">{title}</strong>
+    </div>
+  )
+}
+
 /** The banner with the channel's picture, name and counts, and the ways to YouTube. */
 function ChannelHead({
   channel,
   link,
   pending,
-  onClose,
 }: {
   channel: YouTubeChannel | undefined
   link: ProfileLink
   pending: boolean
-  onClose: () => void
 }) {
   const { text, languageTag } = useStreamLocale()
-  const mobile = usePageLayout() === "compact"
   const title = channel?.title || link.label
   const figures = [
     channel?.handle,
@@ -169,17 +216,6 @@ function ChannelHead({
   return (
     <header className="pf-channel-head" data-pending={pending || undefined}>
       <div className="pf-channel-banner">{channel?.bannerUrl && <img src={channel.bannerUrl} alt="" />}</div>
-      <div className="pf-channel-bar">
-        <button
-          type="button"
-          className="pf-channel-close"
-          data-back={mobile || undefined}
-          aria-label={mobile ? text("Quay lại", "Back") : text("Đóng", "Close")}
-          onClick={onClose}
-        >
-          <StreamIcon name={mobile ? "arrow" : "close"} size={18} />
-        </button>
-      </div>
       <div className="pf-channel-who">
         <StreamImage src={channel?.avatarUrl} name={title} className="pf-channel-avatar" />
         <div>

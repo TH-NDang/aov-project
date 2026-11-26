@@ -1,5 +1,6 @@
 /* ---------- The channel panel: from the right on wide screens, the whole screen on phones ---------- */
 .pf-channel {
+  --pf-channel-top: 56px;
   width: min(520px, 100vw);
   max-width: none;
   padding: 0;
@@ -37,16 +38,51 @@
   height: 100%;
   object-fit: cover;
 }
-.pf-channel-bar {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  left: 10px;
+/* The way out stays at the top: a round button over the banner, then a bar with the name once the banner is gone. */
+.pf-channel-top {
+  position: sticky;
+  z-index: 3;
+  top: 0;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  height: var(--pf-channel-top);
+  margin-bottom: calc(-1 * var(--pf-channel-top));
+  padding: 0 10px 0 16px;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.pf-channel-top > strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.pf-channel-top[data-solid] {
+  background: var(--hub-surface);
+  box-shadow: 0 1px 0 var(--hub-border);
+}
+.pf-channel-top[data-solid] > strong {
+  opacity: 1;
+}
+.pf-channel-top[data-solid] .pf-channel-close {
+  background: transparent;
+  color: var(--hub-text);
+  backdrop-filter: none;
+}
+.pf-channel-top[data-solid] .pf-channel-close:hover {
+  background: var(--hub-raised);
 }
 .pf-channel-close {
   display: grid;
+  flex: none;
+  order: 1;
   width: 36px;
   height: 36px;
   place-items: center;
@@ -60,7 +96,8 @@
   background: rgb(0 0 0 / 0.7);
 }
 .pf-channel-close[data-back] {
-  margin-right: auto;
+  order: -1;
+  margin-left: -6px;
 }
 .pf-channel-close[data-back] > svg {
   transform: scaleX(-1);
@@ -148,7 +185,7 @@
 .pf-channel-player {
   position: sticky;
   z-index: 2;
-  top: 0;
+  top: var(--pf-channel-top);
   margin-bottom: 12px;
   background: var(--hub-surface);
   box-shadow: 0 10px 18px -16px rgb(0 0 0 / 0.6);
@@ -260,8 +297,11 @@
   .pf-channel-banner {
     height: calc(112px + env(safe-area-inset-top));
   }
-  .pf-channel-bar {
-    top: calc(10px + env(safe-area-inset-top));
+  .pf-channel {
+    --pf-channel-top: calc(56px + env(safe-area-inset-top));
+  }
+  .pf-channel-top {
+    padding-top: env(safe-area-inset-top);
   }
 }
 @media (prefers-reduced-motion: reduce) {
