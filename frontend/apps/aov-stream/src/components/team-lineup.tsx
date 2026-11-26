@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react"
 import { Link } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import type { LineupSeat } from "../lib/lineup-model"
+import { CaptainBadge } from "./captain-badge"
 import { LANE_NAMES } from "../lib/tournament-model"
 import { Jersey } from "./jersey"
 import { useStreamLocale } from "./stream-locale"
@@ -26,7 +27,6 @@ export function TeamLineup({
 }) {
   const { text } = useStreamLocale()
   const compact = usePageLayout() === "compact"
-  const captain = text("Đội trưởng", "Captain")
   return (
     <section className="ln" aria-labelledby="profile-lineup">
       <div className="tn-heading">
@@ -58,11 +58,7 @@ export function TeamLineup({
               </span>
               <strong>
                 {seat.to ? <Link to={seat.to}>{seat.name}</Link> : seat.name}
-                {seat.captain && (
-                  <abbr title={captain} aria-label={captain}>
-                    C
-                  </abbr>
-                )}
+                {seat.captain && <CaptainBadge />}
               </strong>
               <span>{text(LANE_NAMES[seat.lane][0], LANE_NAMES[seat.lane][1])}</span>
             </li>

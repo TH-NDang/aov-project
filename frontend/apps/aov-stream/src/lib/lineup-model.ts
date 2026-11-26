@@ -40,7 +40,7 @@ export function competitionLineup(views: CompetitionView[], teamId: string): Com
               key: row.playerId,
               name: players[row.playerId]?.nickname ?? "",
               lane: row.lane,
-              captain: false,
+              captain: row.captain === true,
               to: `/players/${row.playerId}`,
             },
           ]

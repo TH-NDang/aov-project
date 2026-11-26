@@ -68,20 +68,6 @@
   font-weight: 400;
   line-height: 16px;
 }
-.rs-name > abbr {
-  display: inline-grid;
-  width: 18px;
-  height: 18px;
-  margin-left: 6px;
-  place-items: center;
-  border-radius: var(--aov-radius-pill);
-  background: var(--hub-accent-soft);
-  color: var(--hub-accent-strong);
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-  vertical-align: middle;
-}
 /* In a narrow list the role wraps at the end of the row; the member's name never gives way to it. */
 .rs li > small {
   padding: 7px 0;

@@ -68,3 +68,17 @@ test("a team's lineup comes from the newest competition that lists its starters"
 test("substitutes alone make no lineup", () => {
   assert.equal(competitionLineup([registered("new", ["TOP", "MID", "DRAGON"], "SUBSTITUTE")], "team"), null)
 })
+
+test("the captain a competition's roster marks keeps the mark in the lineup drawn from it", () => {
+  const view = registered("marked", ["TOP", "MID", "DRAGON"])
+  view.content.rosters[1]!.captain = true
+
+  assert.deepEqual(
+    competitionLineup([view], "team")!.seats.map(({ lane, captain }) => [lane, captain]),
+    [
+      ["TOP", false],
+      ["MID", true],
+      ["DRAGON", false],
+    ],
+  )
+})
