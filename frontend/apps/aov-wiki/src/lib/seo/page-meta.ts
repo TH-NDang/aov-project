@@ -26,6 +26,15 @@ export interface PageMeta {
   type?: "website" | "article"
   image?: PageImage
   noindex?: boolean
+  /** The way down from the home page to this one, this page last; it becomes the page's BreadcrumbList. */
+  breadcrumbs?: readonly Crumb[]
+  /** When an article went live, as a date or timestamp: patch notes are read by their date. */
+  published?: string | null
+}
+
+export interface Crumb {
+  name: string
+  path: string
 }
 
 export interface MediaVersionLike {
@@ -48,6 +57,8 @@ export interface HeroMetaSource {
   media?: Partial<Record<"HEAD" | "PORTRAIT" | "SPLASH", MediaLike | undefined>> | null
   /** The form being read of a hero that holds forms (ADR-024); the default form keeps the hero's own address. */
   form?: { key: string; label: string; isDefault: boolean } | null
+  /** Whether a build is published for the hero; only then do the title and description promise one. */
+  hasBuild?: boolean
 }
 
 export interface TranslationLike {
@@ -68,6 +79,7 @@ export interface PatchLike {
   title?: string | null
   summary?: string | null
   description?: string | null
+  effectiveAt?: string | null
 }
 
 export type WarehouseTab = (typeof WAREHOUSE_TABS)[number]
@@ -77,13 +89,34 @@ const pick = (locale: string, vietnamese: string, english: string) => localeText
 
 const titled = (heading: string) => `${heading} | ${SITE_NAME}`
 
+/** Readers search with the game's name, so every title carries it once. */
+const GAME = { short: ["Liên Quân", "Arena of Valor"], full: ["Liên Quân Mobile", "Arena of Valor"] } as const
+const namesGame = (text: string) => /li[eê]n qu[aâ]n|arena of valor|\baov\b/i.test(text.replace(SITE_NAME, ""))
+
+/** An entry named with its section and the game, such as "Cloak — Arena of Valor equipment". */
+const ofGame = (name: string, section: string, locale: string) =>
+  pick(locale, `${name} — ${section} ${GAME.short[0]}`, `${name} — ${GAME.short[1]} ${section.toLowerCase()}`)
+
+const homeCrumb = (locale: string): Crumb => ({ name: pick(locale, "Trang chủ", "Home"), path: "/" })
+
+const sectionCrumb = (key: SectionKey, locale: string): Crumb => ({
+  name: pick(locale, ...SECTIONS[key].name),
+  path: SECTIONS[key].path,
+})
+
+const crumbs = (locale: string, ...rest: Crumb[]) => [homeCrumb(locale), ...rest]
+
+/** The wide card for pages without art of their own: link previews crop to about 1.91:1. */
 export const DEFAULT_IMAGE: PageImage = {
-  url: "/images/mole-logo-v4.png",
-  width: 1254,
-  height: 1254,
-  type: "image/png",
-  alt: SITE_NAME,
+  url: "/images/og-default.jpg",
+  width: 1200,
+  height: 630,
+  type: "image/jpeg",
+  alt: `${SITE_NAME} — Sổ tay Liên Quân Mobile`,
 }
+
+/** The square mark, for structured data that asks for a logo. */
+export const LOGO_IMAGE = "/images/mole-logo-v4.png"
 
 export const SECTIONS: Record<SectionKey, { path: string; name: [string, string]; description: [string, string] }> = {
   modes: {
@@ -189,17 +222,18 @@ export function sectionMeta(key: SectionKey, locale: string): PageMeta {
   const section = SECTIONS[key]
   const heading = pick(locale, ...section.name)
   return {
-    title: titled(heading),
+    title: titled(pick(locale, `${heading} ${GAME.full[0]}`, `${GAME.full[1]} ${heading.toLowerCase()}`)),
     heading,
     description: pick(locale, ...section.description),
     path: section.path,
     locale,
     image: DEFAULT_IMAGE,
+    breadcrumbs: crumbs(locale, sectionCrumb(key, locale)),
   }
 }
 
 export function homeMeta(locale: string): PageMeta {
-  const heading = pick(locale, `${SITE_NAME} — Khai mở tri thức`, `${SITE_NAME} — Knowledge uncovered`)
+  const heading = pick(locale, `${SITE_NAME} — Sổ tay Liên Quân Mobile`, `${SITE_NAME} — Arena of Valor handbook`)
   return {
     title: heading,
     heading,
@@ -227,6 +261,7 @@ export function contactMeta(locale: string): PageMeta {
     path: "/contact",
     locale,
     image: DEFAULT_IMAGE,
+    breadcrumbs: crumbs(locale, { name: heading, path: "/contact" }),
   }
 }
 
@@ -280,6 +315,9 @@ export function heroMeta(hero: HeroMetaSource, locale: string): PageMeta {
   const form = hero.form && !hero.form.isDefault ? hero.form : undefined
   const named = form ? `${hero.name} (${form.label})` : hero.name
   const heading = hero.title ? `${named} — ${hero.title}` : named
+  const contents = hero.hasBuild
+    ? pick(locale, "lên đồ, bảng ngọc, kỹ năng", "build, arcana and abilities")
+    : pick(locale, "kỹ năng, trang phục", "abilities and skins")
   const roles = heroRoleLabels(hero.roles, locale)
   const identity = pick(
     locale,
@@ -288,21 +326,29 @@ export function heroMeta(hero: HeroMetaSource, locale: string): PageMeta {
   )
   const details =
     plainText(hero.summary) ||
-    pick(
-      locale,
-      `Kỹ năng, chỉ số, trang phục và lịch sử thay đổi của ${hero.name}.`,
-      `Abilities, stats, skins and change history of ${hero.name}.`,
-    )
+    (hero.hasBuild
+      ? pick(
+          locale,
+          `Cách lên đồ, bảng ngọc, phù hiệu, kỹ năng và trang phục của ${hero.name}.`,
+          `How to build ${hero.name}: items, arcana, enchantments, abilities and skins.`,
+        )
+      : pick(
+          locale,
+          `Kỹ năng, chỉ số, trang phục và lịch sử thay đổi của ${hero.name}.`,
+          `Abilities, stats, skins and change history of ${hero.name}.`,
+        ))
+  const path = form
+    ? `/hero/${encodeURIComponent(hero.code)}/${encodeURIComponent(form.key)}`
+    : `/hero/${encodeURIComponent(hero.code)}`
   return {
-    title: titled(heading),
+    title: titled(pick(locale, `${named} ${GAME.short[0]}: ${contents}`, `${named} — ${GAME.short[1]} ${contents}`)),
     heading,
     description: clampDescription(`${identity} ${details}`),
-    path: form
-      ? `/hero/${encodeURIComponent(hero.code)}/${encodeURIComponent(form.key)}`
-      : `/hero/${encodeURIComponent(hero.code)}`,
+    path,
     locale,
     type: "article",
     image: pageImage(hero.media?.SPLASH ?? hero.media?.PORTRAIT ?? hero.media?.HEAD, hero.name) ?? DEFAULT_IMAGE,
+    breadcrumbs: crumbs(locale, sectionCrumb("heroes", locale), { name: named, path }),
   }
 }
 
@@ -315,16 +361,18 @@ export function warehouseEntryMeta(tab: WarehouseTab, entry: WarehouseEntryLike,
   const summary = plainText(text?.summary)
   const details = plainText(text?.description)
   const body = [summary, details].filter(Boolean).join(". ")
+  const path = warehousePath(tab, entry.code)
   return {
-    title: titled(heading),
+    title: titled(ofGame(name, section, locale)),
     heading,
     description: clampDescription(
       `${name}: ${section} ${pick(locale, "trong Liên Quân Mobile", "in Arena of Valor")}.${body ? ` ${body}` : ""}`,
     ),
-    path: warehousePath(tab, entry.code),
+    path,
     locale,
     type: "article",
     image: pageImage(icon, name) ?? DEFAULT_IMAGE,
+    breadcrumbs: crumbs(locale, sectionCrumb(tab, locale), { name, path }),
   }
 }
 
@@ -332,8 +380,9 @@ export function termMeta(term: { id: string; name: string; description?: string 
   const section = pick(locale, ...SECTIONS.terms.name)
   const heading = `${term.name} — ${section}`
   const details = plainText(term.description)
+  const path = `/terms/${encodeURIComponent(term.id)}`
   return {
-    title: titled(heading),
+    title: titled(ofGame(term.name, section, locale)),
     heading,
     description: clampDescription(
       details
@@ -344,10 +393,11 @@ export function termMeta(term: { id: string; name: string; description?: string 
             `${term.name}: a term used in Arena of Valor.`,
           ),
     ),
-    path: `/terms/${encodeURIComponent(term.id)}`,
+    path,
     locale,
     type: "article",
     image: DEFAULT_IMAGE,
+    breadcrumbs: crumbs(locale, sectionCrumb("terms", locale), { name: term.name, path }),
   }
 }
 
@@ -364,8 +414,9 @@ export function modeMeta(mode: ModeMetaSource, locale: string): PageMeta {
   const section = pick(locale, ...SECTIONS.modes.name)
   const heading = `${mode.name} — ${section}`
   const details = plainText(mode.summary)
+  const path = `/modes/${encodeURIComponent(mode.code)}`
   return {
-    title: titled(heading),
+    title: titled(ofGame(mode.name, section, locale)),
     heading,
     description: clampDescription(
       details ||
@@ -375,20 +426,22 @@ export function modeMeta(mode: ModeMetaSource, locale: string): PageMeta {
           `${mode.name}: an Arena of Valor game mode — match length, availability and rules${mode.hasGuide ? ", with a detailed guide" : ""}.`,
         ),
     ),
-    path: `/modes/${encodeURIComponent(mode.code)}`,
+    path,
     locale,
     type: "article",
     image: mode.art
       ? { url: mode.art.url, width: mode.art.width, height: mode.art.height, alt: mode.name }
       : DEFAULT_IMAGE,
+    breadcrumbs: crumbs(locale, sectionCrumb("modes", locale), { name: mode.name, path }),
   }
 }
 
 export function patchMeta(patch: PatchLike, locale: string): PageMeta {
   const heading = plainText(patch.title) || patch.code
   const details = plainText(patch.summary) || plainText(patch.description)
+  const path = `/updates/${encodeURIComponent(patch.code)}`
   return {
-    title: titled(heading),
+    title: titled(namesGame(heading) ? heading : `${heading} — ${pick(locale, ...GAME.full)}`),
     heading,
     description: clampDescription(
       details ||
@@ -398,9 +451,11 @@ export function patchMeta(patch: PatchLike, locale: string): PageMeta {
           `Arena of Valor patch notes ${patch.code}: changed heroes, equipment, enchantments, arcana and talents. ${heading}.`,
         ),
     ),
-    path: `/updates/${encodeURIComponent(patch.code)}`,
+    path,
     locale,
     type: "article",
     image: DEFAULT_IMAGE,
+    breadcrumbs: crumbs(locale, sectionCrumb("updates", locale), { name: heading, path }),
+    published: patch.effectiveAt,
   }
 }

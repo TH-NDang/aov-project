@@ -340,6 +340,18 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
           </div>
         )}
       </article>
+      {/* The other abilities stay in the page like closed tabs, so a reader of the markup finds the whole kit and not
+          only the ability on screen. */}
+      <div hidden>
+        {skills
+          .filter((skill) => skill.skillKey !== active.skillKey && skill.description)
+          .map((skill) => (
+            <section key={skill.skillKey}>
+              <h3>{skill.name || skillLabel(skill, locale)}</h3>
+              <div>{rich(skill.description ?? "")}</div>
+            </section>
+          ))}
+      </div>
     </>
   )
 }

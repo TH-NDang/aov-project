@@ -14,6 +14,10 @@ Trên desktop, tên AOV Stream cạnh logo cú mở menu gồm AOV Wiki và AOV 
 
 Chiều Wiki → Stream dùng `VITE_STREAM_URL` trong `apps/aov-wiki`. Cả hai chiều chuyển trong cùng tab, không chuyển các bộ lọc riêng của ứng dụng.
 
+## Tiêu đề và tìm kiếm
+
+Mỗi trang đặt tiêu đề, mô tả, canonical và thẻ xem trước qua `<StreamHead>` (`components/stream-head.tsx`), không dùng thẻ `<title>` trực tiếp. Trang tài khoản, quản lý trang, lời mời, đăng nhập và địa chỉ không có trang được gắn `noindex`; địa chỉ lạ hiện trang “Không tìm thấy trang” thay vì chuyển về trang chủ. Xem thêm [SEO của Wiki](../aov-wiki/docs/seo.md#stream).
+
 ## Dữ liệu và phạm vi
 
 Icon tài khoản trên header mở popup khi hover, nhấn hoặc dùng bàn phím. Trên mobile, nút “⋯” mở drawer gọn: hàng tài khoản ở đầu, hai ô Wiki/Stream cạnh nhau, rồi ngôn ngữ và Sáng/Tối. Sau đăng nhập, các liên kết tài khoản xếp hai cột. Drawer dùng chung `PublicPreferencesDrawer` với Wiki; thanh kéo mảnh 36×3px nằm trong vùng kéo 64×24px, chỉ vùng này nhận thao tác kéo đóng. Nội dung cuộn độc lập, lớp nền mờ nhẹ và hiệu ứng mở 240ms; tôn trọng thiết lập giảm chuyển động. Popup desktop gom ngôn ngữ,

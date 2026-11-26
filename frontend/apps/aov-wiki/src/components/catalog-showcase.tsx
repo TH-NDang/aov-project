@@ -9,6 +9,8 @@ export interface ShowcaseIntro {
   /** A control pinned to the banner, such as the data version: its top right corner on wide screens, beside the count on phones. */
   corner?: ReactNode
   wide: boolean
+  /** False on a page about one entry of the catalog, whose own name is the page's h1. */
+  titleIsHeading?: boolean
 }
 
 /**
@@ -32,8 +34,10 @@ export function CatalogShowcase({
   scene,
   align = "middle",
   note,
+  titleIsHeading = true,
 }: ShowcaseIntro & { scene?: ReactNode; align?: ShowcaseAlign; note?: ReactNode }) {
   const counted = count && <span className="wiki-catalog-showcase-count">{count}</span>
+  const Title = titleIsHeading ? "h1" : "p"
   return (
     <section className="wiki-catalog-showcase" data-layout={wide ? "wide" : "compact"} data-align={align}>
       <div className="wiki-catalog-showcase-scene" aria-hidden="true">
@@ -42,7 +46,7 @@ export function CatalogShowcase({
       <div className="wiki-catalog-showcase-text">
         {wide ? (
           <div className="wiki-catalog-showcase-title">
-            <h1>{title}</h1>
+            <Title>{title}</Title>
             {counted}
           </div>
         ) : (

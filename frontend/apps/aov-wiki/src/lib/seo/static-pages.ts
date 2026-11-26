@@ -1,9 +1,10 @@
 import { formLabelRole, heroFormPath } from "../hero-forms.ts"
 import type { HeroRole } from "../hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
-import { headTags } from "./head-tags.ts"
+import { absoluteUrl, headTags } from "./head-tags.ts"
 import {
   contactMeta,
+  DEFAULT_IMAGE,
   heroMeta,
   heroPositionLabels,
   heroRoleLabels,
@@ -33,11 +34,22 @@ import { HOME_BANNERS, HOME_BANNER_WIDTH } from "../home-banners.ts"
 export const STATIC_SCOPE = { region: "VN", locale: "vi-VN" } as const
 const LOCALE = STATIC_SCOPE.locale
 
+/** One build as a static page lists it: the warehouse entries by id, in slot order. */
+export interface PublishedBuild {
+  source: string
+  items: readonly string[]
+  enchantments: readonly string[]
+  arcana: readonly { id: string; quantity: number }[]
+  spellId?: string | null
+}
+
 export interface PublishedHero extends HeroMetaSource {
   id: string
   positions?: readonly string[]
   skills: readonly { name?: string | null; description?: string | null }[]
   skins: readonly { name?: string | null }[]
+  /** The first build of each source; older callers may leave them out. */
+  builds?: readonly PublishedBuild[]
   /** The published forms of a hero that holds forms, default form first (ADR-024). */
   forms?: readonly PublishedHeroForm[]
 }
@@ -53,6 +65,7 @@ export interface PublishedHeroForm {
   media?: HeroMetaSource["media"]
   skills: PublishedHero["skills"]
   skins: PublishedHero["skins"]
+  builds?: PublishedHero["builds"]
 }
 
 export interface PublishedEntry extends WarehouseEntryLike {
@@ -96,6 +109,9 @@ export interface StaticPageOptions {
   /** The build asks the image service for resized pictures (`VITE_IMAGE_RESIZE=cloudflare`). */
   imageResize?: boolean
 }
+
+/** How a build names the entries it holds: each links to that entry's own page. */
+type EntryNames = ReadonlyMap<string, { tab: WarehouseTab; code: string; name: string }>
 
 const escapeHtml = (value: string) =>
   value
@@ -173,6 +189,7 @@ function page(heading: string, content: string, heroId?: string) {
 function heroFormPages(
   hero: PublishedHero,
   forms: readonly PublishedHeroForm[],
+  names: EntryNames,
   options: StaticPageOptions,
 ): StaticPage[] {
   return forms.flatMap((form, index) => {
@@ -187,9 +204,11 @@ function heroFormPages(
         media: { ...hero.media, ...form.media },
         skills: form.skills,
         skins: [...hero.skins, ...form.skins],
+        builds: form.builds,
         form: { key: form.formKey, label, isDefault: index === 0 },
         forms: undefined,
       },
+      names,
       options,
     )[0]
     const switcher = list(forms.map((other) => link(heroFormPath(hero.code, other.formKey, forms), other.name)))
@@ -199,9 +218,35 @@ function heroFormPages(
   })
 }
 
-function heroPage(hero: PublishedHero, options: StaticPageOptions): StaticPage[] {
-  if (hero.forms?.length) return heroFormPages(hero, hero.forms, options)
-  const meta = heroMeta(hero, LOCALE)
+/** The builds as lists of linked names; an entry the catalog does not know is left out. */
+function buildSection(builds: readonly PublishedBuild[], names: EntryNames) {
+  const named = (ids: readonly string[]) =>
+    ids.flatMap((id) => {
+      const entry = names.get(id)
+      return entry ? [link(warehousePath(entry.tab, entry.code), entry.name)] : []
+    })
+  const rows = builds.flatMap((build) => {
+    const parts = [
+      ["Trang bị", named(build.items)],
+      ["Phù hiệu", named(build.enchantments)],
+      [
+        "Bảng ngọc",
+        build.arcana.flatMap((row) => {
+          const [name] = named([row.id])
+          return name ? [`${name} ×${row.quantity}`] : []
+        }),
+      ],
+      ["Phụ trợ", named(build.spellId ? [build.spellId] : [])],
+    ] as const
+    const lines = parts.flatMap(([label, values]) => (values.length ? [`${label}: ${values.join(", ")}`] : []))
+    return lines.length ? [`<h3>${escapeHtml(build.source)}</h3>${list(lines)}`] : []
+  })
+  return rows.length ? `<h2>Lên đồ</h2>${rows.join("")}` : ""
+}
+
+function heroPage(hero: PublishedHero, names: EntryNames, options: StaticPageOptions): StaticPage[] {
+  if (hero.forms?.length) return heroFormPages(hero, hero.forms, names, options)
+  const meta = heroMeta({ ...hero, hasBuild: !!hero.builds?.length }, LOCALE)
   const roles = heroRoleLabels(hero.roles, LOCALE)
   const positions = heroPositionLabels(hero.positions, LOCALE)
   const skills = hero.skills.flatMap((skill) =>
@@ -217,6 +262,7 @@ function heroPage(hero: PublishedHero, options: StaticPageOptions): StaticPage[]
       roles.length ? paragraph(`Vai trò: ${roles.join(", ")}`) : "",
       positions.length ? paragraph(`Vị trí: ${positions.join(", ")}`) : "",
       skills.length ? `<h2>Kỹ năng</h2>${list(skills)}` : "",
+      buildSection(hero.builds ?? [], names),
       skins.length ? `<h2>Trang phục</h2>${list(skins)}` : "",
       `<p>${link("/hero", "Tất cả tướng")}</p>`,
     ].join(""),
@@ -261,7 +307,14 @@ function warehouseListPage(tab: WarehouseTab, entries: readonly PublishedEntry[]
     meta,
     body: page(meta.heading, paragraph(meta.description) + list(rows)),
     listed: true,
+    lastmod: latest(entries.map((entry) => entry.revision?.publishedAt)),
   }
+}
+
+/** The newest of the dates that have already passed: a list changes when the last of its entries went live. */
+function latest(values: readonly (string | null | undefined)[], now = new Date().toISOString()) {
+  const passed = values.filter((value): value is string => !!value && value <= now)
+  return passed.length ? passed.reduce((newest, value) => (value > newest ? value : newest)) : null
 }
 
 function skinsPage(catalog: PublishedCatalog): StaticPage {
@@ -329,7 +382,17 @@ export function buildStaticPages(catalog: PublishedCatalog, options: StaticPageO
     ),
     listed: true,
   })
-  pages.push(...catalog.heroes.flatMap((hero) => heroPage(hero, options)))
+  const names: EntryNames = new Map(
+    WAREHOUSE_TABS.flatMap((tab) =>
+      catalog.warehouse[tab]
+        .filter((entry) => entry.revision?.state === "PUBLISHED")
+        .map((entry) => [
+          entry.id,
+          { tab, code: entry.code, name: warehouseText(entry.content.translations, LOCALE)?.name ?? entry.code },
+        ]),
+    ),
+  )
+  pages.push(...catalog.heroes.flatMap((hero) => heroPage(hero, names, options)))
   pages.push(skinsPage(catalog))
 
   for (const tab of WAREHOUSE_TABS) {
@@ -383,6 +446,7 @@ export function buildStaticPages(catalog: PublishedCatalog, options: StaticPageO
         ),
     ),
     listed: true,
+    lastmod: latest((catalog.modes ?? []).map((mode) => mode.publishedAt)),
   })
   for (const mode of catalog.modes ?? []) {
     const meta = modeMeta(mode, LOCALE)
@@ -409,6 +473,7 @@ export function buildStaticPages(catalog: PublishedCatalog, options: StaticPageO
         ),
     ),
     listed: true,
+    lastmod: latest(catalog.patches.map((patch) => patch.effectiveAt)),
   })
   for (const patch of catalog.patches) {
     const meta = patchMeta(patch, LOCALE)
@@ -430,11 +495,14 @@ export function buildStaticPages(catalog: PublishedCatalog, options: StaticPageO
 
 function renderHead(meta: PageMeta, siteUrl: string) {
   return headTags(meta, siteUrl)
-    .map(({ tag, attrs }) => {
+    .map(({ tag, attrs, text }) => {
       const attributes = Object.entries(attrs)
         .map(([name, value]) => `${name}="${escapeHtml(value)}"`)
         .join(" ")
-      return `<${tag} data-seo ${attributes} />`
+      // structuredData has already made the text safe inside a script tag.
+      return text === undefined
+        ? `<${tag} data-seo ${attributes} />`
+        : `<${tag} data-seo ${attributes}>${text}</${tag}>`
     })
     .join("\n    ")
 }
@@ -466,14 +534,21 @@ export function renderStaticPage(template: string, page: StaticPage, siteUrl: st
 const sitemapDate = (value: string | null | undefined) =>
   value && /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null
 
+/** A page's own art, for Google Images; the shared preview card is not the page's picture. */
+function sitemapImage(page: StaticPage, siteUrl: string) {
+  const url = page.meta.image?.url
+  const image = url && url !== DEFAULT_IMAGE.url ? absoluteUrl(url, siteUrl) : null
+  return image ? `<image:image><image:loc>${escapeHtml(image)}</image:loc></image:image>` : ""
+}
+
 export function renderSitemap(pages: readonly StaticPage[], siteUrl: string) {
   const urls = pages
     .filter((page) => page.listed)
     .map((page) => {
       const lastmod = sitemapDate(page.lastmod)
-      return `  <url><loc>${escapeHtml(`${siteUrl}${page.meta.path}`)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}</url>`
+      return `  <url><loc>${escapeHtml(`${siteUrl}${page.meta.path}`)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}${sitemapImage(page, siteUrl)}</url>`
     })
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${urls.join("\n")}\n</urlset>\n`
 }
 
 /** Two pages sharing a title or description compete with each other in search results. */

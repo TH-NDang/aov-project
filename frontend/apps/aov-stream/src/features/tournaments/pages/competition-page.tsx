@@ -21,6 +21,7 @@ import { CompetitionStandings } from "../components/competition-standings"
 import { CompetitionStatisticsTab } from "../components/competition-statistics"
 import { CompetitionTeams } from "../components/competition-teams"
 import { SeasonSwitch } from "../components/season-switch"
+import { StreamHead } from "../../../components/stream-head"
 import "./competition-page.css"
 
 /** The tabs of a competition, each named in Vietnamese and in English. */
@@ -139,7 +140,13 @@ export function PublicCompetitionPage() {
   const tabRow = <Tabs tab={tab} tabs={tabs} setTab={setTab} focus={focus} />
   return (
     <StreamShell>
-      <title>{`${tournament.name} — AOV Stream`}</title>
+      <StreamHead
+        title={`${tournament.name} — AOV Stream`}
+        description={text(
+          `${tournament.name}: lịch thi đấu, kết quả, bảng xếp hạng và đội tuyển giải Liên Quân Mobile.`,
+          `${tournament.name}: schedule, results, standings and teams of the Arena of Valor tournament.`,
+        )}
+      />
       <div className="cp-container tn-comp">
         <CompetitionHead
           view={view}

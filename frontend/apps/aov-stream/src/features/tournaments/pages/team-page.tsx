@@ -27,6 +27,7 @@ import { useNow } from "../../../lib/use-now"
 import { TeamStaff } from "../components/competition-people"
 import { FormMarks } from "../components/form-marks"
 import { ParticipantMissing, Part, SeasonLine, ShelfPart } from "../components/participant-parts"
+import { StreamHead } from "../../../components/stream-head"
 import "../../../components/participant-list.css"
 import { teamForm } from "../../../lib/standings-model"
 
@@ -52,11 +53,22 @@ export function TeamPage() {
   const profile = competitions.data ? teamProfile(competitions.data, id) : null
   return (
     <StreamShell>
-      <title>
-        {profile
-          ? text(`${profile.team.name} — Đội tuyển · AOV Stream`, `${profile.team.name} — Team · AOV Stream`)
-          : text("Đội tuyển — AOV Stream", "Team — AOV Stream")}
-      </title>
+      <StreamHead
+        title={
+          profile
+            ? text(`${profile.team.name} — Đội tuyển · AOV Stream`, `${profile.team.name} — Team · AOV Stream`)
+            : text("Đội tuyển — AOV Stream", "Team — AOV Stream")
+        }
+        description={
+          profile
+            ? text(
+                `${profile.team.name}, đội tuyển Liên Quân Mobile: đội hình, lịch thi đấu và kết quả các giải.`,
+                `${profile.team.name}, Arena of Valor team: roster, schedule and tournament results.`,
+              )
+            : undefined
+        }
+        noindex={!profile && competitions.isSuccess && !page.isPending}
+      />
       <div className="cp-container pt-page">
         {competitions.isPending || page.isPending ? (
           <div

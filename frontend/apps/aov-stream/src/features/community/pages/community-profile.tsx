@@ -26,7 +26,8 @@ import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { competitionLineup, rosterLineup } from "../../../lib/lineup-model"
 import { playerProfile, playerStints, teamProfile, type PlayerProfile } from "../../../lib/participant-model"
-import { pageReferenceKey } from "../../../lib/reference-model"
+import { pageReferenceKey, plainReferences } from "../../../lib/reference-model"
+import { pageSummary } from "../../../lib/stream-head"
 import { useCommunitySession } from "../../../lib/stream-auth"
 import { teamCompetitionsQuery } from "../../../lib/tournament-api"
 import { CommunityFeed } from "../components/community-feed"
@@ -67,6 +68,7 @@ import {
   type OrganizationTeamsQuery,
 } from "../components/profile-organization"
 import { CompetitionList, ProfileCompetitionSummary } from "../../../components/public-competitions"
+import { StreamHead } from "../../../components/stream-head"
 import "../components/community.css"
 import "../components/community-profile.css"
 
@@ -279,7 +281,16 @@ function Profile({ profile }: { profile: CommunityProfile }) {
   )
   return (
     <div className="cp-container pf-page">
-      <title>{`${content.name} — AOV Stream`}</title>
+      <StreamHead
+        title={`${content.name} — AOV Stream`}
+        description={
+          pageSummary(plainReferences(content.biography ?? "")) ||
+          text(
+            `${content.name} (${kind}) trên AOV Stream: thông tin, thành tích và các giải Liên Quân Mobile.`,
+            `${content.name} (${kind}) on AOV Stream: profile, achievements and Arena of Valor tournaments.`,
+          )
+        }
+      />
       <ProfileHead
         profile={profile}
         mark={
