@@ -6,6 +6,7 @@ import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { Sheet, SheetContent, SheetTitle } from "@aov/ui/components/sheet"
 import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { music } from "../../../components/music-session"
 import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -70,6 +71,7 @@ function ChannelBody({ pageId, link, onClose }: { pageId: string; link: ProfileL
    */
   function play(video: YouTubeVideo) {
     watch.pause()
+    music.yieldTo()
     setPlaying(video)
     const list = scroller.current
     const head = list?.querySelector(".pf-channel-head")
