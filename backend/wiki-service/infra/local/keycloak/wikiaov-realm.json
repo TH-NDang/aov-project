@@ -222,6 +222,7 @@
   "clients": [
     {
       "clientId": "aov-wiki",
+      "fullScopeAllowed": false,
       "name": "AOV Wiki",
       "enabled": true,
       "publicClient": true,
@@ -257,6 +258,7 @@
     },
     {
       "clientId": "aov-stream",
+      "fullScopeAllowed": false,
       "name": "AOV Stream",
       "enabled": true,
       "publicClient": true,

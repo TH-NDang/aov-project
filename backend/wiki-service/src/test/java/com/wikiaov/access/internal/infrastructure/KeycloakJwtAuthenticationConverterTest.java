@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -12,7 +13,8 @@ import org.springframework.security.oauth2.server.resource.InvalidBearerTokenExc
 
 class KeycloakJwtAuthenticationConverterTest {
 
-    private final KeycloakJwtAuthenticationConverter converter = new KeycloakJwtAuthenticationConverter("wiki-service");
+    private final KeycloakJwtAuthenticationConverter converter = new KeycloakJwtAuthenticationConverter("wiki-service",
+            Set.of("admin-aov-backend", "wiki-importer"));
 
     @Test
     void readsOnlyClientRolesOfTheConfiguredClient() {
@@ -23,6 +25,24 @@ class KeycloakJwtAuthenticationConverterTest {
         assertThat(converter.convert(jwt).getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
                 .containsExactlyInAnyOrder("catalog:read", "hero:write");
+    }
+
+    @Test
+    void tokenOfAPublicClientHasNoAuthorities() {
+        var roles = Map.<String, Object>of("wiki-service", Map.of("roles", List.of("catalog:read", "hero:publish")));
+
+        assertThat(converter.convert(jwt(roles, "aov-wiki")).getAuthorities()).isEmpty();
+        assertThat(converter.convert(jwt(roles, "aov-stream")).getAuthorities()).isEmpty();
+        assertThat(converter.convert(jwt(roles, null)).getAuthorities()).isEmpty();
+        assertThat(converter.convert(jwt(roles, "aov-wiki")).getName()).isEqualTo("user-123");
+    }
+
+    @Test
+    void serviceAccountOfACapabilityClientKeepsItsRoles() {
+        var roles = Map.<String, Object>of("wiki-service", Map.of("roles", List.of("hero:write")));
+
+        assertThat(converter.convert(jwt(roles, "wiki-importer")).getAuthorities())
+                .extracting(GrantedAuthority::getAuthority).containsExactly("hero:write");
     }
 
     @Test
@@ -45,11 +65,18 @@ class KeycloakJwtAuthenticationConverterTest {
     }
 
     private static Jwt jwt(Map<String, Object> resourceAccess) {
-        return Jwt.withTokenValue("token")
+        return jwt(resourceAccess, "admin-aov-backend");
+    }
+
+    private static Jwt jwt(Map<String, Object> resourceAccess, String authorizedParty) {
+        var builder = Jwt.withTokenValue("token")
                 .header("alg", "none")
                 .issuer("http://localhost:8081/realms/wikiaov")
                 .subject("user-123")
-                .claim("resource_access", resourceAccess)
-                .build();
+                .claim("resource_access", resourceAccess);
+        if (authorizedParty != null) {
+            builder.claim("azp", authorizedParty);
+        }
+        return builder.build();
     }
 }

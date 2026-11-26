@@ -7,6 +7,7 @@ import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
 import com.wikiaov.media.AvatarUploads;
 import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.asset.persistence.MediaAssetRepository;
 import com.wikiaov.media.internal.asset.persistence.MediaAssetVersionRepository;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAsset;
@@ -17,6 +18,7 @@ import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 class AvatarUploadService implements AvatarUploads {
+    /** Avatar uploads one person may start per hour. */
+    static final int HOURLY_LIMIT = 10;
+
     private final MediaAssetRepository assets;
     private final MediaAssetVersionRepository versions;
     private final RequestMediaUpload request;
@@ -53,6 +58,7 @@ class AvatarUploadService implements AvatarUploads {
     public Ticket begin(String fileName, String contentType, long sizeBytes) {
         Actor actor = human();
         return transaction.execute(status -> {
+            requireQuota(actor);
             MediaAsset asset = assets.save(MediaAsset.create(UUID.randomUUID(), MediaSemanticType.USER_AVATAR,
                     MediaWritePolicy.ref(actor), clock.instant()));
             audit.record(AuditEntry.of(actor, "MEDIA_AVATAR_CREATED", CatalogAggregates.MEDIA_ASSET, asset.getId()));
@@ -92,6 +98,18 @@ class AvatarUploadService implements AvatarUploads {
                 .flatMap(asset -> versions.findById(asset.getCurrentVersionId()))
                 .filter(version -> version.isReady())
                 .map(version -> storage.presignGet(version.getObjectKey(), Duration.ofMinutes(15)).url().toString());
+    }
+
+    /** A person changes an avatar a few times; anything more fills storage for nothing (each ticket may upload). */
+    private void requireQuota(Actor actor) {
+        long started = assets.countBySemanticTypeAndCreatedByIssuerAndCreatedBySubjectAndCreatedAtAfter(
+                MediaSemanticType.USER_AVATAR, actor.issuer(), actor.subject(),
+                clock.instant().minus(Duration.ofHours(1)));
+        if (started >= HOURLY_LIMIT) {
+            throw new ApiException(MediaErrorCode.MEDIA_AVATAR_RATE_LIMITED,
+                    "Too many avatar uploads; try again later.",
+                    Map.of("limit", HOURLY_LIMIT));
+        }
     }
 
     private Actor human() {

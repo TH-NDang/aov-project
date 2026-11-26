@@ -3,6 +3,7 @@
   "displayName": "AOV",
   "enabled": true,
   "registrationAllowed": true,
+  "passwordPolicy": "length(12) and maxLength(128) and notUsername and notEmail and passwordHistory(3)",
   "internationalizationEnabled": true,
   "supportedLocales": [
     "vi",
@@ -225,6 +226,7 @@
   "clients": [
     {
       "clientId": "aov-wiki",
+      "fullScopeAllowed": false,
       "name": "AOV Wiki",
       "enabled": true,
       "publicClient": true,
@@ -260,6 +262,7 @@
     },
     {
       "clientId": "aov-stream",
+      "fullScopeAllowed": false,
       "name": "AOV Stream",
       "enabled": true,
       "publicClient": true,

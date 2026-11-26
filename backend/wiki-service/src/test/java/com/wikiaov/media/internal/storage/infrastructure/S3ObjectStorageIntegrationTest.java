@@ -141,7 +141,7 @@ class S3ObjectStorageIntegrationTest {
         String publicBucket = "wiki-media-assets-test";
         s3.createBucket(request -> request.bucket(publicBucket));
         var properties = new StorageProperties(endpoint, "us-east-1", "wiki-media-test", publicBucket,
-                null, true, ACCESS_KEY, SECRET_KEY, false, null);
+                null, true, ACCESS_KEY, SECRET_KEY, false, null, false);
         var splitStorage = new S3ObjectStorage(s3, presigner, properties);
         byte[] bytes = "split-bucket-image".getBytes(StandardCharsets.UTF_8);
         String source = "incoming/split-upload";
@@ -181,6 +181,34 @@ class S3ObjectStorageIntegrationTest {
     }
 
     @Test
+    void signedUploadSizeAcceptsTheDeclaredBodyAndRefusesALargerOne() throws Exception {
+        var properties = new StorageProperties(endpoint, "us-east-1", "wiki-media-test", null, null, true, ACCESS_KEY,
+                SECRET_KEY, false, null, true);
+        var sizedStorage = new S3ObjectStorage(s3, presigner, properties);
+        byte[] bytes = "declared-size".getBytes(StandardCharsets.UTF_8);
+
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            PresignedRequest upload = sizedStorage.presignPut("incoming/sized", "image/png", bytes.length,
+                    Duration.ofMinutes(5));
+            assertThat(http.send(put(upload, bytes), HttpResponse.BodyHandlers.discarding()).statusCode())
+                    .isEqualTo(200);
+
+            PresignedRequest tooSmall = sizedStorage.presignPut("incoming/sized-2", "image/png", 3,
+                    Duration.ofMinutes(5));
+            assertThat(http.send(put(tooSmall, bytes), HttpResponse.BodyHandlers.discarding()).statusCode())
+                    .isEqualTo(403);
+        }
+        assertThat(sizedStorage.stat("incoming/sized-2")).isEmpty();
+    }
+
+    private static HttpRequest put(PresignedRequest upload, byte[] bytes) {
+        HttpRequest.Builder put = HttpRequest.newBuilder(upload.url())
+                .method(upload.method(), HttpRequest.BodyPublishers.ofByteArray(bytes));
+        upload.headers().forEach(put::header);
+        return put.build();
+    }
+
+    @Test
     void wrongSecretKeyIsRejected() {
         try (S3Client wrongKey = new S3StorageConfiguration().s3Client(properties("wrong-secret"))) {
             assertThatThrownBy(wrongKey::listBuckets).isInstanceOf(S3Exception.class);
@@ -189,6 +217,6 @@ class S3ObjectStorageIntegrationTest {
 
     private static StorageProperties properties(String secretKey) {
         return new StorageProperties(endpoint, "us-east-1", "wiki-media-test", null, null, true, ACCESS_KEY,
-                secretKey, false, null);
+                secretKey, false, null, false);
     }
 }

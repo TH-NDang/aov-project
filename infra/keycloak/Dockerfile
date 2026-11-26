@@ -2,7 +2,7 @@
 # Keycloak in production mode with the AOV login theme and the realm template baked in.
 # Build context is backend/wiki-service/infra/local/keycloak-themes; Compose passes this folder as context `keycloak`.
 
-FROM quay.io/keycloak/keycloak:26.4.0 AS build
+FROM quay.io/keycloak/keycloak:26.8.2 AS build
 COPY aov-public /opt/keycloak/themes/aov-public
 COPY aov-admin /opt/keycloak/themes/aov-admin
 ENV KC_DB=postgres \
@@ -10,7 +10,7 @@ ENV KC_DB=postgres \
     KC_HTTP_RELATIVE_PATH=/idp
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM quay.io/keycloak/keycloak:26.4.0 AS runtime
+FROM quay.io/keycloak/keycloak:26.8.2 AS runtime
 COPY --from=build /opt/keycloak/ /opt/keycloak/
 # One instance, so no cluster: a clustered node waits on dead members after every restart. This is read at runtime.
 ENV KC_CACHE=local

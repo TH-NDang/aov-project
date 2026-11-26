@@ -14,6 +14,8 @@ public enum MediaErrorCode implements ApiErrorCode {
 
     MEDIA_CONTACT_NOT_FOUND(HttpStatus.NOT_FOUND, "Contact request not found"),
     MEDIA_CONTACT_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many contact requests"),
+    /** More avatar uploads started within an hour than one person needs; context: {@code limit}. */
+    MEDIA_AVATAR_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many avatar uploads"),
     MEDIA_OWNER_NOT_FOUND(HttpStatus.NOT_FOUND, "Media owner not found"),
     /** Another owner has the same name once case and whitespace are ignored; context: {@code ownerId}. */
     MEDIA_OWNER_NAME_TAKEN(HttpStatus.CONFLICT, "Media owner name taken"),

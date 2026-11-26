@@ -114,7 +114,8 @@ public class RequestMediaUpload {
         }
         sessions.save(session);
         // Signing is a local computation; no network call happens inside the transaction.
-        PresignedRequest put = storage.presignPut(objectKey, format.mimeType(), properties.uploadUrlValidity());
+        PresignedRequest put = storage.presignPut(objectKey, format.mimeType(), command.sizeBytes(),
+                properties.uploadUrlValidity());
         return new UploadTicket(uploadId, asset.getId(), objectKey, put.method(), put.url(), put.headers(),
                 put.expiresAt(), completeBefore);
     }

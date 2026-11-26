@@ -23,6 +23,21 @@ class AuthGuardsTest {
     }
 
     @Test
+    void fullThrottleDropsTheOldestWindowInsteadOfRefusingEveryone() {
+        Clock clock = mock(Clock.class);
+        when(clock.millis()).thenReturn(1000L);
+        var throttle = new AuthThrottle(clock);
+        throttle.check("first", 1);
+        for (int index = 1; index < AuthThrottle.MAX_WINDOWS; index++) {
+            throttle.check("filler-" + index, 1);
+        }
+
+        throttle.check("newcomer", 1);
+        throttle.check("first", 1);
+        assertThatThrownBy(() -> throttle.check("newcomer", 1)).isInstanceOf(ApiException.class);
+    }
+
+    @Test
     void googleStateExpiresAndVerifierIsDistinctFromChallenge() {
         Clock clock = mock(Clock.class);
         when(clock.millis()).thenReturn(1000L);

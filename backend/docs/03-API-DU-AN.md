@@ -174,7 +174,7 @@ Base `/api/wiki/v1`, Bearer JWT đã xác minh. Tất cả response `no-store`.
 | GET /admin/users?search=&page=0&size=20 | catalog:read + user:read | PageSlice, tìm tên không phân biệt hoa thường; size 1–100 |
 | GET /admin/users/{id} | catalog:read + user:read | Chi tiết hồ sơ |
 | PUT /admin/users/{id} | catalog:read + user:write, HUMAN | Sửa hồ sơ đã tồn tại |
-| POST /users/me/avatar-uploads | HUMAN | `{fileName, contentType, sizeBytes}` → ticket PUT tới storage |
+| POST /users/me/avatar-uploads | HUMAN | `{fileName, contentType, sizeBytes}` → ticket PUT tới storage. Tối đa 10 lần mỗi giờ cho một người, vượt thì 429 `MEDIA_AVATAR_RATE_LIMITED` (context `limit`) |
 | POST /users/me/avatar-uploads/{uploadId}/complete | Chủ upload, HUMAN | `{assetId, avatarUrl}` sau khi media xác minh |
 
 Body PUT: `{displayName, biography, locale, timeZone, dateFormat?, currency, avatarAssetId, expectedVersion}`. `dateFormat` nhận `AUTO`, `DMY`, `MDY`, `YMD`; bỏ trống thì giữ nguyên giá trị đang lưu.

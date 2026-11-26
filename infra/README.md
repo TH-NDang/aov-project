@@ -104,6 +104,9 @@ chạy stack trên VPS, chủ dự án làm trong dashboard:
    thống vẫn chạy nhưng Admin từ chối xóa ảnh.
 4. **Tùy chọn**: token chỉ có quyền Account Analytics: Read cùng `CLOUDFLARE_ACCOUNT_ID` để tab Dung lượng R2 của Admin có
    số thật của Cloudflare (ADR-030 mục 9).
+5. **Vòng đời `incoming/`**: trên `aov-media-private` thêm quy tắc xóa object có prefix `incoming/` sau 1 ngày (R2 → bucket →
+   Settings → Object lifecycle rules). Upload bị bỏ dở, kể cả do người cố tình xin nhiều URL rồi không gọi `complete`, sẽ không
+   nằm lại mãi. Không đặt quy tắc cho `imports/` hay cho `aov-source-private`.
 
 **Một database, một bộ bucket.** Ba bucket trên chỉ được có một database dùng: hôm nay là database dev, sau khi chuyển là
 database của stack. Quy tắc này áp dụng khi xuất hiện database thứ hai, ví dụ dev trên máy sau ngày ra mắt, stack chạy thử với
@@ -124,6 +127,7 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `PUBLIC_ORIGIN` | Origin trình duyệt dùng, không có `/` cuối. Biên dịch vào frontend và ghi vào realm khi import |
 | `SITE_ADDRESS` | `:80` trên máy này; tên miền trên máy chủ, Caddy khi đó tự lấy chứng chỉ TLS. Ghi cả hai tên trong ngoặc kép, như `"athahub.com, www.athahub.com"`, để `www.` chuyển 308 về tên chính |
 | `PUBLIC_BIND_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT` | Nơi proxy nghe trên máy chủ |
+| `TRUSTED_PROXIES` | Chỉ khi có CDN trước Caddy (proxy Cloudflare): dải IP của CDN, cách nhau bằng dấu cách; `.env.example` có sẵn dải của Cloudflare. Để trống khi trình duyệt vào thẳng máy này. Sai giá trị thì giới hạn tần suất đếm chung cho mọi người |
 | `KEYCLOAK_ADMIN_PORT` | Cổng console Keycloak, luôn chỉ trên `127.0.0.1` |
 | `AUTH_SECURE_COOKIES` | `true` khi có HTTPS. `false` chỉ dành cho HTTP loopback |
 | `COMPOSE_PROFILES` | `test-identity` tạo tài khoản thử; bỏ đi trên máy chủ thật |
@@ -142,12 +146,14 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `STORAGE_PUBLIC_ENDPOINT` | Địa chỉ ghi vào URL ký sẵn; để trống là dùng `STORAGE_ENDPOINT`, đúng với R2 |
 | `STORAGE_REGION`, `STORAGE_PATH_STYLE` | `auto` và `true` với R2 |
 | `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` | Khóa của R2 API token dành riêng cho máy chạy stack |
+| `STORAGE_SIGN_UPLOAD_SIZE` | `true` thì URL upload ký cả kích thước đã khai, R2 từ chối tệp lớn hơn. R2 không ghi trong tài liệu là có kiểm tra, nên bật ở dev trước (tải avatar và một ảnh lên), rồi mới bật trên stack |
 | `STORAGE_BUCKET`, `STORAGE_ASSETS_BUCKET`, `STORAGE_SOURCES_BUCKET` | `aov-media-private`, `aov-media-assets`, `aov-source-private`; xem [Cloudflare R2](#cloudflare-r2) |
 | `MEDIA_PUBLIC_BASE_URL` | `https://img.athahub.com/assets`; đuôi `/assets` là bắt buộc |
 | `MEDIA_CLOUDFLARE_PURGE_ENABLED`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_CACHE_PURGE_TOKEN` | Purge cache Cloudflare khi xóa ảnh |
 | `IMAGE_RESIZE` | `cloudflare` để Wiki xin ảnh Media đúng cỡ hiển thị qua Cloudflare Image Transformations (`/cdn-cgi/image/...` trên host ảnh); bật Transformations cho zone trước, rồi build lại. Để trống thì phát ảnh gốc. Image `web` do CI build (`images.yml`) lấy giá trị từ biến repo `STACK_IMAGE_RESIZE`, mặc định `cloudflare`; đặt `off` để tắt |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ANALYTICS_TOKEN` | Tùy chọn: số liệu R2 thật trong Admin |
 | `REDIS_PASSWORD` | Mật khẩu cache |
+| `REQUIRE_STAFF_OTP`, `VERIFY_EMAIL` | Chỉ cho `keycloak-harden`, mặc định `false`; xem [Bảo mật realm](#bảo-mật-realm) |
 | `COMMUNITY_EXCHANGE_RATES_ENABLED` | Lấy tỷ giá hằng ngày từ `api.frankfurter.dev`; đặt `false` nếu không muốn gọi ra ngoài |
 | `IMAGE_TAG`, `WIKI_MEM_LIMIT`, `COMMUNITY_MEM_LIMIT`, `KEYCLOAK_MEM_LIMIT` | Tùy chọn: nhãn image, giới hạn RAM |
 
@@ -520,6 +526,29 @@ Lúc chuyển phải giữ:
 
 Stack cũ còn container và volume của kho ảnh đi kèm trước đây: xem phần bổ sung ngày 17/11/2026 của ADR-021 để dọn.
 
+## Bảo mật realm
+
+Keycloak chỉ đọc `keycloak/wikiaov-realm.json` khi tạo realm lần đầu, nên realm đã có không tự nhận thay đổi của file. Chạy
+lại sau mỗi lần file đổi phần bảo mật (an toàn khi chạy nhiều lần):
+
+```bash
+docker compose run --rm keycloak-harden
+```
+
+Luôn áp hai việc: client công khai `aov-wiki` và `aov-stream` không còn đưa role vào token (`fullScopeAllowed=false`), và chính
+sách mật khẩu `length(12) and maxLength(128) and notUsername and notEmail and passwordHistory(3)` cho mật khẩu mới hoặc đổi;
+mật khẩu đang có vẫn dùng được. Hai service cũng chỉ cấp quyền cho token do `admin-aov-backend` hoặc `wiki-importer` cấp
+(claim `azp`), nên token của Wiki và Stream không làm được việc admin dù realm chưa chạy lệnh này.
+
+Hai việc chỉ chạy khi bật, vì có thể chặn người đăng nhập tới khi họ làm theo:
+
+- `REQUIRE_STAFF_OTP=true docker compose run --rm keycloak-harden`: mọi tài khoản có role `wiki-*` hoặc `community-*` chưa
+  có app xác thực phải cài ở lần đăng nhập kế tiếp, tại `<PUBLIC_ORIGIN>/idp/realms/wikiaov/account`. Tới khi cài xong, form
+  đăng nhập Admin báo tài khoản chưa thiết lập xong. Sau đó form Admin hỏi mã 6 số. Cài app xác thực cho chính mình trước, rồi
+  mới chạy.
+- `VERIFY_EMAIL=true docker compose run --rm keycloak-harden`: tài khoản mới phải xác minh email. Cần chạy `keycloak-mail`
+  trước; tài khoản cũ chưa xác minh sẽ được hỏi ở lần đăng nhập kế tiếp.
+
 ## Còn lại cho máy chủ thật
 
 Những việc sau chủ dự án phải quyết định hoặc làm, repo không đoán thay:
@@ -542,13 +571,15 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
   giữ không.
 - **Đăng nhập Google**: provider `google` đi theo khi chuyển dữ liệu dev lên; đặt `GOOGLE_LOGIN_ENABLED=true`. Chưa đăng nhập
   thử qua Google trên origin thật.
-- **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bật MFA nếu cần.
-- **CDN hoặc load balancer**: nếu đặt trước Caddy phải khai báo `trusted_proxies`, nếu không giới hạn tần suất theo IP sẽ sai.
+- **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bắt buộc app xác thực bằng
+  [Bảo mật realm](#bảo-mật-realm).
+- **CDN hoặc load balancer**: nếu đặt trước Caddy phải điền `TRUSTED_PROXIES`, nếu không giới hạn tần suất theo IP sẽ sai.
 - **Theo dõi**: kiểm tra sức khỏe chạy trên chính VPS. Khi mở cổng 443 cho mọi người, thêm một dịch vụ theo dõi bên ngoài để biết
   cả khi máy tắt hẳn. Chưa gom log; log JSON chỉ xoay vòng trong Docker.
 - **Tính năng chỉ có ở Vite dev**: JSON storage của Admin cần dev server, nên bản build trả 404 cho nó.
-- **Content-Security-Policy** chưa đặt, nên hiện không có gì chặn R2. Khi bật phải liệt kê nguồn thật: ít nhất `img-src` có
-  tên miền ảnh và endpoint R2 (ảnh đối chứng qua URL ký sẵn), `connect-src` có endpoint R2 (upload, manifest tệp nguồn), cùng
-  các nguồn khác. Trình phát YouTube của Stream và Admin cần `script-src https://www.youtube.com` và
-  `frame-src https://www.youtube-nocookie.com`; `Referrer-Policy: strict-origin-when-cross-origin` trong `proxy/Caddyfile` phải
-  giữ, nếu không YouTube trả lỗi 153.
+- **Content-Security-Policy** đặt trong `proxy/Caddyfile` cho mọi đường dẫn trừ `/idp/`: script chỉ từ chính trang và API
+  player của YouTube (`www.youtube.com`, `s.ytimg.com`) cho trình phát của Stream và Admin; ảnh, video và `connect-src` nhận
+  mọi nguồn `https:` (tên miền ảnh, endpoint R2 cho ảnh đối chứng qua URL ký sẵn, upload, manifest tệp nguồn); iframe chỉ
+  YouTube (gồm `www.youtube-nocookie.com`), Twitch, Facebook, TikTok. Thêm nhúng mới hay script ngoài thì sửa chính sách ở
+  đó. `Referrer-Policy: strict-origin-when-cross-origin` cũng nằm ở đó và phải giữ, nếu không YouTube trả lỗi 153. Nếu bật
+  proxy Cloudflare, các tính năng chèn script như Web Analytics, Rocket Loader hay Email Obfuscation sẽ bị chặn.

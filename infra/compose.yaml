@@ -303,6 +303,27 @@ services:
         condition: service_healthy
     logging: *logging
 
+  # Run by hand: docker compose run --rm keycloak-harden. Applies the security settings of the realm template to the
+  # existing realm (public clients without roles, password policy); REQUIRE_STAFF_OTP and VERIFY_EMAIL are opt-in.
+  keycloak-harden:
+    image: aov/keycloak:${IMAGE_TAG:-local}
+    build: *keycloak-build
+    profiles: [ops]
+    entrypoint: ["/bin/bash", "/scripts/harden-realm.sh"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?set in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      REQUIRE_STAFF_OTP: ${REQUIRE_STAFF_OTP:-false}
+      VERIFY_EMAIL: ${VERIFY_EMAIL:-false}
+    volumes:
+      - ./keycloak/harden-realm.sh:/scripts/harden-realm.sh:ro
+    healthcheck:
+      disable: true
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    logging: *logging
+
   wiki-service:
     image: aov/wiki-service:${IMAGE_TAG:-local}
     build:
@@ -343,6 +364,7 @@ services:
       STORAGE_PATH_STYLE: ${STORAGE_PATH_STYLE:-true}
       STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-}
       STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-}
+      STORAGE_SIGN_UPLOAD_SIZE: ${STORAGE_SIGN_UPLOAD_SIZE:-false}
       MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-}
       MEDIA_CLOUDFLARE_PURGE_ENABLED: ${MEDIA_CLOUDFLARE_PURGE_ENABLED:-false}
       MEDIA_WARM_WIDTHS: ${MEDIA_WARM_WIDTHS:-}
@@ -396,6 +418,8 @@ services:
     restart: unless-stopped
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      # Address ranges of a CDN in front of Caddy (Cloudflare proxy), space separated; empty trusts nobody.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
     ports:
       - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-18080}:80
       - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-18443}:443
