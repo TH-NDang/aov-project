@@ -41,65 +41,10 @@
 }
 
 /* The list's search field, with its icon and a button that empties it. */
+/* The search (`PageSearch`) up to 300px beside the chips. */
 .wiki-mode-find {
-  font: var(--wiki-type-body);
-  display: flex;
-  flex: 0 1 300px;
-  align-items: center;
   min-width: 200px;
-  height: 36px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-  background: var(--aov-surface);
-  color: var(--aov-muted);
-}
-.wiki-mode-find:focus-within {
-  border-color: var(--aov-accent);
-  background: var(--aov-sunken);
-}
-.wiki-mode-find label {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  height: 100%;
-  padding-left: 12px;
-  cursor: text;
-}
-.wiki-mode-find svg {
-  flex: none;
-}
-.wiki-mode-find input {
-  font: inherit;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--aov-text);
-}
-.wiki-mode-find input::placeholder {
-  color: var(--aov-muted);
-}
-.wiki-mode-find input::-webkit-search-cancel-button {
-  display: none;
-}
-.wiki-mode-find button {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 36px;
-  height: 100%;
-  border: 0;
-  border-radius: var(--aov-radius-control);
-  background: transparent;
-  color: var(--aov-muted);
-  cursor: pointer;
-}
-.wiki-mode-find button:hover {
-  color: var(--aov-text);
+  flex: 0 1 300px;
 }
 
 /* Whether a mode is open: a dot and the game's wording, green while it can be played, muted otherwise. */
@@ -748,11 +693,6 @@ a.wiki-mode-row:active {
   }
   .wiki-mode-find {
     flex: 1 1 100%;
-    height: 40px;
-  }
-  /* 16px so an iPhone does not zoom into the field. */
-  .wiki-mode-find input {
-    font-size: 16px;
   }
   .wiki-mode-index .wiki-mode-filter-bar > .wiki-mode-chip-row {
     max-width: none;

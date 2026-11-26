@@ -32,6 +32,11 @@
 - Cả trang dùng phông Be Vietnam Pro; cỡ chữ theo các vai trò trong `src/styles/typography.css` (xem
   `frontend/docs/DESIGN-TOKENS.md`). Ô nhập và nút thường dùng chung `src/styles/controls.css`: `.wiki-field`,
   `.wiki-input`, `.wiki-select`, `.wiki-button`, nút chính có `data-primary`.
+- Ô tìm trong trang của các mục (Tướng, Trang phục, bốn phần kho, Thuật ngữ, Chế độ chơi) là một component chung
+  `PageSearch` (`src/components/page-search.tsx`), theo kiểu ô tìm của Kho trang bị: cao 40px (44px ở thanh ghim của
+  Tướng trên điện thoại), bo 10px, nền nổi nhẹ, kính lúp bên trái, viền và kính lúp chuyển vàng kèm vòng sáng khi gõ,
+  chip số kết quả (ở kho) và nút × tròn khi đã gõ; chữ 16px trên compact. Mỗi trang chỉ đặt bề rộng của ô; Tướng thêm
+  phím / để vào ô. Các bộ lọc bên cạnh cao 40px cho thẳng hàng.
 - Trạng thái trống, lỗi và không tìm thấy dùng linh vật chuột chũi (`wiki-mascot-state`), một câu nói rõ chuyện gì xảy ra
   và bước tiếp theo.
 

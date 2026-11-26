@@ -13,6 +13,7 @@ import { foldSearchText } from "@aov/ui/lib/search-text"
 import { modesLead, scheduleNote } from "./mode-lead"
 import "./modes.css"
 import "./mode-pages.css"
+import { PageSearch } from "../../components/page-search"
 
 type Filter = "all" | "PVP" | "ENTERTAINMENT" | "open" | "guide"
 
@@ -91,27 +92,13 @@ export function ModesPage() {
       <div className="wiki-mode-index-head">
         <CatalogHeading title={text("Chế độ chơi", "Game modes")} lead={modesLead(text, counts)} />
         <div className="wiki-mode-filter-bar" role="group" aria-label={text("Lọc chế độ", "Filter modes")}>
-          <div className="wiki-mode-find">
-            <label>
-              <WikiIcon name="search" size={18} />
-              <input
-                type="search"
-                value={search}
-                placeholder={text("Tìm chế độ…", "Search modes…")}
-                aria-label={text("Tìm chế độ", "Search modes")}
-                onChange={(event) => update({ search: event.target.value || null })}
-              />
-            </label>
-            {search && (
-              <button
-                type="button"
-                aria-label={text("Xóa từ khóa", "Clear the search")}
-                onClick={() => update({ search: null })}
-              >
-                <WikiIcon name="close" size={16} />
-              </button>
-            )}
-          </div>
+          <PageSearch
+            value={search}
+            onChange={(value) => update({ search: value || null })}
+            className="wiki-mode-find"
+            label={text("Tìm chế độ", "Search modes")}
+            placeholder={text("Tìm chế độ…", "Search modes…")}
+          />
           <div ref={chips} className="wiki-mode-chip-row">
             {FILTERS.map((item) => (
               <button

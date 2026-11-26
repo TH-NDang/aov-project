@@ -43,69 +43,16 @@
   background: var(--aov-line);
 }
 /* The search gives up width before a filter does, and a long choice is shortened before anything leaves the row. */
+/* The search (`PageSearch`) takes the room the filters leave, from 160px to 360px. */
 .wiki-skin-search {
-  display: flex;
   min-width: 160px;
-  height: 36px;
   flex: 0 100 360px;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-  padding: 0 4px 0 12px;
-  background: var(--aov-surface);
-  color: var(--aov-muted);
-}
-.wiki-skin-search:focus-within {
-  border-color: var(--aov-accent);
-  background: var(--aov-sunken);
-}
-.wiki-skin-search > label {
-  display: flex;
-  min-width: 0;
-  height: 100%;
-  flex: 1;
-  align-items: center;
-  gap: 8px;
-}
-.wiki-skin-search svg {
-  flex: none;
-}
-.wiki-skin-search input {
-  width: 100%;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--aov-text);
-  font: var(--wiki-type-body);
-  text-overflow: ellipsis;
-}
-.wiki-skin-search input::placeholder {
-  color: var(--aov-muted);
-}
-.wiki-skin-search input::-webkit-search-cancel-button {
-  display: none;
-}
-.wiki-skin-search-clear {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: none;
-  place-items: center;
-  border-radius: var(--aov-radius-control);
-  color: var(--aov-muted);
-}
-.wiki-skin-search-clear:hover {
-  background: var(--aov-raised);
-  color: var(--aov-text);
 }
 /* One filter: the list to choose from and, once something is chosen, a button that clears it. */
 .wiki-skin-filter {
   display: flex;
   min-width: 104px;
-  height: 36px;
+  height: 40px;
   flex: 0 1 auto;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-control);
@@ -223,7 +170,7 @@
 }
 .wiki-skin-sort {
   display: inline-flex;
-  height: 36px;
+  height: 40px;
   flex: none;
   align-items: center;
   gap: 6px;
@@ -303,18 +250,7 @@
 }
 .wiki-skin-toolbar-compact .wiki-skin-search {
   min-width: 0;
-  height: 40px;
   flex: 1 1 0;
-}
-/* 16px keeps iOS from zooming the page when the field gets focus. */
-.wiki-skin-toolbar-compact .wiki-skin-search input {
-  font-size: 16px;
-}
-/* The clear button is as tall as the field, so it is easy to hit. */
-.wiki-skin-toolbar-compact .wiki-skin-search-clear {
-  width: 40px;
-  height: auto;
-  align-self: stretch;
 }
 .wiki-skin-status {
   display: grid;
@@ -598,7 +534,8 @@
   border-color: transparent;
 }
 .wiki-skin-search.wiki-skeleton {
-  border-color: transparent;
+  height: 40px;
+  border-radius: 10px;
 }
 .wiki-skin-toolbar-compact .wiki-skin-filter.wiki-skeleton {
   width: 84px;

@@ -5,54 +5,9 @@
   justify-content: space-between;
   gap: 12px;
 }
+/* The search (`PageSearch`) up to 340px, its count beside it. */
 .wiki-terms-search {
-  display: flex;
-  min-width: 0;
-  height: 36px;
   flex: 0 1 340px;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-  padding: 0 4px 0 12px;
-  background: var(--aov-surface);
-  color: var(--aov-muted);
-}
-.wiki-terms-search:focus-within {
-  border-color: var(--aov-accent);
-  background: var(--aov-sunken);
-}
-.wiki-terms-search > svg {
-  flex: none;
-}
-.wiki-terms-search input {
-  font: var(--wiki-type-body);
-  min-width: 0;
-  height: 100%;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--aov-text);
-}
-.wiki-terms-search input::placeholder {
-  color: var(--aov-muted);
-}
-.wiki-terms-search input::-webkit-search-cancel-button {
-  display: none;
-}
-.wiki-terms-clear {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: none;
-  place-items: center;
-  border-radius: var(--aov-radius-control);
-  color: var(--aov-muted);
-}
-.wiki-terms-clear:hover {
-  background: var(--aov-raised);
-  color: var(--aov-text);
 }
 .wiki-terms-count {
   font: var(--wiki-type-meta);
@@ -222,15 +177,6 @@
 }
 @media (max-width: 899.98px) {
   .wiki-terms-search {
-    height: 40px;
     flex: 1 1 auto;
-  }
-  /* 16px keeps iPhones from zooming the page when the field takes focus. */
-  .wiki-terms-search input {
-    font-size: 16px;
-  }
-  .wiki-terms-clear {
-    width: 36px;
-    height: 36px;
   }
 }

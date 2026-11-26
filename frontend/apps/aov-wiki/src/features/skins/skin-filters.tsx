@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import type { SkinFilterOption } from "../../lib/skin-api"
+import { PageSearch } from "../../components/page-search"
 import { SkinIcon } from "../../components/skin-icon"
 
 export type FilterKind = "hero" | "badge"
@@ -129,41 +130,20 @@ export function FilterSelect({
   )
 }
 
+/** The skins' search: the Wiki's page search at the toolbar's width. */
 export function SkinSearch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const text = useWikiText()
-  const field = useRef<HTMLInputElement>(null)
   return (
-    <div className="wiki-skin-search">
-      <label>
-        <SkinIcon name="search" size={18} />
-        <span className="sr-only">{text("Tìm trang phục hoặc tướng", "Search skins or heroes")}</span>
-        <input
-          ref={field}
-          type="search"
-          enterKeyHint="search"
-          placeholder={text("Tìm trang phục, tướng…", "Search skins, heroes…")}
-          maxLength={120}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={(event) => {
-            // The list filters as the reader types, so on a touch screen the search key only puts the keyboard away.
-            if (event.key === "Enter" && window.matchMedia?.("(pointer: coarse)").matches) event.currentTarget.blur()
-          }}
-        />
-      </label>
-      {value && (
-        <button
-          type="button"
-          className="wiki-skin-search-clear"
-          aria-label={text("Xóa từ khóa", "Clear the search")}
-          onClick={() => {
-            field.current?.focus()
-            onChange("")
-          }}
-        >
-          <SkinIcon name="close" size={14} />
-        </button>
-      )}
-    </div>
+    <PageSearch
+      value={value}
+      onChange={onChange}
+      className="wiki-skin-search"
+      label={text("Tìm trang phục hoặc tướng", "Search skins or heroes")}
+      placeholder={text("Tìm trang phục, tướng…", "Search skins, heroes…")}
+      onKeyDown={(event) => {
+        // The list filters as the reader types, so on a touch screen the search key only puts the keyboard away.
+        if (event.key === "Enter" && window.matchMedia?.("(pointer: coarse)").matches) event.currentTarget.blur()
+      }}
+    />
   )
 }
