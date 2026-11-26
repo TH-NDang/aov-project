@@ -10,12 +10,12 @@ import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.PublicResponses;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,7 +84,7 @@ public class HeroChangesController implements HeroChangesApi {
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size"));
-        return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
+        return ResponseEntity.ok().cacheControl(PublicResponses.current())
                 .body(changes.forHero(heroId, region, locale, page, size));
     }
 }

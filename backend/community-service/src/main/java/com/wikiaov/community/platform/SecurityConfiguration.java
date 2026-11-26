@@ -1,8 +1,7 @@
 package com.wikiaov.community.platform;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -10,9 +9,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -20,7 +16,9 @@ import org.springframework.security.web.SecurityFilterChain;
 class SecurityConfiguration {
     @Bean
     SecurityFilterChain security(HttpSecurity http, ProblemAuthenticationEntryPoint entryPoint,
-            ProblemAccessDeniedHandler accessDeniedHandler) throws Exception {
+            ProblemAccessDeniedHandler accessDeniedHandler,
+            @Value("${community.security.capability-clients:admin-aov-backend}") List<String> capabilityClients)
+            throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable).cors(c -> {
         }).sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a.requestMatchers("/actuator/health", "/error").permitAll()
@@ -28,19 +26,9 @@ class SecurityConfiguration {
                         .requestMatchers("/api/community/*/admin/**").hasAuthority("tournament:read")
                         .requestMatchers("/api/community/*/me", "/api/community/*/me/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/community/*/**").permitAll().anyRequest().denyAll())
-                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwt -> {
-                    if (jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-                        throw new InvalidBearerTokenException("Token subject is required");
-                    }
-                    Map<String, Object> resources = jwt.getClaimAsMap("resource_access");
-                    Object client = resources == null ? null : resources.get("community-service");
-                    Object roles = client instanceof Map<?, ?> map ? map.get("roles") : null;
-                    var authorities = roles instanceof Collection<?> values
-                            ? values.stream().filter(String.class::isInstance)
-                                    .map(role -> new SimpleGrantedAuthority((String) role)).toList()
-                            : List.<SimpleGrantedAuthority>of();
-                    return new JwtAuthenticationToken(jwt, authorities, jwt.getSubject());
-                })).authenticationEntryPoint(entryPoint).accessDeniedHandler(accessDeniedHandler))
+                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(
+                        new CommunityJwtAuthenticationConverter(capabilityClients)))
+                        .authenticationEntryPoint(entryPoint).accessDeniedHandler(accessDeniedHandler))
                 .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint).accessDeniedHandler(accessDeniedHandler))
                 .build();
     }

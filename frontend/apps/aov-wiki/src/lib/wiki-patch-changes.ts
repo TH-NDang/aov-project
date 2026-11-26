@@ -5,13 +5,16 @@ import { warehouseName } from "./warehouse-types"
 import { wikiCatalogParameters, type WikiCatalogScope } from "./wiki-catalog"
 import { changeKind, changedSubjects, type PublishedChange } from "./published-change-subjects"
 import type { WarehouseKind } from "./warehouse-types"
-import { wikiGetAll, wikiGetPage, type WikiPage } from "./wiki-api"
+import { wikiGet, wikiGetAll, wikiGetPage, type WikiPage } from "./wiki-api"
 
 /** Every query key of the shared patch change lists; reads and invalidation both use these. */
 export const patchChangeKeys = {
   heroVariants: (scope: WikiCatalogScope, heroId: string) =>
     ["wiki", "hero-changed-variants", scope.region, scope.locale, heroId] as const,
   releases: (scope: WikiCatalogScope) => ["wiki", "releases", scope.region, scope.locale] as const,
+  /** The versions of the region's ruleset whose patch page lists at least one change in a domain. */
+  changedVariants: (scope: WikiCatalogScope, domain: ChangeDomain) =>
+    ["wiki", "patch-changed-variants", scope.region, domain] as const,
   changes: (scope: WikiCatalogScope, domain: ChangeDomain, variant: Pick<WikiPatch, "id" | "patchId">) =>
     ["wiki", "patch-changes", scope.region, scope.locale, domain, variant.id, variant.patchId ?? "legacy"] as const,
   /** The pages after the first one of a patch with more changes than one page holds. */
@@ -20,6 +23,7 @@ export const patchChangeKeys = {
 }
 
 type Release = { id: string; variantId: string }
+type ChangedVariants = { domain: ChangeDomain; variantIds: string[] }
 export type ChangeDomain = "HERO" | "ITEM" | "ARCANA" | "ENCHANTMENT" | "SPELL"
 const warehouseKinds = { ITEM: "items", ARCANA: "arcana", ENCHANTMENT: "enchantments", SPELL: "spells" } as const
 export const warehouseChangeDomain = {
@@ -58,12 +62,46 @@ export function useHeroChangedVariants(heroId: string) {
   })
 }
 
-export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = false) {
+/** Which versions to read: the ones the page shows, every one that changed the domain, or a single version. */
+export type ChangeVersions = "shown" | "changed" | { variantId: string }
+
+/**
+ * The published changes of the versions `versions` names. One small list names the versions that changed the domain,
+ * so the version menu can mark them without the page fetching every version's changes.
+ */
+export function usePublishedChanges(domain: ChangeDomain, versions: ChangeVersions = "shown") {
   const scope = useWikiContext()
   const client = useQueryClient()
   const variants = scope.options?.patches ?? []
   const params = wikiCatalogParameters(scope, false)
-  const needsReleases = (domain === "HERO" || domain === "SPELL") && variants.some((patch) => !patch.patchId)
+  const marks = useQuery({
+    queryKey: patchChangeKeys.changedVariants(scope, domain),
+    queryFn: ({ signal }) =>
+      wikiGet<ChangedVariants>(
+        `/patches/changed-variants?${new URLSearchParams({ region: scope.region, domain })}`,
+        signal,
+      ),
+    staleTime: 60_000,
+    retry: 1,
+  })
+  const marked = marks.data ? new Set(marks.data.variantIds) : undefined
+  const shown = (variant: WikiPatch) =>
+    scope.patchVariantId
+      ? variant.id === scope.patchVariantId
+      : scope.seasonId
+        ? variant.seasonId === scope.seasonId
+        : variant.isCurrent
+  // A server without the list leaves every version to be read, as before it existed.
+  const selected = variants.filter((variant) =>
+    versions === "changed"
+      ? marked
+        ? marked.has(variant.id)
+        : marks.isError
+      : versions === "shown"
+        ? shown(variant)
+        : variant.id === versions.variantId,
+  )
+  const needsReleases = (domain === "HERO" || domain === "SPELL") && selected.some((patch) => !patch.patchId)
   const releases = useQuery({
     queryKey: patchChangeKeys.releases(scope),
     queryFn: ({ signal }) => pages<Release>("/patches", params, signal),
@@ -84,7 +122,7 @@ export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = fa
   }
   const key = (variant: WikiPatch) => patchChangeKeys.changes(scope, domain, variant)
   const first = useQueries({
-    queries: variants.map((variant) => ({
+    queries: selected.map((variant) => ({
       queryKey: key(variant),
       enabled: !!variant.patchId || !needsReleases || releases.isSuccess,
       queryFn: async ({ signal }: { signal: AbortSignal }) => {
@@ -120,21 +158,11 @@ export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = fa
         return { items: rows, totalElements: rows.length }
       },
       staleTime: 60_000,
-      refetchOnWindowFocus: "always" as const,
       retry: 1,
     })),
   })
-  const indexed = variants.map((variant, i) => ({ variant, result: first[i] }))
-  const selected = indexed.filter(
-    ({ variant }) =>
-      includeAllPatches ||
-      (scope.patchVariantId
-        ? variant.id === scope.patchVariantId
-        : scope.seasonId
-          ? variant.seasonId === scope.seasonId
-          : variant.isCurrent),
-  )
-  const paginated = selected.filter(
+  const indexed = selected.map((variant, i) => ({ variant, result: first[i] }))
+  const paginated = indexed.filter(
     ({ variant, result }) => variant.patchId && result?.data && result.data.totalElements > result.data.items.length,
   )
   const remainder = useQueries({
@@ -143,12 +171,11 @@ export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = fa
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         pages<PublishedChange>(endpoint(variant)!, parameters(variant), signal, 1),
       staleTime: 60_000,
-      refetchOnWindowFocus: "always" as const,
       retry: 1,
     })),
   })
   const moreByVariant = new Map(paginated.map(({ variant }, i) => [variant.id, remainder[i]?.data ?? []]))
-  const patches = selected.map(({ variant, result }) => ({
+  const patches = indexed.map(({ variant, result }) => ({
     variant,
     rows: [...(result?.data?.items ?? []), ...(moreByVariant.get(variant.id) ?? [])],
   }))
@@ -158,13 +185,16 @@ export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = fa
     patches,
     pending:
       scope.optionsPending ||
+      (versions === "changed" && marks.isPending) ||
       (needsReleases && releases.isPending) ||
       [...first, ...remainder].some((q) => q.isPending && !q.isError && q.fetchStatus !== "idle"),
-    changedVariants: new Set(
-      indexed.filter(({ result }) => result?.data?.items.some(changeKind)).map(({ variant }) => variant.id),
-    ),
+    // Without the list, only the versions read here can be marked.
+    changedVariants:
+      marked ??
+      new Set(indexed.filter(({ result }) => result?.data?.items.some(changeKind)).map(({ variant }) => variant.id)),
     failed: (needsReleases && releases.isError) || errors.length > 0,
     retry: () => {
+      if (marks.isError) void marks.refetch()
       if (needsReleases && releases.isError) void releases.refetch()
       for (const q of errors) void q.refetch()
     },

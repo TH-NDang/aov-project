@@ -142,7 +142,7 @@ public class SourceUploads {
             return new SourceFileViews.UploadResult(SourceFileViews.UploadStatus.STORED, stored, null);
         }
 
-        PresignedRequest put = storage.presignPut(MediaObjectKeys.incoming(uploadId), contentType,
+        PresignedRequest put = storage.presignPut(MediaObjectKeys.incoming(uploadId), contentType, sizeBytes,
                 media.uploadUrlValidity());
         return new SourceFileViews.UploadResult(SourceFileViews.UploadStatus.UPLOAD_REQUIRED, null,
                 new SourceFileViews.Ticket(uploadId, put.method(), put.url().toString(), put.headers(),

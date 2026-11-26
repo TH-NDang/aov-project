@@ -2,8 +2,9 @@ import { resizedImageUrl } from "../../../lib/sized-image"
 import { localeText } from "@aov/ui/lib/locale-text"
 import { useEffect, useState, type CSSProperties } from "react"
 import { Link, Navigate, useLocation, useParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { HeroDetailLayout } from "../../../layout/wiki-library-layout"
+import { prerenderedHeroId } from "../../../lib/prerendered-page"
 import {
   hasPublishedBuild,
   heroBuildsQuery,
@@ -174,7 +175,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
       {splash && (
         <div
           className="wiki-hero-profile-atmosphere"
-          style={{ backgroundImage: `url(${JSON.stringify(resizedImageUrl(splash, 512))})` }}
+          style={{ backgroundImage: `url(${JSON.stringify(resizedImageUrl(splash, 384))})` }}
           aria-hidden="true"
         />
       )}
@@ -268,11 +269,17 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
 
 export function HeroDetailPage() {
   const scope = useWikiContext()
-  const { locale } = scope
+  const { locale, region } = scope
   const t = localeText(locale)
   const { heroCode, formKey } = useParams()
   const location = useLocation()
   const catalog = useQuery(heroCatalogQuery(scope))
+  // The static page names its hero, so its details load beside the hero list instead of after it.
+  const client = useQueryClient()
+  const early = prerenderedHeroId(location.pathname)
+  useEffect(() => {
+    if (early) void client.prefetchQuery(heroDetailQuery(early, currentScope({ region, locale })))
+  }, [client, early, region, locale])
   const route = catalog.data ? resolveHeroRoute(catalog.data.items, heroCode, formKey) : undefined
   const previous = (location.state as { from?: unknown } | null)?.from
   const returnTo = typeof previous === "string" && /^\/hero(?:\?|$)/u.test(previous) ? previous : "/hero"

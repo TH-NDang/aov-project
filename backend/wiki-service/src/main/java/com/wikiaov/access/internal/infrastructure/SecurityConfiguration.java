@@ -54,7 +54,8 @@ class SecurityConfiguration {
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(
-                                new KeycloakJwtAuthenticationConverter(properties.resourceClientId())))
+                                new KeycloakJwtAuthenticationConverter(properties.resourceClientId(),
+                                        properties.capabilityClients())))
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .exceptionHandling(exceptions -> exceptions

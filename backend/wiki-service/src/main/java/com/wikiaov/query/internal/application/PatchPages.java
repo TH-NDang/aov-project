@@ -5,6 +5,7 @@ import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChangeProvider;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
 import com.wikiaov.spell.SpellChangeQueries;
@@ -45,18 +46,13 @@ public class PatchPages {
     /** One page of the changes a patch made to one domain, in the order the domain's provider returns them. */
     public PatchChangesPage changes(UUID id, String region, String locale, String domain,
             @Nullable UUID patchVariantId, int page, int size) {
-        Optional<CatalogChangeProvider> provider = catalogs.stream()
-                .filter(catalog -> domain.equals(catalog.domain())).findFirst();
-        if (!LEGACY_DOMAINS.contains(domain) && provider.isEmpty()) {
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
-                    "This domain does not have an implemented change provider.");
-        }
+        Optional<CatalogChangeProvider> provider = provider(domain);
 
         var patch = patchVariantId == null
                 ? patches.published(id, region, locale)
                 : patches.publishedVariant(id, patchVariantId, region, locale);
         UUID variant = patch.variantId();
-        List<?> all = changes(domain, provider, patch, variant, locale);
+        List<?> all = changes(domain, provider, patch.rulesetId(), variant, locale);
 
         // Paged in memory: the items are composed from the hero changes, the spell removals and the domain's provider.
         var slice = PageSlice.of(all, page, size);
@@ -64,13 +60,41 @@ public class PatchPages {
                 slice.totalElements());
     }
 
-    private List<?> changes(String domain, Optional<CatalogChangeProvider> provider, PublishedPatch patch,
-            UUID variant, String locale) {
+    /**
+     * Whether a published variant changed one domain: its patch page would list at least one change with a kind. A hero
+     * entry counts once an editor assessed it or it records a line, as the Wiki marks it.
+     */
+    boolean changed(String domain, UUID rulesetId, UUID variant) {
+        Optional<CatalogChangeProvider> provider = provider(domain);
+        if (domain.equals("HERO")) {
+            return heroes.forVariant(variant, CatalogLocales.DEFAULT).stream()
+                    .anyMatch(entry -> entry.overallKind() != null || !entry.changes().isEmpty());
+        }
+        return !changes(domain, provider, rulesetId, variant, CatalogLocales.DEFAULT).isEmpty();
+    }
+
+    /** Refuses a domain without a change provider, before anything is read for it. */
+    void requireDomain(String domain) {
+        provider(domain);
+    }
+
+    private Optional<CatalogChangeProvider> provider(String domain) {
+        Optional<CatalogChangeProvider> provider = catalogs.stream()
+                .filter(catalog -> domain.equals(catalog.domain())).findFirst();
+        if (!LEGACY_DOMAINS.contains(domain) && provider.isEmpty()) {
+            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
+                    "This domain does not have an implemented change provider.");
+        }
+        return provider;
+    }
+
+    private List<?> changes(String domain, Optional<CatalogChangeProvider> provider, UUID rulesetId, UUID variant,
+            String locale) {
         if (domain.equals("HERO")) {
             return heroes.forVariant(variant, locale);
         }
         List<Map<String, Object>> legacy = domain.equals("SPELL") ? spells.forVariant(variant, locale) : List.of();
-        return provider.map(catalog -> PublishedCatalogChanges.forVariant(catalog, patch.rulesetId(),
+        return provider.map(catalog -> PublishedCatalogChanges.forVariant(catalog, rulesetId,
                 variant, locale, legacy)).orElse(legacy);
     }
 }

@@ -1,3 +1,4 @@
+import { fontPreload } from "../../tooling/font-preload.mts"
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
@@ -9,7 +10,7 @@ const proxy = {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), fontPreload()],
   server: { proxy },
   preview: { proxy },
   // What every page needs is one script and one sheet, whatever else comes on demand. A chunk of its own would put the

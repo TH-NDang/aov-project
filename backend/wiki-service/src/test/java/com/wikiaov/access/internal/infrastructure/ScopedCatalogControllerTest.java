@@ -1,5 +1,6 @@
 package com.wikiaov.access.internal.infrastructure;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,6 +10,7 @@ import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
 import com.wikiaov.hero.internal.catalog.application.HeroQueries;
 import com.wikiaov.hero.internal.catalog.application.HeroSectionPages;
+import com.wikiaov.hero.internal.catalog.application.PublicCatalogCache;
 import com.wikiaov.hero.internal.skins.application.PublicSkinCatalog;
 import com.wikiaov.hero.internal.web.HeroPublicController;
 import com.wikiaov.hero.internal.web.PublicSkinCatalogController;
@@ -23,6 +25,8 @@ import com.wikiaov.terminology.internal.web.ReferenceController;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -61,6 +65,15 @@ class ScopedCatalogControllerTest {
 
     @MockitoBean
     ReadModelCache cache;
+
+    @MockitoBean
+    PublicCatalogCache catalogs;
+
+    @BeforeEach
+    void readCatalogsThrough() {
+        when(catalogs.current(any(), any(), any(), any(), any()))
+                .thenAnswer(call -> call.<Supplier<?>>getArgument(4).get());
+    }
 
     @MockitoBean
     JwtDecoder decoder;

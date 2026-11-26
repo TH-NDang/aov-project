@@ -96,10 +96,16 @@ class S3ObjectStorage implements ObjectStorage {
     }
 
     @Override
-    public PresignedRequest presignPut(String key, String contentType, Duration validity) {
+    public PresignedRequest presignPut(String key, String contentType, long contentLength, Duration validity) {
+        boolean signSize = properties.signUploadSize() && contentLength >= 0;
         PresignedPutObjectRequest presigned = presigner.presignPutObject(request -> request
                 .signatureDuration(validity)
-                .putObjectRequest(put -> put.bucket(properties.bucketFor(key)).key(key).contentType(contentType)));
+                .putObjectRequest(put -> {
+                    put.bucket(properties.bucketFor(key)).key(key).contentType(contentType);
+                    if (signSize) {
+                        put.contentLength(contentLength);
+                    }
+                }));
         return toPresignedRequest(presigned);
     }
 
@@ -124,8 +130,8 @@ class S3ObjectStorage implements ObjectStorage {
             software.amazon.awssdk.awscore.presigner.PresignedRequest presigned) {
         Map<String, String> headers = new LinkedHashMap<>();
         presigned.signedHeaders().forEach((name, values) -> {
-            // The HTTP client sets Host itself; the caller must not send it manually.
-            if (!"host".equalsIgnoreCase(name)) {
+            // HTTP clients set Host and Content-Length themselves; browsers and java.net.http refuse to have them set.
+            if (!"host".equalsIgnoreCase(name) && !"content-length".equalsIgnoreCase(name)) {
                 headers.put(name, String.join(",", values));
             }
         });

@@ -41,7 +41,7 @@ class CatalogContextControllerTest {
         when(contexts.read("VN", "vi-VN")).thenReturn(empty());
 
         mvc.perform(get("/api/wiki/v1/catalog-context")).andExpect(status().isOk())
-                .andExpect(header().string("Cache-Control", "no-cache, public"))
+                .andExpect(header().string("Cache-Control", "max-age=60, must-revalidate, public"))
                 .andExpect(jsonPath("$.seasons").isArray()).andExpect(jsonPath("$.current.rulesetId").isString());
         verify(contexts).read("VN", "vi-VN");
     }

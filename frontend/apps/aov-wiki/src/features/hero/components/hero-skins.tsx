@@ -15,7 +15,7 @@ import "./hero-skins.css"
 
 const preload = (skin: SkinEntry) => {
   const source = previewSource(skin)
-  if (source) preloadPicture(source, 800)
+  if (source) preloadPicture(source, 768)
 }
 
 /*

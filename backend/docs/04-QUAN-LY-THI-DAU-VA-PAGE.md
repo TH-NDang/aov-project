@@ -1155,7 +1155,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /admin/community-reports; POST /admin/community-reports/{id}/resolve | Hàng chờ; {resolution,hide} |
 | GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng, mỗi dòng {id,pageId,kind,parameters,message?,createdAt,read} (xem "Nội dung thông báo"); đánh dấu đọc |
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
-| GET /competitions?teamId=&playerId=&personPageId=&organizerPageId=&detail=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức. `detail=LIST` để trống `series`, `rosters`, `players`, `people` cho trang danh sách; mặc định FULL |
+| GET /competitions?teamId=&playerId=&personPageId=&organizerPageId=&detail=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức. `detail=LIST` để trống `series`, `rosters`, `players`, `people` cho trang danh sách; mặc định FULL. Cache: xem "Cache đọc công khai" |
 | GET /competitions/participants?kind=&q=&country=&page=&size= | Đội (`kind=TEAM`), tuyển thủ (`PLAYER`) hoặc nhân sự (`PERSON`) của các giải đã công bố: [{id,kind,name,shortName,country,imageUrl,imageDarkUrl,competitions,competitionId,competitionName,team,roles}] |
 | GET /competitions/{id} | Snapshot giải |
 | GET /competitions/{id}/statistics | {games,decided,blueWins,withBans,averageSeconds?,longest?,shortest?,heroes:[{id?,code?,name,iconUrl?,picks,wins,bans,bluePicks}],mvps:[{playerId,games}]} đếm trên ván đã công bố (xem "Thống kê tướng của giải") |
@@ -1214,3 +1214,11 @@ giao diện sáng/tối và đăng nhập; Wiki không có lựa chọn giao di�
 Flyway luôn dùng default-schema public, nơi lưu bảng lịch sử migration. Không để phụ thuộc
 search_path của tài khoản database: khi schema community trùng tên user xuất hiện, PostgreSQL
 có thể chọn schema này làm mặc định ở lần khởi động tiếp theo.
+
+## Cache đọc công khai (26/11/2026)
+
+`GET /competitions`, `/competitions/participants`, `/competitions/{id}`, `/catalog`, `/tournaments`, `/series`, `/games`
+và `/games/{id}` trả `Cache-Control: max-age=60, must-revalidate, public` và `ETag` tính từ nội dung trả về; gửi lại
+`If-None-Match` khi nội dung không đổi nhận 304 không thân. Các câu trả lời này giống nhau cho mọi người đọc, đăng nhập
+hay không. Câu trả lời lỗi giữ `no-store` của handler. `/references` và `/competitions/{id}/statistics` giữ chính sách
+riêng (`max-age=300`). Hệ quả: sau khi công bố, trang đang mở có thể thấy bản cũ tối đa 60 giây.

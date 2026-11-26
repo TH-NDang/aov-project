@@ -20,6 +20,9 @@ export const HOME_BANNERS = [
   },
 ] as const
 
+/** The width the banner is asked for; the static home page preloads the same copy. */
+export const HOME_BANNER_WIDTH = 1536
+
 /** One picture a day, so the page looks fresh across visits without moving while it is read. */
 export function bannerOfDay(now = new Date()) {
   const day = Math.floor((now.getTime() - now.getTimezoneOffset() * 60_000) / 86_400_000)

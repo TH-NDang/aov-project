@@ -2,6 +2,7 @@ package com.wikiaov.terminology.internal.web;
 
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PublicResponses;
 import com.wikiaov.platform.QueryParameters;
 import com.wikiaov.platform.ReadModelCache;
 import com.wikiaov.terminology.internal.application.response.AdminReferenceCatalogView;
@@ -16,7 +17,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -90,7 +90,7 @@ public class ReferenceController implements ReferenceApi {
         try {
             String tag = "\"" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                     .digest(json.writeValueAsBytes(value))) + "\"";
-            var cache = CacheControl.noCache().cachePublic();
+            var cache = PublicResponses.current();
             if (request.checkNotModified(tag)) {
                 return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(tag).cacheControl(cache).build();
             }

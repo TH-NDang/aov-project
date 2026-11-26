@@ -4,10 +4,10 @@ import com.wikiaov.patch.internal.application.response.CatalogContextView;
 import com.wikiaov.patch.internal.context.application.CatalogContexts;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PublicResponses;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +28,7 @@ public class CatalogContextController implements CatalogContextApi {
     public ResponseEntity<CatalogContextView> read(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
-        return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
+        return ResponseEntity.ok().cacheControl(PublicResponses.current())
                 .body(contexts.read(region, locale));
     }
 }

@@ -9,7 +9,7 @@ import { SECTION_NAMES, wikiSections, type WikiSectionKey } from "../../lib/wiki
 import { warehouseCatalogQuery, warehouseGroupsQuery } from "../../lib/warehouse-api"
 import { warehouseImage } from "../../lib/warehouse-types"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
-import { HOME_BANNERS } from "./home-banners"
+import { HOME_BANNERS } from "../../lib/home-banners"
 import { sectionCountsQuery } from "../../lib/section-counts"
 import { skinSampleQuery } from "../../lib/skin-api"
 import { modesOpenQuery } from "./home-api"

@@ -12,7 +12,7 @@ test("a Media picture is asked for through the image service at the next listed 
 })
 
 test("a width beyond the list asks for the largest listed width", () => {
-  assert.match(resizedImageUrl(picture, 5000, true), /width=2048,/)
+  assert.match(resizedImageUrl(picture, 5000, true), /width=1536,/)
 })
 
 test("with the service off, or for a picture outside Media, the address stays as it is", () => {
@@ -23,9 +23,14 @@ test("with the service off, or for a picture outside Media, the address stays as
 
 test("the sources hold a copy for ordinary screens, one for sharp screens and the full-size picture", () => {
   const sources = sizedImageSources(picture, 90, true)
-  assert.match(sources.src, /width=96,/)
-  assert.match(sources.srcSet ?? "", /width=96,.* 1x, .*width=192,.* 2x$/)
+  assert.match(sources.src, /width=128,/)
+  assert.match(sources.srcSet ?? "", /width=128,.* 1x, .*width=256,.* 2x$/)
   assert.equal(sources.original, picture)
+})
+
+test("the large artwork and its sharp copy are the two largest listed widths", () => {
+  const sources = sizedImageSources(picture, 768, true)
+  assert.match(sources.srcSet ?? "", /width=768,.* 1x, .*width=1536,.* 2x$/)
 })
 
 test("with the service off the sources are the picture alone", () => {

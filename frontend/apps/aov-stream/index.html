@@ -18,13 +18,7 @@
       property="og:description"
       content="Lịch thi đấu, kết quả, bảng xếp hạng, đội tuyển và tuyển thủ các giải đấu Liên Quân Mobile."
     />
-    <script>
-      // Apply a stored light/dark choice before the first paint; otherwise the system preference decides.
-      try {
-        const theme = localStorage.getItem("aov-stream-theme")
-        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme
-      } catch {}
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

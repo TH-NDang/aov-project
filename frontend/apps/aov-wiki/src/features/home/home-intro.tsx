@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { bannerOfDay, HOME_BANNER_WIDTH } from "../../lib/home-banners"
 import { resizedImageUrl } from "../../lib/sized-image"
-import { bannerOfDay } from "./home-banners"
 import "./home-intro.css"
 
 /**
@@ -19,7 +19,8 @@ export function HomeIntro() {
       aria-labelledby="wiki-home-title"
       style={
         {
-          "--home-art": `url("${resizedImageUrl(banner.image, 1536)}")`,
+          // The same copy the static home page preloads.
+          "--home-art": `url("${resizedImageUrl(banner.image, HOME_BANNER_WIDTH)}")`,
           "--home-wash": `url("${resizedImageUrl(banner.image, 384)}")`,
           "--home-art-position": banner.position,
         } as CSSProperties

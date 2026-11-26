@@ -18,7 +18,7 @@ class BucketInitializerTest {
     void uploadCorsAllowsExactlyTheConfiguredFrontendOrigins() {
         var s3 = mock(S3Client.class);
         var properties = new StorageProperties(null, "us-east-1", "wiki-media", null, null, true, null, null, true,
-                null);
+                null, false);
         var origins = List.of("http://localhost:5175", "http://localhost:5174");
 
         new BucketInitializer(s3, properties, origins).run(null);

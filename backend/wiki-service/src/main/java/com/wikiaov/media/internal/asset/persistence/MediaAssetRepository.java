@@ -3,6 +3,7 @@ package com.wikiaov.media.internal.asset.persistence;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAsset;
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +29,9 @@ public interface MediaAssetRepository extends Repository<MediaAsset, UUID> {
     @Lock(LockModeType.PESSIMISTIC_READ)
     @Query("select a from MediaAsset a where a.id = :id")
     Optional<MediaAsset> lockForBinding(UUID id);
+
+    long countBySemanticTypeAndCreatedByIssuerAndCreatedBySubjectAndCreatedAtAfter(MediaSemanticType semanticType,
+            String createdByIssuer, String createdBySubject, Instant createdAt);
 
     @Lock(LockModeType.PESSIMISTIC_READ)
     @Query("select a from MediaAsset a where a.id in :ids order by a.id")

@@ -47,3 +47,13 @@ q/IDs, ruleset, locale, heroId, page/size; public thêm region và patch đang �
 quyền trước cache và bypass lỗi giữ nguyên. Đọc projection theo lô trong transaction REPEATABLE_READ,
 đóng transaction trước khi ghi Redis. Không cache lịch sử chưa đủ quyền hoặc ảnh thư viện như dữ
 liệu gameplay công khai.
+
+## Mở rộng danh mục công khai (2026-11-26)
+
+Thêm vùng `PUBLIC_CATALOGS` cùng TTL (2 phút mặc định) và epoch với `PUBLIC_REFERENCES`, cho những đọc public phải dựng
+lại toàn bộ danh mục mỗi request: danh sách tướng, danh mục trang phục và danh sách bản cập nhật có thay đổi theo mảng
+(03 mục 11.1). Chỉ cache đọc mặc định (danh mục hiện hành, không chọn mùa, variant hay `includeUnscoped`), nên các kiểm
+tra của đọc lịch sử không bị bỏ qua. Khóa gồm tên đọc, region, ruleset và variant hiện hành lúc đọc, rồi mọi tham số
+còn lại (locale, lọc, trang) nối bằng `|`, tham số tìm kiếm đứng cuối. Epoch đổi khi xuất bản nên lần đọc
+sau dựng lại. HTTP phía trình duyệt dùng `max-age=60` kèm ETag (03 mục 51); Redis vẫn không thay CDN.
+
