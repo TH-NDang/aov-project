@@ -101,6 +101,8 @@
   --aov-wiki-line-strong: #363d4a;
   --aov-wiki-gold: #d8bc84;
   --aov-wiki-gold-bright: #ecd6a8;
+  /* The darker metal of the Wiki's game frames, where their gold rim turns away from the light. */
+  --aov-wiki-bronze: #7a5a2c;
   --aov-wiki-text: #ececea;
   --aov-wiki-text-soft: #c4c8cf;
   --aov-wiki-text-muted: #8c929d;
