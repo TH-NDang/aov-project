@@ -30,7 +30,7 @@ jobs:
         working-directory: backend/wiki-service
     steps:
       # Skip Git LFS: no tracked file needs it since resources/ left git (ADR-030).
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: false
 
@@ -79,7 +79,7 @@ jobs:
         working-directory: backend/wiki-service
         shell: powershell
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: false
       - name: Local launcher checks

@@ -44,7 +44,7 @@ jobs:
             file: infra/web/Dockerfile
             target: web
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: false
       - uses: docker/setup-buildx-action@v3
