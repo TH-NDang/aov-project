@@ -242,8 +242,16 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   trang phục được ghi nhận theo từng bản. Xem cả mùa thì không có hàng này.
 - Chọn thẻ mở trình xem bằng Dialog (drawer dưới trên điện thoại), không điều hướng sang trang mới chỉ để xem ảnh. Khung
   ảnh theo tỉ lệ 13:8 của ảnh splash trong game và giữ nguyên khi đổi ảnh; bên dưới là dải ảnh của cùng danh sách, rồi
-  tên, các thông tin (tướng có liên kết, bậc, cách nhận kèm giá) và nguồn ảnh có nút xem chi tiết. Từ 1100px phần ảnh và
-  phần chữ chia hai cột.
+  tên kèm vị trí trong danh sách ("2 / 19"), các thông tin (tướng có liên kết, bậc, cách nhận kèm giá) và nguồn ảnh có
+  nút xem chi tiết. Từ 1100px phần ảnh và phần chữ chia hai cột. Trình xem theo khung kiểu game: trên wide cả trình xem
+  là một khung vát góc viền vàng chuyển đồng; nút đóng và nút trước/sau là ổ lục giác; mỗi ảnh nhỏ trong dải là một
+  khung vát góc, ảnh đang xem có viền sáng và nhích lên; dải kéo được bằng chuột, không hiện thanh cuộn, mờ dần ở hai
+  mép; tên trang phục màu vàng sáng; nhãn thông tin là chữ hoa nhỏ vàng, các hàng ngăn bằng đường vàng mờ dần; huy hiệu
+  bậc có ánh vàng. Trên drawer điện thoại ảnh trải hết bề ngang (cao tối đa 42% màn hình, ảnh splash phủ kín, không có
+  dải trống), nút đóng nằm trên góc ảnh, không có nút trước/sau (vuốt ảnh hoặc chạm dải ảnh). Nút bút chì cạnh tên là
+  Góp ý cho mọi người đọc, không phải nút sửa.
+- Trình xem là một mục riêng trong lịch sử trình duyệt: nút hoặc cử chỉ quay lại đóng trình xem thay vì rời trang; đóng
+  bằng nút thì mục đó được gỡ; bấm liên kết sang trang tướng thì trang tướng thay chỗ mục đó.
 - Trong trình xem có thể xem liên tiếp mà không cần đóng: nút trước/sau, phím ← →, vuốt ngang và dải ảnh. Thứ tự đi trong
   các trang phục của cùng tướng; trong lưới chung nhiều tướng thì đi theo danh sách kết quả. Ảnh kế tiếp được tải trước
   để chuyển không bị nháy. Đóng bằng nút đóng hoặc Escape, focus về thẻ của trang phục xem sau cùng, không phải thẻ đã
