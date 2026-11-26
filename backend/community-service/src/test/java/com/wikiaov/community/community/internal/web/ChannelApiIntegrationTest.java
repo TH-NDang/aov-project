@@ -144,6 +144,7 @@ class ChannelApiIntegrationTest {
 
     private static Map<String, Object> content(String url) {
         return Map.of("name", "Caster", "personRoles", List.of("CASTER"), "links",
-                List.of(Map.of("label", "YouTube", "url", url, "official", true)));
+                List.of(Map.of("label", "YouTube", "url", url, "official", true)), "sources",
+                List.of(Map.of("label", "Liquipedia", "url", "https://liquipedia.net/arenaofvalor/Caster")));
     }
 }
