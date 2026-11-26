@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, Navigate, useLocation, useParams } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
@@ -9,10 +9,11 @@ import { WikiBreadcrumb } from "../../components/wiki-breadcrumb"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { AutoChessGuide } from "./auto-chess-guide"
-import { GUIDE_TABS, readGuideTab, type GuideTab } from "./auto-chess-model"
+import { readGuideTab, type GuideTab } from "./auto-chess-model"
 import type { ModeImage } from "./auto-chess-model"
 import { AutoChessOverview } from "./auto-chess-overview"
 import { ModeBanner, ModeBannerSkeleton } from "./mode-banner"
+import { GuideTabs } from "./guide-tabs"
 import { WikiApiError } from "../../lib/wiki-api"
 import { guideQuery, modeCardsQuery, modeQuery, type ModeContent } from "./mode-api"
 import { ModeCards } from "./mode-cards"
@@ -204,33 +205,6 @@ export function ModeDetailPage() {
         <AutoChessGuide code={code} tab={activeTab} guide={guide.data} />
       )}
     </div>
-  )
-}
-
-/** The guide's parts as one row of tabs under the mode's name; a narrow row scrolls sideways and never wraps. */
-function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
-  const { href, locale } = useWikiContext()
-  const row = useRef<HTMLElement>(null)
-  // On a narrow row the open tab may sit past the edge: bring it into view without moving the page.
-  useEffect(() => {
-    const current = row.current?.querySelector<HTMLElement>('[aria-current="page"]')
-    if (!row.current || !current) return
-    row.current.scrollLeft = current.offsetLeft - (row.current.clientWidth - current.offsetWidth) / 2
-  }, [active])
-  return (
-    <nav ref={row} className="wiki-guide-tabs" aria-label={wikiText(locale, "Mục cẩm nang", "Guide sections")}>
-      {GUIDE_TABS.map((item) => (
-        <Link
-          key={item.key}
-          className="wiki-guide-tab"
-          aria-current={active === item.key ? "page" : undefined}
-          to={href(`/modes/${encodeURIComponent(code)}${item.key === "overview" ? "" : `/${item.key}`}`)}
-          preventScrollReset
-        >
-          {wikiText(locale, item.label, item.english)}
-        </Link>
-      ))}
-    </nav>
   )
 }
 

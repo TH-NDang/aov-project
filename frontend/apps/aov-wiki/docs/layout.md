@@ -414,8 +414,10 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   Chế độ chưa có ảnh dùng dấu mục mờ trên nền vàng tối. Ở các tab cẩm nang ngoài Tổng quan, banner thấp lại (148px trên
   wide) để công cụ bắt đầu gần đầu trang.
 - Chế độ có cẩm nang có hàng tab dính dưới header (`/modes/:code/:tab`) trên nền thanh tối với đường kẻ vàng; tab đang
-  mở sáng vàng từ dưới lên, đứng trên vạch vàng có viên đá. Hàng cuộn ngang trên điện thoại, tab đang mở được cuộn vào
-  tầm nhìn.
+  mở sáng vàng từ dưới lên, đứng trên vạch vàng có viên đá (`GuideTabs`, `guide-tabs.tsx`). Trên điện thoại chín tab
+  không vừa một hàng: hàng cuộn ngang, mờ dần ở mép phải, tab đang mở được cuộn vào tầm nhìn, và cuối thanh có nút bốn ô
+  mở tấm "Mục cẩm nang" từ dưới lên với chín ô lớn ba cột, mỗi ô có dấu và tên phần, ô đang mở sáng vàng; chọn một ô thì
+  tấm đóng và chuyển phần.
 - Tổng quan gồm giới thiệu, một câu nêu những gì Wiki chưa ghi nhận, nguồn, và khung nhỏ các thông tin còn lại (ngày
   ghi nhận, thời gian mở, phiên bản cẩm nang, ghi chú; nhóm, thời lượng, số người, tình trạng đã có trên banner) trên một tấm nền, hai cột
   trên wide, ô hai cột trên điện thoại. Luật chơi chia nhóm (tên nhóm chữ hoa nhỏ màu vàng, gấp theo nhóm trên điện
@@ -424,7 +426,8 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   prerender.
 - Cẩm nang Cờ Liên quân có các tab Tổng quan, Quân cờ, Phe & Nghề, Trang bị, Chúc phúc, Nhiệm vụ, Đội hình, Xếp đội hình,
   Phân tích (`auto-chess-guide.tsx`, mỗi tab một file `guide-*.tsx`). Trong lúc cẩm nang tải, tab giữ khung gồm tiêu đề,
-  hàng điều khiển và lưới mục.
+  hàng điều khiển và lưới mục. Trên điện thoại ba bước "Mỗi hiệp" của Tổng quan là một hàng vuốt ngang, dừng từng
+  bước, bước sau ló ra ở mép, thay cho ba thẻ xếp dọc.
 - Chi tiết quân cờ, Phe/Nghề, trang bị mở trong ngăn kéo: từ bên phải trên wide, mép trái viền vàng, tiêu đề chữ hoa nhỏ
   màu vàng, nút đóng là ổ lục giác. Trên điện thoại ngăn kéo trồi từ dưới lên dưới một đường kẻ vàng, không có nút đóng
   hiện ra: chạm vùng trang tối phía trên hoặc kéo thanh trên cùng xuống để đóng (nút đóng vẫn còn cho bàn phím và trình
