@@ -1,0 +1,74 @@
+/* A fact on a line, with a hairline under it. Pointed at, its ground reaches past the column on both sides. */
+.tn-fact-row {
+  position: relative;
+  list-style: none;
+}
+.tn-fact-row::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--hub-border);
+}
+.tn-fact-row > a {
+  display: flex;
+  min-width: 0;
+  min-height: var(--fact-row, 64px);
+  align-items: center;
+  gap: 14px;
+  margin-inline: -12px;
+  padding: 8px 12px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  transition: background-color 120ms;
+}
+.tn-fact-row > a:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+}
+.tn-fact-row > a:focus-visible {
+  outline-offset: -2px;
+}
+.tn-fact-art {
+  --portrait: 44px;
+  --portrait-radius: 8px;
+  --stream-image-size: 32px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+.tn-fact-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+}
+.tn-fact-text b {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.tn-fact-text > small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-fact-figure {
+  flex: none;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+@media (max-width: 899.98px) {
+  .tn-fact-row > a {
+    gap: 12px;
+  }
+  .tn-fact-art {
+    --portrait: 36px;
+  }
+}

@@ -10,7 +10,8 @@ import { LANE_NAMES } from "../../../lib/tournament-model"
 import { ReferenceArt } from "./reference-art"
 import "./series-draft.css"
 
-function PlayerRow({ row, games }: { row: DraftRow; games: PublishedGame[] }) {
+/** A row of a team; `named` tells that some rows of it name their player, so one that does not says so. */
+function PlayerRow({ row, games, named }: { row: DraftRow; games: PublishedGame[]; named: boolean }) {
   const { text } = useStreamLocale()
   const nickname = games.map((game) => (row.playerId ? game.players[row.playerId]?.nickname : null)).find(Boolean)
   const lane = text(LANE_NAMES[row.lane][0], LANE_NAMES[row.lane][1])
@@ -21,7 +22,13 @@ function PlayerRow({ row, games }: { row: DraftRow; games: PublishedGame[] }) {
           <span title={lane}>
             <HeroLaneIcon lane={row.lane} size={18} label={lane} />
           </span>
-          {row.playerId && nickname ? <EntityPageLink kind="PLAYER" id={row.playerId} name={nickname} /> : lane}
+          {row.playerId && nickname ? (
+            <EntityPageLink kind="PLAYER" id={row.playerId} name={nickname} />
+          ) : named ? (
+            <span className="tn-pool-unknown">{text("Chưa rõ tuyển thủ", "Player not known")}</span>
+          ) : (
+            lane
+          )}
         </span>
       </th>
       {row.cells.map((cell, index) => (
@@ -45,20 +52,27 @@ function PlayerRow({ row, games }: { row: DraftRow; games: PublishedGame[] }) {
 
 /**
  * Who played what over the whole match: a row per player, a column per game, the games a team lost a step back. One
- * table per team, in the order of the head.
+ * table per team, in the order of the head. A team whose games name nobody has a row per lane instead.
  */
 export function SeriesDraft({ games, teamIds }: { games: PublishedGame[]; teamIds: [string, string] }) {
   const { text } = useStreamLocale()
   if (games.length < 2) return null
+  const tables = teamIds.map((teamId) => {
+    const rows = draftRows(games, teamId)
+    return { teamId, rows, named: rows.some((row) => row.playerId) }
+  })
   return (
     <section className="tn-block" aria-labelledby="series-draft">
       <div className="tn-heading">
-        <h2 id="series-draft">{text("Tướng của từng tuyển thủ", "Heroes of each player")}</h2>
+        <h2 id="series-draft">
+          {tables.some(({ named }) => named)
+            ? text("Tướng của từng tuyển thủ", "Heroes of each player")
+            : text("Tướng theo đường", "Heroes by lane")}
+        </h2>
       </div>
       <div className="tn-pools">
-        {teamIds.map((teamId) => {
+        {tables.map(({ teamId, rows, named }) => {
           const team = games[0]!.teams[teamId]
-          const rows = draftRows(games, teamId)
           if (!rows.length) return null
           const name = team?.name || text("Đội chưa có thông tin", "No team information yet")
           return (
@@ -73,7 +87,7 @@ export function SeriesDraft({ games, teamIds }: { games: PublishedGame[]; teamId
                 <thead>
                   <tr>
                     <th scope="col">
-                      <span className="sr-only">{text("Tuyển thủ", "Player")}</span>
+                      <span className="sr-only">{named ? text("Tuyển thủ", "Player") : text("Đường", "Lane")}</span>
                     </th>
                     {games.map((game) => {
                       const winner = gameWinner(game)
@@ -91,7 +105,7 @@ export function SeriesDraft({ games, teamIds }: { games: PublishedGame[]; teamId
                 </thead>
                 <tbody>
                   {rows.map((row) => (
-                    <PlayerRow key={row.key} row={row} games={games} />
+                    <PlayerRow key={row.key} row={row} games={games} named={named} />
                   ))}
                 </tbody>
               </table>

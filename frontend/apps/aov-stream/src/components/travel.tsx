@@ -1,12 +1,15 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { flushSync } from "react-dom"
 import { useLocation, useNavigationType, type Location } from "react-router"
 import { entryKey, landsAtTop, opensPart, placeMemory, searchesAnew, wayOf, type Step, type Way } from "../lib/travel"
+import { EntryContext, keepChoices, type Entry } from "../lib/use-entry-state"
 import "./travel.css"
 
 const STORED = "stream-places"
 /** How long a page that is still loading may take to grow back to where the reader was. */
 const PATIENCE = 2500
+/** How long a page back in its place is still held, while bars pinned over it settle into their size. */
+const SETTLE = 300
 /** What a page or a tile is recognised by: the picture that travels with the reader. */
 const MARKS = ".pm, .tn-logo, .tn-shield, .jersey, .stream-image, .pl-mark"
 /** The boxes a link may stand in, so the one the reader comes back to can be shown. */
@@ -26,18 +29,29 @@ function storedPlaces() {
 
 const calm = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
-/** Holds the page at `top` while it grows back to that height, until it is there or the reader moves. */
-function holdPlace(top: number) {
+/**
+ * Holds the page at `top` while it grows back to that height, until it has stood there for a moment or the reader
+ * moves. `find` looks for what the reader comes back to after each step, as rows drawn late are not there at first; the
+ * hold also waits for it.
+ */
+function holdPlace(top: number, find?: () => boolean) {
   const started = performance.now()
+  let found = !find
+  let settling = 0
   const watch = new ResizeObserver(() => stand())
   const inputs = ["wheel", "touchstart", "keydown", "pointerdown"] as const
   const stop = () => {
+    window.clearTimeout(settling)
     watch.disconnect()
     for (const input of inputs) window.removeEventListener(input, stop)
   }
   const stand = () => {
     window.scrollTo(0, top)
-    if (Math.abs(window.scrollY - top) < 2 || performance.now() - started > PATIENCE) stop()
+    found ||= !find || find()
+    // A page that passed its top on the way, while it was short, has bars that shrink back as it gets there; their
+    // change of size would otherwise leave it a few pixels off.
+    if (found && Math.abs(window.scrollY - top) < 2) settling ||= window.setTimeout(stop, SETTLE)
+    else if (performance.now() - started > PATIENCE) stop()
   }
   for (const input of inputs) window.addEventListener(input, stop, { passive: true })
   watch.observe(document.body)
@@ -50,10 +64,10 @@ const seen = (element: Element) => {
   return width > 0 && bottom > 0 && top < window.innerHeight
 }
 
-/** The link on screen that opens `pathname`. */
-const linkTo = (pathname: string) =>
+/** The link on screen that opens `pathname`, at `search` where that is told. */
+const linkTo = (pathname: string, search?: string) =>
   [...document.querySelectorAll<HTMLAnchorElement>("main a[href]")].find(
-    (link) => link.pathname === BASE + pathname && seen(link),
+    (link) => link.pathname === BASE + pathname && (search === undefined || link.search === search) && seen(link),
   )
 
 /** The picture of what a link opens: inside it, or close around it. */
@@ -103,10 +117,17 @@ function markReturned(box: HTMLElement) {
 type Arrival = {
   location: Location
   from: string
+  /** What the address of the page left said when it was opened. */
+  fromSearch: string
   way: Way
   top: boolean
   part: boolean
   place: number | undefined
+  /** Where the reader stood on the page left, before the new one could change it. */
+  stood: number
+  /** The reader went back or forward to it; `back` if it was back. */
+  returning: boolean
+  back: boolean
 }
 
 /**
@@ -120,16 +141,22 @@ export function Travel({ children }: { children: (location: Location) => ReactNo
   const [arrival, setArrival] = useState<Arrival>({
     location,
     from: location.pathname,
+    fromSearch: location.search,
     way: "stay",
     top: false,
     part: false,
     place: undefined,
+    stood: 0,
+    returning: false,
+    back: false,
   })
   const memory = useRef(placeMemory(storedPlaces()))
   const index = useRef(historyIndex())
   const pressed = useRef<HTMLAnchorElement | null>(null)
   const here = useRef(location)
   const redirected = useRef(new Map<string, string>())
+  // A link leads to an entry as it was opened; a step that only replaces it later, such as another order, changes that not.
+  const openedWith = useRef(new Map<number, string>([[historyIndex(), location.search]]))
   const released = useRef<(() => void) | null>(null)
 
   /** The link that led to a page, also when its address has since given way to another. */
@@ -157,6 +184,7 @@ export function Travel({ children }: { children: (location: Location) => ReactNo
       } catch {
         // The next visit then starts at the top, as one without storage does.
       }
+      keepChoices()
     }
     window.addEventListener("scroll", write, { passive: true })
     window.addEventListener("pagehide", keep)
@@ -174,8 +202,10 @@ export function Travel({ children }: { children: (location: Location) => ReactNo
     const from = here.current
     if (location === from) return
     const at = historyIndex()
-    const step: Step = { action, delta: at - index.current, from: from.pathname, to: location.pathname }
+    const left = index.current
+    const step: Step = { action, delta: at - left, from: from.pathname, to: location.pathname }
     index.current = at
+    if (action === "PUSH") openedWith.current.set(at, location.search)
     const places = memory.current
     places.remember(entryKey(from), window.scrollY)
     released.current?.()
@@ -184,10 +214,14 @@ export function Travel({ children }: { children: (location: Location) => ReactNo
     const next: Arrival = {
       location,
       from: from.pathname,
+      fromSearch: openedWith.current.get(left) ?? from.search,
       way,
       top: landsAtTop(step) || searchesAnew(step, from.search, location.search),
       part: opensPart(step, from.search, location.search),
       place: action === "POP" && !location.hash ? places.recall(entryKey(location)) : undefined,
+      stood: window.scrollY,
+      returning: action === "POP",
+      back: action === "POP" && step.delta < 0,
     }
     const root = document.documentElement
     const arrive = () => {
@@ -219,21 +253,34 @@ export function Travel({ children }: { children: (location: Location) => ReactNo
 
   // Runs once the page stands in the document, so it is in its place before it is seen.
   useLayoutEffect(() => {
-    const { from, way, top, part, place } = arrival
+    const { from, fromSearch, way, top, part, place, stood, back } = arrival
     pressed.current = null
+    // Within a page the focus goes back to what opened the part the reader comes from; out of one, to the row that
+    // opened it, which is marked for a moment. Several steps back may leave no link to the very address left.
+    const within = from === arrival.location.pathname
+    const returns = within ? back : way === "out"
+    let unmark: (() => void) | undefined
+    const find = () => {
+      const link = linkTo(from, fromSearch) ?? (within ? undefined : rowOf(from))
+      if (!link) return false
+      if (!top) link.focus({ preventScroll: true })
+      if (!within) unmark = markReturned(link.closest<HTMLElement>(BOXES) ?? link)
+      return true
+    }
     if (top) {
       window.scrollTo(0, 0)
       document.getElementById("main")?.focus({ preventScroll: true })
     } else if (part) {
+      // The part may stand in a page that is shorter for a moment than where the reader was, while it is on its way.
       const start = partsTop()
-      if (window.scrollY > start) window.scrollTo(0, start)
-    } else if (place != null) released.current = holdPlace(place)
-    if (way !== "out" || from === arrival.location.pathname) return
-    const link = rowOf(from)
-    if (!link) return
-    if (!top) link.focus({ preventScroll: true })
-    return markReturned(link.closest<HTMLElement>(BOXES) ?? link)
+      if (stood > start) released.current = holdPlace(start)
+    }
+    if (place != null) released.current = holdPlace(place, returns ? find : undefined)
+    else if (returns) find()
+    return () => unmark?.()
   }, [arrival])
 
-  return children(arrival.location)
+  const key = entryKey(arrival.location)
+  const entry = useMemo((): Entry => ({ key, returning: arrival.returning }), [key, arrival.returning])
+  return <EntryContext value={entry}>{children(arrival.location)}</EntryContext>
 }

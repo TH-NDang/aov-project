@@ -1,0 +1,188 @@
+/* A hero on its stage: its picture, its name and lanes, then what became of it in words and as one bar. */
+.tn-hh {
+  --stage-light-left: 94px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "art name"
+    "art verdict"
+    "fate fate"
+    "foot foot";
+  grid-template-rows: auto 1fr auto auto;
+  gap: 8px 24px;
+  padding: 26px 28px 20px;
+}
+.tn-hh-art {
+  --portrait: 132px;
+  --portrait-radius: var(--hub-radius);
+  display: grid;
+  grid-area: art;
+}
+.tn-hh-name {
+  grid-area: name;
+}
+.tn-hh-name > h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  letter-spacing: -0.02em;
+}
+.tn-hh-lanes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 18px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-hh-lanes a {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  color: rgb(255 255 255 / 84%);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.tn-hh-lanes svg {
+  opacity: 0.82;
+}
+.tn-hh-lanes b {
+  color: #fff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tn-hh-lanes a:is(:hover, :focus-visible) {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.tn-hh-verdict {
+  max-width: 68ch;
+  margin: 0;
+  grid-area: verdict;
+  color: rgb(255 255 255 / 92%);
+  font-size: 16px;
+  line-height: 24px;
+  text-wrap: pretty;
+}
+.tn-hh-verdict > :is(a, b) {
+  color: #fff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tn-hh-verdict > a {
+  position: relative;
+  text-decoration: underline;
+  text-decoration-color: rgb(255 255 255 / 32%);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+/*
+ * A number in a sentence is pressed on more than its letters: 40px around its middle at least, the words beside it being
+ * no links. Lines stand closer than that, so two areas meet at their edges while the middle of each stays its own.
+ */
+.tn-hh-verdict > a::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  bottom: -10px;
+  left: 50%;
+  width: max(100% + 12px, 40px);
+  transform: translateX(-50%);
+}
+.tn-hh-verdict > a:is(:hover, :focus-visible) {
+  text-decoration-color: currentColor;
+}
+/* The hollow part and the words under the bar stand on the light, where the muted tone of the stage is too dim. */
+.tn-hh-fate,
+.tn-hh-foot {
+  --hub-muted: var(--aov-stream-text-soft);
+}
+.tn-hh-fate {
+  --fate-height: 32px;
+  margin-top: 18px;
+  grid-area: fate;
+}
+.tn-hh-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 20px;
+  grid-area: foot;
+}
+.tn-hh-foot > p {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+@media (max-width: 899.98px) {
+  .tn-hh-name > h2 > a {
+    position: relative;
+  }
+  .tn-hh-name > h2 > a::after {
+    content: "";
+    position: absolute;
+    inset: -8px 0 -4px;
+  }
+  .tn-hh-lanes {
+    margin: 0;
+  }
+  .tn-hh-lanes a {
+    min-height: 40px;
+  }
+}
+@media (max-width: 759.98px) {
+  .tn-hh {
+    --stage-light-left: 52px;
+    grid-template-areas:
+      "art name"
+      "verdict verdict"
+      "fate fate"
+      "foot foot";
+    grid-template-rows: none;
+    gap: 10px 12px;
+    padding: 14px;
+  }
+  .tn-hh-art {
+    --portrait: 76px;
+    --portrait-radius: 12px;
+  }
+  .tn-hh-name {
+    align-self: center;
+  }
+  .tn-hh-name > h2 {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .tn-hh-lanes {
+    gap: 0 12px;
+  }
+  .tn-hh-foot > p {
+    display: none;
+  }
+  .tn-hh-verdict {
+    font-size: 15px;
+    line-height: 22px;
+  }
+  .tn-hh-fate {
+    margin-top: 4px;
+  }
+}
+/* On a phone the usual lane is named; the others are their marks. */
+@media (max-width: 559.98px) {
+  .tn-hh-lanes {
+    gap: 0 8px;
+  }
+  .tn-hh-lanes a {
+    gap: 5px;
+  }
+  .tn-hh-lanes > li + li span {
+    display: none;
+  }
+}

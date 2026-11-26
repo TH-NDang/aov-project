@@ -1,0 +1,213 @@
+/* A column for every week; the whole of it is all games of the week, filled from the ground. */
+.tn-weeks {
+  --weeks-won: var(--hub-accent);
+  --weeks-lost: color-mix(in srgb, var(--hub-accent) 54%, var(--hub-bg));
+  --weeks-banned: color-mix(in srgb, var(--hub-muted) 78%, var(--hub-bg));
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+.tn-weeks-chart {
+  display: flex;
+  min-width: 0;
+  gap: 10px;
+}
+.tn-weeks-chart[data-stages] {
+  padding-bottom: 18px;
+}
+.tn-weeks-column {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  max-width: 84px;
+  flex: 1 1 0;
+  align-content: start;
+  gap: 6px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+/* The line is where a full column ends; the room over it is for the share of one. */
+.tn-weeks-stack {
+  --full: 118px;
+  display: flex;
+  height: calc(var(--full) + 20px);
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(var(--hub-border), var(--hub-border)) 0 19px / 100% 1px no-repeat;
+}
+.tn-weeks-stack > b {
+  padding: 0 4px 2px;
+  align-self: center;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* The gap under a part is taken from the part, so the parts together are as tall as their share. */
+.tn-weeks-stack > i {
+  height: max(2px, var(--part) / var(--all) * var(--full) - 2px);
+  flex: none;
+  margin-bottom: 2px;
+  border-radius: 3px;
+}
+.tn-weeks-stack > i:last-child {
+  height: max(2px, var(--part) / var(--all) * var(--full));
+  margin-bottom: 0;
+}
+.tn-weeks-stack > [data-part="won"] {
+  background: var(--weeks-won);
+}
+.tn-weeks-stack > [data-part="lost"] {
+  background: var(--weeks-lost);
+}
+.tn-weeks-stack > [data-part="banned"] {
+  border: 1.5px solid var(--weeks-banned);
+}
+.tn-weeks-stack > [data-part="unknown"] {
+  border: 1.5px dotted var(--hub-border-strong);
+}
+.tn-weeks-name {
+  padding: 2px 4px;
+  border-radius: var(--aov-radius-pill);
+}
+.tn-weeks-column:hover > .tn-weeks-name {
+  color: var(--hub-text);
+}
+.tn-weeks-column[aria-pressed="true"] > .tn-weeks-name {
+  background: color-mix(in srgb, var(--hub-text) 10%, transparent);
+  color: var(--hub-text);
+  font-weight: 600;
+}
+/* Where two stages have weeks, the name of each stands under its first one. */
+.tn-weeks-stage {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  white-space: nowrap;
+}
+.tn-weeks-reading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 20px;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-weeks-reading p {
+  margin: 0;
+}
+.tn-weeks-reading p > b {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-weeks-reading ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-weeks-reading li {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+}
+.tn-weeks-reading li::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 3px;
+  background: var(--weeks-won);
+}
+.tn-weeks-reading li[data-part="lost"]::before {
+  background: var(--weeks-lost);
+}
+.tn-weeks-reading li[data-part="banned"]::before {
+  border: 1.5px solid var(--weeks-banned);
+  background: none;
+}
+.tn-weeks-reading li[data-part="unknown"]::before {
+  border: 1.5px dotted var(--hub-border-strong);
+  background: none;
+}
+.tn-weeks-reading li[data-part="open"]::before {
+  content: none;
+}
+.tn-weeks-reading a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: var(--hub-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--hub-accent-strong) 60%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.tn-weeks-reading a:is(:hover, :focus-visible) {
+  text-decoration-color: currentColor;
+}
+/* Where there is room the words stand beside the columns, one under the other. */
+@media (min-width: 900px) {
+  .tn-weeks[data-beside] {
+    grid-template-columns: minmax(0, auto) minmax(160px, 1fr);
+    align-items: center;
+    gap: 56px;
+  }
+  .tn-weeks[data-beside] > .tn-weeks-chart > * {
+    width: 84px;
+    flex: 0 1 auto;
+  }
+  .tn-weeks[data-beside] > .tn-weeks-reading {
+    display: grid;
+    gap: 6px;
+  }
+  .tn-weeks[data-beside] > .tn-weeks-reading p > :is(b, span) {
+    display: block;
+  }
+  .tn-weeks[data-beside] > .tn-weeks-reading p > b {
+    font-size: 16px;
+    line-height: 22px;
+  }
+  .tn-weeks[data-beside] > .tn-weeks-reading ul {
+    display: grid;
+    justify-items: start;
+  }
+}
+/* A phone fits every column into its width: the figures and names give up their side room, and a stage, whose name is
+   longer than that of a week, takes more of the row. */
+@media (max-width: 899.98px) {
+  .tn-weeks-chart {
+    gap: 3px;
+  }
+  .tn-weeks-column {
+    max-width: 140px;
+  }
+  .tn-weeks-column[data-kind="stage"] {
+    flex-grow: 1.7;
+  }
+  .tn-weeks-stack > b,
+  .tn-weeks-name {
+    padding-inline: 0;
+  }
+  /* So many figures side by side would touch: only the first share keeps its sign, the others are read by it. */
+  .tn-weeks-chart[data-many] .tn-weeks-stack > b > [data-unit="later"] {
+    display: none;
+  }
+  .tn-weeks-reading :is(li, a) {
+    min-height: 40px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-weeks-stack > i,
+  .tn-weeks-reading li::before {
+    forced-color-adjust: none;
+  }
+}

@@ -1,0 +1,14 @@
+/* The matches of one step of a table. */
+.tn-steps-matches {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  margin-top: 12px;
+}
+.tn-steps-matches > h3 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+}

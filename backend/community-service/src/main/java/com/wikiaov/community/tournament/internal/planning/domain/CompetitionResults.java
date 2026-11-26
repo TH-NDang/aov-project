@@ -28,8 +28,14 @@ public final class CompetitionResults {
             UUID seriesId,
             boolean consistent
     ) {
+        /** A match with a result, also one that ended in a draw. */
+        public boolean played() {
+            return consistent && scoreA != null && scoreB != null;
+        }
+
+        /** Null while the match is open, and when it ended in a draw. */
         public UUID winner() {
-            return scoreA == null || !consistent ? null : scoreA > scoreB ? teamAId : teamBId;
+            return !played() || scoreA.equals(scoreB) ? null : scoreA > scoreB ? teamAId : teamBId;
         }
 
         public UUID loser() {
@@ -100,10 +106,9 @@ public final class CompetitionResults {
         var matches = plan.matches().stream().filter(match -> match.stageCode().equals(stage.code()))
                 .map(match -> index.get(match.key())).toList();
         var stats = new LinkedHashMap<UUID, int[]>();
-        plan.playing(stage).forEach(entry -> stats.put(entry.teamId(), new int[5]));
+        plan.playing(stage).forEach(entry -> stats.put(entry.teamId(), new int[6]));
         for (var match : matches) {
-            if (!match.consistent() || match.scoreA() == null || !stats.containsKey(match.teamAId())
-                    || !stats.containsKey(match.teamBId())) {
+            if (!match.played() || !stats.containsKey(match.teamAId()) || !stats.containsKey(match.teamBId())) {
                 continue;
             }
             add(stats.get(match.teamAId()), match.scoreA(), match.scoreB(), stage);
@@ -117,7 +122,7 @@ public final class CompetitionResults {
         boolean complete = expected > 0 && matches.size() == expected
                 && pairs.size() == stats.size() * (stats.size() - 1) / 2
                 && pairs.values().stream().allMatch(count -> count == stage.legs())
-                && matches.stream().allMatch(match -> match.winner() != null);
+                && matches.stream().allMatch(Resolved::played);
         List<List<UUID>> groups = List.of(new ArrayList<>(stats.keySet()));
         groups = split(groups, team -> stats.get(team)[4]);
         for (String rule : stage.tieBreakers()) {
@@ -129,12 +134,12 @@ public final class CompetitionResults {
                     int observed = 0;
                     for (var match : matches) {
                         if (!mini.containsKey(match.teamAId()) || !mini.containsKey(match.teamBId())
-                                || match.winner() == null) {
+                                || !match.played()) {
                             continue;
                         }
                         observed++;
-                        mini.compute(match.winner(), (key, value) -> value + stage.winPoints());
-                        mini.compute(match.loser(), (key, value) -> value + stage.lossPoints());
+                        mini.merge(match.teamAId(), points(match.scoreA(), match.scoreB(), stage), Integer::sum);
+                        mini.merge(match.teamBId(), points(match.scoreB(), match.scoreA(), stage), Integer::sum);
                     }
                     if (observed == group.size() * (group.size() - 1) / 2 * stage.legs()) {
                         refined.addAll(split(List.of(group), mini::get));
@@ -155,8 +160,8 @@ public final class CompetitionResults {
             boolean qualified = complete && rank + group.size() - 1 <= stage.advance();
             for (var team : group) {
                 var values = stats.get(team);
-                rows.add(new Standing(rank, team, values[0], values[1], values[0] - values[1], values[2], values[3],
-                        values[4], group.size() > 1, qualified));
+                rows.add(new Standing(rank, team, values[0], values[1], values[5], values[2], values[3], values[4],
+                        group.size() > 1, qualified));
             }
         }
         return new Table(stage.code(), complete, List.copyOf(rows));
@@ -178,9 +183,16 @@ public final class CompetitionResults {
         stats[0]++;
         if (own > other) {
             stats[1]++;
+        } else if (own < other) {
+            stats[5]++;
         }
         stats[2] += own;
         stats[3] += other;
-        stats[4] += own > other ? stage.winPoints() : stage.lossPoints();
+        stats[4] += points(own, other, stage);
+    }
+
+    /** A plan has no points for a draw yet, so a drawn match gives both teams those of a lost one. */
+    private static int points(int own, int other, Stage stage) {
+        return own > other ? stage.winPoints() : stage.lossPoints();
     }
 }

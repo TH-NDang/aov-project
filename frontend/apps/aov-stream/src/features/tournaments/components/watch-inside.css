@@ -1,0 +1,53 @@
+/* What the companion shows of where the video is. */
+.tn-room-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+/* Room for the names and rings that hang over the margins. */
+.tn-room:is([data-shape="side"], [data-shape="turned"]) .tn-room-body {
+  min-height: 0;
+  flex: 1;
+  margin: -4px -12px 0;
+  overflow-y: auto;
+  padding: 4px 12px 0;
+  scrollbar-width: none;
+}
+.tn-room:not([data-shape="stack"]) .tn-room-body[data-above] {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--room-fade));
+}
+.tn-room:not([data-shape="stack"]) .tn-room-body[data-below] {
+  mask-image: linear-gradient(to top, transparent, #000 var(--room-fade));
+}
+.tn-room:not([data-shape="stack"]) .tn-room-body[data-above][data-below] {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--room-fade) calc(100% - var(--room-fade)), transparent);
+}
+.tn-room-fact {
+  flex: none;
+  margin: auto 0 0;
+  padding: 8px 0 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-room:is([data-density="mid"], [data-density="tight"]) .tn-room-fact {
+  padding: 4px 0 2px;
+}
+/* Where it is low the row of what happened last is kept instead; the counts say it when they are pointed at. */
+@container tn-room-side (max-height: 454.98px) {
+  .tn-room:not([data-shape="stack"]) .tn-room-fact[data-counts] {
+    display: none;
+  }
+}
+/* On a tablet the board stands beside what has happened. */
+@container tn-room-side (min-width: 700px) {
+  .tn-room[data-shape="stack"] .tn-room-body {
+    display: grid;
+    grid-template-columns: 400px minmax(0, 1fr);
+    align-items: start;
+    gap: 0 40px;
+  }
+  .tn-room[data-shape="stack"] .tn-room-fact {
+    margin: 0;
+  }
+}

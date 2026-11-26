@@ -9,10 +9,13 @@ import {
   revertCarry,
 } from "../src/features/esports/model/carry-over"
 import { swapSides } from "../src/features/esports/model/line-up"
+import { gameTabs, openNumbers } from "../src/features/esports/model/game-tabs"
+import { buildGameView } from "../src/features/esports/model/game-view"
 import { matchDays, matchNeighbours } from "../src/features/esports/model/match-order"
-import { publishRows } from "../src/features/esports/model/match-publishing"
+import { commonBlocks, commonGaps, publishRows } from "../src/features/esports/model/match-publishing"
 import { recordingProgress } from "../src/features/esports/model/recording-progress"
-import { recordingTools } from "../src/features/esports/model/recording-tools"
+import { placeAt } from "../src/features/esports/model/playback-place"
+import { layoutChapters } from "../src/features/esports/model/series-vod"
 import {
   gameWinner,
   hasEveryGame,
@@ -23,9 +26,11 @@ import {
   quickTally,
   scoreFromGames,
 } from "../src/features/esports/model/series-score"
+import { timingIssues } from "../src/features/esports/model/timing-issues"
+import { followTool, openingTool, toolMarks, toolOfPlace } from "../src/features/esports/model/tool-state"
 import { ApiError } from "../src/lib/api/errors"
 import { withGlobals } from "./fixtures/dom"
-import { completeGame, game, match, seat } from "./fixtures/match-records"
+import { completeGame, game, match, seat, view } from "./fixtures/match-records"
 
 // The API client opens a channel between tabs, which would keep the test process alive.
 const [{ publishGames }, { quickGame }] = await withGlobals({ BroadcastChannel: undefined }, () =>
@@ -218,6 +223,16 @@ test("line-ups come from the latest earlier game that names any player", () => {
   assert.equal(previousGame(games, 3)?.number, 1)
 })
 
+test("of two earlier games that name players the later one gives the line-up", () => {
+  const games = [lineup(1, ["BLUE", "MID", "first"]), lineup(2, ["BLUE", "MID", "second"]), game(3)]
+  assert.equal(previousGame(games, 3)?.number, 2)
+})
+
+test("a game never takes its line-up from itself", () => {
+  const games = [lineup(1, ["BLUE", "MID", "first"]), lineup(2, ["BLUE", "MID", "second"])]
+  assert.equal(previousGame(games, 2)?.number, 1)
+})
+
 test("a game with every required part is ready, one with a gap names the panel that fills it", () => {
   const rows = publishRows([completeGame(1, "a"), game(2, "b")])
   assert.deepEqual(
@@ -226,7 +241,7 @@ test("a game with every required part is ready, one with a gap names the panel t
   )
   assert.deepEqual(
     rows[1]!.steps.map((step) => step.target),
-    ["draft", "draft", "draft", "loadout", "result"],
+    ["draft", "draft", "loadout", "loadout", "result"],
   )
 })
 
@@ -242,13 +257,102 @@ test("a published game is ready again only after it changed", () => {
   )
 })
 
+test("a game that lacks only what nobody saw can be published and names what it lacks", () => {
+  const withoutSpell = seat(completeGame(1, "a"), "RED", "TOP", { spell: { id: null, name: null } })
+  const [row] = publishRows([withoutSpell])
+  assert.equal(row!.state, "partial")
+  assert.deepEqual(
+    row!.steps.map((step) => step.id),
+    ["spells"],
+  )
+})
+
+test("a game without its winner or a hero cannot be published", () => {
+  const complete = completeGame(1, "a")
+  const open = { ...complete, content: { ...complete.content, winner: null } }
+  const withoutHero = seat(completeGame(2, "b"), "RED", "TOP", { hero: { id: null, name: null } })
+  assert.deepEqual(
+    publishRows([open, withoutHero]).map((row) => row.state),
+    ["blocked", "blocked"],
+  )
+})
+
+test("the gaps of several games are counted, the one most games have first", () => {
+  const withoutSpell = (number: number) =>
+    seat(completeGame(number, "a"), "RED", "TOP", { spell: { id: null, name: null } })
+  const withoutBoth = seat(withoutSpell(2), "RED", "TOP", { playerId: null, spell: { id: null, name: null } })
+  assert.deepEqual(commonGaps(publishRows([withoutSpell(1), withoutBoth])), [
+    { label: "Phụ trợ", games: 2 },
+    { label: "Tuyển thủ", games: 1 },
+  ])
+})
+
+test("a game that lacks only its length is not said to lack its result", () => {
+  const complete = completeGame(1, "a")
+  const rows = publishRows([{ ...complete, content: { ...complete.content, durationSeconds: null } }])
+  assert.equal(rows[0]!.state, "partial")
+  assert.deepEqual(commonGaps(rows), [{ label: "Thời lượng", games: 1 }])
+})
+
+test("games held back are listed by what holds them back, not by everything they lack", () => {
+  const withoutHero = seat(completeGame(1, "a"), "RED", "TOP", {
+    hero: { id: null, name: null },
+    spell: { id: null, name: null },
+  })
+  const refused = completeGame(2, "a", { missingFields: ["sides[0].participants[2].hero.unavailableInPatch"] })
+  const rows = publishRows([withoutHero, refused])
+  assert.deepEqual(
+    rows.map((row) => row.state),
+    ["blocked", "blocked"],
+  )
+  assert.deepEqual(
+    commonBlocks(rows, (field) => `reported: ${field.split(".").at(-1)}`),
+    [
+      { label: "Tướng", games: 1 },
+      { label: "reported: unavailableInPatch", games: 1 },
+    ],
+  )
+})
+
 test("what the service reports beyond the recording steps is listed on its own", () => {
   const [row] = publishRows([
     completeGame(1, "a", {
-      missingFields: ["sides[0].bans[1]", "sides[0].participants[2].hero.unavailableInPatch"],
+      missingFields: ["sides[0].participants[2].hero", "sides[0].participants[2].hero.unavailableInPatch"],
     }),
   ])
   assert.deepEqual(row!.issues, ["sides[0].participants[2].hero.unavailableInPatch"])
+})
+
+test("the gap most games share comes first, though another game lacks something else first", () => {
+  const withoutPlayer = seat(completeGame(1, "a"), "RED", "TOP", { playerId: null })
+  const withoutSpell = (number: number) =>
+    seat(completeGame(number, "a"), "RED", "TOP", { spell: { id: null, name: null } })
+  assert.deepEqual(commonGaps(publishRows([withoutPlayer, withoutSpell(2), withoutSpell(3)])), [
+    { label: "Phụ trợ", games: 2 },
+    { label: "Tuyển thủ", games: 1 },
+  ])
+})
+
+test("a game held back twice for the same reason is counted once", () => {
+  const refused = completeGame(1, "a", {
+    missingFields: [
+      "sides[0].participants[1].hero.unavailableInPatch",
+      "sides[0].participants[2].hero.unavailableInPatch",
+    ],
+  })
+  assert.deepEqual(
+    commonBlocks(publishRows([refused]), (field) => `reported: ${field.split(".").at(-1)}`),
+    [{ label: "reported: unavailableInPatch", games: 1 }],
+  )
+})
+
+test("a game held back by a step of its own is not also listed by what the service reports", () => {
+  const reported = completeGame(1, "a", { missingFields: ["sides[0].participants[2].hero.unavailableInPatch"] })
+  const withoutHero = seat(reported, "RED", "TOP", { hero: { id: null, name: null } })
+  assert.deepEqual(
+    commonBlocks(publishRows([withoutHero]), (field) => `reported: ${field.split(".").at(-1)}`),
+    [{ label: "Tướng", games: 1 }],
+  )
 })
 
 test("a game the service refuses does not stop the games after it", async () => {
@@ -276,15 +380,130 @@ test("a game the service refuses does not stop the games after it", async () => 
   )
 })
 
-test("the panel to open next is the first one whose required data is not complete", () => {
-  assert.equal(recordingTools(recordingProgress(game(1))).next, "draft")
-  const withoutSpells = seat(completeGame(1, "a"), "RED", "TOP", { spell: { id: null, name: null } })
-  assert.equal(recordingTools(recordingProgress(withoutSpells)).next, "loadout")
+const VIDEO = "R5rCsGqDJIg"
+const teams = [
+  view("a", { code: "a", name: "Azure", shortName: "AZU" }),
+  view("b", { code: "b", name: "Crimson", shortName: "CRI" }),
+] as Parameters<typeof buildGameView>[1]
+
+/** The game on the video of the match. */
+const onVideo = (entry: DocumentView<GameContent>, change: Partial<GameContent> = {}) => ({
+  ...entry,
+  content: { ...entry.content, sourceUrl: `https://youtu.be/${VIDEO}`, ...change },
 })
 
-test("a complete game points at the last look before publishing, a published one at nothing", () => {
-  assert.equal(recordingTools(recordingProgress(completeGame(1, "a"))).next, "progress")
-  const publishedAt = "2026-09-02T00:00:00Z"
-  const published = completeGame(1, "a", { publishedAt, updatedAt: publishedAt })
-  assert.equal(recordingTools(recordingProgress(published)).next, null)
+function tabs(games: DocumentView<GameContent>[], videoId: string | null = VIDEO) {
+  const chapters = layoutChapters(games, videoId)
+  return gameTabs(
+    games,
+    chapters,
+    Object.fromEntries(games.map((entry) => [entry.id, buildGameView(entry, teams, [])])),
+    Object.fromEntries(games.map((entry) => [entry.id, recordingProgress(entry)])),
+    timingIssues(chapters, null),
+    videoId !== null,
+  )
+}
+
+const publishedAt = "2026-09-02T00:00:00Z"
+const placed = { sourceTimestampSeconds: 1000 }
+
+test("the tab of a published, unchanged game carries no mark and says all of it", () => {
+  const entry = { ...onVideo(completeGame(1, "a"), placed), publishedAt, updatedAt: publishedAt }
+  const [tab] = tabs([entry])
+  assert.equal(tab!.mark, null)
+  assert.equal(tab!.name, "Ván 1, AZU thắng, 15:00, đã xuất bản")
+})
+
+test("a game changed after it was published asks for attention before anything else", () => {
+  const entry = { ...onVideo(completeGame(1, "a")), publishedAt, updatedAt: "2026-09-03T00:00:00Z" }
+  const [tab] = tabs([entry])
+  assert.equal(tab!.mark, "attention")
+  assert.match(tab!.name, /đã sửa sau khi xuất bản/)
+})
+
+test("games whose times on the video clash ask for attention", () => {
+  const games = [onVideo(completeGame(1, "a"), placed), onVideo(completeGame(2, "b"), { sourceTimestampSeconds: 1500 })]
+  assert.deepEqual(
+    tabs(games).map((tab) => [tab.mark, /mốc video chồng ván khác/.test(tab.name)]),
+    [
+      ["attention", true],
+      ["attention", true],
+    ],
+  )
+})
+
+test("a game without a place in the video of the match says so", () => {
+  const [tab] = tabs([onVideo(completeGame(1, "a"))])
+  assert.equal(tab!.mark, "unplaced")
+  assert.match(tab!.name, /chưa đặt mốc trên video/)
+})
+
+test("a game that is being recorded says how far it is, a complete one that it waits", () => {
+  const games = [onVideo(game(1), placed), onVideo(completeGame(2, "a"), { sourceTimestampSeconds: 4000 })]
+  assert.deepEqual(
+    tabs(games).map((tab) => tab.mark),
+    ["recording", "ready"],
+  )
+  assert.match(tabs(games)[0]!.name, /đang ghi, 1 trên 6 mục/)
+  assert.match(tabs(games)[1]!.name, /đủ dữ liệu, chờ xuất bản/)
+})
+
+test("without a video nothing is said about places in one", () => {
+  assert.equal(tabs([completeGame(1, "a")], null)[0]!.mark, "ready")
+})
+
+test("the numbers a new game can take are those the score names and nobody recorded", () => {
+  assert.deepEqual(openNumbers(match([3, 1]).content, [game(1), game(3)], false), [2, 4])
+})
+
+test("while a match has no score, only the next number can be taken", () => {
+  assert.deepEqual(openNumbers(match().content, [game(1)], true), [2])
+  assert.deepEqual(openNumbers(match().content, [game(1)], false), [])
+})
+
+const drafting = onVideo(game(1), { draft: { startSecond: 600, lockedSecond: 800, turns: [] } })
+const live = onVideo(drafting, placed)
+const toolAt = (second: number, gameId = "g1") => toolOfPlace(placeAt(layoutChapters([live], VIDEO), second), gameId)
+
+test("the part on the desk follows the phase the video shows", () => {
+  assert.deepEqual(
+    [650, 900, 1100].map((second) => toolAt(second)),
+    ["draft", "lineup", "moments"],
+  )
+})
+
+test("outside the game on the desk the part that is open stays", () => {
+  assert.equal(toolAt(100), null)
+  assert.equal(toolAt(1100, "another"), null)
+  assert.equal(followTool({ gameId: "g1", tool: "game", chosen: false }, "g1", null).tool, "game")
+})
+
+test("a part the editor chose stays until another game comes on the desk", () => {
+  const chosen = { gameId: "g1", tool: "game" as const, chosen: true }
+  assert.equal(followTool(chosen, "g1", "moments"), chosen)
+  assert.deepEqual(followTool(chosen, "g2", "draft"), { gameId: "g2", tool: "draft", chosen: false })
+})
+
+test("without a video a game opens with the part it is recorded up to", () => {
+  const opening = (entry: DocumentView<GameContent>) => openingTool(entry.content, layoutChapters([entry], null)[0]!)
+  assert.equal(opening(game(1)), "draft")
+  assert.equal(opening(completeGame(1, "a")), "lineup")
+})
+
+const marks = (entry: DocumentView<GameContent>, recording = true) => {
+  const [chapter] = layoutChapters([entry], VIDEO)
+  return toolMarks(entry.content, chapter!, recordingProgress(entry), 0, { recording, followed: false })
+}
+
+test("the parts of a game say what lacks only once it should be there, and only while recording", () => {
+  const withoutSpell = seat(onVideo(completeGame(1, "a"), placed), "RED", "TOP", { spell: { id: null, name: null } })
+  assert.equal(marks(withoutSpell).lineup.lacks, "thiếu phụ trợ")
+  assert.equal(marks(withoutSpell, false).lineup.lacks, null)
+  assert.equal(marks(onVideo(game(1))).lineup.lacks, null, "before the draft nothing is late")
+})
+
+test("a game that has ended without a winner says that it lacks one", () => {
+  const ended = onVideo(completeGame(1, "a"), { ...placed, winner: null })
+  assert.equal(marks(ended).game.lacks, "thiếu đội thắng")
+  assert.equal(marks(onVideo(game(1), placed)).game.lacks, null, "a game that is played has no end yet")
 })

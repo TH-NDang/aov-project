@@ -5,6 +5,11 @@ export interface WikiCatalogScope {
   patchVariantId?: string | null
   includeUnscoped?: boolean
   section?: string
+  /**
+   * The market and language the Wiki falls back to when the address names none: the saved choice, else VN and vi-VN.
+   * Links leave those out, so the addresses crawlers follow are the canonical ones (ADR-022).
+   */
+  implied?: { region: string; locale: string }
 }
 
 export function supportedWikiLocale(value: string | null | undefined) {
@@ -76,8 +81,8 @@ export function wikiScopeHref(path: string, scope: WikiCatalogScope) {
   const sameSection =
     scope.section === undefined || scope.section === wikiSection(target.pathname, target.searchParams.get("tab"))
   const values = {
-    region: scope.region,
-    locale: scope.locale,
+    region: scope.implied?.region !== scope.region && scope.region,
+    locale: scope.implied?.locale !== scope.locale && scope.locale,
     season: sameSection && scope.seasonId,
     patch: sameSection && scope.patchVariantId,
     unscoped: sameSection && scope.includeUnscoped ? "1" : null,

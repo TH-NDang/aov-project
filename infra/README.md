@@ -125,7 +125,7 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | Biến | Ý nghĩa |
 |---|---|
 | `PUBLIC_ORIGIN` | Origin trình duyệt dùng, không có `/` cuối. Biên dịch vào frontend và ghi vào realm khi import |
-| `SITE_ADDRESS` | `:80` trên máy này; tên miền trên máy chủ, Caddy khi đó tự lấy chứng chỉ TLS |
+| `SITE_ADDRESS` | `:80` trên máy này; tên miền trên máy chủ, Caddy khi đó tự lấy chứng chỉ TLS. Ghi cả hai tên trong ngoặc kép, như `"athahub.com, www.athahub.com"`, để `www.` chuyển 308 về tên chính |
 | `PUBLIC_BIND_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT` | Nơi proxy nghe trên máy chủ |
 | `TRUSTED_PROXIES` | Chỉ khi có CDN trước Caddy (proxy Cloudflare): dải IP của CDN, cách nhau bằng dấu cách; `.env.example` có sẵn dải của Cloudflare. Để trống khi trình duyệt vào thẳng máy này. Sai giá trị thì giới hạn tần suất đếm chung cho mọi người |
 | `KEYCLOAK_ADMIN_PORT` | Cổng console Keycloak, luôn chỉ trên `127.0.0.1` |
@@ -330,7 +330,9 @@ bash infra/scripts/deploy.sh --refresh
 
 - Không tham số: commit mới nhất của `main`, chỉ khi mọi check của commit đó trên GitHub đã xong và đạt, và commit đó nối tiếp
   commit đang chạy. Timer chỉ đi tới: `main` bị viết lại lịch sử hoặc lùi về thì nó không làm gì.
-- `<commit>`: đúng commit đó, kể cả khi check chưa đạt; dùng để quay lui về commit trước.
+- `<commit>`: đúng commit đó, kể cả khi check chưa đạt; dùng để quay lui về commit trước. Chỉ khi chưa ván đấu nào có `build`
+  (trang bị đã lên) mới quay lui được về bản chưa biết trường này, vì bản đó từ chối trường lạ và trả 500 cho ván có `build`; đã
+  có thì sửa bằng một commit mới.
 - `--refresh`: chạy lại các bước không gián đoạn trên commit đang chạy, dùng sau khi đổi `.env` cho backend. Đổi giá trị của
   Keycloak, PostgreSQL hay Caddy trong `.env` thì vẫn dùng `docker compose up -d --wait`.
 
@@ -575,7 +577,9 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
 - **Theo dõi**: kiểm tra sức khỏe chạy trên chính VPS. Khi mở cổng 443 cho mọi người, thêm một dịch vụ theo dõi bên ngoài để biết
   cả khi máy tắt hẳn. Chưa gom log; log JSON chỉ xoay vòng trong Docker.
 - **Tính năng chỉ có ở Vite dev**: JSON storage của Admin cần dev server, nên bản build trả 404 cho nó.
-- **Content-Security-Policy** đặt trong `proxy/Caddyfile` cho mọi đường dẫn trừ `/idp/`: script chỉ từ chính trang (và API
-  player của YouTube cho Admin), ảnh, video và `connect-src` nhận mọi nguồn `https:` (tên miền ảnh, endpoint R2, ảnh trong bài
-  viết), iframe chỉ YouTube, Twitch, Facebook, TikTok. Thêm nhúng mới hay script ngoài thì sửa chính sách ở đó. Nếu bật proxy
-  Cloudflare, các tính năng chèn script như Web Analytics, Rocket Loader hay Email Obfuscation sẽ bị chặn.
+- **Content-Security-Policy** đặt trong `proxy/Caddyfile` cho mọi đường dẫn trừ `/idp/`: script chỉ từ chính trang và API
+  player của YouTube (`www.youtube.com`, `s.ytimg.com`) cho trình phát của Stream và Admin; ảnh, video và `connect-src` nhận
+  mọi nguồn `https:` (tên miền ảnh, endpoint R2 cho ảnh đối chứng qua URL ký sẵn, upload, manifest tệp nguồn); iframe chỉ
+  YouTube (gồm `www.youtube-nocookie.com`), Twitch, Facebook, TikTok. Thêm nhúng mới hay script ngoài thì sửa chính sách ở
+  đó. `Referrer-Policy: strict-origin-when-cross-origin` cũng nằm ở đó và phải giữ, nếu không YouTube trả lỗi 153. Nếu bật
+  proxy Cloudflare, các tính năng chèn script như Web Analytics, Rocket Loader hay Email Obfuscation sẽ bị chặn.

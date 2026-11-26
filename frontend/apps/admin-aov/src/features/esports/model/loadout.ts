@@ -2,8 +2,8 @@ import type { ArcanaAllocation, EnchantmentAllocation, ObservationStatus, Refere
 
 export type ArcanaColor = "RED" | "PURPLE" | "GREEN"
 
-/** The parts of a player's row the scoreboard can open the recording panel on. */
-export type LoadoutPart = "player" | "spell" | "enchantments" | "arcana" | "equipment"
+/** The parts of a player that are recorded one by one. */
+export type LoadoutPart = "spell" | "enchantments" | "arcana" | "equipment"
 
 export const ARCANA_COLORS: { code: ArcanaColor; label: string }[] = [
   { code: "RED", label: "Đỏ" },
@@ -18,6 +18,9 @@ export const STONES_PER_COLOR = 10
 export const ARCANA_PAGE_TIER = 3
 
 export const TIER_NUMERALS = ["I", "II", "III"] as const
+
+/** The tier of the emblem a broadcast shows beside a player, the main one of the set. */
+export const MAIN_EMBLEM_TIER = 3
 
 export const isArcanaColor = (color?: string | null): color is ArcanaColor =>
   color === "RED" || color === "PURPLE" || color === "GREEN"
@@ -41,8 +44,8 @@ export function enchantmentBranches(enchantments: Reference[]) {
 
 /**
  * What a stone gives, which is what a broadcast prints next to it. Catalogue names start with the colour and the
- * tier in Roman numerals, then the stats separated by slashes. Colour and tier are already shown by the column and
- * the tier switch, and the names are typed in mixed capitals, so every stat is written the same way here.
+ * tier in Roman numerals, then the stats separated by slashes. Colour and tier are told by the column, and the names
+ * are typed in mixed capitals, so every stat is written the same way here.
  */
 export function arcanaLabel(name?: string | null) {
   const text = (name ?? "").normalize("NFC").trim()
@@ -53,7 +56,7 @@ export function arcanaLabel(name?: string | null) {
     .map((stat) => stat.trim().toLocaleLowerCase("vi"))
     .filter(Boolean)
     .map((stat) => stat.charAt(0).toLocaleUpperCase("vi") + stat.slice(1))
-    .join(" · ")
+    .join("/")
 }
 
 export const stonesOf = (entries: ArcanaAllocation[], color: ArcanaColor) =>
@@ -123,10 +126,6 @@ export const mainBranch = (entries: EnchantmentAllocation[]) => primaryOf(entrie
 export const enchantmentStatus = (entries: EnchantmentAllocation[], current: ObservationStatus) =>
   statusFor(entries.length > 0, primaryOf(entries).length === 3 && secondaryOf(entries).length === 2, current)
 
-/** Main picks a click on this enchantment would discard because it starts another main branch. */
-export const replacedMainPicks = (entries: EnchantmentAllocation[], enchantment: Reference) =>
-  primaryOf(entries).filter((entry) => entry.branchCode !== (enchantment.branchCode ?? undefined))
-
 /** Two secondary picks go together when they are tiers I and II of one branch, or tier I of two branches. */
 const secondaryPair = (a: EnchantmentAllocation, b: EnchantmentAllocation) =>
   a.branchCode === b.branchCode ? a.tier !== b.tier : a.tier === 1 && b.tier === 1
@@ -160,4 +159,16 @@ export function pickEnchantment(
     .reverse()
     .find((entry) => secondaryPair(entry, pick))
   return [...primaryOf(others), ...(partner ? [partner] : []), pick]
+}
+
+/** What a click on a main enchantment throws away beyond the pick of its own tier, whose place it takes. */
+export function lostEnchantments(entries: EnchantmentAllocation[], enchantment: Reference): EnchantmentAllocation[] {
+  if (entries.some((entry) => entry.primary && entry.selection.id === enchantment.id)) return []
+  const kept = pickEnchantment(entries, enchantment, true)
+  return entries.filter(
+    (entry) =>
+      !kept.includes(entry) &&
+      entry.selection.id !== enchantment.id &&
+      !(entry.primary && entry.tier === enchantment.tier),
+  )
 }

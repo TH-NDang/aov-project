@@ -1,0 +1,79 @@
+/* What lies over the games of a bar. The pointer is read under them too, down to the foot of the bar. */
+.tn-story-press {
+  position: absolute;
+  z-index: 3;
+  top: var(--story-staff);
+  right: 0;
+  bottom: calc(-1 * var(--story-foot));
+  left: 0;
+  cursor: pointer;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.tn-story-range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.tn-story-press:has(> :focus-visible)::after {
+  content: "";
+  position: absolute;
+  inset: -4px -4px calc(var(--story-foot) - 4px);
+  border: 2px solid var(--hub-accent);
+  border-radius: 10px;
+  pointer-events: none;
+}
+.tn-story-line {
+  position: absolute;
+  z-index: 2;
+  top: var(--story-staff);
+  bottom: 0;
+  width: 1px;
+  background: rgb(255 255 255 / 55%);
+  pointer-events: none;
+}
+.tn-story-readout {
+  position: absolute;
+  top: 0;
+  left: max(0px, var(--x) - 4px);
+  display: flex;
+  max-width: calc(var(--rest) + 4px);
+  height: var(--story-label);
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.tn-story-readout[data-before] {
+  right: calc(var(--rest) - 4px);
+  left: auto;
+  max-width: calc(var(--x) + 4px);
+}
+.tn-story-readout[data-whole] {
+  top: -46px;
+  right: 0;
+  left: 0;
+  max-width: none;
+  height: 40px;
+  justify-content: center;
+}
+.tn-story-readout > b {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.tn-story-readout > span {
+  overflow: hidden;
+  color: var(--hub-text-soft);
+  text-overflow: ellipsis;
+}

@@ -222,17 +222,17 @@
 }
 
 /* One look for every entry of a catalog that can be opened: a quiet surface, and a gold outline once chosen. */
-:is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"] {
+:is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-current="true"] {
   border-color: color-mix(in srgb, var(--wiki-entry-tone, var(--aov-accent)) 70%, transparent);
   background: color-mix(in srgb, var(--wiki-entry-tone, var(--aov-accent)) 10%, var(--aov-surface));
 }
 /* Muted text is for the page and for plain cards; on the tint of the chosen one it takes the softer text colour. */
-:is(.wiki-item-row, .wiki-enchantment-node)[aria-pressed="true"] small,
-.wiki-spell-card[aria-pressed="true"] .wiki-spell-card-meta {
+:is(.wiki-item-row, .wiki-enchantment-node)[aria-current="true"] small,
+.wiki-spell-card[aria-current="true"] .wiki-spell-card-meta {
   color: var(--aov-text-soft);
 }
 @media (hover: hover) {
-  :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card):not([aria-pressed="true"]):hover {
+  :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card):not([aria-current="true"]):hover {
     border-color: var(--wiki-entry-hover-line);
     background: var(--wiki-entry-hover-bg, var(--aov-raised));
     box-shadow: var(--wiki-entry-glow);
@@ -240,7 +240,7 @@
 }
 /* The card lifts and its picture grows a little under the pointer, where motion is welcome. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card):not([aria-pressed="true"]):hover,
+  :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card):not([aria-current="true"]):hover,
   .wiki-item-board [data-item-node]:not(:has(> .shop-item-select[aria-pressed="true"])):hover {
     transform: translateY(-2px);
   }

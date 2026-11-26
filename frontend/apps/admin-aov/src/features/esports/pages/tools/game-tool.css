@@ -1,0 +1,157 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* What a game is, as rows: a name, what is recorded, what can be done. */
+  .esp-gt-row {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 8px;
+    min-height: 36px;
+    padding: 2px 6px 2px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .esp-gt-value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 8px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-gt-none {
+    color: var(--muted-foreground);
+  }
+  .esp-gt-acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: end;
+    gap: 2px 4px;
+  }
+  .esp-gt-acts:empty {
+    display: none;
+  }
+  /* What a row opens takes its whole width under it. */
+  .esp-gt-under {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 8px;
+    padding: 4px 6px 8px 0;
+  }
+  .esp-gt-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  /* A sentence and its button: the button goes under it where they would squeeze each other. */
+  @container dock ((max-width: 479.98px) or ((min-width: 760px) and (max-width: 979.98px))) {
+    .esp-gt-row[data-long] {
+      grid-template-columns: 112px minmax(0, 1fr);
+    }
+    .esp-gt-row[data-long] > .esp-gt-acts {
+      grid-column: 2;
+      justify-content: start;
+      padding-bottom: 4px;
+    }
+  }
+  .esp-gt-time {
+    border-radius: var(--aov-radius-control);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .esp-gt-time:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .esp-gt-time:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .esp-gt-team {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 2px 10px 2px 6px;
+    border: 1px solid transparent;
+    border-radius: var(--aov-radius-control);
+    color: var(--muted-foreground);
+  }
+  .esp-gt-team:is(button):hover {
+    background: var(--muted);
+  }
+  .esp-gt-team[aria-pressed="true"] {
+    border-color: var(--foreground);
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .esp-gt-team:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+  .esp-gt-review {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 4px 0;
+    color: var(--aov-warning);
+  }
+  .esp-gt-form {
+    display: grid;
+    gap: 12px;
+    padding: 8px 12px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .esp-gt-field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  @container dock (max-width: 359.98px) {
+    .esp-gt-row {
+      grid-template-columns: 88px minmax(0, 1fr) auto;
+    }
+    .esp-gt-row[data-long] {
+      grid-template-columns: 88px minmax(0, 1fr);
+    }
+  }
+  @container dock (min-width: 760px) {
+    .esp-gt-right {
+      min-height: 100%;
+      border-left: 1px solid var(--border);
+    }
+  }
+  /* A finger needs a target of 36 px, 40 on a phone; the rows grow with their buttons and fields. */
+  @media (pointer: coarse) {
+    .esp-gt-acts button,
+    .esp-gt-line > button,
+    .esp-gt-value input,
+    .esp-gt-line input,
+    .esp-gt-time,
+    .esp-gt-team {
+      min-width: 36px;
+      min-height: 36px;
+    }
+    .esp-gt-time {
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+  @media (pointer: coarse) and (max-width: 899.98px) {
+    .esp-gt-acts button,
+    .esp-gt-line > button,
+    .esp-gt-value input,
+    .esp-gt-line input,
+    .esp-gt-time,
+    .esp-gt-team {
+      min-width: 40px;
+      min-height: 40px;
+    }
+  }
+}

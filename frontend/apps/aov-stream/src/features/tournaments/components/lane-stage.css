@@ -1,0 +1,348 @@
+/* The five lanes on one stage, a column each, and the bans in a row under them. */
+.tn-lanes {
+  --stage-light-left: 12%;
+  --stage-light-right: 88%;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 22px 28px 18px;
+}
+.tn-lanes-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 30px;
+}
+.tn-lanes-lane {
+  min-width: 0;
+}
+.tn-lanes-lane > h3,
+.tn-lanes-bans > h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-lanes-lane > ol {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-lanes-lane > ol > li {
+  --portrait: 32px;
+  --portrait-radius: 7px;
+  display: flex;
+  min-width: 0;
+  min-height: 46px;
+  align-items: center;
+  gap: 8px;
+}
+/* The first of a lane: its portrait beside its name and its games, as tall as a name of two lines asks for. */
+.tn-lanes-lane > ol > [data-lead] {
+  --portrait: 72px;
+  --portrait-radius: 10px;
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  min-height: 74px;
+  margin-bottom: 10px;
+  padding-left: calc(var(--portrait) + 14px);
+}
+.tn-lanes-hero {
+  display: flex;
+  min-width: 0;
+  min-height: 40px;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 18px;
+}
+.tn-lanes-hero > strong {
+  min-width: 0;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.tn-lanes-hero:hover > strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+[data-lead] > .tn-lanes-hero {
+  min-height: 0;
+  flex: none;
+}
+[data-lead] > .tn-lanes-hero > :first-child {
+  position: absolute;
+  top: 1px;
+  left: 0;
+}
+/* The name alone is no place for the ring of a link that is mostly its portrait. */
+[data-lead] > .tn-lanes-hero:focus-visible {
+  outline: 0;
+}
+[data-lead] > .tn-lanes-hero:focus-visible > :first-child {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 3px;
+}
+[data-lead] > .tn-lanes-hero > strong {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-lanes-games {
+  display: grid;
+  min-height: 40px;
+  flex: none;
+  align-content: center;
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-align: right;
+}
+.tn-lanes-games > b {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-lanes-games:hover > :first-child {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+[data-lead] > .tn-lanes-games {
+  min-height: 0;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+}
+.tn-lanes-all {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+}
+.tn-lanes-all:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-lanes-bans {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 24px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(255 255 255 / 14%);
+}
+.tn-lanes-bans[data-alone] {
+  margin-top: 0;
+  padding-top: 0;
+  border: 0;
+}
+.tn-lanes-bans > h3 {
+  display: grid;
+  flex: none;
+  gap: 2px;
+  white-space: nowrap;
+}
+.tn-lanes-bans > h3 > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.tn-lanes-bans > ol {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-lanes-bans a {
+  --portrait: 36px;
+  --portrait-radius: 8px;
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-lanes-bans a > b {
+  font-weight: 600;
+}
+.tn-lanes-bans a:hover > b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-lanes-bans a:is(:hover, :focus-visible) {
+  --banned-grey: 0.2;
+}
+/* Who a struck face is: a wide stage tells it on pointing, a phone writes it under the face. */
+.tn-lanes-ban-name {
+  display: none;
+}
+@media (max-width: 1199.98px) {
+  .tn-lanes {
+    padding-inline: 22px;
+  }
+  .tn-lanes-row {
+    gap: 22px;
+  }
+  .tn-lanes-lane > ol > [data-lead] {
+    padding-left: calc(var(--portrait) + 10px);
+  }
+  [data-lead] > .tn-lanes-hero > strong {
+    font-size: 16px;
+    line-height: 19px;
+  }
+  [data-lead] > .tn-lanes-games {
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+  .tn-lanes-bans {
+    gap: 16px;
+  }
+  .tn-lanes-bans a {
+    --portrait: 32px;
+    gap: 6px;
+  }
+}
+@media (max-width: 1079.98px) {
+  .tn-lanes-bans {
+    display: grid;
+    gap: 8px;
+  }
+}
+/*
+ * Short of room, the number of a hero stands under its name, and the first of a lane goes without its bar. English
+ * words are the longer ones and need it up to 1160px.
+ */
+@media (min-width: 900px) and (max-width: 1159.98px) {
+  .tn-lanes-lane > ol > li {
+    position: relative;
+    min-height: 56px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    padding-left: calc(var(--portrait) + 10px);
+  }
+  .tn-lanes-lane > ol > [data-lead] {
+    --portrait: 60px;
+    min-height: 78px;
+    margin-bottom: 4px;
+  }
+  .tn-lanes-hero {
+    min-height: 0;
+    flex: none;
+  }
+  .tn-lanes-hero > :first-child,
+  [data-lead] > .tn-lanes-hero > :first-child {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+  }
+  .tn-lanes-games {
+    display: block;
+    min-height: 0;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .tn-lanes-games > b {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .tn-lanes-games > b:not(:last-child)::after {
+    content: ", ";
+  }
+  [data-lead] > .tn-lanes-games {
+    white-space: normal;
+    text-wrap: balance;
+  }
+  [data-lead] > .tn-lanes-games > :nth-child(2) {
+    display: none;
+  }
+}
+/* Compact: the lanes are a row to swipe, each as wide as its names need; the bans stand in rows of five. */
+@media (max-width: 899.98px) {
+  .tn-lanes {
+    --stage-light-left: 20%;
+    --stage-light-right: 80%;
+    padding: 16px 0 12px;
+  }
+  .tn-lanes-row {
+    grid-auto-columns: 216px;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    gap: 24px;
+    padding-inline: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 14px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .tn-lanes-row::-webkit-scrollbar {
+    display: none;
+  }
+  .tn-lanes-lane {
+    scroll-snap-align: start;
+  }
+  .tn-lanes-lane > ol > [data-lead] {
+    --portrait: 64px;
+    min-height: 66px;
+    padding-left: calc(var(--portrait) + 12px);
+  }
+  [data-lead] > .tn-lanes-games {
+    min-height: 40px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .tn-lanes-all {
+    min-height: 40px;
+  }
+  .tn-lanes-bans {
+    margin: 8px 14px 0;
+    padding-top: 14px;
+  }
+  .tn-lanes-bans > ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    gap: 8px 4px;
+  }
+  .tn-lanes-bans a {
+    --portrait: 28px;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+    gap: 2px 5px;
+  }
+  /* A name of two words breaks between them; one long word may reach into the gap beside its cell. */
+  .tn-lanes-ban-name {
+    display: block;
+    flex: 0 0 100%;
+    color: var(--hub-text-soft);
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+    text-wrap: balance;
+  }
+}

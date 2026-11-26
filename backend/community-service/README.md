@@ -37,10 +37,10 @@ GET công khai không cần đăng nhập. API quản trị chỉ chấp nhận 
   20 tên gọi khác; tên gọi được cắt khoảng trắng, không để trống/trùng hoa thường và dài tối đa 100 ký tự.
 - Tuyển thủ có ảnh `photoUrl` tùy chọn và các tên thi đấu khác với cùng giới hạn như tên khác của đội. Thiếu ảnh
   không tự lấy ảnh của người khác; tên thật/quốc gia không được đưa vào danh mục gợi ý tham chiếu.
-- Một ván gồm hai bên xanh/đỏ, mỗi bên bốn tướng cấm và năm tuyển thủ. Mỗi tuyển thủ có vị trí, tướng và đúng một phụ trợ.
+- Một ván gồm hai bên xanh/đỏ, mỗi bên tối đa bốn tướng cấm và năm người có vị trí và tướng, mỗi người tối đa một phụ trợ. Tuyển thủ, phụ trợ và lượt cấm mà nguồn không cho thấy thì để trống, vẫn xuất bản được (04, "Công bố ván còn thiếu dữ liệu").
 - Có thể lưu nháp thiếu dữ liệu. `missingFields` chỉ rõ các trường còn thiếu để xuất bản. Tướng cấm/chọn, tuyển thủ, đội, vị trí không được trùng trái quy tắc.
-- Phù hiệu và ngọc dùng trạng thái `UNKNOWN` (chưa rõ), `NOT_SHOWN` (nguồn không hiển thị), `KNOWN` (đã nhập). Hai trạng thái đầu không được coi là không sử dụng và không cản xuất bản. Ngọc đã biết cần đủ 30 viên, mỗi màu 10; phù hiệu có ba cấp nhánh chính và hai ô nhánh phụ đúng cấu trúc.
-- Mỗi ảnh chụp trang bị theo thời gian phải có đủ sáu ô đánh số **1–6**. `known=false` là chưa quan sát; `known=true,item=null` là ô trống đã xác nhận. Không suy đoán trang bị đầy đủ cuối trận từ một ảnh giữa trận.
+- Phù hiệu và ngọc dùng trạng thái `UNKNOWN` (chưa rõ), `NOT_SHOWN` (nguồn không hiển thị), `KNOWN` (đã nhập). Hai trạng thái đầu không được coi là không sử dụng và không cản xuất bản. Mục đã ghi của phù hiệu, ngọc phải có trong patch khi xuất bản, kể cả khi mới thấy một phần. Ngọc đã biết cần đủ 30 viên, mỗi màu 10; phù hiệu có ba cấp nhánh chính và hai ô nhánh phụ đúng cấu trúc.
+- Mỗi ảnh chụp trang bị theo thời gian phải có đủ sáu ô đánh số **1–6**. `known=false` là chưa quan sát; `known=true,item=null` là ô trống đã xác nhận. Không suy đoán trang bị đầy đủ cuối trận từ một ảnh giữa trận; `GET /competitions/{id}/heroes/{heroId}/builds` chỉ đọc ảnh chụp nằm trong một phút cuối ván. Các món đã lên, không theo mốc, ghi ở `build` (04, "Trang bị đã lên").
 - Sự kiện mua/bán/nâng cấp/đổi ô được ghi riêng theo giây. Chương trình không tự suy ra giao dịch giữa hai ảnh chụp; các món cấp thấp, món đã bán và món thay thế vẫn được giữ trong diễn biến.
 - Mỗi ván có thị trường, mùa và patch riêng. Chọn riêng mùa khi xuất bản sẽ chốt patch công khai cuối cùng hợp lệ của mùa tại thời điểm đó. Snapshot công khai giữ UUID patch thực tế, nhãn và revision tham chiếu, không tự trôi theo cập nhật sau này.
 - Tham chiếu Wiki dùng public API, không đọc database Wiki. Tướng/trang bị chưa có bản công khai có thể nhập tên quan sát với `id=null`; UI phải thể hiện đây là tên chưa liên kết, không tự tạo UUID hoặc tự xuất bản Wiki.
@@ -78,8 +78,8 @@ GET công khai không cần đăng nhập. API quản trị chỉ chấp nhận 
   (bắt buộc với `PICK`, lượt cấm có thể bỏ trống khi đội bỏ lượt). Mỗi bên tối đa 4 lượt cấm và 5 lượt chọn; một
   tướng chỉ xuất hiện một lần. `atSecond` tùy chọn, nằm trong giai đoạn cấm chọn và không giảm theo thứ tự lượt.
 - Lượt chọn gắn với đội, không gắn với tuyển thủ. Khi đã có lượt, cấm cuối cùng trong `sides[].bans` phải nằm trong
-  lượt cấm của đội đó và tướng của từng tuyển thủ phải nằm trong lượt chọn của đội (`notDrafted`). Đường và tuyển thủ
-  được gán sau mốc chốt.
+  lượt cấm của đội đó và tướng của từng tuyển thủ phải nằm trong lượt chọn của đội (`notDrafted`). Khi xuất bản, tướng bị
+  cấm ở một lượt cũng phải có trong `sides[].bans` của đội đó (`notBanned`). Đường và tuyển thủ được gán sau mốc chốt.
 - Ván lưu trước khi có trường này đọc thành giai đoạn cấm chọn rỗng, không cần migration.
 
 ## Quan sát phụ trợ, phù hiệu và bảng ngọc

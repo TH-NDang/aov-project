@@ -1,0 +1,71 @@
+/*
+ * One mark for each game. Height and fill say what became of it, so the colour never has to: a win is tall and solid, a
+ * loss short and pale, a game without a result hollow.
+ */
+.tn-marks {
+  --mark-won: var(--hub-accent);
+  --mark-lost: color-mix(in srgb, var(--hub-accent) 54%, var(--mark-ground, var(--hub-bg)));
+  display: inline-flex;
+  max-width: 100%;
+  height: var(--mark-height);
+  align-items: flex-end;
+  gap: 2px;
+  vertical-align: middle;
+}
+/* On a dark stage the pale marks fade into the stage, whatever the theme of the page. */
+.tn-stage .tn-marks {
+  --mark-ground: var(--aov-stream-dusk);
+}
+.tn-marks > i {
+  width: var(--mark-unit);
+  height: 42%;
+  flex: none;
+  border-radius: 1px;
+  background: var(--mark-lost);
+}
+.tn-marks > i[data-won] {
+  height: 100%;
+  background: var(--mark-won);
+}
+.tn-marks > i[data-open] {
+  border: 1px solid var(--mark-lost);
+  background: none;
+}
+.tn-marks > i[data-gap] {
+  margin-left: 5px;
+}
+.tn-marks[data-cells] {
+  gap: 1.5px;
+}
+.tn-marks[data-fill] {
+  display: flex;
+  gap: 1px;
+}
+.tn-marks[data-fill] > i {
+  width: auto;
+  min-width: 0;
+  max-width: 10px;
+  flex: 1 1 0;
+}
+.tn-marks[data-fill] > i[data-gap] {
+  margin-left: 3px;
+}
+.tn-marks-bar {
+  width: calc(var(--length, 1) * 100%);
+  max-width: 180px;
+  height: min(10px, 100%);
+  align-self: center;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--mark-won) calc(var(--share) * 100% - 1px),
+    transparent calc(var(--share) * 100% - 1px) calc(var(--share) * 100% + 1px),
+    var(--mark-lost) calc(var(--share) * 100% + 1px)
+  );
+}
+@media (forced-colors: active) {
+  .tn-marks > i,
+  .tn-marks-bar {
+    forced-color-adjust: none;
+  }
+}

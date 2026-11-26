@@ -53,15 +53,20 @@ export function observationMarks(content: GameContent, duration: number): Observ
   return [...marks.values()].sort((a, b) => a.at - b.at)
 }
 
-/** The game with one mark moved to another game second for every player it stands for; null when nobody holds it. */
+/**
+ * The game with one mark moved to another game second for every player it stands for, or only for `lanes`; null when
+ * nobody holds it.
+ */
 export function moveMark(
   content: GameContent,
   mark: Pick<ObservationMark, "side" | "part" | "at">,
   gameSecond: number,
+  lanes?: readonly Lane[],
 ): GameContent | null {
   const second = Math.max(0, Math.round(gameSecond))
   let moved = false
   const move = (participant: Participant): Participant => {
+    if (lanes && !lanes.includes(participant.lane)) return participant
     if (mark.part === "equipment") {
       if (!participant.equipmentSnapshots.some((snapshot) => snapshot.atSeconds === mark.at)) return participant
       moved = true

@@ -1,0 +1,43 @@
+.tn-highlights {
+  display: grid;
+  min-width: 0;
+  container: tn-highlights / inline-size;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px;
+}
+.tn-highlights > p {
+  margin-block: -12px;
+}
+.tn-highlights-stacks {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 40px 56px;
+}
+.tn-highlights-stacks > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+}
+@container tn-highlights (max-width: 1035.98px) {
+  .tn-highlights-stacks {
+    column-gap: 40px;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-highlights {
+    gap: 26px;
+  }
+  .tn-highlights-stacks,
+  .tn-highlights-stacks > div {
+    row-gap: 32px;
+  }
+}
+/* A phone has room for one column of facts. */
+@container tn-highlights (max-width: 735.98px) {
+  .tn-highlights-stacks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,107 @@
+/* The last line of the companion, and what opens above it. */
+.tn-room-tools {
+  position: relative;
+  display: flex;
+  min-height: 52px;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin-top: 8px;
+  border-top: 1px solid var(--room-line);
+}
+.tn-room-length {
+  display: inline-flex;
+  flex: none;
+  min-height: var(--room-target);
+  align-items: center;
+  gap: 8px;
+  margin-left: -10px;
+  padding: 0 10px;
+  border-radius: var(--aov-radius-pill);
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: background-color 120ms;
+}
+.tn-room-length > b {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.tn-room-length > svg {
+  flex: none;
+}
+.tn-room-length:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  background: rgb(255 255 255 / 8%);
+}
+.tn-room-tools-end {
+  display: flex;
+  flex: none;
+  margin: 0 -8px 0 auto;
+}
+.tn-room-panel {
+  position: absolute;
+  z-index: 4;
+  right: calc(12px - var(--room-pad-end));
+  bottom: calc(100% + 8px);
+  left: calc(12px - var(--room-pad));
+  overflow-y: auto;
+  max-height: calc(var(--room-video-h) - 76px);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--aov-stream-indigo);
+}
+.tn-room[data-density="mid"] .tn-room-tools {
+  min-height: 46px;
+  margin-top: 4px;
+}
+/* Where the page scrolls there is room for the words of the buttons. */
+.tn-room-tools[data-stacked] {
+  min-height: 56px;
+  padding: 8px 0 7px;
+}
+/* The video stays at the top of a narrow window, or comes back to it, and the panel opens under it. */
+.tn-room-tools[data-stacked] > .tn-room-panel {
+  max-height: none;
+  scroll-margin-top: calc(var(--room-video-h) - var(--video-cover, 0px) + 8px);
+}
+.tn-room-tools[data-stacked] > .tn-room-tools-end {
+  gap: 4px;
+  margin-right: 0;
+}
+/* On a phone what is left stands under its name, as the score stands under the game. */
+.tn-room[data-phone] .tn-room-length {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-content: center;
+  gap: 0 6px;
+  border-radius: var(--hub-radius);
+  text-align: left;
+}
+.tn-room[data-phone] .tn-room-length > span {
+  grid-area: 2 / 1 / auto / -1;
+  font-size: 13px;
+  line-height: 18px;
+}
+/* Nothing of it but a panel a key has opened. */
+.tn-room-tools[data-bare] {
+  min-height: 0;
+  margin: 0;
+  border: 0;
+}
+.tn-room-tools[data-bare] > .tn-room-panel {
+  bottom: 12px;
+  max-height: calc(var(--room-video-h) - 24px);
+}
+@container tn-room-side (max-width: 300px) {
+  .tn-room-tools .tn-room-keys {
+    display: none;
+  }
+}
+@media (hover: none) {
+  .tn-room-tools .tn-room-keys {
+    display: none;
+  }
+}

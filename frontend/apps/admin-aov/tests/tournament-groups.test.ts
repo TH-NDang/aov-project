@@ -54,8 +54,10 @@ test("what is on comes before what is coming up, soonest first, and a past event
   assert.deepEqual(ids(activeTournaments(rows, new Date("2026-11-24T05:00:00Z"))), ["on", "soon", "later"])
 })
 
-test("a champion is read from the final table when the result names none", () => {
-  assert.equal(championName({ placements: [{ place: "1", teamName: "FPT" }] }), "FPT")
+test("a champion is read from the final table, or from the result where there is none", () => {
+  const result = { winnerName: "MAD Team" } as NonNullable<Parameters<typeof championName>[0]["result"]>
+  assert.equal(championName({ placements: [{ place: "1", teamName: "FPT" }], result }), "FPT")
+  assert.equal(championName({ result }), "MAD Team")
   assert.equal(championName({}), null)
 })
 

@@ -40,7 +40,7 @@ export function PlaceTrail({ places, current, steps }: { places: Place[]; curren
           // On a phone the section is its sign alone, the bar above already naming it, and so is a place on the way.
           const sign = compact && !!place.mark && (at === 0 || at < places.length - 1)
           return (
-            <li key={place.to} data-sign={sign || undefined}>
+            <li key={at} data-sign={sign || undefined}>
               <Link to={place.to} aria-label={sign ? place.name : undefined}>
                 {place.mark}
                 {!sign && <span>{(compact && place.short) || place.name}</span>}

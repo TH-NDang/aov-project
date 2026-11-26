@@ -1,0 +1,25 @@
+/* What happened in a game, one mark each; those still ahead stand on the line of both teams and are paler. */
+.tn-story-marks {
+  position: absolute;
+  top: var(--story-staff);
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.tn-story-marks > rect {
+  fill: var(--aov-stream-cream);
+}
+.tn-story-marks > rect[data-ban] {
+  opacity: 0.6;
+}
+.tn-story-marks > rect[data-ahead] {
+  opacity: 0.46;
+}
+.tn-story-marks > rect[data-ahead][data-ban] {
+  opacity: 0.36;
+}
+@media (forced-colors: active) {
+  .tn-story-marks > rect {
+    fill: CanvasText;
+  }
+}

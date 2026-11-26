@@ -1,0 +1,23 @@
+/* The way up, and at the end of its line what is counted; on compact layouts under it. */
+.tn-stats-trail {
+  /* What follows stands close to the controls of the line; the note under them keeps clear of it. */
+  --unknown-end: 6px;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 24px;
+}
+.tn-stats-trail > :first-child {
+  flex: 1;
+}
+.tn-stats-trail-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 899.98px) {
+  .tn-stats-trail {
+    display: grid;
+    gap: 0;
+  }
+}

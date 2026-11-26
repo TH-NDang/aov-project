@@ -4,6 +4,7 @@ import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { isRetiredSpell, spellRows, type WarehouseSpell } from "./use-item-catalog"
 import { WarehouseArtwork } from "./warehouse-artwork"
+import { WarehouseEntryLink } from "./warehouse-entry-link"
 import { fillStyle } from "./warehouse-grid"
 import { EmptyGroup, FoldedGroup } from "./warehouse-parts"
 import {
@@ -74,7 +75,7 @@ function SpellCard({
 }: {
   entry: WarehouseSpell
   selected: boolean
-  onOpen: (entry: WarehouseEntry, button: HTMLButtonElement) => void
+  onOpen: (entry: WarehouseEntry, element: HTMLElement) => void
 }) {
   const { locale } = useWikiContext()
   const { content } = entry
@@ -84,13 +85,14 @@ function SpellCard({
   const state = content.states.find((candidate) => candidate.key === content.defaultStateKey) ?? content.states[0]
   const charges = spellChargesText(content, locale)
   return (
-    <button
-      type="button"
+    <WarehouseEntryLink
+      kind="spells"
+      entry={entry}
+      selected={selected}
+      onOpen={onOpen}
       className="wiki-spell-card"
       data-spell-card={entry.id}
-      aria-pressed={selected}
       aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
-      onClick={(event) => onOpen(entry, event.currentTarget)}
     >
       <WarehouseArtwork entry={entry} kind="spells" assetId={state?.iconAssetId ?? content.iconAssetId} />
       <span className="wiki-spell-card-text">
@@ -116,7 +118,7 @@ function SpellCard({
         )}
         {description && <span className="wiki-spell-card-description">{description}</span>}
       </span>
-    </button>
+    </WarehouseEntryLink>
   )
 }
 
@@ -133,7 +135,7 @@ export function SpellCatalog({
   params: URLSearchParams
   searching: boolean
   selectedId: string | null
-  onSelect: (entry: WarehouseEntry, button?: HTMLButtonElement) => void
+  onSelect: (entry: WarehouseEntry, button?: HTMLElement) => void
 }) {
   const { locale } = useWikiContext()
   const rows = spellRows(entries, locale)

@@ -1,0 +1,117 @@
+/* A stage of tables on the standings tab. */
+.tn-stand {
+  scroll-margin-top: calc(var(--hub-stack) + 16px);
+}
+.tn-stand:focus {
+  outline: none;
+}
+.tn-stand-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+}
+.tn-stand-groups {
+  display: grid;
+  min-width: 0;
+  gap: 36px;
+}
+.tn-stand-groups[data-columns] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+  gap: 28px 40px;
+}
+.tn-stand-group {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.tn-stand-group > h3 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+}
+/*
+ * The results between the teams are a part of their own under the table and what explains it, closer to it than the
+ * next stage is.
+ */
+.tn-stand-meetings {
+  min-width: 0;
+  margin-top: 10px;
+}
+.tn-stand-meetings:empty {
+  display: none;
+}
+/*
+ * A table and its race beside each other: the lines end in the middle of the rows, and the range over the steps lies
+ * over the whole field. The steps stand level with the head of the table.
+ */
+.tn-stand-table[data-race] {
+  display: grid;
+  min-width: 0;
+  grid-template-areas:
+    ". axis . rows"
+    "places field landing rows";
+  grid-template-columns: 30px 402px 38px minmax(0, 1fr);
+  grid-template-rows: 32px auto;
+}
+.tn-stand-rows {
+  min-width: 0;
+  container-type: inline-size;
+}
+.tn-stand-table[data-race] > .tn-stand-rows {
+  grid-area: rows;
+}
+.tn-stand-range {
+  z-index: 1;
+  min-width: 0;
+  grid-area: 1 / 2 / 3 / 3;
+}
+@media (max-width: 1239.98px) {
+  .tn-stand-table[data-race] {
+    grid-template-columns: 30px 332px 38px minmax(0, 1fr);
+  }
+}
+/* Where there is no room beside, the race stands over the table and the range right under its lines. */
+@media (max-width: 1099.98px) {
+  .tn-stand-table[data-race] {
+    grid-template-areas:
+      "places field landing names"
+      "steps steps steps steps"
+      ". range . ."
+      "rows rows rows rows";
+    grid-template-columns: 26px minmax(0, 1fr) 22px auto;
+    grid-template-rows: auto;
+  }
+  .tn-stand-steps {
+    margin-top: 10px;
+    grid-area: steps;
+  }
+  .tn-stand-range {
+    margin-top: 8px;
+    grid-area: range;
+  }
+}
+@media (max-width: 899.98px) {
+  /* The page spaces its parts more tightly here; a stage keeps as much room after it as on a wide screen. */
+  .tn-stand {
+    margin-bottom: 8px;
+  }
+  .tn-stand-head {
+    margin-bottom: 10px;
+  }
+  .tn-stand-head > .tn-stand-control {
+    width: 100%;
+  }
+  .tn-stand-groups {
+    gap: 28px;
+  }
+  .tn-stand-range {
+    margin-top: 0;
+  }
+}

@@ -1,0 +1,85 @@
+/* Two columns that read side by side, the first pair first. */
+.tn-club-mvps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 56px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-club-mvps > li {
+  --stream-image-size: 36px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: grid;
+  min-width: 0;
+  min-height: 56px;
+  grid-template-columns: 36px minmax(var(--name, 130px), 1fr) minmax(0, 190px) 66px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-club-mvp-name {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+}
+.tn-club-mvp-name > strong {
+  min-width: 0;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.tn-club-mvp-name > strong > a {
+  position: relative;
+}
+.tn-club-mvp-name > strong > a::after {
+  content: "";
+  position: absolute;
+  inset: -10px 0;
+}
+.tn-club-mvp-name > small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-club-mvp-cells {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+}
+.tn-club-mvp-count {
+  display: grid;
+  min-height: 40px;
+  align-items: center;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: right;
+  white-space: nowrap;
+}
+a.tn-club-mvp-count:is(:hover, :focus-visible) {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 1099.98px) {
+  .tn-club-mvps {
+    column-gap: 36px;
+  }
+  /* The team under the player in every line, whether or not the name leaves room beside it. */
+  .tn-club-mvp-name {
+    display: grid;
+  }
+}
+@media (max-width: 619.98px) {
+  .tn-club-mvps {
+    --name: 104px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

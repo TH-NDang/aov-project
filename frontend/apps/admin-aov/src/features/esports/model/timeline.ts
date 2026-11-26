@@ -37,6 +37,8 @@ export type ItemEvent = EventBase & {
   slot: number
   toSlot?: number
   item?: ItemRef
+  /** The record it was read from: what no form shows of it, such as the item it took the place of, is kept from here. */
+  stored?: EquipmentEvent
 }
 export type NoteEvent = EventBase & { kind: "NOTE"; side?: Side; title: string }
 export type TimelineEvent = KillEvent | ObjectiveEvent | ItemEvent | NoteEvent
@@ -169,6 +171,7 @@ export function recordedItemEvents(seat: SeatKey, events: EquipmentEvent[]): Ite
             ? (item ?? (event.replacedItem?.name ? { name: event.replacedItem.name } : undefined))
             : item,
         note: event.note,
+        stored: event,
       },
     ]
   })
@@ -187,12 +190,6 @@ export type EventCluster = {
   end: number
   events: TimelineEvent[]
 }
-
-const KIND_PRIORITY: Record<TimelineKind, number> = { KILL: 0, OBJECTIVE: 1, ITEM: 2, NOTE: 3 }
-
-/** The event that represents a cluster: kills first, then objectives, items and notes. */
-export const leadEvent = (cluster: EventCluster) =>
-  [...cluster.events].sort((a, b) => KIND_PRIORITY[a.kind] - KIND_PRIORITY[b.kind] || a.at - b.at)[0]
 
 /**
  * Chains events whose gap to the previous one in the same lane is at most `window` seconds. Without `laneOf`

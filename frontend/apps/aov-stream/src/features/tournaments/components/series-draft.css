@@ -48,12 +48,13 @@
   font-weight: 400;
   line-height: 16px;
 }
+/* A game the team won, as the list of games above says it: the number in full text, the word in the accent. */
 .tn-pool thead th[data-won] a {
-  color: var(--hub-success);
+  color: var(--hub-text);
 }
 .tn-pool thead th[data-won] small {
-  color: var(--hub-success);
-  font-weight: 600;
+  color: var(--hub-accent-strong);
+  font-weight: 700;
 }
 .tn-pool tbody th {
   padding: 4px 12px 4px 0;
@@ -76,6 +77,10 @@
 }
 .tn-pool-player a:hover {
   color: var(--hub-accent-strong);
+}
+.tn-pool-unknown {
+  color: var(--hub-muted);
+  font-weight: 400;
 }
 .tn-pool td {
   padding: 4px 3px;

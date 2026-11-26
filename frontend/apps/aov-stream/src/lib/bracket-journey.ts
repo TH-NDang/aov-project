@@ -49,7 +49,7 @@ export function teamJourney(layout: BracketLayout, teamId: string): JourneyStop[
 /** The node that ends the bracket: the grand final, or the last match of a bracket of one lane. */
 function decider(layout: BracketLayout) {
   const ends = layout.nodes.filter(
-    (node) => node.lane !== "third" && !layout.links.some((link) => link.from === node) && node.column > 0,
+    (node) => node.lane !== "place" && !layout.links.some((link) => link.from === node) && node.column > 0,
   )
   return ends.find((node) => node.lane === "final") ?? (ends.length === 1 ? ends[0] : undefined)
 }

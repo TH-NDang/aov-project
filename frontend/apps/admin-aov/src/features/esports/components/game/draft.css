@@ -1,0 +1,356 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* The board as a broadcast shows it: blue on the left, red mirrored on the right. */
+  .esp-draft-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 14px;
+    padding: 0 12px 8px;
+  }
+  .esp-draft-head {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .esp-draft-team {
+    overflow: hidden;
+    padding-left: 8px;
+    border-left: 3px solid var(--side);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .esp-draft-team[data-side="RED"] {
+    padding-right: 8px;
+    padding-left: 0;
+    border-right: 3px solid var(--side);
+    border-left: 0;
+    text-align: right;
+  }
+  .esp-draft-line {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 52px));
+    gap: 4px;
+  }
+  .esp-draft-line + .esp-draft-line {
+    margin-top: 5px;
+  }
+  .esp-draft-side[data-side="RED"] .esp-draft-line {
+    justify-content: end;
+  }
+  .esp-draft-line[data-kind="BAN"] {
+    grid-template-columns: repeat(4, minmax(0, 52px));
+    width: 80%;
+  }
+  .esp-draft-side[data-side="RED"] .esp-draft-line[data-kind="BAN"] {
+    margin-left: auto;
+  }
+  .esp-draft-slot {
+    position: relative;
+    display: grid;
+    aspect-ratio: 1;
+    border-radius: var(--aov-radius-control);
+    background: var(--muted);
+  }
+  /* The trigger of a hero card stands between the slot and its face, which fills the slot either way. */
+  .esp-draft-slot > [role="button"] > span {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  button.esp-draft-slot:hover {
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 40%, transparent);
+  }
+  .esp-draft-slot:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .esp-draft-slot[data-next],
+  .esp-draft-slot[aria-pressed="true"] {
+    z-index: 1;
+    box-shadow: 0 0 0 2px var(--foreground);
+  }
+  /* A ban is grey and struck; an empty one is only struck. */
+  .esp-draft-slot[data-kind="BAN"][data-recorded]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      color-mix(in oklch, var(--foreground) 70%, transparent) calc(50% - 1px) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+    pointer-events: none;
+  }
+  .esp-draft-slot[data-kind="BAN"] img {
+    opacity: 0.55;
+    filter: grayscale(1);
+  }
+  .esp-draft-order {
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: 0;
+    min-width: 16px;
+    padding-inline: 3px;
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 14px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    background: color-mix(in oklch, var(--card) 80%, transparent);
+  }
+  .esp-draft-warn {
+    position: absolute;
+    z-index: 1;
+    top: -4px;
+    right: -4px;
+    color: var(--aov-warning);
+  }
+  .esp-draft-used {
+    padding: 0 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--muted-foreground);
+  }
+  .esp-draft-used > summary {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .esp-draft-used > summary::-webkit-details-marker {
+    display: none;
+  }
+  .esp-draft-used[open] > summary > svg {
+    rotate: 90deg;
+  }
+  .esp-draft-used > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 8px;
+  }
+  .esp-draft-line-note {
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--muted-foreground);
+  }
+  .esp-draft-drop {
+    border-radius: var(--aov-radius-control);
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .esp-draft-drop:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .esp-draft-drop:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* The turn being typed and its search stay over the faces while those scroll. */
+  .esp-draft-ask {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 8px;
+    min-height: 36px;
+    padding-inline: 12px 6px;
+    font-size: 14px;
+  }
+  .esp-draft-ask > b {
+    font-weight: 600;
+  }
+  .esp-draft-second {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-foreground);
+  }
+  .esp-draft-asks {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: end;
+    margin-left: auto;
+  }
+  .esp-draft-top {
+    border-top: 1px solid var(--border);
+    background: var(--card);
+  }
+  .esp-draft-search {
+    position: relative;
+    padding: 0 12px 8px;
+  }
+  .esp-draft-search > svg {
+    position: absolute;
+    top: 10px;
+    left: 22px;
+    color: var(--muted-foreground);
+    pointer-events: none;
+  }
+  .esp-faces {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 8px 4px;
+    padding: 4px 12px 12px;
+  }
+  .esp-face {
+    scroll-margin-block: 112px 8px;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 2px;
+    border-radius: var(--aov-radius-control);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .esp-face:hover {
+    background: var(--muted);
+  }
+  .esp-face[data-marked] {
+    outline: 2px solid var(--foreground);
+  }
+  .esp-face-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The turns of a recorded draft, mirrored around their time. */
+  .esp-turns {
+    padding-block: 4px;
+    border-top: 1px solid var(--border);
+  }
+  .esp-turn-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    min-height: 34px;
+    padding: 2px 12px;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: left;
+  }
+  button.esp-turn-row:hover {
+    background: color-mix(in oklch, var(--foreground) 5%, transparent);
+  }
+  .esp-turn-row:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+  .esp-turn-row[data-later] {
+    color: var(--muted-foreground);
+  }
+  .esp-turn-time {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .esp-turn-what {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    grid-row: 1;
+  }
+  .esp-turn-what[data-side="BLUE"] {
+    flex-direction: row-reverse;
+    grid-column: 1;
+    text-align: right;
+  }
+  .esp-turn-what[data-side="RED"] {
+    grid-column: 3;
+  }
+  .esp-turn-what[data-kind="BAN"] {
+    color: var(--muted-foreground);
+  }
+  .esp-turn-what[data-kind="BAN"] img {
+    opacity: 0.55;
+    filter: grayscale(1);
+  }
+  .esp-turn-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 900px) {
+    .esp-draft-top {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+  }
+  @container dock (min-width: 760px) {
+    .esp-draft-top {
+      border-top: 0;
+    }
+    .esp-draft-right {
+      min-height: 100%;
+      border-left: 1px solid var(--border);
+    }
+    .esp-turns {
+      border-top: 0;
+    }
+  }
+  /*
+   * A finger needs a target of 36 px, 40 on a phone; the head and the row of the turn grow with their buttons. The
+   * squares keep the size of the board: a press reaches above and below a small one, into a wider gap between the lines.
+   */
+  @media (pointer: coarse) {
+    .esp-draft-board {
+      --touch: 36px;
+    }
+    .esp-draft-head {
+      height: auto;
+      min-height: 36px;
+    }
+    .esp-draft-head button,
+    .esp-draft-asks button {
+      min-width: 36px;
+      min-height: 36px;
+    }
+    .esp-draft-line + .esp-draft-line {
+      margin-top: 8px;
+    }
+    button.esp-draft-slot::before {
+      content: "";
+      position: absolute;
+      inset: min(0px, calc((100% - var(--touch)) / 2)) 0;
+    }
+  }
+  @media (pointer: coarse) and (max-width: 899.98px) {
+    .esp-draft-board {
+      --touch: 40px;
+    }
+    .esp-draft-head {
+      min-height: 40px;
+    }
+    .esp-draft-head button,
+    .esp-draft-asks button {
+      min-width: 40px;
+      min-height: 40px;
+    }
+    .esp-draft-line + .esp-draft-line {
+      margin-top: 12px;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+.tn-fact-records {
+  display: grid;
+  min-width: 0;
+  gap: 24px;
+}
+.tn-fact-records > section {
+  --fact-row: 68px;
+  min-width: 0;
+}
+.tn-fact-records h3 {
+  margin: 0;
+  padding-bottom: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-fact-records ol {
+  margin: 0;
+  padding: 0;
+}

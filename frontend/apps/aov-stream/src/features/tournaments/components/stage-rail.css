@@ -17,7 +17,7 @@
 .tn-rail > li + li {
   border-left: 1px solid rgb(255 255 255 / 12%);
 }
-.tn-rail button {
+.tn-rail a {
   display: grid;
   width: 100%;
   gap: 2px;
@@ -30,13 +30,13 @@
   text-align: left;
   transition: background-color 120ms;
 }
-.tn-rail > li:first-child button {
+.tn-rail > li:first-child a {
   padding-left: var(--rail-inset, 0);
 }
-.tn-rail button:hover {
+.tn-rail a:hover {
   background: rgb(255 255 255 / 7%);
 }
-.tn-rail button:focus-visible {
+.tn-rail a:focus-visible {
   outline-offset: -3px;
 }
 .tn-rail strong {
@@ -45,7 +45,7 @@
   font-weight: 700;
   line-height: 20px;
 }
-.tn-rail button > span {
+.tn-rail a > span {
   display: flex;
   flex-wrap: wrap;
   gap: 0 14px;
@@ -74,10 +74,10 @@
   .tn-rail > li {
     flex: 1 0 44%;
   }
-  .tn-rail button {
+  .tn-rail a {
     padding: 10px 14px 13px;
   }
-  .tn-rail button > span {
+  .tn-rail a > span {
     display: grid;
     font-size: 12px;
     line-height: 16px;

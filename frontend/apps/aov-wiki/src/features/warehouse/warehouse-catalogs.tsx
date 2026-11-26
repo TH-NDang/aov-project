@@ -23,6 +23,7 @@ import {
   warehouseText,
 } from "../../lib/warehouse-types"
 import { warehouseViewGroups } from "./warehouse-view"
+import { WarehouseEntryLink } from "./warehouse-entry-link"
 import "./warehouse-catalogs.css"
 
 interface CatalogProps {
@@ -34,7 +35,7 @@ interface CatalogProps {
   group: string
   params: URLSearchParams
   selectedId: string | null
-  onSelect: (entry: WarehouseEntry, button?: HTMLButtonElement) => void
+  onSelect: (entry: WarehouseEntry, button?: HTMLElement) => void
   onClear: () => void
   onGroupChange: (group: string) => void
   /** Changes values kept in the address, such as the enchantment set being built. */
@@ -51,19 +52,20 @@ function ItemRow({
   entry: WarehouseItem
   view: ItemCatalogView
   selected: boolean
-  onOpen: (button: HTMLButtonElement) => void
+  onOpen: (entry: WarehouseEntry, element: HTMLElement) => void
 }) {
   const { locale } = useWikiContext()
   const text = warehouseText(entry.content.translations, locale)
   const name = text?.name || entry.code
   return (
-    <button
-      type="button"
+    <WarehouseEntryLink
+      kind="items"
+      entry={entry}
+      selected={selected}
+      onOpen={onOpen}
       className="wiki-item-row"
       data-tier={entry.content.tier ?? undefined}
-      aria-pressed={selected}
       aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
-      onClick={(event) => onOpen(event.currentTarget)}
     >
       <WarehouseArtwork entry={entry} kind="items" />
       <span className="wiki-item-row-main">
@@ -74,7 +76,7 @@ function ItemRow({
       <span className="wiki-item-row-price">
         <ItemPrice amount={entry.content.price} />
       </span>
-    </button>
+    </WarehouseEntryLink>
   )
 }
 
@@ -124,13 +126,7 @@ function ItemList({
   const rows = (entries: WarehouseItem[]) => (
     <div className="wiki-item-rows">
       {entries.map((entry) => (
-        <ItemRow
-          key={entry.id}
-          entry={entry}
-          view={view}
-          selected={selectedId === entry.id}
-          onOpen={(button) => onSelect(entry, button)}
-        />
+        <ItemRow key={entry.id} entry={entry} view={view} selected={selectedId === entry.id} onOpen={onSelect} />
       ))}
     </div>
   )
@@ -202,7 +198,7 @@ function ItemBoard({
   ]
   const open = (id: string | null) => {
     const entry = id ? items.find((item) => item.id === id) : undefined
-    if (entry) onSelect(entry, document.activeElement instanceof HTMLButtonElement ? document.activeElement : undefined)
+    if (entry) onSelect(entry, document.activeElement instanceof HTMLElement ? document.activeElement : undefined)
     else onClear()
   }
   return (

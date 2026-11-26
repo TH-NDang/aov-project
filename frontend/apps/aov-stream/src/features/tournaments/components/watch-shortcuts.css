@@ -1,0 +1,62 @@
+.tn-room-shortcuts {
+  padding: 12px 16px 0;
+}
+.tn-room-shortcuts:focus-visible {
+  outline: none;
+}
+.tn-room-shortcuts > h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-room-shortcuts > dl {
+  display: grid;
+  margin: 0;
+}
+.tn-room-shortcuts > dl > div {
+  display: grid;
+  min-height: 30px;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-room-shortcuts dt {
+  display: flex;
+  gap: 4px;
+}
+.tn-room-shortcuts dd {
+  margin: 0;
+}
+.tn-room-shortcuts kbd {
+  min-width: 24px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 12%);
+  color: var(--hub-text);
+  font: 600 12px/18px var(--hub-font);
+  text-align: center;
+}
+/* In a low window the keys scroll behind it. */
+.tn-room-shortcuts > label {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  border-top: 1px solid var(--hub-border);
+  background: var(--aov-stream-indigo);
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+.tn-room-shortcuts input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--hub-accent);
+}

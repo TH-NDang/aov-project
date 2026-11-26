@@ -13,7 +13,7 @@ import type {
 } from "@aov/community-contracts"
 import { IMPORTED_HERO_CODES } from "./imported-hero-names"
 import { compactKey, nameKey } from "./name-key"
-import { seatKey, type SeatKey } from "./timeline"
+import { seatKey, type ItemRef, type SeatKey, type SlotState } from "./timeline"
 import { LANE_ORDER } from "@/lib/lanes"
 
 export type IconRef = { id?: string | null; name: string; iconUrl?: string | null; tier?: number | null }
@@ -39,6 +39,8 @@ export type GameSeat = {
   arcana: { status: ObservationStatus; entries: (IconRef & { count: number; color?: string })[] }
 }
 export type GameSideView = { side: Side; team: TeamView; bans: (IconRef | null)[]; seats: GameSeat[] }
+/** An item a player still held when the game ended, with the second they had it where that is known. */
+export type KeptItem = ItemRef & { atSeconds: number | null }
 export type GameView = {
   id: string
   number: number
@@ -50,6 +52,8 @@ export type GameView = {
   sourceStartSecond: number | null
   sides: Record<Side, GameSideView>
   snapshots: Partial<Record<SeatKey, EquipmentSnapshot[]>>
+  /** The items of a list somebody wrote for a seat; a list read off a snapshot is that snapshot. */
+  kept?: Partial<Record<SeatKey, KeptItem[]>>
 }
 
 export const teamView = (entry?: DocumentView<TeamContent>, fallbackId = ""): TeamView =>
@@ -109,7 +113,9 @@ export function buildGameView(
   const spell = referenceIndex(catalog?.spells)
   const enchantment = referenceIndex(catalog?.enchantments)
   const arcanum = referenceIndex(catalog?.arcana)
+  const item = referenceIndex(catalog?.items)
   const snapshots: GameView["snapshots"] = {}
+  const kept: NonNullable<GameView["kept"]> = {}
   const side = (code: Side): GameSideView => {
     const source = entry.content.sides.find((candidate) => candidate.side === code)
     const team = teamView(
@@ -121,6 +127,11 @@ export function buildGameView(
       const player = players.find((candidate) => candidate.id === participant?.playerId)
       const key = seatKey(code, lane)
       if (participant?.equipmentSnapshots.length) snapshots[key] = participant.equipmentSnapshots
+      if (participant?.build?.length)
+        kept[key] = participant.build.flatMap((step) => {
+          const ref = step.place === "KEPT" ? item(step.item) : null
+          return ref ? [{ id: ref.id, name: ref.name, atSeconds: step.atSeconds ?? null }] : []
+        })
       return {
         key,
         side: code,
@@ -159,5 +170,20 @@ export function buildGameView(
     sourceStartSecond: entry.content.sourceTimestampSeconds ?? null,
     sides: { BLUE: side("BLUE"), RED: side("RED") },
     snapshots,
+    kept,
   }
+}
+
+/**
+ * The six slots of a seat at a moment. What the sources showed comes first. Where they showed nothing the slots are the
+ * items kept to the end, each from the second the player had it, and once the game has ended they are just those.
+ */
+export function slotsAt(kept: KeptItem[] | undefined, observed: SlotState[], at: number, ended: boolean): SlotState[] {
+  if (!kept?.length || (!ended && observed.some((slot) => slot !== undefined))) return observed
+  return observed.map((_, slot) => {
+    const held = kept[slot]
+    return held && (ended || held.atSeconds == null || held.atSeconds <= at)
+      ? { id: held.id, name: held.name }
+      : undefined
+  })
 }

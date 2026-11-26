@@ -1,0 +1,136 @@
+/*
+ * The room runs from one edge of the window to the other and is dark in both themes. Its shape follows the window
+ * (watch-shape.ts) and the sizes of its parts follow the height of its video (data-density).
+ */
+.tn-room {
+  --room-line: rgb(255 255 255 / 12%);
+  --room-fill: rgb(255 255 255 / 6%);
+  --room-pad: 20px;
+  --room-pad-end: var(--room-pad);
+  --room-gap: 8px;
+  --room-head: 30px;
+  --room-face: 60px;
+  --room-name-gap: 4px;
+  --room-axis: 18px;
+  --room-ban: 30px;
+  --room-fade: 22px;
+  --room-row: 36px;
+  --room-target: 36px;
+  position: relative;
+  display: grid;
+  margin: calc(-1 * var(--hub-layout-gap)) calc((100% - var(--room-w)) / 2) 0;
+  background: var(--aov-stream-night);
+  color: var(--hub-text);
+  color-scheme: dark;
+}
+/* What stands in for a picture is seen on the night of the room. */
+.tn-room.tn-night {
+  --hub-sunken: var(--aov-stream-indigo);
+}
+/* It takes the focus when it opens, and is not a control. */
+.tn-room:focus-visible {
+  outline: none;
+}
+.tn-room[data-density="short"] {
+  --room-face: 50px;
+}
+.tn-room[data-density="mid"] {
+  --room-gap: 5px;
+  --room-head: 26px;
+  --room-face: 44px;
+  --room-name-gap: 2px;
+  --room-axis: 14px;
+}
+.tn-room[data-density="tight"] {
+  --room-gap: 4px;
+  --room-head: 24px;
+  --room-face: 40px;
+  --room-ban: 22px;
+  --room-fade: 10px;
+}
+.tn-room:is([data-shape="side"], [data-shape="turned"]) {
+  grid-template-columns: var(--room-video-w) var(--room-side-w);
+  justify-content: center;
+}
+/* A narrow companion gives some of its margin to the names of the players; it ends where the bar under it ends. */
+.tn-room[data-shape="side"] {
+  --room-pad: clamp(12px, 12px + (var(--room-side-w) - 320px) / 5, 20px);
+  --room-pad-end: 20px;
+}
+.tn-room[data-shape="turned"] {
+  --room-pad: 14px;
+}
+.tn-room[data-shape="stack"] {
+  --room-row: 40px;
+  display: block;
+}
+.tn-room[data-shape="bare"] {
+  justify-items: center;
+}
+.tn-room[data-phone] {
+  --room-pad: 12px;
+  --room-face: 56px;
+  --room-target: 40px;
+}
+@media (hover: none) {
+  .tn-room {
+    --room-row: 40px;
+    --room-target: 40px;
+  }
+}
+.tn-room-side {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  container: tn-room-side / inline-size;
+  padding-inline: var(--room-pad) var(--room-pad-end);
+}
+.tn-room:is([data-shape="side"], [data-shape="turned"]) > .tn-room-side {
+  container-type: size;
+  height: var(--room-video-h);
+  overflow: clip;
+}
+.tn-room[data-shape="stack"] > .tn-room-side {
+  padding-bottom: 8px;
+}
+.tn-room-bar {
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+.tn-room[data-entering] > :is(.tn-room-side, .tn-room-bar) {
+  animation: tn-room-in calc(220ms * var(--entrance, 1)) ease-out;
+}
+@keyframes tn-room-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+/* Seen while it has the focus: beside the video, never over it. */
+.tn-room-stop {
+  position: absolute;
+  z-index: 6;
+  top: 2px;
+  right: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--aov-stream-night);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-room-stop:not(:focus) {
+  overflow: hidden;
+  width: 1px;
+  min-height: 1px;
+  height: 1px;
+  padding: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tn-room:is([data-shape="stack"], [data-shape="bare"]) > .tn-room-stop {
+  top: calc(var(--room-video-h) + 2px);
+}

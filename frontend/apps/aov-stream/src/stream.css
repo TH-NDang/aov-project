@@ -68,6 +68,15 @@
   /* The tile behind a logo or a picture follows the theme, so a logo stands on what its version is drawn for. */
   --hub-plate: light-dark(color-mix(in srgb, var(--aov-stream-ink) 6%, #fff), var(--aov-stream-indigo));
   --hub-on-plate: light-dark(var(--aov-stream-feather), var(--aov-stream-text-muted));
+  /* A banned hero is struck from corner to corner; the stroke has dark edges, so it shows on a pale picture too. */
+  --hub-ban-stroke: linear-gradient(
+    to top right,
+    transparent 44%,
+    rgb(0 0 0 / 62%) 44% 46.5%,
+    #fff 46.5% 53.5%,
+    rgb(0 0 0 / 62%) 53.5% 56%,
+    transparent 56%
+  );
   --brand-wiki-ink: var(--aov-text);
   --brand-wiki-accent: var(--aov-accent);
   --brand-wiki-tint: var(--aov-accent-soft);
@@ -185,6 +194,22 @@ button:disabled {
   outline: 2px solid var(--hub-accent);
   outline-offset: 3px;
 }
+/*
+ * What the keyboard reaches stops clear of the bars pinned over the page, so its ring is seen. What stands in those
+ * bars moves no page; on wide the head of the table of heroes is one of them. It weighs no more than the focus, so the
+ * margins a component sets for its own cells win.
+ */
+@media (max-width: 899.98px) {
+  :where(.hub-shell) :focus-visible:not(:where(.hub-topbar *, .wy-bar *, .cp-tabs *, .tn-sticky-tabs *)) {
+    scroll-margin-block: calc(var(--hub-stack, 0px) + 8px) 8px;
+  }
+}
+@media (min-width: 900px) {
+  :where(.hub-shell)
+    :focus-visible:not(:where(.hub-topbar *, .wy-bar *, .cp-tabs *, .tn-sticky-tabs *, .tn-herotable thead *)) {
+    scroll-margin-block: calc(var(--hub-stack, 0px) + 8px) 8px;
+  }
+}
 .stream-skip {
   position: fixed;
   top: -100px;
@@ -228,6 +253,10 @@ button:disabled {
 }
 
 /* ---------- Shell: top bar, page column ---------- */
+/* The frame of a video is laid out over the pages from beside them (components/video-frame.css). */
+#root {
+  position: relative;
+}
 .hub-shell {
   /* What stands pinned at the top of the window: the bar, and the head of a page once it is scrolled away. */
   --hub-stuck: var(--hub-topbar);
@@ -581,6 +610,10 @@ button:disabled {
     --hub-tabs: 36px;
     --hub-pinned: 37px;
   }
+  /* A page whose own tabs pin under the row has both over its content: the tabs and their line take 45px at most. */
+  .hub-shell:has(.tn-sticky-tabs, .cp-tabs:not([data-flush])) {
+    --hub-stack: calc(var(--hub-pinned) + 45px);
+  }
   .hub-topbar {
     top: calc(-1 * var(--hub-topbar));
     margin-bottom: calc(42px - var(--hub-tabs));
@@ -633,6 +666,16 @@ button:disabled {
     width: 32px;
     height: 32px;
   }
+}
+/*
+ * While the room of a match is in the window the bar scrolls with the page, so it never comes over the video. Its tabs
+ * then shrink at once: by degrees they would nudge the page, and the video with it.
+ */
+html[data-room] .hub-topbar {
+  position: static;
+}
+html[data-room] .hub-topnav {
+  transition: none;
 }
 /* ---------- Side column parts: a title with at most one link, then rows ---------- */
 .hub-card {
@@ -708,9 +751,14 @@ button:disabled {
   background: var(--aov-warning-soft);
   color: var(--aov-warning);
 }
-/* On a banner's art a state is a fact like the others, unless it is on now: deepened so white text reads in both themes. */
+/*
+ * On a banner's art a state is a fact like the others, on smoked glass that stays darker than the brightest light of a
+ * logo; one that is on now is deepened, so white text reads in both themes.
+ */
 .hub-status[data-tone="banner"] {
-  background: rgb(255 255 255 / 14%);
+  background:
+    linear-gradient(rgb(255 255 255 / 10%), rgb(255 255 255 / 10%)),
+    color-mix(in srgb, var(--aov-stream-night) 52%, transparent);
   color: #fff;
 }
 .hub-status[data-tone="banner"][data-status="ONGOING"] {

@@ -8,8 +8,11 @@
   align-items: start;
   gap: 16px;
 }
+/* As tall as the window at least, so the footer waits under it rather than jumping away once the content is there. */
 .tn-comp-skeleton {
   display: grid;
+  min-height: 100svh;
+  align-content: start;
   gap: 20px;
 }
 .tn-comp-skeleton > [data-shape="stage"] {
@@ -22,6 +25,10 @@
 }
 .tn-comp-skeleton > [data-shape="rows"] {
   height: 320px;
+}
+/* As high as the largest window, so a page scrolled to its tabs stays where it is until the tab is there. */
+.tn-comp-skeleton[data-tall] {
+  min-height: 100vh;
 }
 @media (max-width: 899.98px) {
   .tn-comp {

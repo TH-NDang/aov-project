@@ -14,7 +14,7 @@ export interface AvatarResult {
 type Request = <T>(path: string, request?: ApiRequest) => Promise<T>
 
 export const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"]
-export const AVATAR_MAX_BYTES = 25 * 1024 * 1024
+const AVATAR_MAX_BYTES = 25 * 1024 * 1024
 
 /**
  * Avatars are the user's own images: the ticket request carries only the file facts, never a source or owner.

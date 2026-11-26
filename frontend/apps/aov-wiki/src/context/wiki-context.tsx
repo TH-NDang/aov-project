@@ -116,7 +116,11 @@ function useWikiState() {
   const { pathname } = useLocation()
   const section = wikiSection(pathname, params.get("tab"))
   const [preferences] = useState(readPreferences)
-  const region = params.get("region") || preferences.region || "VN"
+  const implied = useMemo(
+    () => ({ region: preferences.region || "VN", locale: supportedWikiLocale(preferences.locale) }),
+    [preferences],
+  )
+  const region = params.get("region") || implied.region
   const requestedLocale = params.get("locale") || preferences.locale
   const locale = supportedWikiLocale(requestedLocale)
   const seasonId = params.get("season") ?? ""
@@ -200,8 +204,9 @@ function useWikiState() {
     [navigate, params, pathname],
   )
   const href = useCallback(
-    (path: string) => wikiScopeHref(path, { region, locale, seasonId, patchVariantId, includeUnscoped, section }),
-    [region, locale, seasonId, patchVariantId, includeUnscoped, section],
+    (path: string) =>
+      wikiScopeHref(path, { region, locale, seasonId, patchVariantId, includeUnscoped, section, implied }),
+    [region, locale, seasonId, patchVariantId, includeUnscoped, section, implied],
   )
   const marketList = markets.data ?? context.data?.regions
   const regions = useMemo(
@@ -216,6 +221,7 @@ function useWikiState() {
     region,
     section,
     locale,
+    implied,
     seasonId,
     patchVariantId,
     includeUnscoped,

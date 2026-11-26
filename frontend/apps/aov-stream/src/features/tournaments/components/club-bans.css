@@ -1,0 +1,122 @@
+/* Two lists whose headings and first lines stand level, however many lines a heading takes. */
+.tn-club-ban-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 56px;
+}
+.tn-club-ban-lists > section {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+}
+.tn-club-bans {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-club-bans > li {
+  border-bottom: 1px solid var(--hub-border);
+}
+/*
+ * The share of the team's games as a hollow bar, as a ban is drawn everywhere; the upright line is the others' share. The
+ * figures take the same room in every line of both lists, so that all bars have one scale.
+ */
+.tn-club-ban {
+  --portrait: 40px;
+  --portrait-radius: 7px;
+  display: grid;
+  min-height: 60px;
+  grid-template-columns: 40px minmax(0, 1fr) var(--figures, 168px);
+  grid-template-areas:
+    "face name count"
+    "face bar shares";
+  align-content: center;
+  align-items: center;
+  gap: 2px 14px;
+  color: var(--hub-text);
+}
+.tn-club-ban[data-counts] {
+  --figures: 60px;
+}
+.tn-club-ban > :first-child {
+  grid-area: face;
+}
+.tn-club-ban > strong {
+  overflow: hidden;
+  grid-area: name;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-club-ban > i {
+  position: relative;
+  display: block;
+  height: 10px;
+  grid-area: bar;
+}
+.tn-club-ban > i::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--share) * 100%);
+  border: 1.5px solid color-mix(in srgb, var(--hub-muted) 78%, var(--hub-bg));
+  border-radius: 2px;
+}
+.tn-club-ban > i::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: calc(var(--elsewhere) * 100% - 1px);
+  width: 2px;
+  border-radius: 1px;
+  background: var(--hub-text);
+}
+.tn-club-ban > b {
+  grid-area: count;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: right;
+}
+.tn-club-ban > small {
+  grid-area: shares;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  text-align: right;
+  white-space: nowrap;
+}
+.tn-club-ban > small > span {
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}
+.tn-club-ban:is(:hover, :focus-visible) > strong {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (forced-colors: active) {
+  .tn-club-ban > i::after {
+    background: CanvasText;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-club-ban-lists {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tn-club-ban-lists > section + section {
+    margin-top: 32px;
+  }
+  .tn-club-ban:not([data-counts]) {
+    --figures: 156px;
+  }
+  .tn-club-ban > small {
+    text-wrap: balance;
+    white-space: normal;
+  }
+}

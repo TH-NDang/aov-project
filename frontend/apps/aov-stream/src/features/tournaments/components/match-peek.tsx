@@ -109,6 +109,8 @@ export function MatchPeek({ entry }: { entry: CompetitionMatch }) {
           { src: a.logoUrl, darkSrc: a.logoDarkUrl, at: "left" },
           { src: b.logoUrl, darkSrc: b.logoDarkUrl, at: "right" },
         ]}
+        // Small words stand all over this stage, where a pale logo would wash them out.
+        shaded
         className="tn-peek-stage"
       >
         <p className="tn-peek-round">

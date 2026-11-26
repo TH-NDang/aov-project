@@ -4,6 +4,8 @@ import com.wikiaov.community.tournament.internal.domain.CatalogLocales;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.EnchantmentAllocation;
@@ -30,6 +32,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class GameRules {
     public static final int MAX_GAME_NUMBER = 99;
@@ -62,10 +65,18 @@ public final class GameRules {
     public static final int INVENTORY_SLOTS = 6;
     public static final int MAX_EQUIPMENT_SNAPSHOTS = 1000;
     public static final int MAX_EQUIPMENT_EVENTS = 2000;
+    /** A build: at most this many items, none of the lowest tier, each made of at most three others. */
+    public static final int MAX_BUILD_STEPS = 24;
+    public static final int MAX_BUILD_PARTS = 3;
+    public static final int MIN_BUILD_TIER = 2;
 
     private GameRules() {
     }
 
+    /**
+     * What is wrong with a game. A publication also needs the match, the two teams and the ten heroes with their lanes;
+     * a player, a spell or a ban that nobody saw stays unknown and holds nothing back.
+     */
     public static List<String> violations(Game game, boolean publication, Catalog catalog) {
         var errors = new ArrayList<String>();
         if (game == null) {
@@ -83,7 +94,7 @@ public final class GameRules {
             }
         }
         timeline(game.timeline(), game.durationSeconds(), errors);
-        draft(game, errors);
+        draft(game, publication, errors);
         return List.copyOf(errors);
     }
 
@@ -145,14 +156,13 @@ public final class GameRules {
         if (publication) {
             require(side.side() != null, path + ".side", errors);
             require(side.teamId() != null, path + ".teamId", errors);
-            require(side.bans().size() == BANS_PER_SIDE, path + ".bans.four", errors);
             require(side.participants().size() == PLAYERS_PER_SIDE, path + ".participants.five", errors);
         }
 
         for (int banIndex = 0; banIndex < side.bans().size(); banIndex++) {
             var ban = side.bans().get(banIndex);
             String field = path + ".bans[" + banIndex + "]";
-            selection(ban, publication, field, errors, catalog == null ? null : catalog.heroes());
+            observed(ban, publication, field, errors, catalog == null ? null : catalog.heroes());
             if (present(ban) && !seen.bans().add(identity(ban))) {
                 errors.add(field + ".duplicate");
             }
@@ -174,12 +184,11 @@ public final class GameRules {
     private static void participant(Participant participant, String field, Integer duration, boolean publication,
             Catalog catalog, Seen seen, List<String> errors) {
         if (publication) {
-            require(participant.playerId() != null, field + ".playerId", errors);
             require(participant.lane() != null, field + ".lane", errors);
         }
         selection(participant.hero(), publication, field + ".hero", errors,
                 catalog == null ? null : catalog.heroes());
-        selection(participant.spell(), publication, field + ".spell", errors,
+        observed(participant.spell(), publication, field + ".spell", errors,
                 catalog == null ? null : catalog.spells());
         if (present(participant.hero()) && !seen.heroes().add(identity(participant.hero()))) {
             errors.add(field + ".hero.duplicate");
@@ -196,7 +205,7 @@ public final class GameRules {
     /** Longest video position accepted for draft marks, matching a two-day live stream. */
     private static final int MAX_VIDEO_SECOND = 172_800;
 
-    private static void draft(Game game, List<String> errors) {
+    private static void draft(Game game, boolean publication, List<String> errors) {
         var draft = game.draft();
         if (draft.turns().size() > MAX_DRAFT_TURNS) {
             errors.add("draft.maximum");
@@ -215,6 +224,9 @@ public final class GameRules {
         }
 
         draftedLineups(game, draft, errors);
+        if (publication) {
+            draftedBans(game, draft, errors);
+        }
     }
 
     /** The marks of the draft phase on the video: it starts, then locks, both before the game starts. */
@@ -301,6 +313,22 @@ public final class GameRules {
                 if (present(hero) && !picks.contains(identity(hero))) {
                     errors.add(path + ".participants[" + index + "].hero.notDrafted");
                 }
+            }
+        }
+    }
+
+    /** A hero banned in a turn is among the bans of that side, which is what the statistics count. */
+    private static void draftedBans(Game game, GameDraft draft, List<String> errors) {
+        for (int index = 0; index < draft.turns().size(); index++) {
+            var turn = draft.turns().get(index);
+            if (turn.kind() != DraftKind.BAN || !present(turn.hero())) {
+                continue;
+            }
+            boolean listed = game.sides().stream().filter(side -> side.side() == turn.side())
+                    .flatMap(side -> side.bans().stream())
+                    .anyMatch(ban -> present(ban) && identity(ban).equals(identity(turn.hero())));
+            if (!listed) {
+                errors.add("draft.turns[" + index + "].hero.notBanned");
             }
         }
     }
@@ -454,7 +482,7 @@ public final class GameRules {
         for (int index = 0; index < loadout.entries().size(); index++) {
             var entry = loadout.entries().get(index);
             String field = path + ".entries[" + index + "]";
-            selection(entry.selection(), complete, field + ".selection", errors,
+            part(entry.selection(), complete, publication, field + ".selection", errors,
                     catalog == null ? null : catalog.arcana());
             if (present(entry.selection()) && !ids.add(identity(entry.selection()))) {
                 errors.add(field + ".duplicate");
@@ -507,7 +535,7 @@ public final class GameRules {
         for (int index = 0; index < loadout.entries().size(); index++) {
             var entry = loadout.entries().get(index);
             String field = path + ".entries[" + index + "]";
-            selection(entry.selection(), complete, field + ".selection", errors,
+            part(entry.selection(), complete, publication, field + ".selection", errors,
                     catalog == null ? null : catalog.enchantments());
             if (present(entry.selection()) && !ids.add(identity(entry.selection()))) {
                 errors.add(field + ".duplicate");
@@ -583,6 +611,79 @@ public final class GameRules {
         }
         equipmentSnapshots(participant, path, publication, duration, catalog, errors);
         equipmentEvents(participant, path, publication, duration, catalog, errors);
+        build(participant, path + ".build", publication, duration, catalog, errors);
+    }
+
+    /** The items a player built, each of them once; no more of them are held at the end than an inventory has slots. */
+    private static void build(Participant participant, String path, boolean publication, Integer duration,
+            Catalog catalog, List<String> errors) {
+        if (participant.build().size() > MAX_BUILD_STEPS) {
+            errors.add(path + ".maximum");
+            return;
+        }
+
+        var references = catalog == null ? null : catalog.items();
+        var items = new HashSet<String>();
+        int kept = 0;
+        for (int index = 0; index < participant.build().size(); index++) {
+            var step = participant.build().get(index);
+            String field = path + "[" + index + "]";
+            buildItem(step.item(), publication, field + ".item", references, errors);
+            if (present(step.item()) && !items.add(identity(step.item()))) {
+                errors.add(field + ".item.duplicate");
+            }
+            buildParts(step, publication, field + ".from", references, errors);
+            if (step.atSeconds() != null) {
+                time(step.atSeconds(), duration, field, errors);
+            }
+            if (step.place() == BuildPlace.KEPT && ++kept > INVENTORY_SLOTS) {
+                errors.add(field + ".kept.maximum");
+            }
+        }
+    }
+
+    private static void buildParts(BuildStep step, boolean publication, String path, List<Reference> references,
+            List<String> errors) {
+        if (step.from().size() > MAX_BUILD_PARTS) {
+            errors.add(path + ".maximum");
+            return;
+        }
+
+        var item = reference(step.item(), references);
+        var parts = new HashSet<String>();
+        for (int index = 0; index < step.from().size(); index++) {
+            var part = step.from().get(index);
+            String field = path + "[" + index + "]";
+            buildItem(part, publication, field, references, errors);
+            if (present(part) && !parts.add(identity(part))) {
+                errors.add(field + ".duplicate");
+            }
+            if (present(part) && present(step.item()) && identity(part).equals(identity(step.item()))) {
+                errors.add(field + ".same");
+            } else if (!growsInto(reference(part, references), item)) {
+                errors.add(field + ".notLower");
+            }
+        }
+    }
+
+    /**
+     * Whether an item can have grown from a part: one of a lower tier, or one that its recipe names. What the catalog
+     * does not know holds nothing back. Recipes come with the catalog of the wiki, not with the one frozen in a game.
+     */
+    private static boolean growsInto(@Nullable Reference part, @Nullable Reference item) {
+        if (part == null || item == null || part.tier() == null || item.tier() == null) {
+            return true;
+        }
+        return part.tier() < item.tier() || item.components().contains(part.id());
+    }
+
+    private static void buildItem(Selection item, boolean publication, String path, List<Reference> references,
+            List<String> errors) {
+        selection(item, true, path, errors, publication ? references : null);
+        var known = reference(item, references);
+        if (known != null && known.tier() != null && known.tier() < MIN_BUILD_TIER) {
+            errors.add(path + ".tier");
+        }
     }
 
     private static void equipmentSnapshots(Participant participant, String path, boolean publication,
@@ -687,6 +788,22 @@ public final class GameRules {
         }
         if (required && selection.id() != null && references != null && reference(selection, references) == null) {
             errors.add(path + ".unavailableInPatch");
+        }
+    }
+
+    /** A selection the source may not have shown: it may be missing, but one that is named must be right. */
+    private static void observed(Selection selection, boolean publication, String path, List<String> errors,
+            List<Reference> references) {
+        if (present(selection)) {
+            selection(selection, publication, path, errors, references);
+        }
+    }
+
+    /** A part of a loadout: needed once the whole loadout was seen, and right in any case. */
+    private static void part(Selection selection, boolean complete, boolean publication, String path,
+            List<String> errors, List<Reference> references) {
+        if (complete || present(selection)) {
+            selection(selection, publication, path, errors, references);
         }
     }
 

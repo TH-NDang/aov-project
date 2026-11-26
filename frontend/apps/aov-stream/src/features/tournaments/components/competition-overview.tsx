@@ -3,6 +3,7 @@ import { MatchCard } from "../../../components/match-card"
 import { MatchSpotlight } from "../../../components/match-spotlight"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { competitionStatus, matchStrip, matchUnderway, playedOrder } from "../../../lib/competition-model"
+import type { CompetitionTab } from "../../../lib/competition-tabs"
 import { stageName } from "../../../lib/match-labels"
 import type { CompetitionMatch } from "../../../lib/match-model"
 import { matchSides } from "../../../lib/match-schedule"
@@ -17,8 +18,6 @@ import { StandingsTable } from "./standings-table"
 import { TeamWall } from "./team-wall"
 import { TopHeroes } from "./top-heroes"
 import "./competition-overview.css"
-
-export type CompetitionTab = "overview" | "matches" | "standings" | "stats" | "teams" | "info"
 
 /** The main stage of each kind: the table with the most matches and the last elimination stage played. */
 function mainStages(view: CompetitionView) {
@@ -144,7 +143,7 @@ export function CompetitionOverview({
         <aside className="tn-overview-side">
           <CompetitionAbout view={view} />
           {!showTable && <CompetitionFacts view={view} />}
-          <FinalRanking view={view} />
+          <FinalRanking view={view} side />
           <CompetitionAwards view={view} preview={3} />
         </aside>
       </div>

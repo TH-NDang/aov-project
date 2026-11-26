@@ -169,6 +169,47 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+/* With actions: the facts up to them, and what else there is after them. */
+.tn-duel-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 26px;
+}
+.tn-duel-row > .tn-duel-facts {
+  justify-content: flex-start;
+  text-align: left;
+}
+.tn-duel-row > .tn-duel-facts:first-child {
+  justify-content: flex-end;
+  text-align: right;
+}
+.tn-duel-row > .tn-duel-facts svg {
+  flex: none;
+}
+/* A name that has no room beside its label stands under it. */
+.tn-duel-row > .tn-duel-facts:last-child > span {
+  flex-wrap: wrap;
+  row-gap: 0;
+  overflow-wrap: anywhere;
+}
+.tn-duel-actions {
+  min-width: 0;
+  max-width: 100%;
+}
+/* Actions that turn out to have nothing to offer leave the head as it is without them. */
+.tn-duel-row:has(> .tn-duel-actions:empty) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 22px;
+}
+.tn-duel-actions:empty,
+.tn-duel-row:has(> .tn-duel-actions:empty) > :empty,
+.tn-duel-row:has(> .tn-duel-actions:empty):not(:has(> :not(:empty))) {
+  display: none;
+}
 
 /* The games of the match along the foot of the head. */
 .tn-track {
@@ -236,6 +277,9 @@
   background: var(--hub-accent);
 }
 @media (max-width: 1079.98px) {
+  .tn-duel-row {
+    gap: 14px;
+  }
   .tn-duel-team {
     --stream-image-size: 92px;
     gap: 16px;

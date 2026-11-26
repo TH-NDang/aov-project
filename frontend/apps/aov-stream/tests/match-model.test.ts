@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionView, PlannedMatch, PublishedGame } from "@aov/community-contracts"
+import { currentTimeZone } from "@aov/ui/lib/time-zone"
 import {
   competitionMatches,
   competitionMatchHref,
@@ -8,6 +9,7 @@ import {
   matchSeriesId,
   matchState,
   orderedMatchGames,
+  planZone,
 } from "../src/lib/match-model.ts"
 
 const planned = (key: string, extra: Partial<PlannedMatch> = {}): PlannedMatch => ({
@@ -47,6 +49,14 @@ test("incomplete scores and past scheduled times do not claim a live or finished
   assert.equal(matchState(entry), "FINISHED")
   entry.result.scoreB = 3
   assert.equal(matchState(entry), "SCORED")
+})
+
+test("an event is played on the calendar of its plan", () => {
+  for (const timezone of ["Asia/Tokyo", "America/New_York"]) assert.equal(planZone({ timezone }), timezone)
+})
+
+test("an event whose plan names no zone there is runs on the reader's own calendar", () => {
+  for (const timezone of ["", "Asia/Nowhere"]) assert.equal(planZone({ timezone }), currentTimeZone())
 })
 
 test("game navigation keeps only the exact series and sorts by game number rather than publication order", () => {

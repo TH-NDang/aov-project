@@ -3,6 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/publ
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { ChipGroup } from "./chips"
 import type { FilterOption } from "./schedule-controls"
 import "./filter-menu.css"
 
@@ -12,35 +13,41 @@ export type FilterGroup = {
   label: string
   value: string
   options: readonly FilterOption[]
+  /** A choice on its own narrows the list: what it asks for is not true of everything. */
+  alone?: boolean
 }
 
-/** A filter with a single choice narrows nothing, so it is only offered while that choice is in use. */
-const offered = (groups: FilterGroup[]) => groups.filter((group) => group.options.length > 1 || group.value !== "all")
+/** A filter with a single choice mostly narrows nothing, so it is only offered while that choice is in use. */
+const offered = (groups: FilterGroup[]) =>
+  groups.filter(({ options, value, alone }) => options.length > (alone ? 0 : 1) || value !== "all")
 const chosen = (groups: FilterGroup[]) => groups.filter((group) => group.value !== "all")
 
 type Change = (key: string, value: string) => void
 
-/** Every filter as a line of chips; the chip in use lets go when pressed again. */
+/** Every filter as a line of chips. */
 function Groups({ groups, onChange }: { groups: FilterGroup[]; onChange: Change }) {
   return (
     <div className="tn-filter-groups">
       {offered(groups).map((group) => (
-        <section key={group.key} role="group" aria-label={group.label}>
-          <h3>{group.label}</h3>
-          <div>
-            {group.options.map(([value, name, mark]) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={group.value === value}
-                onClick={() => onChange(group.key, group.value === value ? "all" : value)}
-              >
-                {mark}
-                {name}
-              </button>
-            ))}
-          </div>
-        </section>
+        <ChipGroup
+          key={group.key}
+          title={group.label}
+          chips={group.options.map(([value, name, mark, games]) => {
+            const on = group.value === value
+            return {
+              key: value,
+              name: (
+                <>
+                  {mark}
+                  {name}
+                </>
+              ),
+              games,
+              on,
+              press: () => onChange(group.key, on ? "all" : value),
+            }
+          })}
+        />
       ))}
     </div>
   )
@@ -74,7 +81,7 @@ export function FilterMenu({
   const layout = usePageLayout()
   const count = chosen(groups).length
   const label = text("Lọc", "Filter")
-  const reset = text("Xóa lọc", "Clear filters")
+  const reset = text("Xóa bộ lọc", "Clear filters")
   if (!offered(groups).length) return null
   if (layout === "compact")
     return (
@@ -105,6 +112,7 @@ export function FilterMenu({
       </PopoverTrigger>
       <PopoverContent
         drawerTitle={title}
+        aria-label={title}
         align={align}
         sideOffset={8}
         collisionPadding={16}
@@ -144,6 +152,8 @@ export function FilterTokens({
           <button
             key={group.key}
             type="button"
+            className="tn-chip"
+            data-token=""
             aria-label={text(`Bỏ lọc ${group.label}: ${name}`, `Remove the filter ${group.label}: ${name}`)}
             onClick={() => onChange(group.key, "all")}
           >
@@ -154,8 +164,8 @@ export function FilterTokens({
         )
       })}
       {used.length > 1 && (
-        <button type="button" data-clear="" onClick={onReset}>
-          {text("Xóa lọc", "Clear filters")}
+        <button type="button" className="tn-chip" data-clear="" onClick={onReset}>
+          {text("Xóa bộ lọc", "Clear filters")}
         </button>
       )}
     </div>

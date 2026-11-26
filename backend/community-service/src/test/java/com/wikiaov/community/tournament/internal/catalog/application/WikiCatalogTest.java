@@ -19,7 +19,8 @@ import org.junit.jupiter.api.Test;
 class WikiCatalogTest {
     private static final UUID SEASON = UUID.randomUUID(), OTHER = UUID.randomUUID(), FIRST = UUID.randomUUID(),
             LATEST = UUID.randomUUID(), RULESET = UUID.randomUUID(), HERO = UUID.randomUUID(),
-            REVISION = UUID.randomUUID(), LATEST_PATCH = UUID.randomUUID();
+            REVISION = UUID.randomUUID(), LATEST_PATCH = UUID.randomUUID(), ITEM = UUID.randomUUID(),
+            PART = UUID.randomUUID(), OTHER_PART = UUID.randomUUID();
     private HttpServer server;
     private WikiCatalog catalog;
     private final List<String> requested = new ArrayList<>();
@@ -38,7 +39,7 @@ class WikiCatalogTest {
                                     ? "{\"context\":{\"region\":\"VN\"},\"page\":{\"items\":[{\"id\":\"" + HERO
                                             + "\",\"code\":\"hero\",\"name\":\"Hero\",\"revisionId\":\"" + REVISION
                                             + "\"}],\"page\":0,\"size\":100,\"totalElements\":1}}"
-                                    : "{\"items\":[],\"totalElements\":0}";
+                                    : path.endsWith("items") ? items() : "{\"items\":[],\"totalElements\":0}";
             byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, bytes.length);
@@ -96,6 +97,13 @@ class WikiCatalogTest {
     }
 
     @Test
+    void anItemNamesTheItemsOfItsRecipe() {
+        var items = catalog.read("VN", "vi-VN", null, null, false).items();
+
+        assertThat(items.getFirst().components()).containsExactly(PART, OTHER_PART);
+    }
+
+    @Test
     void mismatchedSeasonPatchIsRejectedBeforeReadingGameplay() {
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", OTHER, FIRST, false))
                 .isInstanceOf(ApiException.class)
@@ -122,6 +130,12 @@ class WikiCatalogTest {
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", null, null, false))
                 .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getErrorCode())
                         .isEqualTo(TournamentErrorCode.TOURNAMENT_WIKI_UNAVAILABLE));
+    }
+
+    private static String items() {
+        return "{\"items\":[{\"id\":\"" + ITEM + "\",\"code\":\"item\",\"content\":{\"tier\":3,\"components\":["
+                + "{\"itemId\":\"" + PART + "\",\"quantity\":1},{\"itemId\":\"" + OTHER_PART
+                + "\",\"quantity\":2}]}}],\"totalElements\":1}";
     }
 
     private static String context() {

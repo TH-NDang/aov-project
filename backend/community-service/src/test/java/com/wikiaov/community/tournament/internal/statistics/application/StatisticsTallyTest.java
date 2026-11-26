@@ -5,11 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
 import com.wikiaov.community.tournament.internal.statistics.application.StatisticsViews.GameLength;
+import com.wikiaov.community.tournament.internal.statistics.application.StatisticsViews.GameStatistics;
 import com.wikiaov.community.tournament.internal.statistics.application.StatisticsViews.HeroCount;
 import com.wikiaov.community.tournament.internal.statistics.application.StatisticsViews.MvpCount;
 import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup;
-import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.KnownHero;
+import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.Catalog;
+import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.Known;
 import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.LineupSide;
+import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.Seat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,8 +30,21 @@ class StatisticsTallyTest {
         var game = game(Side.BLUE, side(Side.BLUE, List.of(named("Veera"), named("veera ")), List.of()),
                 side(Side.RED, List.of(named("Veera")), List.of()));
 
-        assertThat(StatisticsTally.of(List.of(game)).heroes())
+        assertThat(tally(List.of(game)).heroes())
                 .containsExactly(count(null, "Veera", 0, 0, 2, 0));
+    }
+
+    @Test
+    void aGameShowsItsBansOnceItNamesAHeroThatWasBanned() {
+        var shown = game(Side.BLUE, side(Side.BLUE, List.of(), List.of()),
+                side(Side.RED, List.of(named("Veera")), List.of()));
+        var unseen = game(Side.BLUE, side(Side.BLUE, Arrays.asList(new Selection(null, " "), null), List.of()),
+                side(Side.RED, List.of(), List.of()));
+
+        var statistics = tally(List.of(shown, unseen));
+
+        assertThat(statistics.games()).isEqualTo(2);
+        assertThat(statistics.withBans()).isEqualTo(1);
     }
 
     @Test
@@ -36,14 +52,14 @@ class StatisticsTallyTest {
         var empty = Arrays.asList(new Selection(null, null), new Selection(null, " "), null);
         var game = game(Side.BLUE, side(Side.BLUE, empty, empty));
 
-        assertThat(StatisticsTally.of(List.of(game)).heroes()).isEmpty();
+        assertThat(tally(List.of(game)).heroes()).isEmpty();
     }
 
     @Test
     void aPickWinsOnlyInADecidedGame() {
         var picked = side(Side.RED, List.of(), List.of(named("Veera")));
 
-        var statistics = StatisticsTally.of(List.of(game(Side.RED, picked), game(null, picked)));
+        var statistics = tally(List.of(game(Side.RED, picked), game(null, picked)));
 
         assertThat(statistics.heroes()).containsExactly(count(null, "Veera", 2, 1, 0, 0));
     }
@@ -53,7 +69,7 @@ class StatisticsTallyTest {
         var game = game(null, side(Side.BLUE, List.of(), List.of(new Selection(FLORENTINO, "Florentino"))),
                 side(Side.RED, List.of(named("florentino ")), List.of()));
 
-        assertThat(StatisticsTally.of(List.of(game)).heroes())
+        assertThat(tally(List.of(game)).heroes())
                 .containsExactly(count(FLORENTINO, "Florentino", 1, 0, 1, 1));
     }
 
@@ -65,17 +81,17 @@ class StatisticsTallyTest {
                         List.of(new Selection(FLORENTINO, "Florentino"), new Selection(other, "Florentino"))),
                 side(Side.RED, List.of(named("Florentino")), List.of()));
 
-        assertThat(StatisticsTally.of(List.of(game)).heroes()).hasSize(3)
+        assertThat(tally(List.of(game)).heroes()).hasSize(3)
                 .contains(count(null, "Florentino", 0, 0, 1, 0));
     }
 
     @Test
     void aHeroCarriesTheCodeAndThePictureOfTheNewestCatalogThatHasThem() {
         var sides = List.of(side(Side.BLUE, List.of(), List.of(new Selection(FLORENTINO, "Florentino"))));
-        var newer = lineup(sides, new KnownHero(FLORENTINO, "florentino", "Florentino", null));
-        var older = lineup(sides, new KnownHero(FLORENTINO, "old-code", "Florentino", "https://img/florentino.jpg"));
+        var newer = lineup(sides, new Known(FLORENTINO, "florentino", "Florentino", null, null));
+        var older = lineup(sides, new Known(FLORENTINO, "old-code", "Florentino", "https://img/florentino.jpg", null));
 
-        assertThat(StatisticsTally.of(List.of(newer, older)).heroes()).containsExactly(
+        assertThat(tally(List.of(newer, older)).heroes()).containsExactly(
                 new HeroCount(FLORENTINO, "florentino", "Florentino", "https://img/florentino.jpg", 2, 0, 0, 2));
     }
 
@@ -84,7 +100,7 @@ class StatisticsTallyTest {
         var newer = game(null, side(Side.BLUE, List.of(new Selection(FLORENTINO, null)), List.of()));
         var older = game(null, side(Side.BLUE, List.of(new Selection(FLORENTINO, "Florentino")), List.of()));
 
-        assertThat(StatisticsTally.of(List.of(newer, older)).heroes())
+        assertThat(tally(List.of(newer, older)).heroes())
                 .containsExactly(count(FLORENTINO, "Florentino", 0, 0, 2, 0));
     }
 
@@ -95,7 +111,7 @@ class StatisticsTallyTest {
                         List.of(named("Zephys"), named("Airi"), named("Twice"))),
                 side(Side.RED, List.of(named("Twice")), List.of(named("Both"))));
 
-        assertThat(StatisticsTally.of(List.of(game)).heroes()).extracting(HeroCount::name)
+        assertThat(tally(List.of(game)).heroes()).extracting(HeroCount::name)
                 .containsExactly("Both", "Twice", "Airi", "Zephys", "Banned once");
     }
 
@@ -103,7 +119,7 @@ class StatisticsTallyTest {
     void theAverageLengthIsRounded() {
         var games = List.of(lasting(1000), lasting(1001));
 
-        assertThat(StatisticsTally.of(games).averageSeconds()).isEqualTo(1001);
+        assertThat(tally(games).averageSeconds()).isEqualTo(1001);
     }
 
     @Test
@@ -111,7 +127,7 @@ class StatisticsTallyTest {
         var zero = lasting(0);
         var known = lasting(900);
 
-        var statistics = StatisticsTally.of(List.of(zero, known));
+        var statistics = tally(List.of(zero, known));
 
         assertThat(statistics.averageSeconds()).isEqualTo(900);
         assertThat(statistics.shortest()).isEqualTo(new GameLength(known.id(), 900));
@@ -122,7 +138,7 @@ class StatisticsTallyTest {
         var newer = lasting(900);
         var older = lasting(900);
 
-        var statistics = StatisticsTally.of(List.of(newer, older));
+        var statistics = tally(List.of(newer, older));
 
         assertThat(statistics.longest()).isEqualTo(new GameLength(newer.id(), 900));
         assertThat(statistics.shortest()).isEqualTo(new GameLength(newer.id(), 900));
@@ -136,7 +152,7 @@ class StatisticsTallyTest {
         players.forEach(player -> games.add(withMvp(player)));
         games.add(withMvp(players.get(5)));
 
-        var mvps = StatisticsTally.of(games).mvps();
+        var mvps = tally(games).mvps();
 
         assertThat(mvps).hasSize(10);
         assertThat(mvps.getFirst()).isEqualTo(new MvpCount(players.get(5), 2));
@@ -144,12 +160,17 @@ class StatisticsTallyTest {
         assertThat(mvps).extracting(MvpCount::playerId).doesNotContain(players.get(0));
     }
 
+    private static GameStatistics tally(List<PublishedLineup> games) {
+        return StatisticsTally.of(games, HeroRoll.of(games));
+    }
+
     private static Selection named(String name) {
         return new Selection(null, name);
     }
 
     private static LineupSide side(Side side, List<@Nullable Selection> bans, List<@Nullable Selection> picks) {
-        return new LineupSide(side, bans, picks);
+        return new LineupSide(side, UUID.randomUUID(), bans,
+                picks.stream().map(hero -> new Seat(hero, null, null, null, List.of(), null, List.of())).toList());
     }
 
     private static PublishedLineup game(@Nullable Side winner, LineupSide... sides) {
@@ -168,12 +189,14 @@ class StatisticsTallyTest {
         return new HeroCount(id, null, name, null, picks, wins, bans, bluePicks);
     }
 
-    private static PublishedLineup lineup(List<LineupSide> sides, KnownHero hero) {
-        return new PublishedLineup(UUID.randomUUID(), Instant.EPOCH, null, null, null, sides, List.of(hero));
+    private static PublishedLineup lineup(List<LineupSide> sides, Known hero) {
+        return new PublishedLineup(UUID.randomUUID(), Instant.EPOCH, UUID.randomUUID(), 1, null, null, null, sides,
+                List.of(), null, new Catalog(List.of(hero), List.of(), List.of(), List.of()));
     }
 
     private static PublishedLineup lineup(@Nullable Side winner, @Nullable Integer seconds, @Nullable UUID mvp,
             List<LineupSide> sides) {
-        return new PublishedLineup(UUID.randomUUID(), Instant.EPOCH, winner, seconds, mvp, sides, List.of());
+        return new PublishedLineup(UUID.randomUUID(), Instant.EPOCH, UUID.randomUUID(), 1, winner, seconds, mvp, sides,
+                List.of(), null, null);
     }
 }

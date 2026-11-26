@@ -3,12 +3,14 @@ import { Link, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, CompetitionView } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { FoldButton } from "../../../components/fold-button"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
 import { focusesFoldedLink } from "../../../lib/folded-text"
-import { pageReferenceKey } from "../../../lib/reference-model"
+import { pageReferenceKey, plainReferences } from "../../../lib/reference-model"
+import { pageSummary } from "../../../lib/stream-head"
 import { formatDay, regionKey, regionName } from "../../../components/community-ui"
 import { ReferenceText } from "../../../components/reference-text"
 import { RegionMark } from "../../../components/region-mark"
@@ -26,6 +28,7 @@ import { circuitIdOf } from "../../../lib/directory-model"
 import { competitionCatalogQuery } from "../../../lib/tournament-api"
 import { CircuitHonours } from "./circuit-honours"
 import { Crest } from "../../../components/crest"
+import { StreamHead } from "../../../components/stream-head"
 import "./community.css"
 import "./community-profile.css"
 import "./profile-aside.css"
@@ -70,9 +73,19 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
   )
   return (
     <article className="cp-container pf-page">
-      <title>
-        {text(`${content.name} — Hệ thống giải · AOV Stream`, `${content.name} — Tournament circuit · AOV Stream`)}
-      </title>
+      <StreamHead
+        title={text(
+          `${content.name} — Hệ thống giải · AOV Stream`,
+          `${content.name} — Tournament circuit · AOV Stream`,
+        )}
+        description={
+          pageSummary(plainReferences(content.biography ?? "")) ||
+          text(
+            `${content.name}: các mùa giải, lịch thi đấu và kết quả Liên Quân Mobile.`,
+            `${content.name}: seasons, schedule and results of Arena of Valor tournaments.`,
+          )
+        }
+      />
       <ProfileHead
         profile={profile}
         places={[tournaments]}
@@ -190,11 +203,7 @@ function CircuitIntro({ text, about }: { text: string; about: string }) {
       >
         <ReferenceText text={text} about={[about]} />
       </p>
-      {foldable && (
-        <button type="button" className="tn-more pf-intro-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? ui("Thu gọn", "Show less") : ui("Xem thêm", "Show more")}
-        </button>
-      )}
+      <FoldButton fold={{ folds: foldable, open, toggle: () => setOpen(!open) }} more={ui("Xem thêm", "Show more")} />
     </div>
   )
 }

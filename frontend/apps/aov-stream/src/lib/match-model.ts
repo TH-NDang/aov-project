@@ -1,4 +1,11 @@
-import type { CompetitionView, PlannedMatch, PublishedGame, ResolvedMatch } from "@aov/community-contracts"
+import type {
+  CompetitionPlan,
+  CompetitionView,
+  PlannedMatch,
+  PublishedGame,
+  ResolvedMatch,
+} from "@aov/community-contracts"
+import { currentTimeZone, isValidTimeZone } from "@aov/ui/lib/time-zone"
 
 export type CompetitionMatch = {
   competition: CompetitionView
@@ -12,6 +19,10 @@ export function competitionMatches(competitions: CompetitionView[]): Competition
     return competition.content.plan.matches.map((match) => ({ competition, match, result: results.get(match.key) }))
   })
 }
+
+/** The zone whose calendar an event is played on; the reader's own while its plan names none. */
+export const planZone = (plan: Pick<CompetitionPlan, "timezone">) =>
+  isValidTimeZone(plan.timezone) ? plan.timezone : currentTimeZone()
 
 export function competitionMatchHref(competitionId: string, key: string) {
   return `/competitions/${encodeURIComponent(competitionId)}/matches/${encodeURIComponent(key)}`

@@ -104,7 +104,7 @@ export function contradictedTournaments(entries: readonly Entry[], now = new Dat
     .sort((a, b) => end(b).localeCompare(end(a)) || a.id.localeCompare(b.id))
 }
 
-/** The champion a finished tournament has on record, by its result or its final table. */
+/** The champion a finished tournament has on record. Its final table decides, as on the public pages. */
 export function championName({ result, placements }: Pick<TournamentContent, "result" | "placements">) {
-  return result?.winnerName || placements?.find((line) => line.place?.trim() === "1")?.teamName || null
+  return placements?.find((line) => line.place?.trim() === "1")?.teamName || result?.winnerName || null
 }

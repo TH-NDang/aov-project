@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { regionName } from "../../../components/community-ui"
+import { FoldButton } from "../../../components/fold-button"
 import { GoLink } from "../../../components/go-link"
 import { Jersey } from "../../../components/jersey"
 import { useSections } from "../../../components/place-trail"
@@ -19,6 +20,7 @@ import { isTitleSeason, playerProfile, playerStints, type PlayerProfile } from "
 import { playerCompetitionsQuery } from "../../../lib/tournament-api"
 import { LANE_NAMES } from "../../../lib/tournament-model"
 import { ParticipantMissing, Part, SeasonLine, ShelfPart } from "../components/participant-parts"
+import { StreamHead } from "../../../components/stream-head"
 import "../../../components/participant-list.css"
 
 /** Seasons shown before the rest unfold. */
@@ -42,14 +44,25 @@ export function PlayerPage() {
   const profile = competitions.data ? playerProfile(competitions.data, id) : null
   return (
     <StreamShell>
-      <title>
-        {profile
-          ? text(
-              `${profile.player.nickname} — Tuyển thủ · AOV Stream`,
-              `${profile.player.nickname} — Player · AOV Stream`,
-            )
-          : text("Tuyển thủ — AOV Stream", "Player — AOV Stream")}
-      </title>
+      <StreamHead
+        title={
+          profile
+            ? text(
+                `${profile.player.nickname} — Tuyển thủ · AOV Stream`,
+                `${profile.player.nickname} — Player · AOV Stream`,
+              )
+            : text("Tuyển thủ — AOV Stream", "Player — AOV Stream")
+        }
+        description={
+          profile
+            ? text(
+                `${profile.player.nickname}, tuyển thủ Liên Quân Mobile: đội tuyển, các giải đã thi đấu và thành tích.`,
+                `${profile.player.nickname}, Arena of Valor player: teams, tournaments played and achievements.`,
+              )
+            : undefined
+        }
+        noindex={!profile && competitions.isSuccess && !page.isPending}
+      />
       <div className="cp-container pt-page">
         {competitions.isPending || page.isPending ? (
           <div
@@ -216,14 +229,10 @@ function PlayerBody({ profile }: { profile: PlayerProfile }) {
             </SeasonLine>
           ))}
         </ul>
-        {seasons.length > SEASONS && (
-          <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {open
-              ? text("Thu gọn", "Show less")
-              : text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
-            <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
-          </button>
-        )}
+        <FoldButton
+          fold={{ folds: seasons.length > SEASONS, open, toggle: () => setOpen(!open) }}
+          more={text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
+        />
       </Part>
       <p className="tn-quiet">
         {text(

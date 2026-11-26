@@ -1,0 +1,102 @@
+/* Two lists whose headings and first lines stand level, however many lines a heading takes. */
+.tn-club-split-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 56px;
+}
+.tn-club-split-lists > section {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+}
+/* Two lines of the first list stand as tall as four of the second. */
+.tn-club-splits {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) minmax(60px, max-content) minmax(44px, max-content);
+  align-content: start;
+  gap: 0 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-club-splits > li,
+.tn-club-splits > li > a {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.tn-club-splits > li {
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-club-splits > li > a {
+  min-height: 52px;
+  align-items: center;
+  color: var(--hub-text);
+  font-size: 15px;
+  line-height: 20px;
+}
+.tn-club-splits[data-form="block"] {
+  grid-template-columns: minmax(0, 1fr) minmax(60px, max-content) minmax(44px, max-content);
+}
+.tn-club-splits[data-form="block"] > li > a {
+  min-height: 105px;
+  grid-template-areas:
+    "name record rate"
+    "cells cells cells";
+  align-content: center;
+  row-gap: 12px;
+}
+/* A side of the map has its own colour, won games solid and lost ones pale like everywhere else. */
+.tn-club-splits > li > [data-side="BLUE"] {
+  --hub-accent: var(--hub-blue);
+}
+.tn-club-splits > li > [data-side="RED"] {
+  --hub-accent: var(--hub-red);
+}
+.tn-club-splits strong {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-club-split-cells {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+}
+.tn-club-splits[data-form="block"] .tn-club-split-cells {
+  grid-area: cells;
+}
+.tn-club-splits b {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+.tn-club-splits small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.tn-club-splits > li > a:is(:hover, :focus-visible) > strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 899.98px) {
+  .tn-club-split-lists {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tn-club-split-lists > section + section {
+    margin-top: 32px;
+  }
+  .tn-club-splits {
+    column-gap: 10px;
+  }
+  .tn-club-splits > li > a {
+    font-size: 14px;
+  }
+  .tn-club-splits[data-form="block"] > li > a {
+    min-height: 88px;
+    row-gap: 10px;
+  }
+}

@@ -1,8 +1,17 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionStanding } from "@aov/community-contracts"
-import { meetings, standingGroups, teamForm, teamRecord } from "../src/lib/standings-model.ts"
+import {
+  allPlayed,
+  laterStages,
+  meetings,
+  standingGroups,
+  tableOver,
+  teamForm,
+  teamRecord,
+} from "../src/lib/standings-model.ts"
 import { competition, matchesOf, on, stage, type TestMatch } from "./fixtures/competition.ts"
+import { leagueMatches, leagueView } from "./fixtures/league.ts"
 
 const league: TestMatch[] = [
   { key: "m1", a: "a", b: "b", score: [3, 1], scheduledAt: on(1) },
@@ -121,4 +130,151 @@ test("teams a recorded rule leaves level stay level", () => {
     ["a", 1, true],
     ["b", 1, true],
   ])
+})
+
+test("places are counted without the teams that are left out", () => {
+  // Z stands between the two, but has no match in the stage.
+  assert.deepEqual(groupsOf([{ key: "x", a: "a", b: "b" }], "azb"), [[null, "1a 2b"]])
+})
+
+test("teams level in the table stay level in their group", () => {
+  const view = competition(
+    groupStage(() => "Ngày 1"),
+    { stages: [stage("RR", { format: "ROUND_ROBIN", tieBreakers: ["GAME_DIFF"] })] },
+  )
+  const rows = [row("a", 1), row("b", 2), row("c", 2), row("d", 4), row("e", 5), row("f", 6)]
+  const [first] = standingGroups(view, { stageCode: "RR", complete: false, rows })
+  assert.deepEqual(
+    first!.rows.map(({ teamId, rank, tied }) => [teamId, rank, tied]),
+    [
+      ["a", 1, false],
+      ["b", 2, true],
+      ["c", 2, true],
+    ],
+  )
+})
+
+const open = leagueMatches.map((match, index) => (index < 5 ? match : { ...match, score: undefined }))
+const over = (view: ReturnType<typeof leagueView>) => tableOver(view, view.content.standings[0]!)
+
+test("a table is final once every match has its result", () => {
+  assert.equal(over(leagueView(leagueMatches, { complete: false })), true)
+  assert.equal(over(leagueView(open, { complete: false })), false)
+})
+
+test("a drawn match is played once all its games were", () => {
+  const drawn = (bestOf: number) => leagueView([{ ...leagueMatches[0]!, bestOf, score: [1, 1] }], { complete: false })
+  const played = (view: ReturnType<typeof leagueView>) => allPlayed(view, view.content.standings[0]!)
+  assert.equal(played(drawn(2)), true)
+  assert.equal(played(drawn(3)), false)
+})
+
+/** A league of one drawn match whose table holds it as the given number of losses for both teams. */
+const drawnLeague = (lost: number) => {
+  const view = leagueView([{ ...leagueMatches[0]!, bestOf: 2, score: [1, 1] }])
+  const table = view.content.standings[0]!
+  table.rows = table.rows.map((item) => ({ ...item, lost }))
+  return standingGroups(view, table).flatMap(({ rows }) => rows)
+}
+
+test("drawn matches stand apart in a table published before they were counted", () => {
+  assert.deepEqual(
+    drawnLeague(1).map(({ played, won, lost }) => [played, won, lost]),
+    [
+      [1, 0, 0],
+      [1, 0, 0],
+    ],
+  )
+})
+
+test("a table that counts its drawn matches is left as it is", () => {
+  const view = leagueView([
+    { ...leagueMatches[0]!, bestOf: 2, score: [1, 1] },
+    { key: "m7", a: "a", b: "b", score: [2, 0], scheduledAt: on(5) },
+  ])
+  assert.deepEqual(
+    standingGroups(view, view.content.standings[0]!)
+      .flatMap(({ rows }) => rows)
+      .map(({ teamId, played, won, lost }) => [teamId, played, won, lost]),
+    [
+      ["a", 2, 1, 0],
+      ["b", 2, 0, 1],
+    ],
+  )
+})
+
+test("a draw whose score contradicts its games is none", () => {
+  const view = leagueView([
+    { ...leagueMatches[0]!, score: [2, 0] },
+    { key: "m7", a: "a", b: "b", score: [1, 1], scheduledAt: on(5) },
+  ])
+  view.content.resolved = view.content.resolved.map((result) =>
+    result.key === "m7" ? { ...result, consistent: false } : result,
+  )
+  const [table] = view.content.standings
+  table!.rows = table!.rows.map((row) => ({
+    ...row,
+    played: 1,
+    won: Number(row.teamId === "a"),
+    lost: Number(row.teamId === "b"),
+  }))
+  assert.deepEqual(
+    standingGroups(view, table!)
+      .flatMap(({ rows }) => rows)
+      .map(({ teamId, lost }) => [teamId, lost]),
+    [
+      ["a", 0],
+      ["b", 1],
+    ],
+  )
+})
+
+test("a table is final when the event is over, whatever was never played", () => {
+  assert.equal(over(leagueView(open, { complete: false, tournament: { status: "FINISHED" } })), true)
+})
+
+test("a table nobody played in is not final", () => {
+  const unplayed = leagueMatches.map(({ score: _, ...match }) => match)
+  assert.equal(over(leagueView(unplayed, { complete: false, tournament: { status: "FINISHED" } })), false)
+})
+
+test("a table is final once a later stage with only some of its teams has begun", () => {
+  const cup = (score?: [number, number]) =>
+    leagueView(open, {
+      complete: false,
+      stages: [stage("KO")],
+      later: [{ key: "k", stageCode: "KO", a: "c", b: "d", score, scheduledAt: on(9) }],
+    })
+  assert.equal(over(cup([3, 1])), true)
+  assert.equal(over(cup()), false)
+})
+
+test("a second leg of the same teams does not close the table of the first", () => {
+  const second = leagueMatches.map((match) => ({
+    ...match,
+    key: `${match.key}-2`,
+    stageCode: "TWO",
+    scheduledAt: on(9),
+  }))
+  const view = leagueView(open, {
+    complete: false,
+    stages: [stage("TWO", { format: "ROUND_ROBIN" })],
+    later: second,
+  })
+  assert.equal(over(view), false)
+})
+
+test("the stages after one come in the order they are played", () => {
+  const view = leagueView(leagueMatches, {
+    stages: [stage("FINAL"), stage("SEMI")],
+    later: [
+      { key: "f", stageCode: "FINAL", a: "c", b: "d", scheduledAt: on(12) },
+      { key: "s", stageCode: "SEMI", a: "c", b: "a", scheduledAt: on(9) },
+    ],
+  })
+  assert.deepEqual(
+    laterStages(view, "RR").map(({ code }) => code),
+    ["SEMI", "FINAL"],
+  )
+  assert.deepEqual(laterStages(view, "FINAL"), [])
 })

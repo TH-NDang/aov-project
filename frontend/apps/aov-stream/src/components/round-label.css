@@ -10,7 +10,8 @@
   min-width: 0;
   align-items: center;
   gap: 5px;
-  color: light-dark(var(--aov-game-gold), var(--aov-medal-gold));
+  /* The gold of the medal on a dark ground; on a light one it is darkened with the ink to be read at 4.5:1. */
+  color: light-dark(color-mix(in srgb, var(--aov-game-gold) 65%, var(--hub-text)), var(--aov-medal-gold));
   font-weight: 700;
 }
 .tn-round > svg {

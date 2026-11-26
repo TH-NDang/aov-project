@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode, type RefObject } from "react"
 import { Link } from "react-router"
 import type { PublishedGame } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
@@ -33,7 +33,7 @@ export type HeadTeam = {
   known?: boolean
 }
 
-type Head = { tint: string; round: ReactNode; bestOf: number; teams: [HeadTeam, HeadTeam] }
+export type Head = { tint: string; round: ReactNode; bestOf: number; teams: [HeadTeam, HeadTeam] }
 
 /**
  * The head of a match of a competition's plan: its round, how many games decide it, and both sides in full. A side
@@ -85,36 +85,105 @@ function DuelTeam({ team, side }: { team: HeadTeam; side: "a" | "b" }) {
   )
 }
 
+/** The pages above, and beside, for the bar that stands in for the head once it is scrolled away. */
+type HeadBar = { places: Place[]; steps?: ReactNode }
+
+const isScored = ([a, b]: [HeadTeam, HeadTeam]) => a.score != null && b.score != null
+
+/**
+ * The bar that stands in for what is at `at`, the head of a match or the room in its place, once it is scrolled away.
+ * `told` is false while the video in the room has yet to tell the result.
+ */
+export function MatchBar({
+  head: { teams },
+  at,
+  bar,
+  told = true,
+}: {
+  head: Head
+  at: RefObject<HTMLElement | null>
+  bar: HeadBar
+  told?: boolean
+}): ReactNode | null {
+  const wide = usePageLayout() === "wide"
+  if (!wide) return null
+  const [a, b] = teams
+  return (
+    <PlaceBar
+      head={at}
+      {...bar}
+      name={`${a.name} ${told && isScored(teams) ? `${a.score}–${b.score}` : "vs"} ${b.name}`}
+      mark={
+        <>
+          <StreamImage src={a.logoUrl} darkSrc={a.logoDarkUrl} logo name={a.name} />
+          <StreamImage src={b.logoUrl} darkSrc={b.logoDarkUrl} logo name={b.name} />
+        </>
+      }
+    />
+  )
+}
+
+/**
+ * What stands under the board. With `actions` a wide head puts them in the middle between the facts and `more`; a
+ * narrow one puts them first, in a row of their own.
+ */
+function UnderBoard({ facts, actions, more }: { facts?: ReactNode; actions?: ReactNode; more?: ReactNode }) {
+  const wide = usePageLayout() === "wide"
+  if (wide && actions)
+    return (
+      <div className="tn-duel-row">
+        <div className="tn-duel-facts">{facts}</div>
+        <div className="tn-duel-actions">{actions}</div>
+        <div className="tn-duel-facts">{more}</div>
+      </div>
+    )
+  return (
+    <>
+      {actions && <div className="tn-duel-actions">{actions}</div>}
+      {(facts || more) && (
+        <div className="tn-duel-facts">
+          {facts}
+          {more}
+        </div>
+      )}
+    </>
+  )
+}
+
 /**
  * The head a match shares with each of its games: both teams large around the score, on a stage lit by both.
- * `trail` says where the match stands, `round` and `bestOf` say what the match is, `center` takes the place of the score while there is none, `scoreNote`
- * says what the score counts when the page is about one game, `facts` stand under the board and `foot` closes it.
+ * `trail` says where the match stands, `round` and `bestOf` say what the match is, `center` takes the place of the
+ * score while there is none, `scoreNote` says what the score counts when the page is about one game. Under the board
+ * stand `facts`, `actions` and `more`; `foot` closes it.
  */
 export function MatchHead({
-  head: { tint, round, bestOf, teams },
+  head,
   trail,
   bar,
   center,
   scoreNote,
   facts,
+  actions,
+  more,
   foot,
 }: {
   head: Head
   trail: ReactNode
-  /** The pages above, and beside, for the bar that stands in for the head once it is scrolled away. */
-  bar: { places: Place[]; steps?: ReactNode }
+  bar: HeadBar
   center?: ReactNode
   scoreNote?: string
   facts?: ReactNode
+  actions?: ReactNode
+  more?: ReactNode
   foot?: ReactNode
 }) {
+  const { tint, round, bestOf, teams } = head
   const [a, b] = teams
-  const scored = a.score != null && b.score != null
-  const wide = usePageLayout() === "wide"
-  const head = useRef<HTMLDivElement>(null)
+  const scored = isScored(teams)
+  const at = useRef<HTMLDivElement>(null)
   return (
     <>
-      <div ref={head} data-place-head="">
+      <div ref={at} data-place-head="">
         <Stage
           tint={tint}
           lights={[
@@ -146,24 +215,12 @@ export function MatchHead({
               </span>
               <DuelTeam team={b} side="b" />
             </h1>
-            {facts && <div className="tn-duel-facts">{facts}</div>}
+            <UnderBoard facts={facts} actions={actions} more={more} />
           </header>
           {foot}
         </Stage>
       </div>
-      {wide && (
-        <PlaceBar
-          head={head}
-          {...bar}
-          name={`${a.name} ${scored ? `${a.score}–${b.score}` : "vs"} ${b.name}`}
-          mark={
-            <>
-              <StreamImage src={a.logoUrl} darkSrc={a.logoDarkUrl} logo name={a.name} />
-              <StreamImage src={b.logoUrl} darkSrc={b.logoDarkUrl} logo name={b.name} />
-            </>
-          }
-        />
-      )}
+      <MatchBar head={head} at={at} bar={bar} />
     </>
   )
 }

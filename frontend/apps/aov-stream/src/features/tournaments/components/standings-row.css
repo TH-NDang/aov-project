@@ -1,0 +1,93 @@
+/* A team in a row of a table; the table sets how large it is drawn (--team-crest, --team-gap, --team-size). */
+.tn-team {
+  --stream-image-size: var(--team-crest, 36px);
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--team-gap, 12px);
+  font-size: var(--team-size, 1em);
+  font-weight: 700;
+}
+.tn-team-name {
+  display: grid;
+  min-width: 0;
+}
+.tn-team-name > :is(a, small) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Pressed on the whole height of its row. */
+.tn-team-name > a {
+  margin-block: -11px;
+  padding-block: 11px;
+  line-height: 1.34;
+}
+/* In a narrow table the arrow after a name gives way to it. */
+@container (max-width: 599.98px) {
+  .tn-team-name > a > svg {
+    display: none;
+  }
+}
+.tn-team-name > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+/* A name too long for a phone gives way to its short form there. */
+.tn-team-short {
+  display: none;
+}
+/* How far a team moved, in the colour of the way it went. */
+.tn-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--hub-success);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.tn-move > i {
+  width: 8px;
+  height: 7px;
+  background: currentColor;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.tn-move[data-way="down"] {
+  color: var(--hub-danger);
+}
+.tn-move[data-way="down"] > i {
+  transform: rotate(180deg);
+}
+/* A phone's column of places is as wide as a medal, so the arrow keeps its air on its own side. */
+@media (max-width: 899.98px) {
+  .tn-move {
+    margin-left: 3px;
+  }
+}
+@media (max-width: 559.98px) {
+  .tn-team-long {
+    display: none;
+  }
+  .tn-team-short {
+    display: inline;
+  }
+}
+/* The card beside the side column of a wide page leaves a name less room than a phone does. */
+@media (min-width: 900px) {
+  @container (max-width: 819.98px) {
+    .tn-table[data-look="card"] .tn-team-long {
+      display: none;
+    }
+    .tn-table[data-look="card"] .tn-team-short {
+      display: inline;
+    }
+  }
+}
+@media (forced-colors: active) {
+  .tn-move > i {
+    forced-color-adjust: none;
+  }
+}

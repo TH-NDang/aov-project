@@ -11,7 +11,7 @@ const DEPTHS: [RegExp, number][] = [
   [/^\/(competitions|pages|teams|players|people|manage)\/[^/]+/, 1],
 ]
 
-export const depthOf = (pathname: string) => DEPTHS.find(([pattern]) => pattern.test(pathname))?.[1] ?? 0
+const depthOf = (pathname: string) => DEPTHS.find(([pattern]) => pattern.test(pathname))?.[1] ?? 0
 
 /** Which way a step goes. Going up by a link leaves a page as much as going back does. */
 export function wayOf({ action, delta, from, to }: Step): Way {
@@ -24,7 +24,7 @@ export function wayOf({ action, delta, from, to }: Step): Way {
 export const landsAtTop = ({ action, from, to }: Step) => action !== "POP" && from !== to
 
 /** What the address of a page says about the part of it that is open. */
-const PARTS = ["tab", "hero", "kind"]
+const PARTS = ["tab", "view", "hero", "club", "list", "kind"]
 
 /** Whether a step opens another part of the same page. */
 export function opensPart({ action, from, to }: Step, fromSearch: string, toSearch: string) {

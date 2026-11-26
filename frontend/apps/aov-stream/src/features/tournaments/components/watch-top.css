@@ -1,0 +1,47 @@
+.tn-room-top {
+  display: flex;
+  min-height: 40px;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding-top: calc(40px - var(--room-target));
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+/* How many games it is gives way to a long round: it wraps under the one line that is seen. */
+.tn-room-top > p {
+  display: flex;
+  min-width: 0;
+  height: var(--room-target);
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  overflow: hidden;
+  margin: 0;
+}
+.tn-room-top > p > span {
+  line-height: var(--room-target);
+}
+.tn-room-top > p > a {
+  display: inline-flex;
+  max-width: 100%;
+  height: var(--room-target);
+  align-items: center;
+  gap: 8px;
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}
+.tn-room-top > p > a:is(:hover, :focus-visible) {
+  color: var(--hub-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.tn-room-top > p > a:focus-visible {
+  outline-offset: -2px;
+}
+.tn-room-top > p > a > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

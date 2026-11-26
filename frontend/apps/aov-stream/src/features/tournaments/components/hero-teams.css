@@ -1,0 +1,219 @@
+/* Two lists of teams side by side, their lines of one height: who plays the hero, and who bans it. */
+.tn-hh-sides {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 40px 56px;
+}
+/* A list that is alone takes the width of both, its teams two on a line. */
+.tn-hh-sides[data-alone] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.tn-hh-sides[data-alone] .tn-hh-bans,
+.tn-hh-sides[data-alone] .tn-hh-ban-heads {
+  max-width: 640px;
+}
+.tn-hh-plays,
+.tn-hh-bans {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-hh-plays {
+  container: tn-hh-plays / inline-size;
+}
+.tn-hh-team {
+  --stream-image-size: 30px;
+  --stream-image-radius: var(--aov-radius-control);
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 46px;
+  grid-template-columns: 30px minmax(0, 1fr) var(--cells) 56px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-hh-team-who {
+  min-width: 0;
+  padding-block: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-hh-team-who > span {
+  white-space: nowrap;
+}
+.tn-hh-team-who > a {
+  margin-right: 4px;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+/* The whole line opens the games of the team; the players keep their own links above it. */
+.tn-hh-team-who > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.tn-hh-team:hover > .tn-hh-team-who > a {
+  color: var(--hub-accent-strong);
+}
+.tn-hh-team-who > span > a {
+  position: relative;
+  z-index: 1;
+  padding-block: 6px;
+}
+.tn-hh-team-who > span > a:is(:hover, :focus-visible) {
+  color: var(--hub-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-hh-team-cells {
+  display: grid;
+  min-width: 0;
+}
+.tn-hh-team > b {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 22px;
+  text-align: right;
+}
+/* The heads stand in the air over the first line, so the lines of the two lists stay level. */
+.tn-hh-ban-heads {
+  display: flex;
+  justify-content: space-between;
+  margin: -14px 0 -4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-hh-ban {
+  display: grid;
+  min-height: 46px;
+  grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+  align-items: stretch;
+}
+.tn-hh-ban > [data-half] {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-hh-ban > span[data-half] {
+  color: var(--hub-muted);
+}
+.tn-hh-ban > [data-half="against"] {
+  grid-template-columns: minmax(0, 1fr) 34px;
+}
+.tn-hh-ban > [data-half="against"] > span {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: right;
+}
+.tn-hh-ban i {
+  width: calc(var(--share) * 100%);
+  min-width: 2px;
+  height: 10px;
+  border-radius: 3px;
+}
+/* A ban is hollow, as in the bar of the head; what others ban against the team is their doing, not the team's. */
+.tn-hh-ban > [data-half="own"] > i {
+  border: 1.5px solid color-mix(in srgb, var(--hub-muted) 78%, var(--hub-bg));
+  justify-self: end;
+}
+.tn-hh-ban > [data-half="against"] > i {
+  background: color-mix(in srgb, var(--hub-muted) 78%, var(--hub-bg));
+  grid-column: 1;
+  grid-row: 1;
+}
+.tn-hh-ban > span[data-half] > i {
+  visibility: hidden;
+}
+.tn-hh-ban > a[data-half]:is(:hover, :focus-visible) > span {
+  font-weight: 700;
+}
+.tn-hh-ban > a[data-half]:is(:hover, :focus-visible) > i {
+  filter: brightness(1.25);
+}
+.tn-hh-ban > [data-team] {
+  display: grid;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  place-items: center;
+}
+.tn-hh-ban > [data-team]:is(:hover, :focus-visible) {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (min-width: 1100px) {
+  .tn-hh-sides[data-alone] .tn-hh-plays {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 56px;
+  }
+}
+@media (max-width: 1099.98px) {
+  .tn-hh-sides {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-hh-sides {
+    gap: 32px;
+  }
+  .tn-hh-ban {
+    min-height: 40px;
+    grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+  }
+  .tn-hh-ban-heads {
+    margin-block: -4px -2px;
+  }
+}
+/* Where the cells leave too little room for both, the players stand under the name of their team. */
+@container tn-hh-plays (min-width: 480px) and (max-width: 559.98px) {
+  .tn-hh-team-who {
+    padding-block: 3px;
+  }
+  .tn-hh-team-who > a {
+    display: block;
+  }
+}
+/* Two lines a team: its name and players, then the cells and the record under them. */
+@container tn-hh-plays (max-width: 479.98px) {
+  .tn-hh-team {
+    --stream-image-size: 36px;
+    min-height: 62px;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-content: center;
+    gap: 2px 12px;
+  }
+  .tn-hh-team > :first-child {
+    grid-row: 1 / 3;
+  }
+  .tn-hh-team-who {
+    grid-column: 2 / 4;
+    padding-block: 6px 0;
+  }
+  .tn-hh-team-cells {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .tn-hh-team > b {
+    grid-column: 3;
+    grid-row: 2;
+  }
+}
+@media (forced-colors: active) {
+  .tn-hh-ban i {
+    forced-color-adjust: none;
+  }
+}

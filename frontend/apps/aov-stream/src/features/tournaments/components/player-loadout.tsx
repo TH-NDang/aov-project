@@ -1,132 +1,70 @@
-import type { Participant, PublishedGame } from "@aov/community-contracts"
+import type { Catalog, Participant } from "@aov/community-contracts"
 import { useStreamLocale } from "../../../components/stream-locale"
-import {
-  clock,
-  hasLoadout,
-  OBSERVATION_NAMES,
-  referenceName,
-  snapshotAt,
-  UNKNOWN_REFERENCE,
-  type LoadoutKind,
-} from "../../../lib/tournament-model"
+import { mainEnchantment, type BuildView, type BuiltItem } from "../../../lib/build-view"
+import { present } from "../../../lib/tournament-model"
+import { BuildItem } from "./build-item"
 import { ReferenceArt } from "./reference-art"
 import "./player-loadout.css"
 
-/** Each kind of loadout in Vietnamese and in English. */
-export const KIND_NAMES: Record<LoadoutKind, readonly [string, string]> = {
-  equipment: ["Trang bị", "Equipment"],
-  arcana: ["Bảng ngọc", "Arcana"],
-  enchantments: ["Phù hiệu", "Enchantments"],
-}
-
-const TIERS = ["", "I", "II", "III"]
-
-/** The six slots of a player at a moment; the time it was seen and its note open on hover. */
-function Inventory({ participant, game, time }: { participant: Participant; game: PublishedGame; time: number }) {
+/** The spell of a player and the main enchantment; an empty place stands for the one nobody saw. */
+export function LoadoutKit({ catalog, seat }: { catalog: Catalog; seat: Participant }) {
   const { text } = useStreamLocale()
-  const snapshot = snapshotAt(participant.equipmentSnapshots, time)
-  const seen = snapshot && text(`Ghi nhận lúc ${clock(snapshot.atSeconds)}`, `Recorded at ${clock(snapshot.atSeconds)}`)
+  const main = mainEnchantment(seat)
   return (
-    <span className="tn-slots" title={[seen, snapshot?.note].filter(Boolean).join(". ") || undefined}>
-      {Array.from({ length: 6 }, (_, slot) => {
-        const value = snapshot?.slots.find((item) => item.slot === slot + 1)
-        const known = value?.known === true
-        const place = text(`Ô ${slot + 1}`, `Slot ${slot + 1}`)
-        const what = !known
-          ? text("chưa quan sát", "not observed")
-          : value.item
-            ? referenceName(game.catalog, "items", value.item, text(...UNKNOWN_REFERENCE))
-            : text("trống", "empty")
-        return (
-          <span key={slot} className="tn-slot" data-unknown={!known || undefined} title={`${place}: ${what}`}>
-            {known && value.item ? (
-              <ReferenceArt catalog={game.catalog} kind="items" selection={value.item} />
-            ) : (
-              <span aria-hidden="true">{known ? "" : "?"}</span>
-            )}
-            <span className="sr-only">
-              {place}: {what}
-            </span>
-          </span>
-        )
-      })}
+    <span className="tn-loadout-kit">
+      {present(seat.spell) ? (
+        <ReferenceArt catalog={catalog} kind="spells" selection={seat.spell} />
+      ) : (
+        <span className="tn-loadout-none" title={text("Chưa rõ phụ trợ", "Spell not known")} />
+      )}
+      {main ? (
+        <ReferenceArt className="tn-loadout-emblem" catalog={catalog} kind="enchantments" selection={main.selection} />
+      ) : (
+        <span className="tn-loadout-none" title={text("Chưa rõ phù hiệu", "Enchantment not known")} />
+      )}
     </span>
   )
 }
 
-function Arcana({ participant, game }: { participant: Participant; game: PublishedGame }) {
-  const { text } = useStreamLocale()
+/** Items that are no part of what a player held to the end, behind the word for what became of them. */
+function Aside({ catalog, label, items, gone }: { catalog: Catalog; label: string; items: BuiltItem[]; gone?: true }) {
+  if (!items.length) return null
   return (
-    <span className="tn-runes">
-      {participant.arcana.entries.map((entry, index) => (
-        <span key={index} title={referenceName(game.catalog, "arcana", entry.selection, text(...UNKNOWN_REFERENCE))}>
-          <ReferenceArt catalog={game.catalog} kind="arcana" selection={entry.selection} />×{entry.count}
-        </span>
+    <span>
+      <small>{label}</small>
+      {items.map((built, index) => (
+        <BuildItem key={index} catalog={catalog} built={built} gone={gone} />
       ))}
     </span>
   )
 }
 
-/** Enchantments by branch, the primary one first. */
-function Enchantments({ participant, game }: { participant: Participant; game: PublishedGame }) {
+/**
+ * The items of a player: those held to the end, with a faint place for each slot nobody could read, then the ones given
+ * up and the ones bought for a moment. A few words stand for items nobody recorded.
+ */
+export function LoadoutItems({ catalog, build }: { catalog: Catalog; build: BuildView | null }) {
   const { text } = useStreamLocale()
-  const branches = [true, false].map((primary) => ({
-    primary,
-    entries: participant.enchantments.entries.filter((entry) => entry.primary === primary),
-  }))
+  const { kept = [], replaced = [], situational = [], unread = 0 } = build ?? {}
+  const aside = replaced.length + situational.length > 0
   return (
-    <span className="tn-runes">
-      {branches.flatMap(({ primary, entries }) =>
-        entries.map((entry, index) => {
-          const branch = primary ? text("Nhánh chính", "Primary branch") : text("Nhánh phụ", "Secondary branch")
-          const name = referenceName(game.catalog, "enchantments", entry.selection, text(...UNKNOWN_REFERENCE))
-          return (
-            <span key={`${String(primary)}:${index}`} data-branch={primary || undefined} title={`${name} (${branch})`}>
-              <span className="sr-only">{branch}: </span>
-              <ReferenceArt catalog={game.catalog} kind="enchantments" selection={entry.selection} />
-              {TIERS[entry.tier] ?? entry.tier}
-            </span>
-          )
-        }),
+    <>
+      <span className="tn-build" data-blank={!(kept.length || unread || aside) || undefined}>
+        {kept.map((built, index) => (
+          <BuildItem key={index} catalog={catalog} built={built} />
+        ))}
+        {Array.from({ length: unread }, (_, index) => (
+          <span key={`unread-${index}`} className="tn-build-place" title={text("Chưa rõ", "Not known")} />
+        ))}
+        {!(kept.length || unread || aside) &&
+          (build ? text("Không có trang bị", "No items") : text("Chưa rõ trang bị", "Items not known"))}
+      </span>
+      {aside && (
+        <span className="tn-build-more">
+          <Aside catalog={catalog} label={text("Đã đổi", "Given up")} items={replaced} gone />
+          <Aside catalog={catalog} label={text("Tình huống", "Situational")} items={situational} />
+        </span>
       )}
-    </span>
-  )
-}
-
-/** What one player built, of the kind chosen. A player nothing is recorded for shows a dash. */
-export function PlayerLoadout({
-  game,
-  participant,
-  kind,
-  time,
-}: {
-  game: PublishedGame
-  participant: Participant
-  kind: LoadoutKind
-  time: number
-}) {
-  const { text } = useStreamLocale()
-  if (!hasLoadout(participant, kind))
-    return (
-      <div className="tn-build" data-empty="">
-        <span title={text("Chưa ghi nhận", "Not recorded")}>–</span>
-      </div>
-    )
-  // A partial observation still shows what the source showed, and says that it is partial.
-  const loadout = kind === "equipment" ? null : participant[kind]
-  const caveat = [loadout?.status === "PARTIAL" && text(...OBSERVATION_NAMES.PARTIAL), loadout?.note]
-    .filter(Boolean)
-    .join(". ")
-  return (
-    <div className="tn-build">
-      {kind === "equipment" ? (
-        <Inventory participant={participant} game={game} time={time} />
-      ) : kind === "arcana" ? (
-        <Arcana participant={participant} game={game} />
-      ) : (
-        <Enchantments participant={participant} game={game} />
-      )}
-      {caveat && <small>{caveat}</small>}
-    </div>
+    </>
   )
 }

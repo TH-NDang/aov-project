@@ -1,4 +1,13 @@
-import { createContext, useContext, useState, type ComponentProps } from "react"
+import {
+  createContext,
+  startTransition,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react"
 import { Slot } from "radix-ui"
 import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "@aov/ui/lib/utils"
@@ -16,12 +25,34 @@ const DrawerDepth = createContext(false)
 const OverlayContext = createContext({ mobile: false, close: () => {} })
 
 /**
+ * Closes what is open when the reader goes back or forward, since the page under it is then another one. It asks once
+ * the page stands for the new address: the router draws that in a transition, and this one is drawn with it. An overlay
+ * the address opens has closed by itself then, and closing it again would take the reader one more step back.
+ */
+function useClosedByHistory(open: boolean, close: () => void) {
+  const [steps, setSteps] = useState(0)
+  const handled = useRef(0)
+  useEffect(() => {
+    if (!open) return
+    const step = () => startTransition(() => setSteps((count) => count + 1))
+    window.addEventListener("popstate", step)
+    return () => window.removeEventListener("popstate", step)
+  }, [open])
+  useLayoutEffect(() => {
+    if (steps === handled.current) return
+    handled.current = steps
+    if (open) close()
+  })
+}
+
+/**
  * The phone's bottom sheet. It closes by a tap on the dimmed page above it, by Escape, or by dragging it down from
- * anywhere once its content is scrolled to the top. Nested choices stay in the current drawer's focus and dismissal
- * stack.
+ * anywhere once its content is scrolled to the top, and when the reader goes back. Nested choices stay in the current
+ * drawer's focus and dismissal stack.
  */
 export function PublicDrawer(props: ComponentProps<typeof DrawerPrimitive.Root>) {
   const nested = useContext(DrawerDepth)
+  useClosedByHistory(props.open === true, () => props.onOpenChange?.(false))
   const Root = nested ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
   return (
     <DrawerDepth.Provider value={true}>
@@ -77,6 +108,8 @@ function OverlayRoot({
     setLocalOpen(next)
     onOpenChange?.(next)
   }
+  // On a phone the drawer below closes itself.
+  useClosedByHistory(open && !mobile, () => change(false))
   const Root = mobile
     ? PublicDrawer
     : kind === "dialog"

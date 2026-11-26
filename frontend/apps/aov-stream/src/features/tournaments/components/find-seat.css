@@ -1,0 +1,64 @@
+/* A seat of the board: filled, the next to fill, or one nobody asked about yet, which is an i and no button. */
+.tn-find-seat {
+  --portrait: 100%;
+  --portrait-radius: calc(var(--seat-radius, 10px) - 1px);
+  position: relative;
+  display: grid;
+  width: var(--seat, 46px);
+  height: var(--seat, 46px);
+  flex: none;
+  padding: 0;
+  border: 1.5px dashed rgb(255 255 255 / 20%);
+  border-radius: var(--seat-radius, 10px);
+  background: none;
+  color: var(--hub-text);
+  place-items: center;
+}
+.tn-find-seat[data-add] {
+  border: 1.5px solid rgb(255 255 255 / 50%);
+  transition:
+    border-color 120ms,
+    background-color 120ms;
+}
+.tn-find-seat[data-add]:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  border-color: var(--hub-accent);
+  background: color-mix(in srgb, var(--hub-accent) 18%, transparent);
+}
+.tn-find-seat[data-filled] {
+  border: 0;
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+  animation: tn-find-placed calc(160ms * var(--entrance, 1)) ease-out;
+}
+.tn-find-seat[data-banned] {
+  outline-color: rgb(255 255 255 / 70%);
+}
+.tn-find-seat[data-filled]:is(:hover, [aria-expanded="true"]) {
+  outline-color: var(--hub-accent-strong);
+  outline-width: 3px;
+}
+.tn-find-seat[data-filled]:focus-visible {
+  outline: 3px solid var(--hub-text);
+  outline-offset: 2px;
+}
+/* A ban one side is asked to have made points to that side. */
+.tn-find-seat[data-by]::before {
+  content: "";
+  position: absolute;
+  top: calc(50% - 5px);
+  border-block: 5px solid transparent;
+}
+.tn-find-seat[data-by="a"]::before {
+  left: -11px;
+  border-right: 6px solid rgb(255 255 255 / 90%);
+}
+.tn-find-seat[data-by="b"]::before {
+  right: -11px;
+  border-left: 6px solid rgb(255 255 255 / 90%);
+}
+@keyframes tn-find-placed {
+  from {
+    opacity: 0.4;
+    transform: scale(0.82);
+  }
+}

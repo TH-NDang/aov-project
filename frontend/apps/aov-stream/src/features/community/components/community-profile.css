@@ -212,7 +212,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
 }
-.pf-intro > .pf-intro-more {
+.pf-intro > button {
   margin-top: 4px;
 }
 /* What a page does not record, said once. */

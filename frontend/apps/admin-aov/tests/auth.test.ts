@@ -172,6 +172,51 @@ test("401 ends the session without replaying a write; 403 preserves the session"
   }
 })
 
+const clientOf = (fetcher: typeof fetch) =>
+  createAuthenticatedClient(
+    async () => "token",
+    () => {},
+    fetcher,
+  )
+
+test("a request the service does not answer in time is told in Vietnamese", async (context) => {
+  context.mock.method(AbortSignal, "timeout", () =>
+    AbortSignal.abort(new DOMException("signal timed out", "TimeoutError")),
+  )
+  const request = clientOf(async (_url, init) => {
+    throw init!.signal!.reason
+  })
+  await assert.rejects(request("/admin/catalog"), { message: "Máy chủ chưa trả lời sau 15 giây. Hãy thử lại." })
+})
+
+test("an answer that breaks off when its time is over is told the same way", async (context) => {
+  const timer = new AbortController()
+  context.mock.method(AbortSignal, "timeout", () => timer.signal)
+  const request = clientOf(async () => {
+    timer.abort(new DOMException("signal timed out", "TimeoutError"))
+    return { ok: true, status: 200, text: () => Promise.reject(timer.signal.reason) } as Response
+  })
+  await assert.rejects(request("/admin/catalog"), /^Error: Máy chủ chưa trả lời/)
+})
+
+test("a service nobody reaches is told in Vietnamese", async () => {
+  const request = clientOf(async () => {
+    throw new TypeError("Failed to fetch")
+  })
+  await assert.rejects(request("/admin/me"), {
+    message: "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.",
+  })
+})
+
+test("a request its caller gave up keeps the caller's reason", async () => {
+  const caller = new AbortController()
+  const request = clientOf(async (_url, init) => {
+    caller.abort()
+    throw init!.signal!.reason
+  })
+  await assert.rejects(request("/admin/me", { signal: caller.signal }), { name: "AbortError" })
+})
+
 test("refresh failure prevents the request", async () => {
   const request = createAuthenticatedClient(
     async () => {

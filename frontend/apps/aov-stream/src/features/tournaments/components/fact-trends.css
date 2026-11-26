@@ -1,0 +1,103 @@
+/* A column for every part of the competition, standing on the hairline of its line. */
+.tn-fact-trends {
+  width: 100%;
+  border-spacing: 0;
+  table-layout: fixed;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}
+.tn-fact-trends thead td {
+  width: 38%;
+}
+.tn-fact-trends thead th {
+  padding: 0 6px 6px;
+  font-weight: 600;
+  text-align: center;
+  vertical-align: bottom;
+}
+.tn-fact-trends thead a {
+  display: grid;
+  min-height: 40px;
+  align-content: end;
+  color: var(--hub-text-soft);
+}
+.tn-fact-trends thead a:hover {
+  color: var(--hub-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-fact-trends thead a > span {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.tn-fact-trends tbody > tr > * {
+  height: 52px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--hub-border);
+  text-align: center;
+  vertical-align: bottom;
+}
+.tn-fact-trends tbody th {
+  padding: 0;
+  font-weight: 400;
+  text-align: left;
+}
+.tn-fact-trends tbody > .tn-fact-trends-way > th {
+  height: 32px;
+  padding-bottom: 6px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.tn-fact-trends tbody + tbody > .tn-fact-trends-way > th {
+  height: 44px;
+}
+.tn-fact-trends tbody th > a {
+  --portrait: 36px;
+  --portrait-radius: 8px;
+  display: flex;
+  min-width: 0;
+  min-height: 51px;
+  align-items: center;
+  gap: 12px;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-fact-trends tbody th > a:hover > span:last-child {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-fact-trends td > span {
+  display: block;
+}
+.tn-fact-trends td > i {
+  display: block;
+  width: min(100%, 44px);
+  height: max(2px, var(--share) * 26px);
+  margin-inline: auto;
+  border-radius: 2px 2px 0 0;
+  background: var(--hub-accent);
+}
+@media (forced-colors: active) {
+  .tn-fact-trends td > i {
+    forced-color-adjust: none;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-fact-trends thead td {
+    width: 34%;
+  }
+  .tn-fact-trends thead th,
+  .tn-fact-trends tbody > tr > td {
+    padding-inline: 3px;
+  }
+  .tn-fact-trends tbody th > a {
+    --portrait: 32px;
+    gap: 8px;
+  }
+}

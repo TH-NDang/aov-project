@@ -1,16 +1,16 @@
 import { useState } from "react"
 import { Link, Navigate, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import type { Lane, RosterMembershipContent } from "@aov/community-contracts"
+import type { RosterMembershipContent } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { regionName } from "../../../components/community-ui"
+import { FoldButton } from "../../../components/fold-button"
 import { MatchCard } from "../../../components/match-card"
 import { useSections } from "../../../components/place-trail"
 import { PageHead, type HeadFigure } from "../../../components/page-head"
 import { PlayerMark } from "../../../components/player-mark"
 import { EntityPageLink } from "../../../components/go-link"
 import { RegionMark } from "../../../components/region-mark"
-import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { StreamShell } from "../../../components/stream-shell"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -22,17 +22,17 @@ import { matchStrip } from "../../../lib/competition-model"
 import { competitionLineup } from "../../../lib/lineup-model"
 import { isTitleSeason, teamProfile, type TeamProfile } from "../../../lib/participant-model"
 import { competitionQuery, teamCompetitionsQuery } from "../../../lib/tournament-api"
-import { LANE_NAMES } from "../../../lib/tournament-model"
+import { LANE_NAMES, LANES } from "../../../lib/tournament-model"
 import { useNow } from "../../../lib/use-now"
 import { TeamStaff } from "../components/competition-people"
 import { FormMarks } from "../components/form-marks"
 import { ParticipantMissing, Part, SeasonLine, ShelfPart } from "../components/participant-parts"
+import { StreamHead } from "../../../components/stream-head"
 import "../../../components/participant-list.css"
 import { teamForm } from "../../../lib/standings-model"
 
 /** Seasons shown before the rest unfold. */
 const SEASONS = 12
-const LANES: Lane[] = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"]
 
 /**
  * A team as the published competitions show it: its squad, its matches and what it has won. A team with a published
@@ -52,11 +52,22 @@ export function TeamPage() {
   const profile = competitions.data ? teamProfile(competitions.data, id) : null
   return (
     <StreamShell>
-      <title>
-        {profile
-          ? text(`${profile.team.name} — Đội tuyển · AOV Stream`, `${profile.team.name} — Team · AOV Stream`)
-          : text("Đội tuyển — AOV Stream", "Team — AOV Stream")}
-      </title>
+      <StreamHead
+        title={
+          profile
+            ? text(`${profile.team.name} — Đội tuyển · AOV Stream`, `${profile.team.name} — Team · AOV Stream`)
+            : text("Đội tuyển — AOV Stream", "Team — AOV Stream")
+        }
+        description={
+          profile
+            ? text(
+                `${profile.team.name}, đội tuyển Liên Quân Mobile: đội hình, lịch thi đấu và kết quả các giải.`,
+                `${profile.team.name}, Arena of Valor team: roster, schedule and tournament results.`,
+              )
+            : undefined
+        }
+        noindex={!profile && competitions.isSuccess && !page.isPending}
+      />
       <div className="cp-container pt-page">
         {competitions.isPending || page.isPending ? (
           <div
@@ -172,14 +183,10 @@ function TeamContent({ id, profile }: { id: string; profile: TeamProfile }) {
             </SeasonLine>
           ))}
         </ul>
-        {seasons.length > SEASONS && (
-          <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {open
-              ? text("Thu gọn", "Show less")
-              : text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
-            <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
-          </button>
-        )}
+        <FoldButton
+          fold={{ folds: seasons.length > SEASONS, open, toggle: () => setOpen(!open) }}
+          more={text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
+        />
       </Part>
     </>
   )

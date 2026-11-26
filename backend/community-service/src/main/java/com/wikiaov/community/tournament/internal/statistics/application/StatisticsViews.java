@@ -12,13 +12,15 @@ public final class StatisticsViews {
 
     /**
      * What the published games of a competition add up to. {@code decided} are the games with a winner, of which the
-     * blue side won {@code blueWins}. The lengths are left out while no game has one.
+     * blue side won {@code blueWins}. {@code withBans} are the games that show who was banned: a hero's bans are out of
+     * these, not out of all games. The lengths are left out while no game has one.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record GameStatistics(
             int games,
             int decided,
             int blueWins,
+            int withBans,
             @Nullable Integer averageSeconds,
             @Nullable GameLength longest,
             @Nullable GameLength shortest,

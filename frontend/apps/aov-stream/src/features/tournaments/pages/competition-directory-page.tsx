@@ -22,6 +22,7 @@ import { ScoreRibbon } from "../components/score-ribbon"
 import { SeasonMap } from "../components/season-map"
 import { YearPills } from "../components/year-pills"
 import { ScheduleEmpty, ScheduleList, ScheduleNote } from "../components/schedule-list"
+import { StreamHead } from "../../../components/stream-head"
 import "./competition-directory-page.css"
 
 /** Circuits listed before the reader scrolls for more, once a search leaves lists of seasons. */
@@ -49,11 +50,24 @@ export function CompetitionDirectory() {
           : text("Tìm giải đấu, hệ thống giải…", "Search tournaments, circuits…"),
       }}
     >
-      <title>
-        {whole
-          ? text("Lịch thi đấu — AOV Stream", "Schedule — AOV Stream")
-          : text("Giải đấu — AOV Stream", "Tournaments — AOV Stream")}
-      </title>
+      <StreamHead
+        title={
+          whole
+            ? text("Lịch thi đấu — AOV Stream", "Schedule — AOV Stream")
+            : text("Giải đấu — AOV Stream", "Tournaments — AOV Stream")
+        }
+        description={
+          whole
+            ? text(
+                "Lịch thi đấu và kết quả các trận Liên Quân Mobile sắp diễn ra và vừa kết thúc.",
+                "Schedule and results of upcoming and recent Arena of Valor matches.",
+              )
+            : text(
+                "Các giải đấu Liên Quân Mobile: lịch thi đấu, kết quả, bảng xếp hạng và đội tuyển.",
+                "Arena of Valor tournaments: schedule, results, standings and teams.",
+              )
+        }
+      />
       <div className="tn-directory cp-container">
         <h1 className="sr-only">{whole ? text("Lịch thi đấu", "Schedule") : text("Giải đấu", "Tournaments")}</h1>
         {whole && <PlaceTrail places={[tournaments]} current={text("Lịch & kết quả", "Schedule & results")} />}

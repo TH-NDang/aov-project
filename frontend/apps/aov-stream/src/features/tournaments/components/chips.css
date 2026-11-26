@@ -1,0 +1,78 @@
+/* What a list can be narrowed by: a title over the chips of its choices. */
+.tn-chips {
+  display: grid;
+  gap: 8px;
+}
+.tn-chips > h3 {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.tn-chips > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tn-chips > p {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-chip {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color 120ms,
+    background-color 120ms;
+}
+/* A filter in use, and the words that let go of all of them. */
+.tn-chip[data-token] {
+  border-color: var(--hub-accent-border);
+  background: var(--hub-accent-soft);
+  color: var(--hub-text);
+}
+.tn-chip[data-clear] {
+  border-color: transparent;
+  background: none;
+  color: var(--hub-accent-strong);
+}
+.tn-chip:hover {
+  border-color: var(--hub-accent-border);
+  background: var(--hub-hover);
+}
+.tn-chip[aria-pressed="true"] {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+.tn-chip[data-token] > svg {
+  color: var(--hub-muted);
+}
+.tn-chip > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tn-chip[aria-pressed="true"] > small {
+  color: inherit;
+}
+@media (max-width: 899.98px) {
+  .tn-chip {
+    min-height: 40px;
+    padding: 0 14px;
+  }
+}
