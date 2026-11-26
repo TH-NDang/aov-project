@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  * first page of a news list, never every post. {@code MANUAL} holds links an editor adds by hand.
  */
 public enum PatchNoteSource {
-    /** lienquan.garena.vn, WordPress feed of the "Cập nhật" category. */
+    /** lienquan.garena.vn, WordPress feed of the update category (cap-nhat). */
     LIENQUAN_VN(PatchNoteRegion.VN, Format.RSS, "https://lienquan.garena.vn/category/cap-nhat/feed/",
             "https://lienquan.garena.vn/category/cap-nhat/", Set.of(PatchNoteChannel.OFFICIAL)),
     /** rov.in.th: its sitemap lists every patch note with a date, live and test server alike. */

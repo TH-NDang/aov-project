@@ -68,7 +68,7 @@ export function scheduleChoice(source: Pick<PatchNoteSource, "mode" | "paused">)
   return source.paused ? "PAUSED" : source.mode
 }
 
-/** How often the source is read, as a short line: "08:00 mỗi ngày", "Mỗi 6 giờ", "Tạm dừng". */
+/** How often the source is read, as one short line: a daily time, every few hours, or paused. */
 export function scheduleText(source: Pick<PatchNoteSource, "mode" | "paused" | "dailyAt" | "everyHours">) {
   if (source.paused) return "Tạm dừng"
   return source.mode === "DAILY" ? `${timeOfDay(source.dailyAt)} mỗi ngày` : `Mỗi ${source.everyHours} giờ`

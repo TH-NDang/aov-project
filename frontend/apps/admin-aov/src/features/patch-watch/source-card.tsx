@@ -15,7 +15,7 @@ export function SourceCard({
   onEdit,
 }: {
   source: PatchNoteSource
-  /** The zone of the daily time, such as "giờ Việt Nam". */
+  /** The zone of the daily time, as the card names it. */
   zoneLabel: string
   canWrite: boolean
   onEdit: () => void
