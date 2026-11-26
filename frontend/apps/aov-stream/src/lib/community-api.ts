@@ -10,6 +10,8 @@ import type {
   PageSlice,
   PageViewer,
   TeamAffiliation,
+  YouTubeChannel,
+  YouTubeVideoPage,
 } from "@aov/community-contracts"
 import { communityGetAll, communityRequest } from "./stream-api"
 import type { Query } from "./community-keys"
@@ -48,6 +50,14 @@ export const communityApi = {
       list(`/posts/${postId}/comments`, { page: String(page), size: "30" }),
     ),
   competitions: (query: Query) => communityRequest<PageSlice<CompetitionView>>(list("/competitions", query)),
+  /** The YouTube channel behind one of the page's links, given exactly as the page lists it. */
+  youtubeChannel: (pageId: string, url: string) =>
+    communityRequest<YouTubeChannel>(list(`/pages/${id(pageId)}/youtube-channel`, { url })),
+  /** Older uploads of that channel, from its newest upload when no token is given. */
+  youtubeVideos: (pageId: string, url: string, pageToken: string | null) =>
+    communityRequest<YouTubeVideoPage>(
+      list(`/pages/${id(pageId)}/youtube-channel/videos`, pageToken ? { url, pageToken } : { url }),
+    ),
 
   managedPages: () => communityRequest<CommunityProfile[]>("/me/pages"),
   claims: () => communityRequest<PageClaim[]>("/me/claims"),

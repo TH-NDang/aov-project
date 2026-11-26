@@ -344,7 +344,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           )
         }
         figures={figures}
-        channels={content.links.length > 0 && <ProfileSocials links={content.links} />}
+        channels={content.links.length > 0 && <ProfileSocials pageId={profile.id} links={content.links} />}
         tabs={!compact && tabRow}
         actions={
           <>
