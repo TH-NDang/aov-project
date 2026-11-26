@@ -31,6 +31,17 @@ public record MediaAssetReference(
         return state == MediaAssetState.ACTIVE && currentVersion != null;
     }
 
+    /** The same asset without its credits, for a list that draws it where another picture carries the credit. */
+    public MediaAssetReference withoutSources() {
+        if (currentVersion == null || currentVersion.sources().isEmpty()) {
+            return this;
+        }
+        var v = currentVersion;
+        return new MediaAssetReference(assetId, semanticType, state,
+                new CurrentVersion(v.versionId(), v.mimeType(), v.width(), v.height(), v.url(), List.of(),
+                        v.focalPoint()));
+    }
+
     /**
      * @param versionId version id
      * @param mimeType  verified MIME type, e.g. {@code image/webp}

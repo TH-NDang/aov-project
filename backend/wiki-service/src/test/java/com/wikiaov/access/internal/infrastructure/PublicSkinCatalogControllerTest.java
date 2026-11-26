@@ -1,5 +1,6 @@
 package com.wikiaov.access.internal.infrastructure;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,10 +9,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
+import com.wikiaov.hero.internal.catalog.application.PublicCatalogCache;
 import com.wikiaov.hero.internal.skins.application.PublicSkinCatalog;
 import com.wikiaov.hero.internal.web.PublicSkinCatalogController;
 import com.wikiaov.platform.PageSlice;
 import java.util.List;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -33,6 +37,15 @@ class PublicSkinCatalogControllerTest {
     PublicSkinCatalog catalog;
 
     @MockitoBean
+    PublicCatalogCache catalogs;
+
+    @BeforeEach
+    void readCatalogsThrough() {
+        when(catalogs.current(any(), any(), any(), any(), any()))
+                .thenAnswer(call -> call.<Supplier<?>>getArgument(4).get());
+    }
+
+    @MockitoBean
     JwtDecoder jwtDecoder;
 
     @Test
@@ -41,7 +54,7 @@ class PublicSkinCatalogControllerTest {
                 .thenReturn(new PublicSkinCatalogView(new PageSlice<>(List.of(), 0, 24, 0), List.of(), List.of()));
 
         mvc.perform(get("/api/wiki/v1/skins")).andExpect(status().isOk())
-                .andExpect(header().string("Cache-Control", "no-cache, public"))
+                .andExpect(header().string("Cache-Control", "max-age=60, must-revalidate, public"))
                 .andExpect(jsonPath("$.page.items").isEmpty())
                 .andExpect(jsonPath("$.page.size").value(24))
                 .andExpect(jsonPath("$.heroes").isEmpty());

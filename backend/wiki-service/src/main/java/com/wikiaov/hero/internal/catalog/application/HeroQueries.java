@@ -20,6 +20,7 @@ import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.ratings.persistence.HeroRatingSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
+import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
@@ -477,6 +478,12 @@ public class HeroQueries {
                 if (asset != null && asset.usable()) {
                     entry.item().put(role.name().toLowerCase(Locale.ROOT), asset);
                 }
+            }
+            // A listed hero is drawn by its portrait, which carries the credit; the head is only its small mark, so
+            // its credits stay on the hero's own page and the list stays small (spec 03, section 4).
+            if (entry.item().get("portrait") != null
+                    && entry.item().get("head") instanceof MediaAssetReference head) {
+                entry.item().put("head", head.withoutSources());
             }
         }
         return entries.stream().map(ListEntry::item).toList();
