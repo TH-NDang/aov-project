@@ -13,7 +13,12 @@ Docker, PostgreSQL và Keycloak của dự án cần đang chạy. Trong thư m�
 
 Lần đầu, script chỉ tạo database/user riêng nếu chưa có; không xóa dữ liệu Wiki.
 Có thể tự thiết lập database rồi dùng `-SkipDatabaseSetup`.
-Biến môi trường được mô tả trong `.env.example`; ứng dụng đọc biến đã export, không tự thực thi nội dung file môi trường.
+
+Biến môi trường của service này nằm trong file riêng `backend/community-service/.env` (Git bỏ qua), mẫu ở `.env.example`;
+không đặt chúng vào `.env` hay `.env.r2` của wiki-service. Script đọc file đó nếu có (chọn file khác bằng
+`-EnvironmentFile <path>`), biến đã export trong shell được ưu tiên, nội dung file chỉ là dữ liệu và không được thực thi.
+Thiếu file thì dùng giá trị mặc định local của `application.yml`. `-DryRun` in lệnh và **tên** biến, không in giá trị.
+`YOUTUBE_API_KEY` là khóa YouTube Data API v3 chỉ dùng phía máy chủ; để trống thì phần xem kênh YouTube chỉ đọc feed công khai.
 Profile `prod` bỏ mọi giá trị mặc định local, thiếu biến thì không khởi động; chạy bằng Docker xem [`infra/README.md`](../../infra/README.md).
 Để quản trị, chạy script đồng bộ quyền và đăng nhập lại admin để nhận audience `community-service` cùng các quyền:
 

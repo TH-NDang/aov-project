@@ -402,6 +402,8 @@ services:
       WIKI_BASE_URL: http://wiki-service:8080
       COMMUNITY_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?set in .env}
       COMMUNITY_EXCHANGE_RATES_ENABLED: ${COMMUNITY_EXCHANGE_RATES_ENABLED:-true}
+      # YouTube Data API key of the channel viewer; empty reads the channels' public feeds only.
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
     mem_limit: ${COMMUNITY_MEM_LIMIT:-768m}
     stop_grace_period: 40s
     depends_on:

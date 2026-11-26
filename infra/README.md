@@ -155,6 +155,7 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `REDIS_PASSWORD` | Mật khẩu cache |
 | `REQUIRE_STAFF_OTP`, `VERIFY_EMAIL` | Chỉ cho `keycloak-harden`, mặc định `false`; xem [Bảo mật realm](#bảo-mật-realm) |
 | `COMMUNITY_EXCHANGE_RATES_ENABLED` | Lấy tỷ giá hằng ngày từ `api.frankfurter.dev`; đặt `false` nếu không muốn gọi ra ngoài |
+| `YOUTUBE_API_KEY` | Khóa YouTube Data API v3 của `community-service`, cho phần xem kênh YouTube trong web. Tạo riêng cho máy chủ trên Google Cloud, chỉ cho phép YouTube Data API v3 và địa chỉ IP của máy chủ. Để trống thì chỉ đọc feed công khai của kênh |
 | `IMAGE_TAG`, `WIKI_MEM_LIMIT`, `COMMUNITY_MEM_LIMIT`, `KEYCLOAK_MEM_LIMIT` | Tùy chọn: nhãn image, giới hạn RAM |
 
 Hai điều dễ nhầm khi đổi `.env` sau lần chạy đầu:
