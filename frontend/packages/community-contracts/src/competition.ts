@@ -1,4 +1,12 @@
-import type { PlayerContent, TeamContent, TournamentContent, SeriesContent, RosterMembershipContent } from "./index"
+import type {
+  Lane,
+  PlayerContent,
+  RosterMembershipContent,
+  SeriesContent,
+  Side,
+  TeamContent,
+  TournamentContent,
+} from "./index"
 import type { PersonRole } from "./pages"
 import { matchName, type MatchTitle, type TitleText } from "./match-titles.ts"
 
@@ -178,17 +186,54 @@ export type HeroCount = {
   bans: number
   bluePicks: number
 }
-/** What the published games of a competition add up to; the lengths are absent while no game has one. */
+/**
+ * What the published games of a competition add up to; the lengths are absent while no game has one. `withBans` are the
+ * games that show who was banned, which the bans of a hero are out of.
+ */
 export type CompetitionStatistics = {
   games: number
   decided: number
   blueWins: number
+  withBans: number
   averageSeconds?: number | null
   longest?: { id: string; seconds: number } | null
   shortest?: { id: string; seconds: number } | null
   heroes: HeroCount[]
   mvps: { playerId: string; games: number }[]
 }
+/** A hero the games of a competition name; one without an id was recorded by its name only. */
+export type LineupHero = { id?: string | null; code?: string | null; name: string; iconUrl?: string | null }
+/** A player the games of a competition name; `name` is the nickname in the newest of them that knew one. */
+export type LineupPlayer = { id: string; name?: string | null }
+/** `hero` and `player` are places in the lists of the answer; `turn` counts all turns of a draft whose order is known. */
+export type LineupPick = { hero: number; lane?: Lane | null; player?: number | null; turn?: number | null }
+export type LineupBan = { hero: number; turn?: number | null }
+/** A game whose two sides list no ban is one whose bans nobody wrote down. */
+export type LineupTeam = { teamId?: string | null; picks: LineupPick[]; bans: LineupBan[] }
+export type LineupGame = {
+  id: string
+  seriesId: string
+  number?: number | null
+  winner?: Side | null
+  seconds?: number | null
+  mvp?: number | null
+  blue?: LineupTeam | null
+  red?: LineupTeam | null
+}
+/** Every published game of a competition in short: who picked and banned what, and how it ended. */
+export type CompetitionLineups = { heroes: LineupHero[]; players: LineupPlayer[]; games: LineupGame[] }
+export type BuildPart = { id?: string | null; name: string; iconUrl?: string | null; tier?: number | null }
+/** Parts are places in the lists of the answer. `items` were held to the end; the other two lists may be absent. */
+export type HeroBuild = {
+  gameId: string
+  spell?: number | null
+  enchantment?: number | null
+  items: number[]
+  replaced?: number[]
+  situational?: number[]
+}
+/** What a hero was played with in the published games of a competition. */
+export type HeroBuilds = { spells: BuildPart[]; enchantments: BuildPart[]; items: BuildPart[]; builds: HeroBuild[] }
 /** One entry of a plan's history, without the plan itself. */
 export type CompetitionRevision = {
   id: string
