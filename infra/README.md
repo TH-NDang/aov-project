@@ -324,7 +324,9 @@ bash infra/scripts/deploy.sh --refresh
 
 - Không tham số: commit mới nhất của `main`, chỉ khi mọi check của commit đó trên GitHub đã xong và đạt, và commit đó nối tiếp
   commit đang chạy. Timer chỉ đi tới: `main` bị viết lại lịch sử hoặc lùi về thì nó không làm gì.
-- `<commit>`: đúng commit đó, kể cả khi check chưa đạt; dùng để quay lui về commit trước.
+- `<commit>`: đúng commit đó, kể cả khi check chưa đạt; dùng để quay lui về commit trước. Chỉ khi chưa ván đấu nào có `build`
+  (trang bị đã lên) mới quay lui được về bản chưa biết trường này, vì bản đó từ chối trường lạ và trả 500 cho ván có `build`; đã
+  có thì sửa bằng một commit mới.
 - `--refresh`: chạy lại các bước không gián đoạn trên commit đang chạy, dùng sau khi đổi `.env` cho backend. Đổi giá trị của
   Keycloak, PostgreSQL hay Caddy trong `.env` thì vẫn dùng `docker compose up -d --wait`.
 
@@ -547,4 +549,6 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
 - **Tính năng chỉ có ở Vite dev**: JSON storage của Admin cần dev server, nên bản build trả 404 cho nó.
 - **Content-Security-Policy** chưa đặt, nên hiện không có gì chặn R2. Khi bật phải liệt kê nguồn thật: ít nhất `img-src` có
   tên miền ảnh và endpoint R2 (ảnh đối chứng qua URL ký sẵn), `connect-src` có endpoint R2 (upload, manifest tệp nguồn), cùng
-  các nguồn khác như YouTube.
+  các nguồn khác. Trình phát YouTube của Stream và Admin cần `script-src https://www.youtube.com` và
+  `frame-src https://www.youtube-nocookie.com`; `Referrer-Policy: strict-origin-when-cross-origin` trong `proxy/Caddyfile` phải
+  giữ, nếu không YouTube trả lỗi 153.

@@ -143,11 +143,6 @@ export function initialDraft(profile: UserProfile, browser: BrowserPreferences):
   return draft
 }
 
-/** Keeps a value the server already stores selectable even when it is not in the suggested list. */
-export function withCurrent(options: readonly string[], current: string) {
-  return current && !options.includes(current) ? [current, ...options] : [...options]
-}
-
 export function initials(name: string) {
   return (
     name

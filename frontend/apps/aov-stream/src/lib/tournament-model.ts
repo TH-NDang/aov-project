@@ -2,14 +2,13 @@ import type {
   Catalog,
   EquipmentSnapshot,
   GameSide,
+  Lane,
   Participant,
   PublishedGame,
   Selection,
   SeriesContent,
 } from "@aov/community-contracts"
-import { matchTitleText } from "@aov/community-contracts/match-titles"
-import { localeText } from "@aov/ui/lib/locale-text"
-import { roundPart } from "./match-labels.ts"
+import { matchRound } from "./match-labels.ts"
 
 export type CatalogKind = "heroes" | "items" | "arcana" | "enchantments" | "spells"
 
@@ -21,6 +20,8 @@ export const LANE_NAMES = {
   DRAGON: ["Đường Rồng", "Abyssal Dragon lane"],
   SUPPORT: ["Hỗ trợ", "Support"],
 } as const
+/** The lanes in that order. */
+export const LANES = Object.keys(LANE_NAMES) as Lane[]
 /** How much of a loadout the source showed, in Vietnamese and in English. */
 export const OBSERVATION_NAMES = {
   UNKNOWN: ["Chưa thu thập", "Not collected"],
@@ -30,6 +31,9 @@ export const OBSERVATION_NAMES = {
 } as const
 /** The name used when a pick is not linked to the wiki and carries no name of its own. */
 export const UNKNOWN_REFERENCE = ["Chưa xác định", "Unknown"] as const
+/** Whether a selection names anything; a record may hold an empty one for what nobody saw. */
+export const present = (selection?: Selection | null): selection is Selection =>
+  !!selection && (!!selection.id || !!selection.name?.trim())
 export function findReference(catalog: Catalog, kind: CatalogKind, selection?: Selection | null) {
   return selection?.id ? catalog[kind].find((item) => item.id === selection.id) : undefined
 }
@@ -41,6 +45,10 @@ export function referenceName(
 ) {
   return findReference(catalog, kind, selection)?.name || selection?.name || unknown
 }
+
+/** What an address of the statistics calls a hero: its code, or its id or name while the wiki does not know it. */
+export const heroKey = (catalog: Catalog, hero?: Selection | null) =>
+  findReference(catalog, "heroes", hero)?.code || hero?.id || hero?.name?.trim() || null
 
 /** Two letters standing in for a missing picture: the first letters of two words, or the start of a single one. */
 export function nameInitials(name: string) {
@@ -85,8 +93,7 @@ export function observationTimes(sides: GameSide[]) {
   ].sort((a, b) => a - b)
 }
 export function orderedParticipants(participants: Participant[]) {
-  const order = Object.keys(LANE_NAMES)
-  return [...participants].sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane))
+  return [...participants].sort((a, b) => LANES.indexOf(a.lane) - LANES.indexOf(b.lane))
 }
 
 /**
@@ -113,16 +120,8 @@ export function plainNote(note: string) {
  * A series name without the pairing ("Round 18 · FPL vs SGP" reads "Round 18"): the teams stand beside it. A series
  * without a name reads its title in `locale`.
  */
-export function seriesRound(series?: Pick<SeriesContent, "name" | "title"> | null, locale = "vi-VN") {
-  const name = series?.name?.trim()
-  if (!name) return matchTitleText(series?.title, localeText(locale))
-  const parts = name
-    .split("·")
-    .map((part) => part.trim())
-    .filter((part) => part && !/\bvs\.?\b/i.test(part))
-    .flatMap((part) => roundPart(part, locale) ?? [])
-  return parts.join(" · ") || null
-}
+export const seriesRound = (series?: Pick<SeriesContent, "name" | "title"> | null, locale = "vi-VN") =>
+  matchRound(series?.name, series?.title, locale)
 
 /** The sides of a game in the order of its series, so a team keeps its place from one game to the next. */
 export function seriesSides(game: Pick<PublishedGame, "content" | "series">) {
@@ -169,22 +168,8 @@ export function seriesTeams(game: Pick<PublishedGame, "series" | "teams">, local
   }) as [SeriesTeam, SeriesTeam]
 }
 
-export type LoadoutKind = "equipment" | "arcana" | "enchantments"
-const LOADOUT_KINDS: LoadoutKind[] = ["equipment", "arcana", "enchantments"]
-
 /** Whether a source showed anything of this kind for a player. A status alone, without entries, is not a record. */
-export function hasLoadout(participant: Participant, kind: LoadoutKind) {
-  if (kind === "equipment") return participant.equipmentSnapshots.length > 0
+export function hasLoadout(participant: Participant, kind: "arcana" | "enchantments") {
   const loadout = participant[kind]
   return (loadout.status === "KNOWN" || loadout.status === "PARTIAL") && loadout.entries.length > 0
-}
-
-/** The kinds of loadout recorded for at least one player of a game, in the order they are shown. */
-export function recordedLoadouts(sides: GameSide[]) {
-  const players = sides.flatMap((side) => side.participants)
-  return LOADOUT_KINDS.filter(
-    (kind) =>
-      players.some((participant) => hasLoadout(participant, kind)) ||
-      (kind === "equipment" && players.some((participant) => participant.equipmentEvents.length > 0)),
-  )
 }

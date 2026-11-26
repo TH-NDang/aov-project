@@ -3,6 +3,7 @@ import { after, test } from "node:test"
 import { act, useState, type ReactNode } from "react"
 import { MemoryRouter, useLocation } from "react-router"
 import type { DocumentView, GameContent, SeriesContent } from "@aov/community-contracts"
+import type { RecordedChange } from "../src/features/esports/model/desk"
 import type { RosterOption } from "../src/features/esports/model/line-up"
 import {
   answerConfirm,
@@ -25,9 +26,9 @@ withDom({
 
 const { tournamentApi } = await import("../src/features/tournaments/api/tournament-api")
 const { competitionApi } = await import("../src/features/competition/competition-api")
-const { buildGameView } = await import("../src/features/esports/model/game-view")
 const { CarryOverBar } = await import("../src/features/esports/components/game/carry-over-bar")
-const { AddGameButton } = await import("../src/features/esports/components/series/game-chips")
+const { NextStep } = await import("../src/features/esports/components/series/next-step")
+const { createPlayhead } = await import("../src/features/esports/model/playhead")
 const { EditMatchButton } = await import("../src/features/esports/pages/edit-match-button")
 const { MatchPublishPanel } = await import("../src/features/esports/pages/match-publish-panel")
 const { MatchSwitcher } = await import("../src/features/esports/components/series/match-switcher")
@@ -138,7 +139,7 @@ const publishPanel = (games: DocumentView<GameContent>[], opened: string[] = [])
       team={team}
       canPublish
       beforePublish={async () => {}}
-      onOpenStep={(gameId, target) => opened.push(`${gameId}:${target}`)}
+      onOpenStep={(gameId, step) => opened.push(`${gameId}:${step.id}`)}
     />,
   )
 
@@ -180,7 +181,7 @@ test("a missing part opens its panel in the game it belongs to", async () => {
   await publishPanel([game(1, "a"), game(2)], opened)
   const line = [...document.querySelectorAll("li[data-publish]")][1]!
   await click(button("Phụ trợ", line))
-  assert.deepEqual(opened, ["g2:loadout"])
+  assert.deepEqual(opened, ["g2:spells"])
 })
 
 const starters: Record<string, RosterOption[]> = {
@@ -188,18 +189,25 @@ const starters: Record<string, RosterOption[]> = {
   b: [{ id: "crimson-mid", name: "Mid B", lane: "MID", status: "ACTIVE" }],
 }
 
-/** The bar over one game that keeps what it changes. */
+/** The bar over one game that keeps what it records. */
 function Carry({ start, previous }: { start: GameContent; previous: GameContent | null }) {
   const [content, setContent] = useState(start)
+  const [done, setDone] = useState<RecordedChange | null>(null)
   return (
     <>
       <CarryOverBar
         content={content}
         previous={previous}
-        view={buildGameView(view("g2", content), [], [])}
         roster={(teamId) => starters[teamId] ?? []}
-        onChange={(change) => setContent(change)}
+        onRecord={(change) => {
+          setContent(change.apply)
+          setDone(change)
+        }}
       />
+      <p role="status">{done?.text}</p>
+      <button type="button" onClick={() => setContent(done!.revert!)}>
+        Hoàn tác
+      </button>
       <output>
         {content.sides.map((side) => side.participants.map((entry) => entry.playerId ?? "-").join(",")).join(" | ")}
       </output>
@@ -210,7 +218,7 @@ const seats = () => document.querySelector("output")!.textContent
 
 test("both line-ups are filled from the roster in one click and the fill can be undone", async () => {
   await render(<Carry start={game(2).content} previous={null} />)
-  await click(button("Điền tuyển thủ theo đội hình"))
+  await click(button("Điền theo đội hình đăng ký"))
   assert.equal(seats(), "-,-,azure-mid,-,- | -,-,crimson-mid,-,-")
   await click(button("Hoàn tác"))
   assert.equal(seats(), "-,-,-,-,- | -,-,-,-,-")
@@ -226,30 +234,42 @@ test("filling from the previous game keeps a seat already recorded", async () =>
   assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /1 chỗ khác giữ nguyên/)
 })
 
-test("a recorded seat is replaced from the previous game only after a question naming both players", async () => {
+test("the bar is gone while nothing is left to fill, also where the game before differs", async () => {
   const previous = seat(game(1), "BLUE", "MID", { playerId: "azure-mid" })
-  const start = seat(game(2), "BLUE", "MID", { playerId: "sub" })
-  await render(<Carry start={start.content} previous={previous.content} />)
-  await click(button("Đội hình như ván 1"))
-  assert.match(confirmDialog()?.textContent ?? "", /→ Mid A/)
-  assert.equal(seats(), "-,-,sub,-,- | -,-,-,-,-")
-  await answerConfirm("Thay bằng ván trước")
-  assert.equal(seats(), "-,-,azure-mid,-,- | -,-,-,-,-")
+  const start = seat(game(2), "BLUE", "MID", { playerId: "azure-mid" })
+  const other = seat(start, "RED", "MID", { playerId: "crimson-mid" })
+  const differs = seat(previous, "RED", "MID", { playerId: "crimson-sub" })
+  await render(<Carry start={other.content} previous={differs.content} />)
+  assert.equal(document.querySelector('[aria-label="Điền nhanh hai đội"]'), null)
 })
 
-const addGame = (props: Partial<Parameters<typeof AddGameButton>[0]>, onAdd = () => {}) =>
-  render(<AddGameButton number={1} first pending={false} insideGame={null} videoAt={null} onAdd={onAdd} {...props} />)
+test("the next step names the second it would write, and where it is refused says why instead of writing", async () => {
+  const playhead = createPlayhead(599)
+  const run: unknown[] = []
+  const refused: string[] = []
+  await render(
+    <NextStep
+      playhead={playhead}
+      read={() => {
+        const second = Math.floor(playhead.get())
+        const refusal = second < 600 ? "Đang trong ván 1." : null
+        const action = { kind: "create" as const, number: 2, second }
+        return { outlined: false, lead: 0, buttons: [{ label: "Cấm chọn ván 2", second, refusal, action }] }
+      }}
+      pending={false}
+      keycap
+      onRun={(action) => run.push(action)}
+      onRefuse={(why) => refused.push(why)}
+    />,
+  )
+  assert.equal(button("Cấm chọn ván 2")!.getAttribute("aria-disabled"), "true")
+  await click(button("Cấm chọn ván 2"))
+  assert.deepEqual([run, refused], [[], ["Đang trong ván 1."]])
 
-test("the first game of a match without a video can be added", async () => {
-  let added = 0
-  await addGame({}, () => added++)
-  await click(button("Thêm ván 1"))
-  assert.equal(added, 1)
-})
-
-test("a game recorded from the video cannot start inside another game", async () => {
-  await addGame({ number: 2, videoAt: 600, insideGame: 1 })
-  assert.equal(button("Cấm chọn ván 2")!.disabled, true)
+  await act(async () => playhead.set(605))
+  assert.match(button("Cấm chọn ván 2")!.textContent ?? "", /▸10:05/)
+  await click(button("Cấm chọn ván 2"))
+  assert.deepEqual(run, [{ kind: "create", number: 2, second: 605 }])
 })
 
 const schedule = ["early", "middle", "late"].map((id, index) =>

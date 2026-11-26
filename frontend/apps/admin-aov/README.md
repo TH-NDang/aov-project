@@ -750,7 +750,7 @@ không suy quyền giải đấu từ quyền biên tập Wiki. Ba quyền là `
 `tournament:publish`; sau khi thêm quyền cần làm mới phiên đăng nhập.
 
 Tạo hồ sơ đội/tuyển thủ, tạo giải rồi tạo trận BO. Mỗi ván có hai đội, bốn ô cấm mỗi đội và năm vị trí
-Caesar, Rừng, Giữa, Rồng, Hỗ trợ; mỗi tuyển thủ có đúng một tướng và một phụ trợ. Có thể lưu nháp khi
+Caesar, Rừng, Giữa, Rồng, Hỗ trợ; mỗi vị trí có đúng một tướng và tối đa một phụ trợ. Có thể lưu nháp khi
 chưa đủ, danh sách phần thiếu được hiển thị trước khi xuất bản. Mùa/patch được chọn riêng trên từng
 ván, không gán một patch cố định cho cả giải. Đổi phạm vi giữ các lựa chọn đang có; backend kiểm tra
 lại tham chiếu khi xuất bản. Tham chiếu chưa có trong Wiki được ghi bằng tên thủ công và đánh dấu
@@ -810,53 +810,118 @@ không xóa mục ngoài file và không tạo ván đấu từ tỷ số tổng
 
 Ngọc/phù hiệu phân biệt “Chưa thu thập”, “Nguồn không hiển thị”, “Đã quan sát rõ”. Hai trạng thái đầu
 không phải cấu hình trống. Khi biết đầy đủ, nhập số viên từng loại ngọc và nhánh/cấp của phù hiệu.
-Trang bị được ghi thành các mốc thời gian `phút:giây`, mỗi mốc có sáu ô từ 1 đến 6. Mỗi ô phân biệt
-không rõ, đã xác nhận trống và có trang bị. Các sự kiện mua, bán, ghép hoặc đổi ô được ghi riêng khi
-nguồn xác nhận; chương trình không tự suy ra giao dịch từ khác biệt giữa hai ảnh.
+Trang bị của một tuyển thủ là danh sách các món đã lên (`build`, chỉ cấp 2 và 3), ghi ở phần Trang bị của
+tuyển thủ đó trong Đội hình của màn ghi trận, ở ba chỗ: Giữ đến cuối ván (sáu ô), Đã đổi, Tình huống. Mỗi món
+ghi một lần, nhiều nhất 24 món. Bấm một món để chuyển chỗ, đổi thứ tự, bỏ, nâng lên món khác, ghi các món đã
+ghép thành nó (nhiều nhất ba) và thời điểm có món; "Nâng lên" và "Lên từ" gợi ý theo công thức của Wiki. Chưa
+ai ghi thì danh sách đọc từ mốc cuối; lần sửa đầu tiên ghi thành danh sách riêng, "Đọc lại từ mốc" bỏ danh
+sách đó sau khi xác nhận. Mọi thay đổi hoàn tác được ở chân khung ghi. Các mốc sáu ô theo `phút:giây` và giao
+dịch mua bán nằm trong phần gập "Mốc trang bị theo thời gian" bên dưới: mỗi ô phân biệt không rõ, đã xác nhận
+trống và có trang bị; mua, bán, ghép hoặc đổi ô chỉ ghi khi nguồn xác nhận, chương trình không tự suy ra giao
+dịch từ khác biệt giữa hai ảnh. Sáu ô trong Đội hình theo điều nguồn cho thấy tại lúc đang xem; đã có danh
+sách riêng mà nguồn không cho thấy gì, hoặc ván đã hết, thì là các món giữ đến cuối ván.
 
-Nút Lưu nháp ghi lên máy chủ; đổi trang hoặc đóng trình duyệt khi chưa lưu có cảnh báo. Xuất bản
-chốt nội dung, tên/ảnh tham chiếu và mốc gameplay để người xem Stream không bị thay đổi theo các
-lần chỉnh Wiki sau đó. Sửa nháp không tác động bản công khai; nút Gỡ công khai giữ bản nháp và lịch sử
-để sửa rồi xuất bản lại. Kiểm tra luồng này bằng `pnpm --filter @aov/admin-aov test` trong thư mục `frontend`.
+Màn ghi trận lưu từng thay đổi vào bản nháp của ván ngay khi ghi. Xuất bản chốt nội dung, tên/ảnh tham chiếu
+và mốc gameplay để người xem Stream không bị thay đổi theo các lần chỉnh Wiki sau đó. Sửa nháp không tác động
+bản công khai; "Ngừng xuất bản" giữ bản nháp và lịch sử để sửa rồi xuất bản lại. Kiểm tra luồng này bằng
+`pnpm --filter @aov/admin-aov test` trong thư mục `frontend`.
+
+Ván thiếu tuyển thủ, phụ trợ, lượt cấm hoặc thời lượng vẫn xuất bản được; trang công khai ghi phần đó là chưa
+rõ. Bước Công bố của giải và bảng Xuất bản của màn ghi trận chia các ván chờ xuất bản thành hai nhóm, mỗi nhóm
+một nút: đủ dữ liệu, và xuất bản được, còn thiếu; hộp xác nhận của nhóm sau nêu phần sẽ hiện là chưa rõ.
+Ván chưa xuất bản được khi chưa đủ mười tướng, chưa ghi đội thắng, hoặc máy chủ còn báo mục thiếu hay sai;
+bước Công bố kê các lý do, bảng Xuất bản mở đúng chỗ ghi từng mục. Phần "Ván n, từng mục" gập dưới bảng đó gắn
+nhãn "bắt buộc" cho mục còn chặn, "nên có" cho mục để trống thì hiện là chưa rõ, "tùy nguồn" cho phần còn lại.
+Sau khi xuất bản, trận vẫn nêu mục còn thiếu để bổ sung rồi xuất bản lại.
 
 ## Giải đấu và dòng thời gian ván
 
 - `/tournaments`: danh sách giải (lọc trạng thái/hạng, tìm kiếm). `/tournaments/:id`: không gian làm việc sáu bước của
-  giải (Tổng quan, Đội & đội hình, Thể thức, Lịch & kết quả, Chung cuộc, Công bố). Bước Chung cuộc điền thứ hạng theo
-  nhánh đấu, kèm đối thủ và tỷ số trận cuối của từng đội. `/tournaments/trash`: thùng rác để khôi phục bản ghi đã xóa.
+  giải (Tổng quan, Đội & đội hình, Thể thức, Lịch & kết quả, Chung cuộc, Công bố). `/tournaments/trash`: thùng rác để
+  khôi phục bản ghi đã xóa.
   Hồ sơ cộng đồng của đội và tuyển thủ nằm ở `/teams` và `/players`; đường dẫn `/tournaments/registry` cũ chuyển về đó.
   Bản ghi thi đấu của một đội và các tuyển thủ trong đội hình của giải được sửa từ biểu tượng bút ở dòng đội trong bước
   Đội & đội hình: bảng mở ra hiển thị logo, ảnh và thông tin chỉ đọc, mỗi mục có bút riêng mở form với Lưu/Hủy, rời form
   còn thay đổi thì hỏi trước khi bỏ.
-- `/tournaments/:id/matches/:seriesId`: trình xem cả trận trên **một video YouTube chính thức** (IFrame API, không sao
-  chép video). Mỗi ván là một chương trên trục thời gian video, đặt theo `sourceUrl` + `sourceTimestampSeconds` của
-  ván; ván chưa căn video được xếp nối tiếp (viền đứt). Bảng điểm, diễn biến và bộ ghi luôn theo ván mà video đang phát.
-  Link cũ `/games/:gameId` chuyển về trang trận với `?game=`. `?edit=1` (cần `tournament:write`) mở chế độ ghi.
-- Thanh thời gian gồm bản đồ thu nhỏ toàn video (chương V1, V2…, khung đang phóng) và làn chi tiết phóng 1–32×:
-  hàng Xanh/Đỏ cho hạ gục và trang bị cấp 3, hàng giữa cho mục tiêu lớn, cờ "Bắt đầu trận"/"Bắt đầu ván N".
-- Tướng cấm hiện ở đầu bảng điểm của đội cấm. Tướng, trang bị, phụ trợ, phù hiệu có thẻ tham chiếu khi hover (bấm để
-  ghim). Icon vị trí dùng lại glyph đơn sắc của Wiki nên đổi màu theo đội.
+- Bước Chung cuộc đặt kết quả và thứ hạng đã ghi cạnh điều các trận cho biết (`src/features/competition/workspace/`,
+  `final-state.ts` và `placements.ts`). Nhãn của bước, cũng là mục "Thứ hạng chung cuộc" ở bước Công bố: "Đã đủ n đội",
+  "n gợi ý chưa điền", "Kết quả chưa khớp", "x/y đội có hạng", "Có kết quả, chưa có thứ hạng", "Có giải thưởng, chưa có
+  thứ hạng", "Giao hữu, không xếp hạng", "Chờ giải kết thúc" hoặc "Chưa có".
+- Thứ hạng gợi ý đọc từ giai đoạn cuối mà mỗi đội đã đá. Ở nhánh đấu là vòng của trận thua cuối, kèm đối thủ và tỷ số
+  trận cuối; chỗ kế hoạch không nối trận thì xếp trận theo giờ đấu và theo vòng, hai cách cho hạng khác nhau thì để
+  trống. Ở vòng tròn là hạng trong bảng xếp hạng. Kết quả chưa nói rõ (bảng của giải chưa xong, nhiều bảng mà không có
+  trận quyết định, trận hòa làm đổi thứ tự…) thì nêu lý do, không đoán.
+- Có hai cách điền. "Điền n thứ hạng" thêm ngay các đội chưa có trong bảng, không sửa dòng đã ghi và không thêm tiền
+  thưởng. "Thay n hạng lệch" hỏi trước, nêu hạng cũ → mới; tiền thưởng đi theo đội. Khi các trận cho thấy đội vô địch
+  hoặc á quân khác với kết quả đã ghi thì cả hai nút ẩn đi, bước nhắc kiểm tra các trận cuối trong lịch trước.
+
+### Màn xem và ghi trận
+
+- `/tournaments/:id/matches/:seriesId` xem và ghi cả trận trên **một video YouTube chính thức** (IFrame API, không sao
+  chép video). "Xem | Ghi" ở đầu màn đổi `?edit=1` (cần `tournament:write`). Link cũ `/games/:gameId` chuyển về trang
+  trận với `?game=`. `?t=giây` mở video ở giây đó, trên khung là ván chứa giây đó hoặc ván ngay trước nó; `?view=data`
+  mở phần Ván đấu. Ba tham số này đọc một lần rồi rời khỏi địa chỉ.
+- **Bố cục.** Bên trái là hình, hàng điều khiển, thanh toàn video và đường thời gian; bên phải là khung ghi: các ván, bốn
+  phần Cấm chọn, Đội hình, Diễn biến, Ván đấu, nội dung của phần đang mở và chân khung. Từ 900px cả màn vừa một cửa sổ,
+  chỉ nội dung khung ghi cuộn; hẹp hơn thì một cột (`frontend/docs/RESPONSIVE.md`). Không gì nổi đè lên hình.
+- **Điều khiển video** chỉ có ở hàng dưới hình: mốc trước, −10, phát, +10, mốc sau, vị trí (bấm để gõ giây cần tới), âm
+  lượng, tốc độ, "Hàng nút của YouTube", mở trên YouTube, toàn màn hình. Hàng hẹp thì các nút cuối vào menu `⋯` của chính
+  hàng. Vị trí kéo ở thanh toàn video (đi xa) hoặc đường thời gian (đi gần). Vị trí nhớ theo trình duyệt cho từng trận,
+  âm lượng nhớ theo trình duyệt, tốc độ nhớ tới khi đóng tab.
+- **Trình phát** (`components/game/match-video.ts`): cả trận dùng một trình phát, không tự phát. Chọn ván cùng video chỉ
+  tua; ván có video khác thì nạp vào chính trình phát đó, nên khung video không bị tạo lại. Yêu cầu tua lúc đang tải được
+  giữ tới khi trình phát sẵn sàng. Video chưa phát lần nào chỉ được yêu cầu phát, từ giây trình phát được tạo, hoặc nạp
+  lại ở giây khác; cần đứng hình thì chạy không tiếng tới khung hình đầu rồi dừng. Lý do: dừng trước khung hình đầu để
+  lại khung đen, còn tua trước đó thì khung đen trong 6 trên 37 lần đo ngày 25/11/2026 (Edge chạy không cửa sổ). Sau 6
+  giây chưa có khung hình nào và chưa tải được gì thì trình phát được tạo lại, vì không lệnh nào gỡ được khung đã đứng;
+  vẫn không được thì ảnh bìa của YouTube trở lại, bấm phát là thử lại.
+- **Giây của trình phát.** Trước khung hình đầu trình phát báo 0, số đó bị bỏ qua. Sau khi tua, mười lần đọc đầu (khoảng
+  2,5 giây) còn báo chỗ cũ cũng bị bỏ qua, để ván trên khung không bị kéo theo. Đang chờ dữ liệu vẫn tính là đang phát.
+  Video đã ghi xong dừng trước khi hết 1 giây, vì YouTube che hình khi video hết.
+- **Chữ của YouTube trên hình.** "Hàng nút của YouTube" (chất lượng hình, phụ đề) cần trình phát mới, đứng đúng giây và
+  giữ phát hoặc dừng. Tên video, "More videos" và logo YouTube phủ lên hình khi bắt đầu phát, khi tua lúc đang phát và khi
+  con trỏ đi qua hình; chúng ẩn sau khi video chạy 4 đến 6 giây, dừng sớm hơn thì ở lại. Cần đọc mép dưới của hình thì để
+  video chạy thêm vài giây rồi dừng; tua khi đang dừng không gọi chúng lại.
+- **Ván trên video.** Ván có chỗ trên trục khi trỏ tới video đang mở và đã ghi giây vào trận hoặc giây bắt đầu cấm chọn;
+  ván chưa có mốc mang dấu máy ảnh gạch và không được tự xếp chỗ. Video vào ván nào thì ván đó lên khung, giữa hai ván thì
+  ván trước ở lại, đang mở biểu mẫu hoặc bảng thì giữ nguyên. Diễn biến lưu theo đồng hồ ván và quy đổi sang giây video,
+  gồm phần mở đầu và các đoạn tạm dừng.
+- **Thanh toàn video** vẽ mọi ván (cấm chọn gạch chéo), mốc của hai đội và khoảng đang xem. Video từ 4 giờ 30 phút trở lên
+  chứa cả ngày đấu được cắt theo trận; nút "Trận này" đổi sang "Cả video". Nút khoảng ("14 phút") đổi giữa giai đoạn của
+  ván và cả video, − và + đổi từng nấc.
+- **Đường thời gian** có làn của đội bên xanh và bên đỏ của ván đang chọn, trục giữa mang bốn mốc của ván (bắt đầu cấm
+  chọn, chốt đội hình, vào trận, kết thúc) và các đoạn tạm dừng. Mốc trên làn là mục tiêu, hạ gục, trang bị cấp 3 và lượt
+  cấm chọn, xếp nhiều hàng khi chật. Bấm để tua, bấm đúp vào làn để ghi cho đội đó, kéo mốc để đổi giây (video chạy theo,
+  Esc trả lại), Ctrl và lăn chuột để phóng. Khoảng xem tự theo giai đoạn của ván cho tới khi người ghi phóng tay.
+- **Khung ghi** mở phần hợp với điều video đang chiếu (cấm chọn, chờ vào trận, đang đấu) cho tới khi người ghi chọn một
+  phần; chấm vàng là phần còn thiếu. Dấu trên số ván: tam giác là đã sửa sau khi xuất bản hoặc mốc chồng ván khác, máy ảnh
+  gạch là chưa đặt mốc, vòng là đang ghi, chấm đặc là đủ dữ liệu chờ xuất bản. `+N` là ván tỷ số nói có mà chưa ghi.
+  - Cấm chọn: bàn cấm chọn và ô chọn tướng luôn mở, chỉ có tướng được phép; Enter lấy tướng đầu tiên, giây của lượt là
+    giây lúc gõ phím đầu. Ván có mười tướng mà chưa có thứ tự lượt thì các lượt gom trong trình duyệt
+    (`esports:pending-turns:<gameId>`) và lưu một lần khi đã gọi tên đủ các tướng đã ghi, vì lưu từng lượt sẽ bỏ chúng.
+  - Đội hình: hai đội đối mặt theo đường. Chỗ tên là ô chọn tuyển thủ; bấm ảnh để đổi tướng trong đội; bấm phụ trợ, phù
+    hiệu, ngọc hoặc trang bị mở phần sửa của tuyển thủ đó thay chỗ bảng, dải mười khuôn mặt chuyển sang người khác và giữ
+    nguyên phần. `⋯` của mỗi đội ghi mốc video cho cả đội và chép từ ván trước.
+  - Diễn biến: sáu phím Trụ, Rồng, Tà thần của hai bên ghi ngay ở giây đang xem; "Diễn biến khác" mở biểu mẫu hạ gục, mục
+    tiêu, trang bị, khoảnh khắc. Danh sách chạy theo video; bấm một dòng để tới, dời 1 giây, sửa, xóa, chép liên kết. Trang
+    bị cấp 1–2 nằm sau "Lọc".
+  - Ván đấu: đội thắng, MVP, bốn mốc (lấy giây đang xem hoặc gõ), đồng hồ game, tạm dừng, video của ván hoặc của cả trận,
+    phiên bản game, bản công khai, xóa ván.
+- **Chân khung** nói việc vừa lưu kèm Hoàn tác (tới 20 thay đổi của ván, Ctrl Z), lý do một việc chưa làm được, và đúng một
+  bước tiếp theo theo điều đã ghi và vị trí video (phím G): bắt đầu cấm chọn, chốt đội hình, vào trận, kết thúc kèm đội
+  thắng, bỏ qua giờ nghỉ, phần còn thiếu, xuất bản. Nút ghi giây nào thì nêu giây đó.
+- Ba bảng thay chỗ nội dung khung ghi, đóng bằng Esc: Xuất bản, Ghi nhanh (các ván chỉ biết đội thắng), Trận này (vòng,
+  nguồn, sửa trận, chép liên kết và danh sách phím tắt, mở bằng `?`). Phím tắt tắt được bằng công tắc phím tắt của Admin
+  và không có trên màn hẹp.
 - Mọi thay đổi lưu thẳng qua `PUT /admin/games/{id}` của community-service: hạ gục, mục tiêu, khoảnh khắc và đoạn
-  tạm dừng vào `timeline`; mua/bán trang bị vào `equipmentEvents` của tuyển thủ; link video, giây bắt đầu và thời
-  lượng vào các trường của ván. Các lần lưu được xếp hàng theo phiên bản; xung đột với người sửa khác hiện lỗi kèm
-  nút tải bản mới. Ván đã xuất bản chỉ thay đổi bản nháp cho tới khi xuất bản lại.
-- Thanh tiến trình hiện mốc dạng viên: người hạ ⚔ người bị hạ, tướng › trang bị cấp 3, người kết liễu/phá › mục
-  tiêu lớn (hàng giữa trục). Mốc quá gần nhau gộp thành cụm có số đếm; hover mở thẻ tham chiếu, "Xem chi tiết" mở
-  hộp thoại với link YouTube và link chia sẻ `?t=giây`. Trang bị cấp 1–2 chỉ hiện khi bật trong danh sách diễn biến.
-- Timeline dùng thời gian tuyệt đối và toàn bộ thời lượng do YouTube cung cấp; bấm mốc nào sẽ tua đến đúng giây
-  đó trong video. Diễn biến được quy đổi từ đồng hồ ván, gồm phần mở đầu và các đoạn tạm dừng; dữ liệu ghi sự kiện
-  vẫn dùng thời gian trong ván. Mốc bắt đầu trận lấy từ timestamp trong link trận, hoặc bắt đầu ván 1; các ván
-  cùng video có mốc riêng. Thanh hỗ trợ phóng 1×–32×, cuộn ngang, xem toàn video và quay về vị trí đang xem.
-- Vị trí video đang xem được nhớ theo trình duyệt cho từng ván. Trình phát tải thông tin thời lượng nhưng không
-  tự phát; yêu cầu tua lúc đang tải được giữ đến khi sẵn sàng. Sau khi tua, giá trị cũ YouTube trả về trong
-  khoảng 2,5 giây bị bỏ qua để mốc không nhảy ngược. Đồng hồ riêng trong banner vẫn là thời gian ván.
-- Khi cuộn qua khung video, cùng trình phát thu nhỏ nổi ở góc dưới; có nút quay về video lớn hoặc đóng khung nổi,
-  không tải lại video. Điện thoại (≤ 639px) chia nội dung thành tab, form ghi dạng bottom sheet. Máy tính dùng
-  popup nổi kéo được để không che video.
+  tạm dừng vào `timeline`; trang bị đã lên vào `build`, mua/bán vào `equipmentEvents` của tuyển thủ; link video, giây
+  bắt đầu và thời lượng vào các trường của ván. Các lần lưu được xếp hàng theo phiên bản; xung đột với người sửa khác
+  hiện lỗi kèm nút tải bản mới. Ván đã xuất bản chỉ thay đổi bản nháp cho tới khi xuất bản lại.
 - Icon mục tiêu lớn trong `src/features/esports/assets/objectives` là ảnh thiết kế riêng tạo bằng ChatGPT cho dự án,
   không lấy từ tài nguyên game.
 - Cần chạy community-service bản có trường `timeline`; bản cũ bỏ qua trường lạ và UI sẽ báo cần khởi động lại.
 - Thành phần trong `src/features/esports/components` và `model` không phụ thuộc API/phiên admin để dùng lại cho trang
   công khai; trang chỉ đọc chỉ cần bỏ quyền ghi.
-- Xem nhanh bằng dữ liệu giả lập khi Vite dev đang chạy: `/tests/fixtures/esports.html` (thêm `?view` để xem chế độ chỉ
-  đọc). Kiểm thử: `pnpm --filter @aov/admin-aov test`.
+- Xem nhanh bằng dữ liệu giả lập khi Vite dev đang chạy: `/tests/fixtures/esports.html`, thêm `?view` để xem chế độ chỉ
+  đọc, `?match=` (`new`, `new-unlinked`, `unlinked`, `drafting`, `live`, `imported`, `videos`, `gone`, `score`, `clash`)
+  để xem trận ở trạng thái khác. Kiểm thử: `pnpm --filter @aov/admin-aov test`.

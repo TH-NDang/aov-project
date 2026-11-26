@@ -1,19 +1,25 @@
 import type { DocumentView, GameContent, Loadout, Participant, Selection } from "@aov/community-contracts"
+import { buildOf } from "./build"
 import { DRAFT_ORDER, readDraft } from "./draft"
+import { atVideo } from "./game-times"
 import { readTimeline } from "./timeline-io"
-import { VIDEO_MARK, youtubeVideoId } from "./vod"
+import { youtubeVideoId } from "./vod"
 import { formatClock } from "@/lib/clock"
 
 export type StepStatus = "done" | "partial" | "todo"
-/** Where an admin fixes a step: one of the match page's panels, or the full game data page. */
-export type ProgressTarget = "sync" | "draft" | "loadout" | "composer" | "result" | "data"
+/** What of a game a step is about; it decides the tool that records it. */
+export type ProgressTarget = "sync" | "draft" | "loadout" | "equipment" | "composer" | "result" | "data"
 export type ProgressStep = {
   id: string
   label: string
+  /** What is still missing, where the label names more: a result whose winner is known lacks only its length. */
+  gap?: string
   detail: string
   status: StepStatus
-  /** Required steps must be done before the game can be confirmed (published). */
+  /** Part of a complete record. A game may be published without it unless the step also `blocks`. */
   required: boolean
+  /** The game cannot be published before this is done. */
+  blocks?: boolean
   target: ProgressTarget
 }
 /** `confirmed`: published and unchanged since; `changed`: published, then edited in the draft. */
@@ -23,6 +29,8 @@ export type RecordingProgress = {
   done: number
   total: number
   state: RecordingState
+  /** Nothing keeps the game from being published, also while players, spells or bans nobody saw are missing. */
+  publishable: boolean
   /** Fields the service still reports as missing for publication. */
   missing: string[]
 }
@@ -57,17 +65,33 @@ function loadoutStep(
   return {
     id,
     label,
-    detail: parts.join(" · ") || "Chưa ghi",
+    detail: parts.join(", ") || "Chưa ghi",
     status: missing <= 0 ? "done" : missing < SEATS ? "partial" : "todo",
     required: false,
     target: "loadout",
   }
 }
 
+/** How many players have items: a list somebody wrote, or the inventory they ended the game with. */
+function itemsStep(participants: Participant[], duration: number | null | undefined): ProgressStep {
+  const builds = participants.map((participant) => buildOf(participant, duration))
+  const recorded = builds.filter((build) => build.steps.length).length
+  const read = builds.filter((build) => build.snapshot).length
+  return {
+    id: "items",
+    label: "Trang bị",
+    detail: `${recorded}/${SEATS}${read ? `, ${read} đọc từ mốc` : ""}`,
+    status: status(recorded, SEATS),
+    required: false,
+    target: "equipment",
+  }
+}
+
 /**
- * What has been recorded for one game and what is still missing before it can be confirmed. Bans, picks, players,
- * spells, the result and the service's publication checks are required; the video, ban/pick turns, emblems,
- * arcana and moments are tracked but optional because a broadcast may not show them.
+ * What has been recorded for one game and what is still missing. Bans, picks, players, spells, the result and the
+ * service's publication checks make a complete record, but only the picks, the winner and those checks hold a
+ * publication back: what a broadcast did not show stays unknown. The video, ban/pick turns, emblems, arcana, items and
+ * moments are tracked and optional.
  */
 export function recordingProgress(entry: DocumentView<GameContent>): RecordingProgress {
   const content = entry.content
@@ -89,10 +113,10 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
   const steps: ProgressStep[] = [
     {
       id: "video",
-      label: "Video & vào trận",
+      label: "Video và vào trận",
       detail:
         video && live
-          ? `Vào trận tại ${VIDEO_MARK} ${formatClock(content.sourceTimestampSeconds)}`
+          ? `Vào trận lúc ${atVideo(content.sourceTimestampSeconds!)}`
           : video
             ? "Đã gắn video, chưa đặt mốc vào trận"
             : "Chưa gắn video",
@@ -106,7 +130,7 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
       detail:
         draft.startSecond == null && !turns
           ? "Chưa ghi theo lượt"
-          : `${turns}/${DRAFT_ORDER.length} lượt · ${draft.lockedSecond != null ? `chốt ${VIDEO_MARK} ${formatClock(draft.lockedSecond)}` : "chưa chốt"}`,
+          : `${turns}/${DRAFT_ORDER.length} lượt, ${draft.lockedSecond != null ? `chốt ${atVideo(draft.lockedSecond)}` : "chưa chốt"}`,
       status:
         turns >= DRAFT_ORDER.length && draft.lockedSecond != null
           ? "done"
@@ -130,6 +154,7 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
       detail: `${heroes}/${SEATS}`,
       status: status(heroes, SEATS),
       required: true,
+      blocks: true,
       target: "draft",
     },
     {
@@ -138,22 +163,23 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
       detail: `${players}/${SEATS}`,
       status: status(players, SEATS),
       required: true,
-      target: "draft",
+      target: "loadout",
     },
     {
       id: "spells",
       label: "Phụ trợ",
-      detail: `${spells}/${SEATS}${spellTimes ? ` · ${spellTimes} có mốc` : ""}`,
+      detail: `${spells}/${SEATS}${spellTimes ? `, ${spellTimes} có mốc` : ""}`,
       status: status(spells, SEATS),
       required: true,
       target: "loadout",
     },
     loadoutStep("enchantments", "Phù hiệu", participants, (participant) => participant.enchantments),
     loadoutStep("arcana", "Bảng ngọc", participants, (participant) => participant.arcana),
+    itemsStep(participants, content.durationSeconds),
     {
       id: "moments",
       label: "Diễn biến",
-      detail: events.length ? `${kills} hạ gục · ${objectives} mục tiêu · ${events.length} mốc` : "Chưa ghi mốc nào",
+      detail: events.length ? `${kills} hạ gục, ${objectives} mục tiêu, ${events.length} mốc` : "Chưa ghi mốc nào",
       status: events.length ? "done" : "todo",
       required: false,
       target: "composer",
@@ -161,10 +187,11 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
     {
       id: "result",
       label: "Kết quả",
+      gap: content.winner ? "Thời lượng" : undefined,
       detail: [
-        content.winner ? `Đội ${content.winner === "BLUE" ? "Xanh" : "Đỏ"} thắng` : "Chưa có đội thắng",
-        content.durationSeconds != null ? `⏱ ${formatClock(content.durationSeconds)}` : "chưa có thời lượng",
-      ].join(" · "),
+        content.winner ? `Bên ${content.winner === "BLUE" ? "xanh" : "đỏ"} thắng` : "Chưa có đội thắng",
+        content.durationSeconds != null ? formatClock(content.durationSeconds) : "chưa có thời lượng",
+      ].join(", "),
       status:
         content.winner && content.durationSeconds != null
           ? "done"
@@ -172,6 +199,7 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
             ? "partial"
             : "todo",
       required: true,
+      blocks: !content.winner,
       target: "result",
     },
     {
@@ -182,6 +210,7 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
         : "Máy chủ không báo thiếu",
       status: entry.missingFields.length ? "todo" : "done",
       required: true,
+      blocks: true,
       target: "data",
     },
   ]
@@ -194,6 +223,7 @@ export function recordingProgress(entry: DocumentView<GameContent>): RecordingPr
     steps,
     done,
     total: required.length,
+    publishable: steps.every((step) => !step.blocks || step.status === "done"),
     missing: entry.missingFields,
     state: published != null ? (edited ? "changed" : "confirmed") : done === required.length ? "ready" : "recording",
   }

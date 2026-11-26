@@ -29,7 +29,7 @@ function decidingMatch(view: CompetitionView): CompetitionMatch | null {
   const { nodes, links } = stageBracket(view, last.code)
   if (nodes.length > 1 && !links.length) return null
   if (nodes.some((node) => matchWinner(node.entry) == null)) return null
-  const ends = nodes.filter((node) => node.lane !== "third" && !links.some((link) => link.from === node))
+  const ends = nodes.filter((node) => node.lane !== "place" && !links.some((link) => link.from === node))
   return ends.length === 1 ? ends[0]!.entry : null
 }
 

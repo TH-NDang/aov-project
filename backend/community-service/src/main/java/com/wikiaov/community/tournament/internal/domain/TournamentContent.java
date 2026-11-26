@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -521,6 +522,33 @@ public final class TournamentContent {
     ) {
     }
 
+    /**
+     * What became of an item a player built: still held when the game ended, given up for another, or bought for a
+     * moment of the game, such as a revive, and no part of the build itself.
+     */
+    public enum BuildPlace {
+        KEPT,
+        REPLACED,
+        SITUATIONAL
+    }
+
+    /**
+     * An item a player built, in the order it was built. A second purchase of the same item is no second step.
+     * {@code from} are the items that went into it, of a lower tier unless its recipe names one of its own;
+     * {@code atSeconds} is known only for some.
+     */
+    public record BuildStep(
+            Selection item,
+            List<Selection> from,
+            BuildPlace place,
+            Integer atSeconds
+    ) {
+        public BuildStep {
+            from = from == null ? List.of() : List.copyOf(from);
+            place = place == null ? BuildPlace.KEPT : place;
+        }
+    }
+
     public record Participant(
             UUID playerId,
             Lane lane,
@@ -531,19 +559,30 @@ public final class TournamentContent {
             List<EquipmentSnapshot> equipmentSnapshots,
             List<EquipmentEvent> equipmentEvents,
             String note,
-            Integer spellObservedAtSeconds
+            Integer spellObservedAtSeconds,
+            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<BuildStep> build
     ) {
         public Participant {
             arcana = arcana == null ? new Loadout<>(null, null, null) : arcana;
             enchantments = enchantments == null ? new Loadout<>(null, null, null) : enchantments;
             equipmentSnapshots = equipmentSnapshots == null ? List.of() : List.copyOf(equipmentSnapshots);
             equipmentEvents = equipmentEvents == null ? List.of() : List.copyOf(equipmentEvents);
+            build = build == null ? List.of() : List.copyOf(build);
+        }
+
+        public Participant(UUID playerId, Lane lane, Selection hero, Selection spell,
+                Loadout<ArcanaAllocation> arcana, Loadout<EnchantmentAllocation> enchantments,
+                List<EquipmentSnapshot> equipmentSnapshots, List<EquipmentEvent> equipmentEvents, String note,
+                Integer spellObservedAtSeconds) {
+            this(playerId, lane, hero, spell, arcana, enchantments, equipmentSnapshots, equipmentEvents, note,
+                    spellObservedAtSeconds, null);
         }
 
         public Participant(UUID playerId, Lane lane, Selection hero, Selection spell,
                 Loadout<ArcanaAllocation> arcana, Loadout<EnchantmentAllocation> enchantments,
                 List<EquipmentSnapshot> equipmentSnapshots, List<EquipmentEvent> equipmentEvents, String note) {
-            this(playerId, lane, hero, spell, arcana, enchantments, equipmentSnapshots, equipmentEvents, note, null);
+            this(playerId, lane, hero, spell, arcana, enchantments, equipmentSnapshots, equipmentEvents, note, null,
+                    null);
         }
     }
 
@@ -705,6 +744,7 @@ public final class TournamentContent {
         }
     }
 
+    /** {@code components} are the items an item is made of, where the wiki has verified its recipe. */
     public record Reference(
             UUID id,
             String code,
@@ -713,8 +753,17 @@ public final class TournamentContent {
             Integer tier,
             String color,
             String branchCode,
-            UUID revisionId
+            UUID revisionId,
+            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<UUID> components
     ) {
+        public Reference {
+            components = components == null ? List.of() : List.copyOf(components);
+        }
+
+        public Reference(UUID id, String code, String name, String iconUrl, Integer tier, String color,
+                String branchCode, UUID revisionId) {
+            this(id, code, name, iconUrl, tier, color, branchCode, revisionId, null);
+        }
     }
 
     public record Catalog(

@@ -46,12 +46,13 @@
   letter-spacing: -0.025em;
   text-wrap: balance;
 }
+/* Whole white: on a phone the champion's light shines behind these small words too. */
 .tn-head-facts {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 18px;
-  color: rgb(255 255 255 / 90%);
+  color: #fff;
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
@@ -77,14 +78,18 @@
   min-width: 0;
   gap: 2px;
 }
+/* Under the light of a pale logo the tan of art is too faint for words: they keep the stage's text, the cup the tan. */
 .tn-head-champion span:has(> svg) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--hub-art-accent);
+  color: var(--hub-text);
   font-size: 13px;
   font-weight: 600;
   line-height: 18px;
+}
+.tn-head-champion span > svg {
+  color: var(--hub-art-accent);
 }
 .tn-head-champion strong {
   color: #fff;
@@ -100,7 +105,7 @@
   text-underline-offset: 4px;
 }
 .tn-head-champion small {
-  color: rgb(255 255 255 / 82%);
+  color: rgb(255 255 255 / 92%);
   font-size: 13px;
   line-height: 18px;
 }

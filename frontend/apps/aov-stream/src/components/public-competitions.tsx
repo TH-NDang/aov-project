@@ -4,9 +4,9 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import type { CommunityProfile, CompetitionView } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { StreamIcon } from "./stream-icon"
 import { useStreamLocale } from "./stream-locale"
 import { CompetitionCard } from "./competition-card"
+import { FoldButton } from "./fold-button"
 import { matchWinner } from "../lib/competition-model"
 import { MatchCard } from "./match-card"
 import { competitionMatches, type CompetitionMatch } from "../lib/match-model"
@@ -198,17 +198,13 @@ function CompetitionMatches({
           <MatchCard key={entry.match.key} entry={entry} brief />
         ))}
       </div>
-      {entries.length > preview && (
-        <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open
-            ? text("Thu gọn", "Show less")
-            : text(
-                `Xem thêm ${entries.length - preview} trận`,
-                `Show ${entries.length - preview} more ${entries.length - preview === 1 ? "match" : "matches"}`,
-              )}
-          <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
-        </button>
-      )}
+      <FoldButton
+        fold={{ folds: entries.length > preview, open, toggle: () => setOpen(!open) }}
+        more={text(
+          `Xem thêm ${entries.length - preview} trận`,
+          `Show ${entries.length - preview} more ${entries.length - preview === 1 ? "match" : "matches"}`,
+        )}
+      />
     </section>
   )
 }

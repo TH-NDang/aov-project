@@ -1,0 +1,46 @@
+/* The list a choice opens, the one in use with a check. */
+.tn-choice-menu {
+  min-width: 260px;
+  max-height: min(62vh, 460px, var(--radix-dropdown-menu-content-available-height, 62vh));
+  padding: 6px;
+  overflow-y: auto;
+}
+.tn-choice-menu-row {
+  --stream-image-size: 24px;
+  --stream-image-radius: 5px;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.tn-choice-menu-row[data-part] {
+  padding-left: 16px;
+}
+.tn-choice-menu-row > i {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+}
+.tn-choice-menu-row > span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-choice-menu-row > small {
+  flex: none;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+/* The check keeps its place on every line, so the notes stand under each other. */
+.tn-choice-menu-row > svg {
+  flex: none;
+  visibility: hidden;
+}
+.tn-choice-menu-row[data-chosen] > svg {
+  visibility: visible;
+}

@@ -5,11 +5,9 @@ import type {
   TeamContent,
   TournamentContent,
 } from "@aov/community-contracts"
-import { matchTitleText } from "@aov/community-contracts/match-titles"
-import { localeText } from "@aov/ui/lib/locale-text"
 import { currentTimeZone, dayKeyInZone, isValidTimeZone } from "@aov/ui/lib/time-zone"
 import { tournamentPodium, type PodiumTeam } from "@aov/ui/lib/tournament-podium"
-import { roundPart } from "./match-labels.ts"
+import { matchRound } from "./match-labels.ts"
 import { matchState, type CompetitionMatch } from "./match-model.ts"
 
 /** A match is treated as under way for this long after its start when no score has been entered yet. */
@@ -64,79 +62,8 @@ export function matchWinner(entry: CompetitionMatch): "a" | "b" | null {
  * show, and name their rounds in English ("Week 3"), which reads in the reader's language. A match without a name
  * reads its title.
  */
-export function matchRoundLabel(match: PlannedMatch, stage?: Pick<CompetitionStage, "name"> | null, locale = "vi-VN") {
-  const name = match.label?.trim()
-  if (!name) return matchTitleText(match.title, localeText(locale))
-  const parts = name
-    .split("·")
-    .map((part) => part.trim())
-    .filter((part) => part && !/\bvs\.?\b/i.test(part) && part !== stage?.name)
-    .flatMap((part) => roundPart(part, locale) ?? [])
-  return parts.join(" · ") || null
-}
-
-export type BracketLane = {
-  key: "upper" | "lower" | "final" | "rounds"
-  rounds: { round: number; matches: PlannedMatch[] }[]
-}
-
-/**
- * Splits an elimination stage into the lanes a reader expects. A stage where the loser of one of its matches plays on
- * towards the title is a double elimination: matches fed by a loser, and those that follow them, form the lower lane,
- * and the match between the two lanes' winners stands alone as the final. Any other stage is laid out by round; a
- * match for third place, fed by losers but leading nowhere, does not make a lower lane.
- */
-export function bracketLanes(matches: PlannedMatch[]): BracketLane[] {
-  const byRound = (list: PlannedMatch[]) => {
-    const rounds = new Map<number, PlannedMatch[]>()
-    for (const match of list) rounds.set(match.round, [...(rounds.get(match.round) ?? []), match])
-    return [...rounds].sort(([a], [b]) => a - b).map(([round, entries]) => ({ round, matches: entries }))
-  }
-  const byKey = new Map(matches.map((match) => [match.key, match]))
-  // Only links inside this stage count: a slot may also name a match of an earlier stage.
-  const feeders = (match: PlannedMatch) =>
-    [match.a, match.b].flatMap((slot) => (slot.matchKey && byKey.has(slot.matchKey) ? [slot] : []))
-  const loserFed = (match: PlannedMatch) => feeders(match).some((slot) => slot.type === "LOSER")
-  const playsOn = new Set(
-    matches.flatMap((match) => feeders(match).flatMap((slot) => (slot.type === "WINNER" ? [slot.matchKey!] : []))),
-  )
-  if (!matches.some((match) => loserFed(match) && playsOn.has(match.key)))
-    return [{ key: "rounds", rounds: byRound(matches) }]
-
-  const lower = new Set<string>()
-  // A match is in the lower lane when a loser drops into it, or when everything feeding it is already there.
-  for (let changed = true; changed;) {
-    changed = false
-    for (const match of matches) {
-      if (lower.has(match.key)) continue
-      const sources = feeders(match)
-      const allLower =
-        sources.length > 0 && sources.every((slot) => slot.type === "WINNER" && lower.has(slot.matchKey!))
-      if (loserFed(match) || allLower) {
-        lower.add(match.key)
-        changed = true
-      }
-    }
-  }
-  // The final takes one winner from each lane.
-  const final = matches.filter((match) => {
-    const sources = feeders(match)
-    return (
-      !lower.has(match.key) &&
-      sources.length === 2 &&
-      sources.every((slot) => slot.type === "WINNER") &&
-      sources.some((slot) => lower.has(slot.matchKey!)) &&
-      sources.some((slot) => !lower.has(slot.matchKey!))
-    )
-  })
-  const finalKeys = new Set(final.map((match) => match.key))
-  const lanes: BracketLane[] = [
-    { key: "upper", rounds: byRound(matches.filter((match) => !lower.has(match.key) && !finalKeys.has(match.key))) },
-    { key: "lower", rounds: byRound(matches.filter((match) => lower.has(match.key))) },
-  ]
-  if (final.length) lanes.push({ key: "final", rounds: byRound(final) })
-  return lanes.filter((lane) => lane.rounds.length)
-}
+export const matchRoundLabel = (match: PlannedMatch, stage?: Pick<CompetitionStage, "name"> | null, locale = "vi-VN") =>
+  matchRound(match.label, match.title, locale, stage?.name)
 
 type CodeNames = Readonly<Record<string, readonly [vi: string, en: string]>>
 
@@ -145,6 +72,11 @@ export const STAGE_FORMAT_NAMES: CodeNames = {
   SINGLE_ELIMINATION: ["Loại trực tiếp", "Single elimination"],
   DOUBLE_ELIMINATION: ["Nhánh thắng – nhánh thua", "Upper bracket / lower bracket"],
 }
+
+const ELIMINATION = ["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION"]
+
+/** Whether a stage is a bracket. */
+export const isElimination = ({ format }: Pick<CompetitionStage, "format">) => ELIMINATION.includes(format)
 
 export const TIER_NAMES: CodeNames = {
   S: ["Hạng S", "S-Tier"],

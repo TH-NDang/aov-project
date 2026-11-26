@@ -5,6 +5,7 @@
   height: 18px;
 }
 .tn-form > i {
+  forced-color-adjust: none;
   width: 7px;
   height: 9px;
   border-radius: 2px;

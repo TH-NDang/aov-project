@@ -48,30 +48,51 @@
   padding: 0;
   list-style: none;
 }
-.tn-order-phase li {
+.tn-order-turn {
   --reference-size: 48px;
   --reference-radius: var(--hub-radius-sm);
   position: relative;
   display: grid;
   width: 48px;
+  height: 48px;
   place-items: center;
 }
-.tn-order-phase[data-kind="BAN"] li {
+.tn-order-phase[data-kind="BAN"] .tn-order-turn {
   --reference-size: 38px;
-  filter: grayscale(0.9);
-  opacity: 0.78;
 }
-/* The banned hero is struck through, as in the lineup. */
-.tn-order-phase[data-kind="BAN"] li::after {
+.tn-order-phase[data-kind="BAN"] .tn-order-turn > * > * {
+  filter: grayscale(0.85);
+}
+/* A ban nobody saw or nobody made: the place and its stroke, without a hero. */
+.tn-order-open {
+  width: var(--reference-size);
+  border-radius: var(--reference-radius);
+  background: var(--hub-sunken);
+  aspect-ratio: 1;
+}
+/* The stroke of a ban lies on its picture, inside the room of the turn. */
+.tn-order-phase[data-kind="BAN"] .tn-order-turn::after {
   content: "";
   position: absolute;
   inset: 5px;
-  background: linear-gradient(
-    to top right,
-    transparent calc(50% - 1.5px),
-    var(--hub-danger) calc(50% - 1.5px) calc(50% + 1.5px),
-    transparent calc(50% + 1.5px)
-  );
+  border-radius: var(--reference-radius);
+  background: var(--hub-ban-stroke);
+  forced-color-adjust: none;
+  pointer-events: none;
+}
+.tn-order-turn:has(> .tn-order-open)::after {
+  opacity: 0.4;
+}
+/* A turn that can be watched says so when it is pointed at, where its picture would only name the hero. */
+a.tn-order-turn > * {
+  pointer-events: none;
+}
+a.tn-order-turn:is(:hover, :focus-visible) {
+  outline: none;
+}
+a.tn-order-turn:is(:hover, :focus-visible) > :first-child {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 2px;
 }
 @media (max-width: 899.98px) {
   .tn-order {

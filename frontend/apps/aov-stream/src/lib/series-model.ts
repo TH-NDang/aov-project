@@ -1,7 +1,5 @@
 import type { GameSide, Lane, PublishedGame, Selection, Side, TimelineEvent } from "@aov/community-contracts"
-import { LANE_NAMES } from "./tournament-model.ts"
-
-const LANES = Object.keys(LANE_NAMES) as Lane[]
+import { LANES } from "./tournament-model.ts"
 
 /** The team that won a game, or null while its winner is not recorded. */
 export function gameWinner(game: Pick<PublishedGame, "content">): string | null {

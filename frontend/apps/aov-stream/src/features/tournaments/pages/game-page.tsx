@@ -1,48 +1,70 @@
+import { useMemo } from "react"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import type { PublishedGame } from "@aov/community-contracts"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
+import { useAhead } from "../../../components/on-demand"
 import { PlaceSteps, PlaceTrail, useSections, type Place, type Step } from "../../../components/place-trail"
 import { StreamShell } from "../../../components/stream-shell"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { WatchLink } from "../../../components/watch-link"
 import { mvpOf } from "../../../lib/crew-model"
-import { orderedMatchGames } from "../../../lib/match-model"
+import { datedPatch, gamePatch, plannedPatch } from "../../../lib/game-patch"
+import { findSeriesMatch, orderedMatchGames } from "../../../lib/match-model"
 import { dayMonth } from "../../../lib/match-time"
 import { beside } from "../../../lib/neighbours"
-import { gameQuery, matchGamesQuery } from "../../../lib/tournament-api"
+import { competitionQuery, gameQuery, matchGamesQuery } from "../../../lib/tournament-api"
 import { clock, plainNote } from "../../../lib/tournament-model"
+import { gameWatch } from "../../../lib/watch-story"
 import { MvpFact } from "../components/competition-people"
 import { competitionMark } from "../components/competition-mark"
 import { DraftOrder } from "../components/draft-order"
 import { EquipmentEvents } from "../components/equipment-events"
 import { GameLineup } from "../components/game-lineup"
 import { GameTimeline } from "../components/game-timeline"
-import { MatchHead, SeriesTrack, seriesHeadOf } from "../components/match-head"
+import { MatchHead, SeriesTrack, matchHeadOf, seriesHeadOf } from "../components/match-head"
+import { roomInside } from "../components/room-inside"
 import { StreamHead } from "../../../components/stream-head"
 import "./match-page.css"
 
-/** A patch code that is the day the patch came out. */
-const DAY = /^\d{4}-\d{2}-\d{2}$/
-
 /**
- * The patch a game was played on, named by its date where its code is one (the season in front of it carries the
- * year), with its title on hover.
+ * The patch a game was played on, named by its day (the season in front of it carries the year) with its title on
+ * hover. A game that knows no more than its season is placed by the patches of the competition.
  */
 function PatchFact({ game }: { game: PublishedGame }) {
   const { text, languageTag } = useStreamLocale()
-  const scope = game.resolvedContext
-  if (!scope || scope.unknown) return null
-  const { patchCode, seasonName } = scope
-  const day =
-    patchCode && DAY.test(patchCode)
-      ? seasonName
-        ? dayMonth(patchCode, languageTag)
-        : formatCalendarDate(patchCode, undefined, languageTag)
-      : null
-  const patch = day ? text(`bản ${day}`, `patch ${day}`) : patchCode
-  if (!patch && !seasonName) return null
-  return <span title={scope.patchTitle || undefined}>{[seasonName, patch].filter(Boolean).join(", ")}</span>
+  const competition = useQuery({
+    ...competitionQuery(game.series.tournamentId),
+    enabled: !datedPatch(game.resolvedContext),
+  })
+  const patch = gamePatch(game.resolvedContext, competition.data && plannedPatch(competition.data, game))
+  if (!patch) return null
+  const { season, day, title } = patch
+  const named =
+    day &&
+    (season?.includes(day.slice(0, 4)) ? dayMonth(day, languageTag) : formatCalendarDate(day, undefined, languageTag))
+  return (
+    <span title={title || undefined}>
+      {[season, named ? text(`bản ${named}`, `patch ${named}`) : title].filter(Boolean).join(", ")}
+    </span>
+  )
+}
+
+/** The way into the video of the match: to this game where that is known, else to the video alone. */
+function WatchFact({ game, siblings }: { game: PublishedGame; siblings: PublishedGame[] }) {
+  const { text } = useStreamLocale()
+  const { seriesId, number } = game.content
+  const lead = gameWatch(game, siblings.some(({ id }) => id === game.id) ? siblings : undefined)
+  useAhead(roomInside, !!lead)
+  if (!lead) return null
+  const own = lead === "GAME"
+  return (
+    <WatchLink seriesId={seriesId} game={own ? number : undefined}>
+      <StreamIcon name="play" size={14} />
+      {own ? text(`Xem ván ${number}`, `Watch game ${number}`) : text("Xem video của trận", "Watch the match's video")}
+    </WatchLink>
+  )
 }
 
 /**
@@ -60,8 +82,15 @@ function PublishedGameView({
   busy: boolean
 }) {
   const { text, languageTag } = useStreamLocale()
-  const { number, durationSeconds, seriesId, sourceUrl, note } = game.content
-  const head = seriesHeadOf(game, languageTag)
+  const { number, durationSeconds, seriesId, note } = game.content
+  const competition = useQuery(competitionQuery(game.series.tournamentId))
+  const planned = useMemo(
+    () => competition.data && findSeriesMatch(competition.data, seriesId),
+    [competition.data, seriesId],
+  )
+  const series = seriesHeadOf(game, languageTag)
+  // The round as its match names it, with its weight, once the plan is read; the sides keep the order of the series.
+  const head = planned ? { ...series, round: matchHeadOf(planned, languageTag).round } : series
   const { tournaments } = useSections()
   const [a, b] = head.teams
   const places: Place[] = [
@@ -112,13 +141,7 @@ function PublishedGameView({
                 </span>
                 {mvp && <MvpFact label={text("MVP ván", "Game MVP")} player={mvp} />}
                 <PatchFact game={game} />
-                {sourceUrl && (
-                  <a href={sourceUrl} target="_blank" rel="noreferrer noopener">
-                    <StreamIcon name="play" size={14} />
-                    {text("Xem video", "Watch the video")}
-                    <StreamIcon name="external" size={12} />
-                  </a>
-                )}
+                <WatchFact game={game} siblings={siblings} />
               </>
             }
             foot={
@@ -135,7 +158,10 @@ function PublishedGameView({
         <GameTimeline game={game} />
         <EquipmentEvents game={game} />
         <details className="tn-notes">
-          <summary>{text("Ghi chú và nguồn dữ liệu", "Notes and data sources")}</summary>
+          <summary>
+            {text("Ghi chú và nguồn dữ liệu", "Notes and data sources")}
+            <StreamIcon name="chevronDown" size={14} />
+          </summary>
           {note && <p>{plainNote(note)}</p>}
           <p>
             {text(

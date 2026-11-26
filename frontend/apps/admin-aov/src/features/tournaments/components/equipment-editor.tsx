@@ -1,14 +1,34 @@
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 import type { Catalog, EquipmentEvent, EquipmentSnapshot, Participant } from "@aov/community-contracts"
-import { ArrowDownUp, Camera, Clock3, Plus, Trash2 } from "lucide-react"
+import { Camera, ChevronRight, Clock3, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { confirmAction } from "@/components/confirm-dialog"
 import { CatalogPicker } from "./catalog-picker"
 import { emptySnapshot, minuteLabel, parseGameTime } from "../model/tournament-model"
 import { NativeSelect } from "@/components/native-select"
 import { Input } from "@aov/ui/components/input"
+import { Textarea } from "@aov/ui/components/textarea"
 
-const EVENT_LABELS = { BUY: "Mua", SELL: "Bán", UPGRADE: "Ghép / nâng cấp", SWAP: "Đổi ô" } as const
+const EVENT_LABELS = { BUY: "Mua", SELL: "Bán", UPGRADE: "Ghép/nâng cấp", SWAP: "Đổi ô" } as const
+
+/** A note that is kept when its field is left, since every change is a request. */
+function useNote(note: string | undefined, commit: (note: string) => void) {
+  const [text, setText] = useState(note ?? "")
+  const [shown, setShown] = useState(note ?? "")
+  // A note that was taken back, or changed elsewhere, replaces what the field shows.
+  if (shown !== (note ?? "")) {
+    setShown(note ?? "")
+    setText(note ?? "")
+  }
+  return {
+    value: text,
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setText(event.target.value),
+    onBlur: () => {
+      if (text !== (note ?? "")) commit(text)
+    },
+    maxLength: 1000,
+  }
+}
 
 function SnapshotEditor({
   value,
@@ -21,6 +41,7 @@ function SnapshotEditor({
   onChange: (value: EquipmentSnapshot) => void
   onRemove: () => void
 }) {
+  const note = useNote(value.note, (note) => onChange({ ...value, note }))
   return (
     <section className="tournament-inventory">
       <header>
@@ -43,6 +64,7 @@ function SnapshotEditor({
             <span>Ô {slot.slot}</span>
             <NativeSelect
               aria-label={`Trạng thái ô ${slot.slot}`}
+              className="px-2"
               value={!slot.known ? "unknown" : slot.item ? "item" : "empty"}
               onChange={(event) =>
                 onChange({
@@ -82,12 +104,11 @@ function SnapshotEditor({
           </div>
         ))}
       </div>
-      <textarea
+      <Textarea
         aria-label={`Ghi chú mốc ${minuteLabel(value.atSeconds)}`}
         placeholder="Ghi chú mốc quan sát…"
-        value={value.note ?? ""}
-        onChange={(event) => onChange({ ...value, note: event.target.value })}
-        maxLength={1000}
+        className="min-h-9"
+        {...note}
       />
     </section>
   )
@@ -104,6 +125,7 @@ function EventEditor({
   onChange: (value: EquipmentEvent) => void
   onRemove: () => void
 }) {
+  const note = useNote(value.note, (note) => onChange({ ...value, note }))
   return (
     <div className="tournament-equipment-event">
       <strong>{minuteLabel(value.atSeconds)}</strong>
@@ -166,13 +188,7 @@ function EventEditor({
           ))}
         </NativeSelect>
       </label>
-      <Input
-        aria-label="Ghi chú biến động trang bị"
-        placeholder="Nguồn / ghi chú…"
-        value={value.note ?? ""}
-        onChange={(event) => onChange({ ...value, note: event.target.value })}
-        maxLength={1000}
-      />
+      <Input aria-label="Ghi chú biến động trang bị" placeholder="Nguồn, ghi chú…" {...note} />
       <button type="button" className="tournament-icon-button" aria-label="Xóa biến động trang bị" onClick={onRemove}>
         <Trash2 size={14} />
       </button>
@@ -180,6 +196,21 @@ function EventEditor({
   )
 }
 
+/** How much is recorded, so the folded part says whether opening it is worth it. */
+function recorded({ equipmentSnapshots, equipmentEvents }: Participant) {
+  const parts = [
+    equipmentSnapshots.length && `${equipmentSnapshots.length} mốc`,
+    equipmentEvents.length && `${equipmentEvents.length} lần mua bán`,
+  ].filter(Boolean)
+  return parts.join(", ") || "chưa có"
+}
+
+/**
+ * What the source showed of the six slots at a moment of the game, and what it showed being bought and sold. Folded: the
+ * list of what a player built is recorded without it, and reads the last moment while nobody wrote one. A purchase or a
+ * sale is recorded in the form of a moment, which knows the item and the slot the service asks for; here the recorded
+ * ones are read and corrected.
+ */
 export function EquipmentEditor({
   participant,
   catalog,
@@ -195,31 +226,23 @@ export function EquipmentEditor({
   // Recording follows the video, so a new mark starts at the moment on screen instead of 00:00.
   const [time, setTime] = useState(() => minuteLabel(nowGame ?? 0))
   const [error, setError] = useState("")
-  function add(type: "snapshot" | "event") {
+  function addSnapshot() {
     const seconds = parseGameTime(time)
     if (seconds === null) {
       setError("Nhập thời gian trong ván theo phút:giây, ví dụ 05:30.")
       return
     }
-    if (type === "snapshot" && participant.equipmentSnapshots.some((snapshot) => snapshot.atSeconds === seconds)) {
+    if (participant.equipmentSnapshots.some((snapshot) => snapshot.atSeconds === seconds)) {
       setError("Mốc này đã có. Hãy sửa mốc hiện tại hoặc chọn thời điểm khác.")
       return
     }
     setError("")
-    if (type === "snapshot")
-      onChange({
-        ...participant,
-        equipmentSnapshots: [...participant.equipmentSnapshots, emptySnapshot(seconds)].sort(
-          (a, b) => a.atSeconds - b.atSeconds,
-        ),
-      })
-    else
-      onChange({
-        ...participant,
-        equipmentEvents: [...participant.equipmentEvents, { atSeconds: seconds, type: "BUY" as const }].sort(
-          (a, b) => a.atSeconds - b.atSeconds,
-        ),
-      })
+    onChange({
+      ...participant,
+      equipmentSnapshots: [...participant.equipmentSnapshots, emptySnapshot(seconds)].sort(
+        (a, b) => a.atSeconds - b.atSeconds,
+      ),
+    })
   }
   // An empty mark goes at once; one that holds something is named first, because it has no other copy.
   async function removeSnapshot(snapshot: EquipmentSnapshot) {
@@ -243,90 +266,99 @@ export function EquipmentEditor({
       (!item.length && !event.note?.trim()) ||
       (await confirmAction({
         title: "Xóa biến động trang bị?",
-        description: `${minuteLabel(event.atSeconds)} · ${[EVENT_LABELS[event.type], ...item].join(" · ")} → không còn.`,
+        description: `${[minuteLabel(event.atSeconds), EVENT_LABELS[event.type], ...item].join(", ")} → không còn.`,
         confirmLabel: "Xóa biến động",
       }))
     if (confirmed)
       onChange({ ...participant, equipmentEvents: participant.equipmentEvents.filter((entry) => entry !== event) })
   }
   return (
-    <div className="tournament-equipment-editor">
-      <p className="tournament-muted">
-        Mỗi mốc ghi 6 ô đã nhìn thấy. “Trống” khác “Không rõ”. Chỉ ghi mua/bán khi nguồn xác nhận; không suy ra giao
-        dịch từ hai ảnh.
-      </p>
-      <div className="tournament-equipment-add">
-        <label>
-          Thời gian trong ván
-          <Input
-            value={time}
-            onChange={(event) => setTime(event.target.value)}
-            aria-label="Thời điểm trang bị trong ván"
-            placeholder="00:00"
-            inputMode="numeric"
-          />
-        </label>
-        {nowGame != null && minuteLabel(nowGame) !== time && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => setTime(minuteLabel(nowGame))}>
-            <Clock3 size={14} />
-            Lấy lúc video {minuteLabel(nowGame)}
-          </Button>
-        )}
-        <Button type="button" variant="outline" size="sm" onClick={() => add("snapshot")}>
-          <Camera size={14} />
-          Thêm mốc 6 ô
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => add("event")}>
-          <ArrowDownUp size={14} />
-          Ghi mua / bán
-        </Button>
-      </div>
-      {error && (
-        <p className="tournament-error" role="alert">
-          {error}
+    <details className="group/marks border-t pt-3">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md [&::-webkit-details-marker]:hidden">
+        <ChevronRight
+          size={15}
+          className="shrink-0 text-muted-foreground transition-transform group-open/marks:rotate-90"
+          aria-hidden="true"
+        />
+        <span className="text-sm font-semibold">Mốc trang bị theo thời gian</span>
+        <span className="type-meta">{recorded(participant)}</span>
+      </summary>
+      <div className="tournament-equipment-editor pt-3">
+        <p className="tournament-muted">
+          Mỗi mốc ghi 6 ô đã nhìn thấy. “Trống” khác “Không rõ”. Chỉ ghi mua/bán khi nguồn xác nhận; không suy ra giao
+          dịch từ hai ảnh.
         </p>
-      )}
-      {participant.equipmentSnapshots.map((snapshot, index) => (
-        <SnapshotEditor
-          key={`${snapshot.atSeconds}-${index}`}
-          value={snapshot}
-          catalog={catalog}
-          onRemove={() => void removeSnapshot(snapshot)}
-          onChange={(value) =>
-            onChange({
-              ...participant,
-              equipmentSnapshots: participant.equipmentSnapshots.map((current, position) =>
-                position === index ? value : current,
-              ),
-            })
-          }
-        />
-      ))}
-      {!!participant.equipmentEvents.length && (
-        <h4 className="tournament-section-title">
-          <Plus size={14} />
-          Biến động được xác nhận
-        </h4>
-      )}
-      {participant.equipmentEvents.map((event, index) => (
-        <EventEditor
-          key={index}
-          value={event}
-          catalog={catalog}
-          onRemove={() => void removeEvent(event)}
-          onChange={(value) =>
-            onChange({
-              ...participant,
-              equipmentEvents: participant.equipmentEvents.map((current, position) =>
-                position === index ? value : current,
-              ),
-            })
-          }
-        />
-      ))}
-      {!participant.equipmentSnapshots.length && !participant.equipmentEvents.length && (
-        <p className="tournament-empty-inline">Chưa có mốc trang bị. Không được coi là tuyển thủ không mua đồ.</p>
-      )}
-    </div>
+        <div className="tournament-equipment-add">
+          <label>
+            Thời gian trong ván
+            <Input
+              value={time}
+              onChange={(event) => setTime(event.target.value)}
+              aria-label="Thời điểm trang bị trong ván"
+              placeholder="00:00"
+              inputMode="numeric"
+            />
+          </label>
+          {nowGame != null && minuteLabel(nowGame) !== time && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setTime(minuteLabel(nowGame))}>
+              <Clock3 size={14} />
+              Lấy lúc video {minuteLabel(nowGame)}
+            </Button>
+          )}
+          <Button type="button" variant="outline" size="sm" onClick={addSnapshot}>
+            <Camera size={14} />
+            Thêm mốc 6 ô
+          </Button>
+        </div>
+        {error && (
+          <p className="tournament-error" role="alert">
+            {error}
+          </p>
+        )}
+        {participant.equipmentSnapshots.map((snapshot, index) => (
+          <SnapshotEditor
+            key={`${snapshot.atSeconds}-${index}`}
+            value={snapshot}
+            catalog={catalog}
+            onRemove={() => void removeSnapshot(snapshot)}
+            onChange={(value) =>
+              onChange({
+                ...participant,
+                equipmentSnapshots: participant.equipmentSnapshots.map((current, position) =>
+                  position === index ? value : current,
+                ),
+              })
+            }
+          />
+        ))}
+        {!!participant.equipmentEvents.length && (
+          <h4 className="tournament-section-title">
+            <Plus size={14} />
+            Biến động được xác nhận
+          </h4>
+        )}
+        {participant.equipmentEvents.map((event, index) => (
+          <EventEditor
+            key={index}
+            value={event}
+            catalog={catalog}
+            onRemove={() => void removeEvent(event)}
+            onChange={(value) =>
+              onChange({
+                ...participant,
+                equipmentEvents: participant.equipmentEvents.map((current, position) =>
+                  position === index ? value : current,
+                ),
+              })
+            }
+          />
+        ))}
+        {!participant.equipmentSnapshots.length && !participant.equipmentEvents.length && (
+          <p className="tournament-empty-inline">
+            Chưa có mốc trang bị. Không được coi là tuyển thủ không mua trang bị.
+          </p>
+        )}
+      </div>
+    </details>
   )
 }

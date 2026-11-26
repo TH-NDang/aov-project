@@ -1,14 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { bracketLayout, bracketRoundName, bracketRoundOf, tracedMatches } from "../src/lib/bracket-model.ts"
+import { bracketLayout, bracketRoundName, bracketRoundOf } from "../src/lib/bracket-model.ts"
 import { matchRound, matchSides } from "../src/lib/match-schedule.ts"
 import { competition, loserOf, matchesOf, on, stage, winnerOf, type TestMatch } from "./fixtures/competition.ts"
 
 const layoutOf = (matches: TestMatch[]) => bracketLayout(matchesOf(competition(matches)))
 const placed = (matches: TestMatch[]) =>
   Object.fromEntries(layoutOf(matches).nodes.map((node) => [node.entry.match.key, [node.lane, node.column, node.row]]))
-const roundsOf = (matches: TestMatch[]) =>
-  Object.fromEntries(layoutOf(matches).nodes.map((node) => [node.entry.match.key, bracketRoundName(node.round)]))
 
 /** Four teams, both semifinals and the final named by their teams only, as an import leaves them. */
 const semifinals: TestMatch[] = [
@@ -25,22 +23,17 @@ const doubleElimination: TestMatch[] = [
   { key: "grand-final", a: "a", b: "b", score: [3, 2], scheduledAt: on(5) },
 ]
 
-test("a side without a link is traced to its team's previous match in the stage", () => {
-  const matches = tracedMatches(
-    matchesOf(competition([...semifinals, { key: "final", a: "a", b: "c", scheduledAt: on(3) }])),
+test("a match whose sides have fewer wins than its best of asks for sends nobody on", () => {
+  const { links } = layoutOf([
+    { key: "s1", a: "a", b: "b", score: [2, 1], scheduledAt: on(1) },
+    { key: "s2", a: "c", b: "d", score: [3, 0], scheduledAt: on(2) },
+    { key: "final", a: "a", b: "c", scheduledAt: on(3) },
+  ])
+
+  assert.deepEqual(
+    links.map((link) => link.from.entry.match.key),
+    ["s2"],
   )
-  const final = matches.find((match) => match.key === "final")!
-
-  assert.deepEqual([final.a.type, final.a.matchKey], ["WINNER", "s1"])
-  assert.deepEqual([final.b.type, final.b.matchKey], ["LOSER", "s2"])
-})
-
-test("a link the plan gives is kept as it is", () => {
-  const matches = tracedMatches(
-    matchesOf(competition([...semifinals, { key: "final", a: winnerOf("s2"), b: winnerOf("s1"), scheduledAt: on(3) }])),
-  )
-
-  assert.deepEqual(matches.at(-1)!.a, winnerOf("s2"))
 })
 
 test("a match stands a column after those that feed it, level with their middle", () => {
@@ -60,6 +53,45 @@ test("a double elimination recorded without links splits into its lanes and its 
     "lower-final": ["lower", 2, 2],
     "grand-final": ["final", 3, 1.25],
   })
+})
+
+/** Two play-in matches whose losers meet in the lower lane a round before the losers of the next round play there. */
+const playIns: TestMatch[] = [
+  { key: "p1", a: "a", b: "b", score: [3, 0], scheduledAt: on(1) },
+  { key: "p2", a: "f", b: "g", score: [3, 0], scheduledAt: on(1) },
+  { key: "u1", a: "c", b: "f", score: [3, 1], scheduledAt: on(2) },
+  { key: "u2", a: "a", b: "e", score: [3, 1], scheduledAt: on(2) },
+  { key: "lower-early", a: "b", b: "g", score: [3, 1], scheduledAt: on(2) },
+  { key: "upper-final", a: "c", b: "a", score: [3, 2], scheduledAt: on(3) },
+  { key: "lower-1", a: "f", b: "e", score: [3, 2], scheduledAt: on(3) },
+  { key: "lower-2", a: "b", b: "f", score: [3, 2], scheduledAt: on(4) },
+  { key: "lower-final", a: "b", b: "a", score: [3, 2], scheduledAt: on(5) },
+  { key: "grand-final", a: "c", b: "b", score: [3, 1], scheduledAt: on(6) },
+]
+
+test("a lower match the losers of an early round play stands in the column of its round", () => {
+  const { nodes } = layoutOf(playIns)
+  const read = (key: string) => {
+    const node = nodes.find((item) => item.entry.match.key === key)!
+    return [node.column, bracketRoundName(node.round)]
+  }
+
+  assert.deepEqual(["lower-early", "lower-1", "lower-2", "lower-final"].map(read), [
+    [2, "Vòng 1 nhánh thua"],
+    [2, "Vòng 1 nhánh thua"],
+    [3, "Bán kết nhánh thua"],
+    [4, "Chung kết nhánh thua"],
+  ])
+})
+
+test("a final played once more stands beside the first", () => {
+  const { "grand-final": first, "final-again": again } = placed([
+    ...doubleElimination,
+    { key: "final-again", a: "a", b: "b", score: [1, 3], scheduledAt: on(6) },
+  ])
+
+  assert.deepEqual(first, ["final", 3, 1.25])
+  assert.deepEqual(again, ["final", 4, 1.25])
 })
 
 test("only the way of the winners is drawn", () => {
@@ -83,29 +115,7 @@ test("a match two losers play that leads nowhere stands under the final", () => 
     { key: "final", a: winnerOf("s1"), b: winnerOf("s2"), scheduledAt: on(4) },
   ])
 
-  assert.deepEqual(layout["third"], ["third", 1, 1.5])
-})
-
-test("a match of a late entry stands next to the one it leads to", () => {
-  const layout = placed([
-    { key: "q1", a: "a", b: "b", score: [3, 0], scheduledAt: on(1) },
-    { key: "s1", a: winnerOf("q1"), b: "c", score: [3, 0], scheduledAt: on(2) },
-    { key: "s2", a: "d", b: "e", score: [3, 0], scheduledAt: on(2) },
-    { key: "final", a: winnerOf("s1"), b: winnerOf("s2"), scheduledAt: on(3) },
-  ])
-
-  assert.deepEqual([layout["q1"]![1], layout["s1"]![1], layout["s2"]![1], layout["final"]![1]], [0, 1, 1, 2])
-})
-
-test("rounds are named by how far they are from the end of their lane", () => {
-  assert.deepEqual(roundsOf(doubleElimination), {
-    s1: "Bán kết nhánh thắng",
-    s2: "Bán kết nhánh thắng",
-    "upper-final": "Chung kết nhánh thắng",
-    "lower-1": "Bán kết nhánh thua",
-    "lower-final": "Chung kết nhánh thua",
-    "grand-final": "Chung kết tổng",
-  })
+  assert.deepEqual(layout["third"], ["place", 1, 1.5])
 })
 
 test("a round reads in English for an English reader", () => {

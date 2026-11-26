@@ -1,0 +1,78 @@
+/* The row of the small player, under its picture: the way back with how the match stands, and an end to it. */
+.hub-mini {
+  display: flex;
+  height: 48px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 4px;
+  color: var(--hub-text);
+  color-scheme: dark;
+}
+.hub-mini-back {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+}
+.hub-mini-back > :is(a, button) {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 8px;
+  border-radius: var(--aov-radius-control);
+  text-align: left;
+  white-space: nowrap;
+}
+.hub-mini-back svg {
+  flex: none;
+}
+.hub-mini-back b {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.hub-mini-back small {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+}
+.hub-mini-stay {
+  min-height: 36px;
+  flex: none;
+  padding: 0 14px;
+  border-radius: var(--aov-radius-pill);
+  background: rgb(255 255 255 / 9%);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.hub-mini-close {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--hub-text-soft);
+}
+.hub-mini-back > :is(a, button):hover {
+  background: rgb(255 255 255 / 8%);
+}
+.hub-mini-close:hover {
+  background: rgb(255 255 255 / 8%);
+  color: var(--hub-text);
+}
+.hub-mini-stay:hover {
+  background: rgb(255 255 255 / 16%);
+}
+/* The corner it stands in rounds the row off, so a ring stays inside what it is around. */
+.hub-mini :focus-visible {
+  outline-offset: -2px;
+}

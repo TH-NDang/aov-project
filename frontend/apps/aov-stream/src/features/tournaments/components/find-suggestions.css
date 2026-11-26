@@ -1,0 +1,108 @@
+/* What would narrow the games found: a row a kind, the same columns in each, one line that scrolls sideways. */
+.tn-find-tips {
+  display: grid;
+  min-width: 0;
+  container: tn-find-tips / inline-size;
+  gap: 2px;
+}
+.tn-find-tips-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+}
+.tn-find-tips-row > span {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.tn-find-tips-row > ul {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(var(--tips, 6), minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-find-tips-row li {
+  min-width: 0;
+}
+.tn-find-tip {
+  --portrait: 26px;
+  --portrait-radius: 6px;
+  --stream-image-size: 26px;
+  --stream-image-radius: 6px;
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding-inline: 5px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-find-tip:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+}
+.tn-find-tip:focus-visible {
+  outline-offset: -2px;
+}
+.tn-find-tip > b {
+  overflow: hidden;
+  color: var(--hub-text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+.tn-find-tip > span:not(.tn-portrait, .stream-image) {
+  flex: none;
+}
+.tn-find-tip > small {
+  flex: none;
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+/* A row shows as many as fit, so none is cut. */
+@container tn-find-tips (max-width: 1185.98px) {
+  .tn-find-tips-row > ul {
+    --tips: 5;
+  }
+  .tn-find-tips-row > ul > :nth-child(n + 6) {
+    display: none;
+  }
+}
+@container tn-find-tips (max-width: 999.98px) {
+  .tn-find-tips-row > ul {
+    --tips: 4;
+  }
+  .tn-find-tips-row > ul > :nth-child(n + 5) {
+    display: none;
+  }
+}
+/* On a phone it scrolls sideways, out to the edge of the window. */
+@media (max-width: 899.98px) {
+  .tn-find-tips-row > ul {
+    grid-template-columns: none;
+    grid-auto-columns: max-content;
+    grid-auto-flow: column;
+    gap: 4px;
+    margin-right: calc(-1 * var(--hub-gutter));
+    padding-right: var(--hub-gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .tn-find-tips-row > ul > li:nth-child(n) {
+    display: block;
+  }
+  .tn-find-tips-row {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+  .tn-find-tip {
+    min-height: 40px;
+  }
+}

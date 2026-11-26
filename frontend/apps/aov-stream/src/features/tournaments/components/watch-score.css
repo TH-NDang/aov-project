@@ -1,0 +1,136 @@
+.tn-room-score {
+  --stream-image-size: 38px;
+  --stream-image-radius: 8px;
+  --stream-image-plate: transparent;
+  --pip: 13px;
+  --pips-gap: 3px;
+  --points: 34px;
+  display: grid;
+  min-height: 57px;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 2px 0 12px;
+}
+.tn-room-score[data-ended] {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+}
+.tn-room-club {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.tn-room-club[data-team="B"] {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.tn-room-club > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+.tn-room-club b {
+  overflow: hidden;
+  font-weight: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* How many games decide the match, and how many of them a team has. */
+.tn-room-pips {
+  display: flex;
+  gap: var(--pips-gap);
+}
+.tn-room-club[data-team="B"] .tn-room-pips {
+  justify-content: flex-end;
+}
+.tn-room-pips > i {
+  width: var(--pip);
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 34%);
+}
+.tn-room-pips > i[data-won] {
+  background: var(--hub-accent);
+}
+@media (forced-colors: active) {
+  .tn-room-pips > i {
+    border: 1px solid;
+  }
+  .tn-room-pips > i[data-won] {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+.tn-room-points {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: var(--points);
+  font-weight: 700;
+  line-height: calc(var(--points) + 6px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+.tn-room-points > i {
+  color: rgb(255 255 255 / 46%);
+  font-size: 0.7em;
+  font-style: normal;
+  font-weight: 400;
+}
+@container tn-room-side (max-width: 330px) {
+  .tn-room-score {
+    --stream-image-size: 34px;
+    --pip: 10px;
+    --points: 30px;
+    gap: 8px;
+  }
+  .tn-room-club {
+    gap: 8px;
+    font-size: 16px;
+  }
+}
+.tn-room[data-density="mid"] .tn-room-score {
+  --stream-image-size: 28px;
+  --pip: 8px;
+  --pips-gap: 2px;
+  --points: 26px;
+  min-height: 46px;
+  gap: 6px;
+  padding: 4px 0 6px;
+}
+.tn-room[data-density="tight"] .tn-room-score {
+  --stream-image-size: 26px;
+  --pip: 9px;
+  --pips-gap: 2px;
+  --points: 24px;
+  min-height: 38px;
+  gap: 8px;
+  padding: 0;
+}
+.tn-room[data-density="tight"] .tn-room-points {
+  line-height: 28px;
+}
+.tn-room:is([data-density="mid"], [data-density="tight"]) .tn-room-club {
+  gap: 6px;
+  font-size: 15px;
+  line-height: 18px;
+}
+.tn-room:is([data-density="mid"], [data-density="tight"]) .tn-room-club > span:last-child {
+  gap: 3px;
+}
+@container tn-room-side (max-width: 250px) {
+  .tn-room[data-density="tight"] .tn-room-score {
+    --pip: 6px;
+    --points: 22px;
+    gap: 6px;
+  }
+  .tn-room[data-density="tight"] .tn-room-club {
+    gap: 5px;
+    font-size: 14px;
+  }
+}

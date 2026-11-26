@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query"
 import { personRoleLabels, type PersonRole } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { personRoleEnglish } from "../../../components/community-ui"
+import { FoldButton } from "../../../components/fold-button"
 import { GoLink } from "../../../components/go-link"
 import { useSections } from "../../../components/place-trail"
 import { PageHead } from "../../../components/page-head"
 import { PlayerMark } from "../../../components/player-mark"
-import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { StreamShell } from "../../../components/stream-shell"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -153,14 +153,10 @@ function PersonBody({ profile }: { profile: PersonProfile }) {
             </SeasonLine>
           ))}
         </ul>
-        {seasons.length > SEASONS && (
-          <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {open
-              ? text("Thu gọn", "Show less")
-              : text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
-            <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
-          </button>
-        )}
+        <FoldButton
+          fold={{ folds: seasons.length > SEASONS, open, toggle: () => setOpen(!open) }}
+          more={text(`Xem thêm ${seasons.length - SEASONS} giải`, `Show ${seasons.length - SEASONS} more`)}
+        />
       </Part>
     </>
   )

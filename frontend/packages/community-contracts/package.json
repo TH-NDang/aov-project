@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./achievements": "./src/achievements.ts",
+    "./bracket-results": "./src/bracket-results.ts",
     "./match-titles": "./src/match-titles.ts"
   },
   "scripts": {

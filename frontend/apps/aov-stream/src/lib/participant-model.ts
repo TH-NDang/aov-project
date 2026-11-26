@@ -14,7 +14,7 @@ const startOf = (view: CompetitionView) =>
   Date.parse(view.content.tournament.startsOn || "") || Date.UTC(view.content.tournament.year || 0, 0, 1)
 
 /** Competitions by when they started, the newest first. */
-export const newestFirst = (views: CompetitionView[]) => [...views].sort((a, b) => startOf(b) - startOf(a))
+const newestFirst = (views: CompetitionView[]) => [...views].sort((a, b) => startOf(b) - startOf(a))
 
 /** The place a team took in a competition: a line of its final table, or the two sides of its final. */
 export function teamPlace(view: CompetitionView, teamId: string): string | null {

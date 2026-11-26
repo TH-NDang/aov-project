@@ -1,6 +1,7 @@
 /* A hero's picture, as large as the place it stands in asks for. */
 .tn-portrait {
   --stream-image-size: 100%;
+  position: relative;
   display: grid;
   overflow: hidden;
   width: var(--portrait, 40px);
@@ -8,10 +9,25 @@
   flex: none;
   place-items: center;
   border-radius: var(--portrait-radius, var(--aov-radius-control));
-  background: var(--hub-sunken);
+  background: var(--hub-plate);
 }
 .tn-portrait > b {
   color: var(--hub-text-soft);
   font-size: max(12px, calc(var(--portrait, 40px) * 0.34));
   font-weight: 600;
+}
+/* A banned hero loses its colours and is struck. */
+.tn-portrait[data-banned] > * {
+  filter: grayscale(var(--banned-grey, 0.85));
+}
+.tn-portrait[data-banned]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hub-ban-stroke);
+}
+@media (forced-colors: active) {
+  .tn-portrait[data-banned]::after {
+    forced-color-adjust: none;
+  }
 }

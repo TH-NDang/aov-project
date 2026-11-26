@@ -1,11 +1,11 @@
-import { useState } from "react"
 import type { CompetitionView, TournamentAward } from "@aov/community-contracts"
 import { LocalMoney } from "@aov/ui/components/local-money"
+import { FoldButton } from "../../../components/fold-button"
 import { EntityPageLink } from "../../../components/go-link"
-import { StreamIcon } from "../../../components/stream-icon"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { awardTeam } from "../../../lib/crew-model"
+import { useEntryState } from "../../../lib/use-entry-state"
 import "./competition-awards.css"
 
 function Award({ view, award }: { view: CompetitionView; award: TournamentAward }) {
@@ -65,7 +65,7 @@ export function CompetitionAwards({
   wide?: boolean
 }) {
   const { text } = useStreamLocale()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useEntryState<boolean>("awards", false)
   const groups = new Map<string, TournamentAward[]>()
   for (const award of view.content.tournament.awards ?? [])
     groups.set(award.title, [...(groups.get(award.title) ?? []), award])
@@ -90,14 +90,10 @@ export function CompetitionAwards({
           </div>
         ))}
       </dl>
-      {all.length > preview && (
-        <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open
-            ? text("Thu gọn", "Show less")
-            : text(`Xem thêm ${hidden} giải thưởng`, `Show ${hidden} more ${hidden === 1 ? "award" : "awards"}`)}
-          <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
-        </button>
-      )}
+      <FoldButton
+        fold={{ folds: all.length > preview, open, toggle: () => setOpen(!open) }}
+        more={text(`Xem thêm ${hidden} giải thưởng`, `Show ${hidden} more ${hidden === 1 ? "award" : "awards"}`)}
+      />
     </section>
   )
 }

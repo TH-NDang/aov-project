@@ -1,0 +1,398 @@
+/* The lines of a list share their columns, so the same side stands in the same place from one game to the next. */
+.tn-lines {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  list-style: none;
+}
+.tn-lines > li + li {
+  border-top: 1px solid var(--hub-border);
+}
+/* A line measures the column it stands in, which is narrower than the window in places. */
+.tn-line {
+  display: block;
+  min-width: 0;
+  container: tn-line / inline-size;
+  color: var(--hub-text);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 120ms;
+}
+.tn-line:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+}
+.tn-line:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ---------- The columns, shared with the draft board over a list: both teams side by side once they fit ---------- */
+.tn-line-cols {
+  --pick: 36px;
+  --pick-gap: 4px;
+  display: grid;
+  min-width: 0;
+  align-items: center;
+}
+/* The round and the day stand over the pairing. */
+@container tn-line (min-width: 760px) {
+  .tn-line-cols {
+    grid-template-columns: minmax(0, 1fr) auto 112px auto minmax(0, 1fr);
+    grid-template-areas:
+      "when when when when when"
+      "a picks-a game picks-b b";
+    gap: 8px 10px;
+    padding-inline: 16px;
+  }
+}
+/* From here on they have a column of their own. */
+@container tn-line (min-width: 826px) {
+  .tn-line-cols {
+    --pick-gap: 3px;
+    grid-template-columns: 84px minmax(0, 1fr) auto 104px auto minmax(0, 1fr);
+    grid-template-areas: "when a picks-a game picks-b b";
+    gap: 8px;
+    padding-inline: 14px;
+  }
+}
+@container tn-line (min-width: 1018px) {
+  .tn-line-cols {
+    --pick: 40px;
+    --pick-gap: 4px;
+    grid-template-columns: 124px minmax(0, 1fr) auto 132px auto minmax(0, 1fr);
+    gap: 12px;
+    padding-inline: 18px;
+  }
+}
+@container tn-line (min-width: 1176px) {
+  .tn-line-cols {
+    --pick: clamp(40px, 3.8cqi, 46px);
+    grid-template-columns: 140px minmax(0, 1fr) auto 140px auto minmax(0, 1fr) 100px;
+    grid-template-areas: "when a picks-a game picks-b b mvp";
+  }
+}
+
+/* ---------- One line ---------- */
+.tn-line-when {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  grid-area: when;
+  color: var(--hub-muted);
+}
+.tn-line-when > b {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-wrap: balance;
+}
+/* The games of one match say its round and day once. */
+.tn-line-when[data-follows] > :not(.tn-line-played) {
+  display: none;
+}
+.tn-line-team {
+  --stream-image-size: 32px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 20px;
+}
+.tn-line-team[data-slot="a"] {
+  flex-direction: row-reverse;
+  grid-area: a;
+  text-align: right;
+}
+.tn-line-team[data-slot="b"] {
+  grid-area: b;
+}
+.tn-line-name {
+  display: grid;
+  min-width: 0;
+}
+.tn-line-name > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.tn-line-team[data-slot="a"] .tn-line-name > span {
+  flex-direction: row-reverse;
+}
+.tn-line-name strong {
+  min-width: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.tn-line-name > small {
+  display: none;
+  overflow: hidden;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-line-team[data-won] strong {
+  font-weight: 700;
+}
+.tn-line-team[data-lost] strong {
+  color: var(--hub-muted);
+  font-weight: 500;
+}
+.tn-line-name svg {
+  flex: none;
+  color: var(--hub-accent-strong);
+}
+.tn-line-picks {
+  --side: var(--hub-blue);
+  --portrait: var(--pick);
+  --portrait-radius: 6px;
+  display: grid;
+  grid-template-columns: repeat(5, var(--pick));
+  gap: var(--pick-gap);
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--side);
+}
+.tn-line-picks[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-line-picks[data-slot="a"] {
+  grid-area: picks-a;
+}
+.tn-line-picks[data-slot="b"] {
+  grid-area: picks-b;
+}
+.tn-line-picks > span {
+  border-radius: 6px;
+}
+/* A seat whose hero nobody recorded. */
+.tn-line-picks > i {
+  height: var(--pick);
+  border-radius: 6px;
+  background: var(--hub-sunken);
+}
+/* The side that lost steps back; in a list about some heroes the others do, whoever won. */
+.tn-line-picks[data-lost] > span {
+  opacity: 0.62;
+}
+.tn-line:has([data-marked]) .tn-line-picks > span:not([data-marked]) {
+  filter: saturate(0.5);
+  opacity: 0.45;
+}
+.tn-line-picks > span[data-marked] {
+  opacity: 1;
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+.tn-line-game {
+  display: grid;
+  min-width: 0;
+  grid-area: game;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.tn-line-clock {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--hub-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+.tn-line-clock > b {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.tn-line-bans {
+  --portrait: var(--ban, 32px);
+  --portrait-radius: 6px;
+  display: grid;
+  justify-content: start;
+  grid-auto-flow: column;
+  grid-template-rows: auto;
+  gap: 2px;
+}
+/* Several bans of one side stand over each other, in two columns from the third on. */
+.tn-line-bans[data-many] {
+  --portrait: var(--ban-small, 20px);
+  grid-template-rows: repeat(2, auto);
+}
+.tn-line-bans[data-slot="a"] {
+  justify-content: flex-end;
+  grid-column: 1;
+  grid-row: 1;
+}
+.tn-line-bans[data-slot="b"] {
+  grid-column: 3;
+  grid-row: 1;
+}
+.tn-line-mvp {
+  display: none;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  grid-area: mvp;
+  color: var(--hub-muted);
+}
+.tn-line-mvp > svg {
+  flex: none;
+}
+.tn-line-mvp > b {
+  overflow: hidden;
+  color: var(--hub-text-soft);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- A line of its own for each team: crest and name, the bans asked about, the five picks ---------- */
+@container tn-line (max-width: 759.98px) {
+  .tn-line-row {
+    --pick: clamp(30px, 9.2cqi, 40px);
+    --pick-gap: 3px;
+    --ban: 26px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    padding: 12px;
+  }
+  .tn-line-when {
+    flex-wrap: nowrap;
+    grid-area: 1 / 1 / auto / -1;
+    padding-right: 96px;
+    white-space: nowrap;
+  }
+  .tn-line-when > b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tn-line-when > .tn-line-played {
+    display: none;
+  }
+  .tn-line-game {
+    display: contents;
+  }
+  .tn-line-clock {
+    display: flex;
+    grid-area: 1 / 1 / auto / -1;
+    justify-self: end;
+  }
+  .tn-line-clock > span::after {
+    content: ",\00a0";
+  }
+  .tn-line-clock > b {
+    font-size: inherit;
+  }
+  .tn-line-team {
+    --stream-image-size: 28px;
+    gap: 8px;
+  }
+  .tn-line-team[data-slot="a"],
+  .tn-line-team[data-slot="a"] .tn-line-name > span {
+    flex-direction: row;
+  }
+  .tn-line-team[data-slot="a"] {
+    grid-area: 2 / 1;
+    text-align: left;
+  }
+  .tn-line-team[data-slot="b"] {
+    grid-area: 3 / 1;
+  }
+  .tn-line-name > small {
+    display: block;
+  }
+  .tn-line-bans[data-slot="a"] {
+    grid-area: 2 / 2;
+  }
+  .tn-line-bans[data-slot="b"] {
+    grid-area: 3 / 2;
+    justify-content: flex-end;
+  }
+  .tn-line-picks[data-slot="a"] {
+    grid-area: 2 / 3;
+  }
+  .tn-line-picks[data-slot="b"] {
+    grid-area: 3 / 3;
+  }
+  .tn-line-picks {
+    padding-bottom: 4px;
+  }
+}
+@container tn-line (max-width: 329.98px) {
+  .tn-line-row {
+    --pick: 26px;
+  }
+  .tn-line-team {
+    --stream-image-size: 22px;
+    gap: 6px;
+  }
+  .tn-line-name svg {
+    display: none;
+  }
+}
+
+/* ---------- Both teams side by side ---------- */
+@container tn-line (min-width: 760px) {
+  .tn-line-row {
+    --ban: 28px;
+    padding-block: 10px;
+  }
+  .tn-line-team {
+    --stream-image-size: 28px;
+    gap: 8px;
+  }
+  .tn-line-game {
+    gap: 6px;
+  }
+  .tn-line-bans[data-many="more"] {
+    --ban-small: 12px;
+  }
+}
+@container tn-line (min-width: 826px) {
+  .tn-line-row {
+    --ban: 26px;
+    min-height: 70px;
+  }
+  .tn-line-when > b {
+    flex: 0 0 100%;
+    font-size: 13px;
+  }
+}
+@container tn-line (min-width: 1018px) {
+  .tn-line-row {
+    --ban: 32px;
+    min-height: 76px;
+  }
+  .tn-line-when > b {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .tn-line-team {
+    --stream-image-size: 32px;
+    gap: 10px;
+  }
+  .tn-line-game {
+    gap: 8px;
+  }
+  .tn-line-bans[data-many="more"] {
+    --ban-small: 18px;
+  }
+}
+@container tn-line (min-width: 1176px) {
+  .tn-line-mvp {
+    display: flex;
+  }
+}

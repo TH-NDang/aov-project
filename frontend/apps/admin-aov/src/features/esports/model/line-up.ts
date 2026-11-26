@@ -73,5 +73,5 @@ export const rosterOptionLabel = (member: RosterOption, lane: Lane) =>
   [
     member.name,
     member.lane && member.lane !== lane ? ` (${LANE_LABELS[member.lane].name})` : "",
-    member.status === "INACTIVE" ? " · đã rời" : member.status === "SUBSTITUTE" ? " · dự bị" : "",
+    member.status === "INACTIVE" ? ", đã rời" : member.status === "SUBSTITUTE" ? ", dự bị" : "",
   ].join("")

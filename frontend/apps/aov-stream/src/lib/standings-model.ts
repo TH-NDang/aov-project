@@ -1,5 +1,5 @@
-import type { CompetitionStanding, CompetitionView } from "@aov/community-contracts"
-import { matchWinner } from "./competition-model.ts"
+import type { CompetitionStage, CompetitionStanding, CompetitionView } from "@aov/community-contracts"
+import { competitionStatus, matchWinner, playedOrder } from "./competition-model.ts"
 import { competitionMatches, type CompetitionMatch } from "./match-model.ts"
 
 type Table = CompetitionView["content"]["standings"][number]
@@ -74,10 +74,66 @@ export function ordersByGames(view: CompetitionView, table: Table) {
   return !rules.length && table.rows.some((row) => row.tied && row.played > 0)
 }
 
+/** Whether a table holds drawn matches, which then stand between those won and those lost. */
+export const hasDraws = (rows: CompetitionStanding[]) => rows.some((row) => row.played > row.won + row.lost)
+
+/** Rows with drawn matches apart; a table published before they were counted has them among those lost. */
+function drawsApart(rows: CompetitionStanding[], entries: CompetitionMatch[]): CompetitionStanding[] {
+  if (hasDraws(rows)) return rows
+  const drawn = new Map<string, number>()
+  for (const entry of entries) {
+    const { scoreA, scoreB, consistent } = entry.result ?? {}
+    if (scoreA == null || scoreA !== scoreB || consistent === false) continue
+    for (const team of Object.values(teamsOf(entry))) if (team) drawn.set(team, (drawn.get(team) ?? 0) + 1)
+  }
+  return rows.map((row) => ({ ...row, lost: Math.max(0, row.lost - (drawn.get(row.teamId) ?? 0)) }))
+}
+
+/** Whether a match is decided: won by a team, or drawn once all its games were played. */
+function decided(entry: CompetitionMatch) {
+  const { scoreA, scoreB } = entry.result ?? {}
+  if (scoreA == null || scoreB == null) return false
+  return matchWinner(entry) != null || (scoreA === scoreB && scoreA + scoreB >= entry.match.bestOf)
+}
+
 /** Whether every match of a table's stage has its result; a plan may still expect matches nobody entered. */
 export function allPlayed(view: CompetitionView, table: Table) {
   const entries = competitionMatches([view]).filter((entry) => entry.match.stageCode === table.stageCode)
-  return entries.length > 0 && entries.every((entry) => matchWinner(entry) != null)
+  return entries.length > 0 && entries.every(decided)
+}
+
+/** The stages played after one, the next first. */
+export function laterStages(view: CompetitionView, stageCode: string): CompetitionStage[] {
+  const { plan } = view.content
+  const order = playedOrder(
+    plan.stages.filter((stage) => plan.matches.some((match) => match.stageCode === stage.code)),
+    plan.matches,
+  )
+  const at = order.findIndex((stage) => stage.code === stageCode)
+  return at < 0 ? [] : order.slice(at + 1)
+}
+
+/**
+ * Whether a table is final: every match has its result, the event is over, or a later stage that took only some of its
+ * teams has begun. An event moves on without the matches a team that withdrew never played.
+ */
+export function tableOver(view: CompetitionView, table: Table) {
+  if (table.complete || allPlayed(view, table)) return true
+  if (!table.rows.some((row) => row.played > 0)) return false
+  if (competitionStatus(view.content) === "FINISHED") return true
+  const entries = competitionMatches([view])
+  const teamsIn = (code: string) => {
+    const teams = entries
+      .filter((entry) => entry.match.stageCode === code)
+      .flatMap((entry) => Object.values(teamsOf(entry)))
+    return new Set(teams.filter((team) => team != null))
+  }
+  const own = teamsIn(table.stageCode)
+  return laterStages(view, table.stageCode).some(({ code }) => {
+    const going = [...teamsIn(code)].filter((team) => own.has(team))
+    const begun = entries.some((entry) => entry.match.stageCode === code && entry.result?.scoreA != null)
+    return begun && going.length > 0 && going.length < own.size
+  })
 }
 
 export type StandingGroup = {
@@ -93,14 +149,23 @@ function groupLetter(entries: CompetitionMatch[]) {
   return letters.size === 1 && letter ? letter.toUpperCase() : null
 }
 
+/** Some rows of a table ranked on their own: places count from 1, and teams level in the table stay level. */
+function rankedAlone(rows: CompetitionStanding[]): CompetitionStanding[] {
+  return rows.map((row) => {
+    const level = rows.filter((other) => other.rank === row.rank)
+    return { ...row, rank: rows.indexOf(level[0]!) + 1, tied: level.length > 1 }
+  })
+}
+
 /**
  * The groups of a table. A plan keeps a group stage as one table, so teams that only meet among themselves are read
  * as one group, ranked on its own; pairs and lone teams make no groups, and then the table stays whole. A team
  * without a match in the stage is left out once others have one.
  */
 export function standingGroups(view: CompetitionView, source: Table): StandingGroup[] {
-  const table = ordersByGames(view, source) ? { ...source, rows: settledByGames(source.rows) } : source
-  const entries = competitionMatches([view]).filter((entry) => entry.match.stageCode === table.stageCode)
+  const entries = competitionMatches([view]).filter((entry) => entry.match.stageCode === source.stageCode)
+  const ranked = ordersByGames(view, source) ? settledByGames(source.rows) : source.rows
+  const table = { ...source, rows: drawsApart(ranked, entries) }
   const parent = new Map<string, string>()
   const root = (team: string): string => {
     const up = parent.get(team)
@@ -118,12 +183,12 @@ export function standingGroups(view: CompetitionView, source: Table): StandingGr
   const lists = [...groups]
   if (lists.length < 2 || lists.some(([, rows]) => rows.length < 3)) {
     const playing = table.rows.filter((row) => parent.has(row.teamId))
-    return [{ name: null, rows: playing.length ? playing : table.rows }]
+    return [{ name: null, rows: playing.length ? rankedAlone(playing) : table.rows }]
   }
   return lists
     .map(([key, rows]) => ({
       letter: groupLetter(entries.filter((entry) => root(teamsOf(entry).a!) === key)),
-      rows: rows.map((row, index) => ({ ...row, rank: index + 1, tied: false })),
+      rows: rankedAlone(rows),
     }))
     .sort((x, y) => (x.letter ?? "").localeCompare(y.letter ?? ""))
     .map(({ letter, rows }, index) => ({ name: letter ?? String(index + 1), rows }))

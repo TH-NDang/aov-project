@@ -6,7 +6,7 @@ import { ProgressBadge } from "./game/progress-badge"
 export const MATCH_STATE_LABELS: Record<MatchRecordingState, string> = {
   upcoming: "Chưa diễn ra",
   missing: "Cần bổ sung",
-  unconfirmed: "Chờ xác nhận",
+  unconfirmed: "Chờ xuất bản",
   complete: "Hoàn tất",
 }
 

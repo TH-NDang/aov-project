@@ -29,4 +29,14 @@ class TournamentContentJsonTest {
         assertThat(allocation.primary()).isTrue();
         assertThat(slot.known()).isTrue();
     }
+
+    @Test
+    void aParticipantWithoutABuildIsWrittenWithoutTheKeyAndReadBackAsAnEmptyList() {
+        var participant = new TournamentContent.Participant(null, null, null, null, null, null, null, null, null);
+
+        var written = json.writeValueAsString(participant);
+
+        assertThat(json.readTree(written).has("build")).isFalse();
+        assertThat(json.readValue(written, TournamentContent.Participant.class).build()).isEmpty();
+    }
 }

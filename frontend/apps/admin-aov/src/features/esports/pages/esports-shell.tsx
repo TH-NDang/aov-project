@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react"
+import { Fragment, type ComponentProps, type ReactNode } from "react"
 import { Link } from "react-router"
 import { ChevronRight, RefreshCw, Trophy } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -7,6 +7,7 @@ import { Page } from "@/components/page-header"
 import { tournamentError } from "@/features/tournaments/api/tournament-api"
 import { useTournamentAccess } from "../data/use-esports-data"
 import "@/features/tournaments/model/tournament-styles"
+import "../components/series/studio.css"
 import "../esports.css"
 
 export type Access = ReturnType<typeof useTournamentAccess>
@@ -15,11 +16,21 @@ export function EsportsPage({ children }: { children: ReactNode }) {
   return <Page className="esports mx-auto w-full max-w-[1400px] gap-5">{children}</Page>
 }
 
-/** Resolves community-service capabilities before rendering; read-only users get the same pages without edit controls. */
-export function AccessGate({ children }: { children: (access: Access) => ReactNode }) {
+/** The page of a desk that fills the content region: no padding, no width of its own, nothing around it. */
+export function StudioPage({ fullscreen, ...props }: ComponentProps<"div"> & { fullscreen?: boolean }) {
+  return <div className="esp-studio" data-fullscreen={fullscreen || undefined} {...props} />
+}
+
+/**
+ * Resolves community-service capabilities before rendering; read-only users get the same pages without edit controls.
+ * `pending` is what stands there meanwhile, in the shape of the page that follows.
+ */
+export function AccessGate({ children, pending }: { children: (access: Access) => ReactNode; pending?: ReactNode }) {
   const access = useTournamentAccess()
   if (access.me.isPending)
-    return (
+    return pending ? (
+      <>{pending}</>
+    ) : (
       <EsportsPage>
         <Skeleton className="h-40 rounded-2xl" />
         <Skeleton className="h-64 rounded-xl" />

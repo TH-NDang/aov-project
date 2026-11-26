@@ -64,6 +64,3 @@ export function videoToGame(sync: VodSync, videoSecond: number): number | null {
   }
   return remaining
 }
-
-/** Play triangle forced to text presentation; Windows otherwise draws U+25B6 as a blue emoji tile. */
-export const VIDEO_MARK = String.fromCodePoint(0x25b6, 0xfe0e)

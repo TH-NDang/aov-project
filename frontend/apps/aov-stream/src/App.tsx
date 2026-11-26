@@ -11,6 +11,7 @@ import {
 import { CommunityLoginCallback } from "./components/community-session"
 import { StreamNotFound } from "./components/stream-not-found"
 import { Travel } from "./components/travel"
+import { VideoFrame } from "./components/video-frame"
 import "./features/community/components/community.css"
 import { PublicCompetitionPage } from "./features/tournaments/pages/competition-page"
 import { CompetitionDirectory } from "./features/tournaments/pages/competition-directory-page"
@@ -22,7 +23,12 @@ import { CreditsPage } from "./features/tournaments/pages/credits-page"
 import "./features/tournaments/tournaments.css"
 import "./features/tournaments/components/schedule.css"
 export default function App() {
-  return <Travel>{(location) => <Pages location={location} />}</Travel>
+  return (
+    <>
+      <Travel>{(location) => <Pages location={location} />}</Travel>
+      <VideoFrame />
+    </>
+  )
 }
 
 function Pages({ location }: { location: Location }) {

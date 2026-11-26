@@ -1,0 +1,29 @@
+/* The finder: the board, the answer, what would narrow it, the games. */
+.tn-find {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+.tn-find-head {
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 32px;
+  margin-top: 8px;
+}
+@media (max-width: 899.98px) {
+  .tn-find {
+    gap: 12px;
+  }
+  .tn-find-head {
+    margin-top: 6px;
+  }
+}
+@media (max-width: 599.98px) {
+  .tn-find-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

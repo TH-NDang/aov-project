@@ -54,12 +54,15 @@
   width: 64px;
   height: 24px;
 }
-/* The title alone, no close button: the sheet closes by a tap above it or a drag down. */
+/*
+ * The title alone, no close button: the sheet closes by a tap above it or a drag down. It starts on the line of the
+ * content under it, which the body's padding sets.
+ */
 .public-bottom-heading {
   display: flex;
   align-items: center;
   min-height: 32px;
-  padding: 2px 20px 10px;
+  padding: 2px 16px 10px;
   text-align: left;
 }
 .public-bottom-heading [data-slot="drawer-title"] {

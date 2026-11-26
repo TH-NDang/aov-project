@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type {
-  CompetitionSlot,
   CompetitionView,
   PlannedMatch,
   ResolvedMatch,
@@ -9,10 +8,10 @@ import type {
   TournamentContent,
 } from "@aov/community-contracts"
 import {
-  bracketLanes,
   bySoonest,
   champion,
   competitionStatus,
+  isElimination,
   matchRoundLabel,
   matchStrip,
   playedOrder,
@@ -51,10 +50,6 @@ import { competitionMatches } from "../src/lib/match-model.ts"
 const HOUR = 60 * 60 * 1000
 const NOW = Date.parse("2026-11-13T12:00:00Z")
 const at = (hours: number) => new Date(NOW + hours * HOUR).toISOString()
-
-const team = (teamId: string): CompetitionSlot => ({ type: "TEAM", teamId })
-const winner = (matchKey: string): CompetitionSlot => ({ type: "WINNER", matchKey })
-const loser = (matchKey: string): CompetitionSlot => ({ type: "LOSER", matchKey })
 
 const planned = (key: string, extra: Partial<PlannedMatch> = {}): PlannedMatch => ({
   key,
@@ -122,8 +117,15 @@ test("a match stops counting as on now three hours after its start", () => {
 test("a match without a name reads its title in the reader's language", () => {
   const match = planned("m", { label: null, title: { kind: "ROUND_ROBIN", leg: 2, round: 4 } })
 
-  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "vi-VN"), "Lượt 2 · Vòng 4")
-  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "en-US"), "Leg 2 · Round 4")
+  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "vi-VN"), "Lượt 2, Vòng 4")
+  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "en-US"), "Leg 2, Round 4")
+})
+
+test("a match without a name reads its title, whose number counts the matches of the round", () => {
+  const match = planned("m", { label: null, title: { kind: "LOWER_ROUND", round: 1, number: 2 } })
+  assert.equal(matchRoundLabel(match, null, "vi-VN"), "Vòng 1 nhánh thua, trận 2")
+  assert.equal(matchRoundLabel(match, null, "en-US"), "Lower bracket round 1, match 2")
+  assert.equal(matchRoundLabel(planned("m", { label: null }), null), null)
 })
 
 test("a round label drops the pairing and the stage name that the row already shows", () => {
@@ -133,101 +135,22 @@ test("a round label drops the pairing and the stage name that the row already sh
   assert.equal(label("Playoffs · BAC vs ANK", "Playoffs"), null)
   assert.equal(label("Thi đấu chính · HEV vs BĐ", "Thi đấu chính"), null)
   assert.equal(label("Chung kết tổng", "Playoffs"), "Chung kết tổng")
-  assert.equal(label("Vòng 1 nhánh thua · 2", "Playoffs"), "Vòng 1 nhánh thua · 2")
+  assert.equal(label("Vòng 1 nhánh thua · 2", "Playoffs"), "Vòng 1 nhánh thua, trận 2")
   assert.equal(label("Matchweek 2 · A vs. B"), "Tuần 2")
-  assert.equal(label("Bye · Vòng 2B (0-1) Matches · HCMUTE vs TMU", "Vòng 1-3"), "Bye · Vòng 2B (0-1)")
+  assert.equal(label("Bye · Vòng 2B (0-1) Matches · HCMUTE vs TMU", "Vòng 1-3"), "Bye, Vòng 2B (0-1)")
   assert.equal(label("Canvas vs Devs"), null, "a label that is only the pairing leaves nothing to show")
-  assert.equal(label("Tứ kết · Bảng vsync"), "Tứ kết · Bảng vsync", "'vs' inside a word is not a pairing")
+  assert.equal(label("Tứ kết · Bảng vsync"), "Tứ kết, Bảng vsync", "'vs' inside a word is not a pairing")
 })
 
-test("a plan without loser links is one lane laid out by round", () => {
-  const lanes = bracketLanes([
-    planned("final", { round: 2, a: winner("semi-1"), b: winner("semi-2") }),
-    planned("semi-2", { round: 1, a: team("c"), b: team("d") }),
-    planned("semi-1", { round: 1, a: team("a"), b: team("b") }),
-  ])
-  assert.deepEqual(
-    lanes.map((lane) => [lane.key, lane.rounds.map((round) => round.matches.map((match) => match.key))]),
-    [["rounds", [["semi-2", "semi-1"], ["final"]]]],
-  )
+test("a name that is a number alone counts no matches of a round", () => {
+  assert.equal(matchRoundLabel(planned("m", { label: "12" }), null), "12")
 })
 
-test("a double elimination splits into the upper lane, the lower lane and the final between them", () => {
-  const lanes = bracketLanes([
-    planned("upper-1", { round: 1, a: { type: "SEED", seed: 1 }, b: { type: "SEED", seed: 3 } }),
-    planned("upper-2", { round: 1, a: { type: "SEED", seed: 2 }, b: { type: "SEED", seed: 4 } }),
-    planned("lower-1", { round: 2, a: loser("upper-1"), b: { type: "SEED", seed: 5 } }),
-    planned("lower-2", { round: 2, a: loser("upper-2"), b: { type: "SEED", seed: 6 } }),
-    planned("upper-final", { round: 2, a: winner("upper-1"), b: winner("upper-2") }),
-    planned("lower-semi", { round: 3, a: winner("lower-1"), b: winner("lower-2") }),
-    planned("lower-final", { round: 4, a: loser("upper-final"), b: winner("lower-semi") }),
-    planned("grand-final", { round: 5, a: winner("upper-final"), b: winner("lower-final") }),
-  ])
-  const keys = (lane: (typeof lanes)[number]) =>
-    lane.rounds.map((round) => [round.round, round.matches.map((match) => match.key)])
+test("a stage is a bracket by single and by double elimination", () => {
+  const formats = ["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION", "ROUND_ROBIN", "CUSTOM"]
   assert.deepEqual(
-    lanes.map((lane) => lane.key),
-    ["upper", "lower", "final"],
-  )
-  assert.deepEqual(keys(lanes[0]!), [
-    [1, ["upper-1", "upper-2"]],
-    [2, ["upper-final"]],
-  ])
-  assert.deepEqual(
-    keys(lanes[1]!),
-    [
-      [2, ["lower-1", "lower-2"]],
-      [3, ["lower-semi"]],
-      [4, ["lower-final"]],
-    ],
-    "a match fed only by lower-lane winners stays in the lower lane",
-  )
-  assert.deepEqual(keys(lanes[2]!), [[5, ["grand-final"]]])
-})
-
-test("a match for third place, fed by losers but leading nowhere, stays in the round layout", () => {
-  const lanes = bracketLanes([
-    planned("semi-1", { round: 1, a: team("a"), b: team("b") }),
-    planned("semi-2", { round: 1, a: team("c"), b: team("d") }),
-    planned("third-place", { round: 2, a: loser("semi-1"), b: loser("semi-2") }),
-    planned("final", { round: 2, a: winner("semi-1"), b: winner("semi-2") }),
-  ])
-  assert.deepEqual(
-    lanes.map((lane) => [lane.key, lane.rounds.map((round) => round.matches.map((match) => match.key))]),
-    [
-      [
-        "rounds",
-        [
-          ["semi-1", "semi-2"],
-          ["third-place", "final"],
-        ],
-      ],
-    ],
-  )
-})
-
-test("a loser coming from another stage does not make a lower lane", () => {
-  const lanes = bracketLanes([
-    planned("decider", { round: 1, a: loser("group-final"), b: team("c") }),
-    planned("final", { round: 2, a: winner("decider"), b: team("d") }),
-  ])
-  assert.deepEqual(
-    lanes.map((lane) => lane.key),
-    ["rounds"],
-  )
-})
-
-test("a lower lane without a deciding match has no final lane", () => {
-  const lanes = bracketLanes([
-    planned("upper-1", { round: 1, a: team("a"), b: team("b") }),
-    planned("upper-2", { round: 1, a: team("c"), b: team("d") }),
-    planned("upper-final", { round: 2, a: winner("upper-1"), b: winner("upper-2") }),
-    planned("lower-1", { round: 2, a: loser("upper-1"), b: loser("upper-2") }),
-    planned("lower-final", { round: 3, a: winner("lower-1"), b: loser("upper-final") }),
-  ])
-  assert.deepEqual(
-    lanes.map((lane) => lane.key),
-    ["upper", "lower"],
+    formats.filter((format) => isElimination({ format })),
+    ["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION"],
   )
 })
 

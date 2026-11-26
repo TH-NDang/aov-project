@@ -5,6 +5,8 @@ import type { GameContent, Participant } from "@aov/community-contracts"
 import {
   clampSpan,
   defaultSpan,
+  neighboursOf,
+  phaseSpan,
   retimeRange,
   spanLabel,
   timelineSpans,
@@ -12,8 +14,14 @@ import {
 } from "../src/features/esports/model/broadcast-timeline"
 import type { GameView } from "../src/features/esports/model/game-view"
 import { moveMark, observationMarks } from "../src/features/esports/model/observation-marks"
+import { createPlayhead } from "../src/features/esports/model/playhead"
+import { phaseRange, placeAt } from "../src/features/esports/model/playback-place"
 import type { GameChapter } from "../src/features/esports/model/series-vod"
-import { inPage } from "./fixtures/esports-ui"
+import type { TimelineEvent } from "../src/features/esports/model/timeline"
+import { waitFor } from "./fixtures/dom"
+import { inPage, lookups } from "./fixtures/esports-ui"
+
+const NO_EVENTS: TimelineEvent[] = []
 
 const lanes = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
 const player = (lane: Participant["lane"], overrides: Partial<Participant> = {}): Participant => ({
@@ -95,12 +103,14 @@ test("the moments a broadcast showed loadouts are one mark per team, part and se
 const drafted: GameChapter = {
   gameId: "g1",
   number: 2,
+  videoId: "R5rCsGqDJIg",
   from: 1000,
   start: 1300,
   end: 2200,
   duration: 900,
   synced: true,
   live: true,
+  ended: true,
   draft: {
     start: 1000,
     locked: 1250,
@@ -115,8 +125,8 @@ const drafted: GameChapter = {
   marks: [{ side: "BLUE", part: "equipment", at: 300, lanes: ["TOP"], min: 0, max: 599 }],
 }
 
-test("the edges of the ban/pick phase and the loadout marks move only where the service accepts them", () => {
-  const edge = (kind: "draftStart" | "draftLock" | "gameStart"): RetimeTarget => ({ kind, gameId: "g1" })
+test("the edges of a game and the loadout marks move only where the service accepts them", () => {
+  const edge = (kind: "draftStart" | "draftLock" | "gameStart" | "gameEnd"): RetimeTarget => ({ kind, gameId: "g1" })
   assert.deepEqual(
     retimeRange(drafted, edge("draftStart"), 5000, { previousEnd: 900 }),
     { min: 901, max: 1050 },
@@ -134,12 +144,24 @@ test("the edges of the ban/pick phase and the loadout marks move only where the 
     { min: 1250, max: 1300 },
     "a game already running into the next one can only be pulled back",
   )
+  assert.deepEqual(
+    retimeRange(drafted, edge("gameEnd"), 5000, { nextFrom: 2500 }),
+    { min: 1600, max: 2499 },
+    "the game ends after the last thing it shows and before the next game",
+  )
+  assert.deepEqual(retimeRange({ ...drafted, recordedTo: 700 }, edge("gameEnd"), 5000), { min: 2000, max: 5000 })
+  assert.deepEqual(
+    retimeRange(drafted, edge("gameEnd"), 5000, { nextFrom: 2100 }),
+    { min: 1600, max: 2200 },
+    "an end inside the next game can only be pulled back",
+  )
   const mark: RetimeTarget = { kind: "mark", gameId: "g1", side: "BLUE", part: "equipment", at: 300 }
   assert.deepEqual(retimeRange(drafted, mark, 5000), { min: 1300, max: 1899 }, "game seconds 0 to 599 on the video")
   assert.equal(retimeRange(drafted, { ...mark, at: 301 }, 5000), null)
 
   const waiting = { ...drafted, live: false }
   assert.equal(retimeRange(waiting, edge("gameStart"), 5000), null, "no game start to move before the game is live")
+  assert.equal(retimeRange(waiting, edge("gameEnd"), 5000), null)
   assert.equal(retimeRange(waiting, mark, 5000), null)
   assert.deepEqual(retimeRange(waiting, edge("draftLock"), 5000), { min: 1200, max: 5000 })
   const open = { ...drafted, draft: { ...drafted.draft!, locked: null } }
@@ -148,6 +170,34 @@ test("the edges of the ban/pick phase and the loadout marks move only where the 
     min: 901,
     max: 4100,
   })
+})
+
+test("in a game without an end a moment may go to the next game, and there is no end to move", () => {
+  const moment: TimelineEvent = { id: "n", kind: "NOTE", at: 60, title: "Steal" }
+  const open: GameChapter = { ...drafted, ended: false, events: [moment] }
+  const target: RetimeTarget = { kind: "event", gameId: "g1", id: "n" }
+  assert.deepEqual(retimeRange(open, target, 5000, { nextFrom: 4000 }), { min: 1300, max: 3999 })
+  assert.deepEqual(retimeRange(open, target, 5000), { min: 1300, max: 5000 }, "or to the end of the video")
+  assert.deepEqual(retimeRange({ ...open, ended: true }, target, 5000), { min: 1300, max: 2200 })
+  assert.equal(retimeRange(open, { kind: "gameEnd", gameId: "g1" }, 5000), null)
+})
+
+test("the neighbours of a game are placed games, and an estimated end bounds nothing", () => {
+  const before: GameChapter = {
+    ...drafted,
+    gameId: "g0",
+    number: 1,
+    from: 100,
+    start: 100,
+    end: 1000,
+    ended: false,
+    sync: { url: "", startSecond: 100, pauses: [] },
+  }
+  const elsewhere: GameChapter = { ...drafted, gameId: "g2", number: 3, from: 0, start: 0, end: 0, synced: false }
+  const after: GameChapter = { ...drafted, gameId: "g3", number: 4, from: 3000, start: 3300, end: 4200 }
+  const chapters = [before, drafted, elsewhere, after]
+  assert.deepEqual(neighboursOf(chapters, "g1"), { previousEnd: 400, nextFrom: 3000 }, "game 1 shows something at 5:00")
+  assert.deepEqual(neighboursOf(chapters, "g3"), { previousEnd: 2200, nextFrom: null })
 })
 
 const seat = (side: "BLUE" | "RED", lane: "MID" | "JUNGLE", name: string) => ({
@@ -186,19 +236,22 @@ const view = {
 
 test("dragging an edge or a mark makes the video follow, and a cancelled drag puts it back", async () => {
   await inPage(async (document, render) => {
-    const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
+    const { MatchTimeline } = await import("../src/features/esports/components/series/timeline/match-timeline")
     const window = document.defaultView!
     const moved: [string, number][] = []
     const seeks: number[] = []
+    const playhead = createPlayhead(320)
     const chapter: GameChapter = {
       gameId: "g1",
       number: 1,
+      videoId: "R5rCsGqDJIg",
       from: 100,
       start: 300,
       end: 900,
       duration: 600,
       synced: true,
       live: true,
+      ended: true,
       draft: { start: 100, locked: 250, turns: [] },
       sync: { url: "", startSecond: 300, pauses: [] },
       winner: null,
@@ -208,19 +261,20 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
         { side: "BLUE", part: "spell", at: 42, lanes: ["MID"], min: 0, max: 600 },
       ],
     }
+    const chapters = [chapter]
+    const views = { g1: view }
+    const flags = [{ id: "g1", at: 300, label: "Vào trận ván 1" }]
     const timeline = (editing: boolean) => (
-      <BroadcastTimeline
+      <MatchTimeline
         duration={1200}
-        current={320}
-        chapters={[chapter]}
-        flags={[{ id: "g1", at: 300, label: "Bắt đầu ván 1" }]}
-        events={[]}
-        views={{ g1: view }}
-        chapterTitle={() => ""}
+        playhead={playhead}
+        chapters={chapters}
+        flags={flags}
+        events={NO_EVENTS}
+        views={views}
         focusedGameId="g1"
         activeId={null}
-        isDimmed={() => false}
-        lookups={{ itemIcon: () => null, itemTier: () => 3 }}
+        lookups={lookups}
         editing={
           editing
             ? {
@@ -234,7 +288,6 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
         }
         onSeek={(second) => seeks.push(second)}
         onSelect={() => {}}
-        onOpen={() => {}}
       />
     )
     const pointer = (type: string, clientX: number) =>
@@ -253,10 +306,10 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
     await render(timeline(false))
     measure()
     const shown = document.querySelector<HTMLElement>('[data-mark="enchantments"]')!
-    assert.match(shown.getAttribute("aria-label") ?? "", /Ván 1 · Video hiện phù hiệu · AZU · cả đội · 0:42/)
+    assert.match(shown.getAttribute("aria-label") ?? "", /Ván 1, video hiện phù hiệu của AZU, cả đội, 0:42/)
     assert.match(
       document.querySelector('[data-mark="spell"]')!.getAttribute("aria-label") ?? "",
-      /Video hiện phụ trợ · AZU · Mid A/,
+      /video hiện phụ trợ của AZU, Mid A/,
     )
     assert.equal(
       document.querySelector<HTMLElement>('[data-mark="spell"]')!.style.marginLeft,
@@ -265,12 +318,12 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
     )
     assert.match(
       document.querySelector('[data-edge="draftStart"]')!.getAttribute("aria-label") ?? "",
-      /Bắt đầu cấm chọn ván 1 · 1:40/,
+      /Bắt đầu cấm chọn ván 1, ▸1:40/,
     )
     assert.equal(document.querySelectorAll("[data-movable]").length, 0, "reading moves nothing")
     // The hatched ban/pick zone runs from its start (100) to the lock (250); the wait until the game (300) is apart.
-    assert.equal(document.querySelector<HTMLElement>(".esp-bt-draft")!.style.width, "12.5%")
-    const wait = document.querySelector<HTMLElement>(".esp-bt-draft-wait")!
+    assert.equal(document.querySelector<HTMLElement>('[data-part="draft"]')!.style.width, "12.5%")
+    const wait = document.querySelector<HTMLElement>('[data-part="wait"]')!
     assert.match(wait.style.left, /^20\.83/)
     assert.match(wait.style.width, /^4\.16/)
     await act(async () => shown.click())
@@ -281,13 +334,17 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
     await render(timeline(true))
     measure()
     seeks.length = 0
-    assert.equal(document.querySelectorAll("[data-movable]").length, 5, "two edges, the game start and two marks")
+    assert.equal(
+      document.querySelectorAll("[data-movable]").length,
+      6,
+      "two edges of the draft, the start and the end of the game, and two marks",
+    )
 
     const edge = document.querySelector<HTMLElement>('[data-edge="draftStart"]')!
     await act(async () => edge.dispatchEvent(pointer("pointerdown", 100)))
     await act(async () => window.dispatchEvent(pointer("pointermove", 60)))
     assert.deepEqual(seeks, [60], "the video goes where the edge is being dragged")
-    assert.match(document.querySelector("[data-moving]")!.textContent ?? "", /1:40 → 1:00/)
+    assert.match(document.querySelector("[data-moving]")!.textContent ?? "", /Bắt đầu cấm chọn ván 1: ▸1:40 → ▸1:00/)
     assert.equal(edge.style.left, "5%")
     await act(async () => window.dispatchEvent(pointer("pointerup", 400)))
     assert.deepEqual(moved, [["draftStart", 250]], "the phase cannot start after its lock")
@@ -295,29 +352,42 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
 
     await drag('[data-edge="draftLock"]', 250, 280)
     await drag('[data-edge="gameStart"]', 300, 500)
+    await drag('[data-edge="gameEnd"]', 900, 1000)
     await drag('[data-mark="enchantments"]', 342, 400)
     assert.deepEqual(moved.slice(1), [
       ["draftLock", 280],
       ["gameStart", 500],
+      ["gameEnd", 1000],
       ["mark enchantments 42", 400],
     ])
     assert.equal(seeks.at(-1), 400)
 
     await drag('[data-mark="spell"]', 342, 380, "pointercancel")
-    assert.equal(moved.length, 4, "a cancelled drag saves nothing")
+    assert.equal(moved.length, 5, "a cancelled drag saves nothing")
     assert.equal(seeks.at(-1), 320, "and returns the video to where it was")
+
+    const spell = document.querySelector<HTMLElement>('[data-mark="spell"]')!
+    await act(async () => spell.dispatchEvent(pointer("pointerdown", 342)))
+    await act(async () => window.dispatchEvent(pointer("pointermove", 400)))
+    await act(async () =>
+      window.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })),
+    )
+    await act(async () => window.dispatchEvent(pointer("pointerup", 400)))
+    assert.equal(moved.length, 5, "Esc puts the mark back")
+    assert.equal(seeks.at(-1), 320)
 
     await act(async () =>
       document
         .querySelector<HTMLElement>('[data-edge="draftLock"]')!
         .dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft", altKey: true, bubbles: true })),
     )
-    assert.deepEqual(moved.at(-1), ["draftLock", 249])
     assert.equal(seeks.at(-1), 249)
+    await waitFor(() => moved.length === 6)
+    assert.deepEqual(moved.at(-1), ["draftLock", 249])
   })
 })
 
-test("the track opens on a span that holds the focused game, whatever the length of the video", () => {
+test("the track opens on a span that holds the phase on screen, whatever the length of the video", () => {
   const broadcast = 11 * 3600 + 54 * 60 + 59
   assert.deepEqual(timelineSpans(broadcast), [
     300,
@@ -336,15 +406,25 @@ test("the track opens on a span that holds the focused game, whatever the length
   assert.deepEqual(timelineSpans(1200), [300, 600, 900, 1200], "a short video never offers more than itself")
 
   // Game 1 of the grand final: 11:37 of play after seven minutes of bans and picks.
-  const game = { from: 27154, end: 27574 + 697 }
-  assert.equal(defaultSpan(broadcast, game), 1800)
-  assert.equal(spanLabel(defaultSpan(broadcast, game), broadcast), "30 phút")
-  assert.equal(defaultSpan(broadcast, { from: 0, end: 2700 }), 3600, "a long game takes the next round span")
-  assert.equal(defaultSpan(broadcast, { from: 0, end: 1700 }), 2700, "a game just over half an hour gets 45 minutes")
-  assert.equal(defaultSpan(broadcast, { from: 0, end: broadcast }), broadcast)
-  assert.equal(defaultSpan(broadcast, null), 14400, "without a game, about a quarter of a long video")
-  assert.equal(defaultSpan(1500, null), 1500, "a short video is shown whole")
-  assert.equal(defaultSpan(1500, { from: 100, end: 1400 }), 1500)
+  const start = 27574
+  const game: GameChapter = {
+    ...drafted,
+    from: 27154,
+    start,
+    end: start + 697,
+    duration: 697,
+    draft: { start: 27154, locked: 27500, turns: [] },
+    sync: { url: "", startSecond: start, pauses: [] },
+  }
+  const spanAt = (second: number, chapter = game) =>
+    phaseSpan(phaseRange(placeAt([chapter], second), second, broadcast)!, broadcast)
+  assert.equal(Math.round(spanAt(start + 60)), Math.round(697 * 1.08), "the game with a little air around it")
+  assert.equal(spanLabel(spanAt(start + 60), broadcast), "13 phút")
+  assert.equal(Math.round(spanAt(27200)), Math.round(346 * 1.08), "or its draft")
+  assert.equal(spanAt(start + 60, { ...game, end: start + 120, duration: 120 }), 300, "at least five minutes")
+  assert.equal(phaseSpan({ from: 100, to: 1400 }, 1200), 1200, "and never more than the video")
+  assert.equal(defaultSpan(broadcast), 14400, "without a game, about a quarter of a long video")
+  assert.equal(defaultSpan(1500), 1500, "a short video is shown whole")
   assert.deepEqual(
     [300, 2700, 3600, 5400, 14400, broadcast].map((span) => spanLabel(span, broadcast)),
     ["5 phút", "45 phút", "1 giờ", "1,5 giờ", "4 giờ", "Cả video"],
@@ -353,30 +433,27 @@ test("the track opens on a span that holds the focused game, whatever the length
 
 test("the track zooms around the pointer with Ctrl + wheel and with a two-finger pinch", async () => {
   await inPage(async (document, render) => {
-    const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
+    const { MatchTimeline } = await import("../src/features/esports/components/series/timeline/match-timeline")
     const window = document.defaultView!
     await render(
-      <BroadcastTimeline
+      <MatchTimeline
         duration={7200}
-        current={600}
+        playhead={createPlayhead(600)}
         chapters={[]}
-        events={[]}
+        events={NO_EVENTS}
         views={{}}
-        chapterTitle={() => ""}
         focusedGameId={null}
         activeId={null}
-        isDimmed={() => false}
-        lookups={{ itemIcon: () => null, itemTier: () => 3 }}
+        lookups={lookups}
         onSeek={() => {}}
         onSelect={() => {}}
-        onOpen={() => {}}
       />,
     )
     const view = document.querySelector<HTMLElement>("[data-timeline-viewport]")!
     view.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 180 }) as DOMRect
     document.querySelector<HTMLElement>('[role="slider"]')!.getBoundingClientRect = () =>
       ({ left: 0, top: 0, width: 4000, height: 158 }) as DOMRect
-    const range = () => document.querySelector('[aria-label="Phạm vi đang xem"]')?.textContent
+    const range = () => document.querySelector('[aria-label^="Khoảng đang xem"]')?.textContent
     const gesture = async (type: string, values: Record<string, unknown>) => {
       const event = Object.assign(new window.Event(type, { bubbles: true, cancelable: true }), values)
       await act(async () => void view.dispatchEvent(event))
@@ -402,7 +479,7 @@ test("the track zooms around the pointer with Ctrl + wheel and with a two-finger
     assert.equal(range(), "1,4 giờ")
     for (let turn = 0; turn < 3; turn++) await gesture("wheel", { deltaY: 9, deltaMode: 1, ctrlKey: true, clientX: 0 })
     assert.equal(range(), "Cả video", "zooming out stops at the whole video")
-    assert.equal(document.querySelector<HTMLButtonElement>('[aria-label="Thu nhỏ timeline"]')!.disabled, true)
+    assert.equal(document.querySelector<HTMLButtonElement>('[aria-label="Xem khoảng dài hơn"]')!.disabled, true)
 
     await gesture("touchstart", fingers(400, 600))
     await gesture("touchmove", fingers(300, 700))
@@ -416,7 +493,7 @@ test("the track zooms around the pointer with Ctrl + wheel and with a two-finger
 
     for (let turn = 0; turn < 8; turn++) await gesture("wheel", { deltaY: -300, ctrlKey: true, clientX: 500 })
     assert.equal(range(), "1 phút", "zooming in stops at one minute")
-    assert.equal(document.querySelector<HTMLButtonElement>('[aria-label="Phóng to timeline"]')!.disabled, true)
+    assert.equal(document.querySelector<HTMLButtonElement>('[aria-label="Xem khoảng ngắn hơn"]')!.disabled, true)
     assert.equal(clampSpan(7200, 5), 60)
     assert.equal(clampSpan(30, 5), 30, "a video shorter than a minute is its own shortest span")
     assert.equal(clampSpan(7200, 99999), 7200)

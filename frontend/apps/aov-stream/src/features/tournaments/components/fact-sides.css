@@ -1,0 +1,60 @@
+.tn-fact-sides {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+.tn-fact-sides > p {
+  margin: -8px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+}
+/* Blue on the left and red on the right, as the words under them say. */
+.tn-fact-sides-bar {
+  display: flex;
+  height: 14px;
+  gap: 2px;
+}
+.tn-fact-sides-bar > i {
+  flex: var(--part) 1 0;
+  border-radius: 2px;
+  background: var(--hub-blue);
+}
+.tn-fact-sides-bar > [data-side="RED"] {
+  background: var(--hub-red);
+}
+.tn-fact-sides-bar > :first-child {
+  border-radius: 4px 2px 2px 4px;
+}
+.tn-fact-sides-bar > :last-child {
+  border-radius: 2px 4px 4px 2px;
+}
+.tn-fact-sides > ul {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -8px 0 0;
+  padding: 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 40px;
+  list-style: none;
+}
+.tn-fact-sides b {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-fact-sides a {
+  display: block;
+}
+.tn-fact-sides a:hover > b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (forced-colors: active) {
+  .tn-fact-sides-bar > i {
+    forced-color-adjust: none;
+  }
+}

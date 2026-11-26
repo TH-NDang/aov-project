@@ -41,7 +41,7 @@ test("each game starts independently with four bans, five distinct lanes and exp
         (player) =>
           !player.playerId &&
           !player.hero.id &&
-          !player.spell.id &&
+          !player.spell?.id &&
           player.arcana.status === "UNKNOWN" &&
           player.enchantments.status === "UNKNOWN",
       ),

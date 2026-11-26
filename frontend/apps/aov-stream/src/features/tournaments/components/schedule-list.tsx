@@ -1,7 +1,6 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
-import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
@@ -15,8 +14,9 @@ import {
   type ScheduleScope,
 } from "../../../lib/match-schedule"
 import { shortCompetitionName } from "../../../lib/season-name"
+import { useKeptRows } from "../../../lib/use-kept-rows"
 import { useNow } from "../../../lib/use-now"
-import { MatchRow } from "./match-row"
+import { MatchRow, matchStatus } from "./match-row"
 
 /** Matches shown before the reader scrolls for more. */
 const STEP = 40
@@ -66,25 +66,36 @@ function DayTitle({ group, part, timeZone, now }: { group: ScheduleGroup; part: 
 
 /**
  * Matches already in reading order, under a heading for each day of the reader's zone. `part` says which side of
- * now they are on, which names the group of matches without a date.
+ * now they are on, which names the group of matches without a date. `roundOf` is what a row says of its round, where a
+ * heading over the matches says some of it already; a list whose rows are left with nothing to say has no column for it.
  */
 export function ScheduleDays({
   entries,
   part,
   competition = false,
+  roundOf,
 }: {
   entries: CompetitionMatch[]
   part: Part
   competition?: boolean
+  roundOf?: (entry: CompetitionMatch) => string | null
 }) {
   const timeZone = useUserTimeZone()
   const now = useNow()
+  const bare =
+    !competition && !!roundOf && entries.every((entry) => !roundOf(entry) && matchStatus(entry, now) !== "PENDING")
   return scheduleGroups(entries, timeZone, now).map((group) => (
     <div className="tn-day" key={group.key}>
       <DayTitle group={group} part={part} timeZone={timeZone} now={now} />
       <div className="tn-fixtures">
         {group.items.map((entry) => (
-          <MatchRow key={`${entry.competition.id}:${entry.match.key}`} entry={entry} competition={competition} />
+          <MatchRow
+            key={`${entry.competition.id}:${entry.match.key}`}
+            entry={entry}
+            competition={competition}
+            round={roundOf?.(entry)}
+            bare={bare}
+          />
         ))}
       </div>
     </div>
@@ -148,7 +159,7 @@ export function ScheduleList({
   const ahead = scope === "results" ? [] : open.rest
   const undecided = scope === "results" ? [] : open.undecided
   const played = scope === "upcoming" ? [] : results
-  const { rows, loader } = useRevealedRows([...ahead, ...played], `${listKey}:${scope}`, STEP)
+  const { rows, loader } = useKeptRows([...ahead, ...played], `${listKey}:${scope}`, STEP)
   if (!ahead.length && !undecided.length && !played.length) return <>{empty}</>
   const parts: [Part, number, CompetitionMatch[]][] = [
     ["upcoming", scope === "results" ? 0 : upcoming.length, rows.slice(0, ahead.length)],

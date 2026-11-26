@@ -1,171 +1,186 @@
-import { Fragment } from "react"
-import type { CompetitionStanding, CompetitionView } from "@aov/community-contracts"
-import { EntityPageLink } from "../../../components/go-link"
-import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
-import { StreamImage } from "../../../components/stream-image"
+import { useRef, type ReactNode } from "react"
+import type { CompetitionStage, CompetitionStanding, CompetitionView } from "@aov/community-contracts"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { stageName } from "../../../lib/match-labels"
 import { competitionMatches, type CompetitionMatch } from "../../../lib/match-model"
-import { ordersByGames, standingGroups, teamForm, type StandingGroup } from "../../../lib/standings-model"
-import { FormMarks } from "./form-marks"
+import { isOut, placeZones, type PlaceZones } from "../../../lib/place-zones"
+import { groupWords, wayWords, zoneWords } from "../../../lib/standing-words"
+import { hasDraws, ordersByGames, standingGroups, tableOver } from "../../../lib/standings-model"
+import { useSlidingRows } from "../../../lib/use-sliding-rows"
+import { StandingsRow, type TableReading } from "./standings-row"
+import { ZoneHeading, zoneMark } from "./standings-zone"
 import "./standings-table.css"
 
 type Table = CompetitionView["content"]["standings"][number]
+type Say = (vi: string, en: string) => string
 
-/** The head of the table; narrow screens keep the record, the game difference and the points. */
-function TableHead() {
+/** The name of a table: its stage, and its group where the stage has several. */
+export const tableName = (stage: Pick<CompetitionStage, "name">, group: string | null | undefined, text: Say) =>
+  group ? `${stageName(stage.name)}, ${groupWords(group, text)}` : stageName(stage.name)
+
+/** The head of a table; narrow ones keep the record, the game difference and the points. */
+function TableHead({ draws, moves }: { draws: boolean; moves: boolean }) {
   const { text } = useStreamLocale()
   return (
     <thead>
       <tr>
-        <th scope="col" className="tn-rank">
+        <th scope="col" className="tn-table-rank">
           <abbr title={text("Thứ hạng", "Rank")}>#</abbr>
         </th>
-        <th scope="col">{text("Đội", "Team")}</th>
-        <th scope="col" className="tn-wide-only">
+        {moves && (
+          <th scope="col" className="tn-table-moved">
+            <span className="sr-only">{text("So với bước trước", "Since the step before")}</span>
+          </th>
+        )}
+        <th scope="col" className="tn-table-team">
+          {text("Đội", "Team")}
+        </th>
+        <th scope="col" className="tn-table-form">
           {text("Phong độ", "Form")}
         </th>
-        <th scope="col">
-          <abbr title={text("Trận thắng – trận thua", "Matches won – lost")}>{text("T–B", "W–L")}</abbr>
+        <th scope="col" className="tn-table-record">
+          {draws ? (
+            <abbr title={text("Trận thắng – hòa – thua", "Matches won – drawn – lost")}>{text("T–H–B", "W–D–L")}</abbr>
+          ) : (
+            <abbr title={text("Trận thắng – trận thua", "Matches won – lost")}>{text("T–B", "W–L")}</abbr>
+          )}
         </th>
-        <th scope="col" className="tn-wide-only">
+        <th scope="col" className="tn-table-games">
           <abbr title={text("Ván thắng – ván thua", "Games won – lost")}>{text("Ván", "Games")}</abbr>
         </th>
-        <th scope="col">
+        <th scope="col" className="tn-table-diff">
           <abbr title={text("Hiệu số ván", "Game difference")}>{text("HS", "+/−")}</abbr>
         </th>
-        <th scope="col">{text("Điểm", "Points")}</th>
+        <th scope="col" className="tn-table-points">
+          <abbr title={text("Điểm", "Points")}>{text("Điểm", "Pts")}</abbr>
+        </th>
       </tr>
     </thead>
   )
 }
 
-function Row({
+/**
+ * One group of a stage as a table, under a heading for every zone of places that lead the same way. Where the ways of
+ * neighbours are mixed each team's own way stands under its name.
+ */
+export function StandingsRows({
   view,
-  row,
+  name,
+  rows,
   entries,
+  zones,
+  final,
+  reading,
+  draws = hasDraws(rows),
+  caption,
 }: {
   view: CompetitionView
-  row: CompetitionStanding
-  /** The matches of the stage, for the form of the team. */
+  /** What the table is called for those who hear it, as a page may hold the tables of several stages and groups. */
+  name: string
+  rows: CompetitionStanding[]
+  /** The matches the rows count, for the form of each team. */
   entries: CompetitionMatch[]
+  zones: PlaceZones
+  /** Whether the table can no longer change, so places are won and ways are taken. */
+  final: boolean
+  /** On the standings tab; elsewhere the table is a card with a wash of the medals. */
+  reading?: TableReading
+  /** Whether matches of the stage were drawn, also when none was at the step shown. */
+  draws?: boolean
+  caption?: ReactNode
 }) {
-  const { text } = useStreamLocale()
-  const team = view.content.teams[row.teamId]
-  const name = team?.name || text("Đội chưa có thông tin", "No team information yet")
-  const difference = row.gameWins - row.gameLosses
-  // Before the first match every team shares the first line, which is no place worth a medal.
-  const medal = row.played > 0 ? medalOf(row.rank) : null
+  const { text, languageTag } = useStreamLocale()
+  const table = useRef<HTMLTableElement>(null)
+  useSlidingRows(table, rows.map((row) => row.teamId).join())
+  // Before the first match nobody has a place, and no place leads anywhere.
+  const ranked = rows.some((row) => row.played > 0)
+  const words = zoneWords(zones.zones, final, text, languageTag)
+  const parts =
+    ranked && zones.zones.length
+      ? zones.zones.map((zone, index) => ({ zone, index, own: rows.slice(zone.from - 1, zone.to) }))
+      : [{ zone: null, index: 0, own: rows }]
+  const moves = !!reading?.moved
   return (
-    <tr data-qualified={row.qualified || undefined} data-medal={medal || undefined}>
-      <td className="tn-rank">
-        {medal ? <RankBadge place={row.rank} size={medal === "gold" ? 42 : 36} /> : row.rank}
-        {row.qualified && (
-          <span className="sr-only">{text(", đã giành suất đi tiếp", ", secured a spot to advance")}</span>
-        )}
-      </td>
-      <th scope="row">
-        <span className="tn-team">
-          <StreamImage src={team?.logoUrl} darkSrc={team?.logoDarkUrl} logo name={team?.shortName || name} />
-          <span className="tn-team-name">
-            <EntityPageLink kind="TEAM" id={row.teamId} name={name} />
-            {row.tied && row.played > 0 && <small>{text("Đồng hạng", "Tied")}</small>}
-          </span>
-        </span>
-      </th>
-      <td className="tn-wide-only">
-        <FormMarks marks={teamForm(entries, row.teamId)} />
-      </td>
-      <td>
-        {row.won}–{row.lost}
-      </td>
-      <td className="tn-wide-only">
-        {row.gameWins}–{row.gameLosses}
-      </td>
-      <td>{difference > 0 ? `+${difference}` : difference}</td>
-      <td>
-        <strong>{row.points}</strong>
-      </td>
-    </tr>
+    <table ref={table} className="tn-table" data-look={reading ? "race" : "card"} aria-label={name}>
+      {caption && <caption>{caption}</caption>}
+      <TableHead draws={draws} moves={moves} />
+      {parts
+        .filter(({ own }) => own.length > 0)
+        .map(({ zone, index, own }) => (
+          <tbody key={index} onPointerLeave={reading && (() => reading.onPoint(null))}>
+            {zone && (
+              <ZoneHeading
+                zone={zone}
+                mark={zoneMark(zones.zones, index)}
+                words={words[index]!}
+                columns={moves ? 8 : 7}
+                linked={!!reading}
+              />
+            )}
+            {own.map((row) => {
+              const way = zones.ways.get(row.teamId)
+              return (
+                <StandingsRow
+                  key={row.teamId}
+                  view={view}
+                  row={row}
+                  entries={entries}
+                  medal={final || !reading}
+                  draws={draws}
+                  out={isOut(zone, row, final)}
+                  note={way ? wayWords(way, true, text, languageTag) : null}
+                  qualified={row.qualified && !zone}
+                  reading={reading}
+                />
+              )
+            })}
+          </tbody>
+        ))}
+    </table>
+  )
+}
+
+/** What the order of a table rests on, where the plan records no rule for level teams. */
+export function OrderNote() {
+  const { text } = useStreamLocale()
+  return (
+    <p className="tn-tables-note">
+      {text(
+        "Đội bằng điểm xếp theo hiệu số ván, rồi số ván thắng.",
+        "Teams level on points are ranked by game difference, then by games won.",
+      )}
+    </p>
   )
 }
 
 /**
- * One group of a stage as a table. `advance` draws the line between the places that go on and the others, where the
- * stage sends a number of teams on.
+ * A stage's table as a card, split into its groups where its teams only meet within them: the first places on a wash of
+ * their medal, the leader in a taller line.
  */
-function GroupTable({
-  view,
-  group,
-  stageCode,
-  advance,
-  limit,
-}: {
-  view: CompetitionView
-  group: StandingGroup
-  stageCode: string
-  advance: number
-  limit?: number
-}) {
-  const { text } = useStreamLocale()
-  const rows = limit ? group.rows.slice(0, limit) : group.rows
-  const entries = competitionMatches([view]).filter((entry) => entry.match.stageCode === stageCode)
-  return (
-    <div className="tn-table-wrap">
-      <table className="tn-table">
-        {group.name && (
-          <caption>
-            {/^[A-Z]$/.test(group.name)
-              ? text(`Bảng ${group.name}`, `Group ${group.name}`)
-              : text(`Nhóm ${group.name}`, `Group ${group.name}`)}
-          </caption>
-        )}
-        <TableHead />
-        <tbody>
-          {rows.map((row, index) => (
-            <Fragment key={row.teamId}>
-              <Row view={view} row={row} entries={entries} />
-              {advance > 0 && index === advance - 1 && index < rows.length - 1 && (
-                <tr className="tn-table-line">
-                  <td colSpan={7}>
-                    <span>{text(`${advance} đội đi tiếp`, `Top ${advance} advance`)}</span>
-                  </td>
-                </tr>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-/** A stage's table, split into its groups where its teams only meet within them. */
 export function StandingsTable({ view, table, limit }: { view: CompetitionView; table: Table; limit?: number }) {
   const { text } = useStreamLocale()
   const groups = standingGroups(view, table)
   const stage = view.content.plan.stages.find((item) => item.code === table.stageCode)
-  // The number of teams that go on is the stage's, so it draws no line inside one of several groups.
-  const advance = groups.length === 1 ? (stage?.advance ?? 0) : 0
+  const entries = competitionMatches([view]).filter((entry) => entry.match.stageCode === table.stageCode)
+  const over = tableOver(view, table)
+  const alone = groups.length === 1
+  if (!stage) return null
   return (
-    <div className="tn-tables" data-groups={groups.length > 1 || undefined}>
-      {groups.map((group) => (
-        <GroupTable
-          key={group.name ?? "all"}
-          view={view}
-          group={group}
-          stageCode={table.stageCode}
-          advance={advance}
-          limit={groups.length === 1 ? limit : undefined}
-        />
+    <div className="tn-tables" data-groups={!alone || undefined}>
+      {groups.map(({ name, rows }) => (
+        <div key={name ?? "all"} className="tn-table-wrap">
+          <StandingsRows
+            view={view}
+            name={tableName(stage, name, text)}
+            rows={limit && alone ? rows.slice(0, limit) : rows}
+            entries={entries}
+            zones={placeZones(view, stage, rows, over, alone)}
+            final={over}
+            caption={name && groupWords(name, text)}
+          />
+        </div>
       ))}
-      {ordersByGames(view, table) && (
-        <p className="tn-tables-note">
-          {text(
-            "Đội bằng điểm xếp theo hiệu số ván, rồi số ván thắng.",
-            "Teams level on points are ranked by game difference, then by games won.",
-          )}
-        </p>
-      )}
+      {ordersByGames(view, table) && <OrderNote />}
     </div>
   )
 }

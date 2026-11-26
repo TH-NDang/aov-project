@@ -20,7 +20,7 @@ const PROBLEMS: Record<string, [string, string]> = {
  * The words of a community-service failure in the reader's language. A screen that knows what a code means for its
  * own action (a duplicate claim, say) reads `ApiError.code` and says it itself.
  */
-export function communityProblemText(status: number, code?: string) {
+function communityProblemText(status: number, code?: string) {
   const known = PROBLEMS[code ?? ""]
   if (known) return streamText(...known)
   if (status === 404) return streamText(...PROBLEMS.PAGE_NOT_FOUND!)

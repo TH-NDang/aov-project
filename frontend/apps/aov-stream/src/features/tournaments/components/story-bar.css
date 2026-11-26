@@ -1,0 +1,72 @@
+/* The story of a match along one line, as high as its video leaves room for. It sets what its games are sized by. */
+.tn-story {
+  display: flex;
+  min-width: 0;
+  padding-block: var(--story-top) var(--story-foot);
+  color: var(--hub-text);
+}
+.tn-story-track {
+  position: relative;
+  min-width: 0;
+  height: calc(var(--story-staff) + var(--story-lane) * 2 + var(--story-axis));
+  flex: 1;
+}
+/* A logo stands in the lane of its team. */
+.tn-story-lanes {
+  --stream-image-size: calc(var(--story-lane) - 1px);
+  --stream-image-radius: 3px;
+  --stream-image-initials: 0px;
+  display: grid;
+  width: 26px;
+  height: calc(var(--story-lane) * 2 + var(--story-axis));
+  flex: none;
+  align-content: space-between;
+  margin-top: var(--story-staff);
+}
+/* The place of the video. */
+.tn-story-head {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--story-staff) - 3px);
+  bottom: -3px;
+  left: var(--story-x, -20px);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--aov-stream-cream);
+  pointer-events: none;
+}
+.tn-story-head::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--aov-stream-cream);
+}
+/* Between two games, where no time passes on the bar, it is open. */
+.tn-story-track[data-gap] > .tn-story-head {
+  top: calc(var(--story-staff) + var(--story-lane) + var(--story-axis) / 2 - 5px);
+  bottom: auto;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border: 2px solid var(--aov-stream-cream);
+  border-radius: 50%;
+  background: none;
+}
+.tn-story-track[data-gap] > .tn-story-head::before {
+  display: none;
+}
+@media (forced-colors: active) {
+  .tn-story-head,
+  .tn-story-head::before {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+  .tn-story-track[data-gap] > .tn-story-head {
+    border-color: Highlight;
+    background: none;
+  }
+}

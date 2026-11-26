@@ -1,0 +1,115 @@
+/* What a hero was played with: the items over two columns, the enchantment and the spell in a third. */
+.tn-hbuild {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 28px 56px;
+}
+.tn-hbuild-rest {
+  display: grid;
+  min-width: 0;
+  gap: 24px;
+}
+.tn-hbuild-kind > h3 {
+  margin: 0 0 4px;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-hbuild-kind > h3 > span {
+  margin-left: 10px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+.tn-hbuild-kind > ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0 40px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-hbuild-part {
+  display: grid;
+  min-width: 0;
+  min-height: 56px;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "art name count"
+    "art bar bar";
+  align-content: center;
+  align-items: center;
+  gap: 5px 12px;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-hbuild-part > strong {
+  min-width: 0;
+  grid-area: name;
+  font-weight: 600;
+}
+/* Too few games for a share leave the name beside the middle of the picture. */
+.tn-hbuild-part:not(:has(> i)) {
+  grid-template-areas: "art name count";
+}
+.tn-hbuild-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  grid-area: count;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-hbuild-count > b {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.tn-hbuild-part > i {
+  height: 4px;
+  grid-area: bar;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--hub-accent) calc(var(--share) * 100%),
+    color-mix(in srgb, var(--hub-text) 10%, transparent) 0
+  );
+}
+.tn-hbuild-art {
+  --stream-image-size: 100%;
+  display: grid;
+  overflow: hidden;
+  width: 40px;
+  height: 40px;
+  grid-area: art;
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-sunken);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  place-items: center;
+}
+/* Low, because most competitions record no builds and the place closes again. */
+.tn-hbuild-wait > span {
+  display: block;
+  width: min(100%, 420px);
+  height: 28px;
+}
+@media (max-width: 1099.98px) {
+  .tn-hbuild {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-hbuild-part {
+    min-height: 52px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-hbuild-part > i {
+    forced-color-adjust: none;
+  }
+}

@@ -1,0 +1,138 @@
+/* The step a table is shown at, between the ways to the ones beside it. */
+.tn-steps {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.tn-steps > button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hub-text) 9%, transparent);
+  color: var(--hub-text);
+  place-items: center;
+  transition: background-color 120ms;
+}
+.tn-steps > button:hover {
+  background: color-mix(in srgb, var(--hub-text) 16%, transparent);
+}
+.tn-steps > button[aria-disabled] {
+  background: color-mix(in srgb, var(--hub-text) 5%, transparent);
+  color: var(--hub-muted);
+  cursor: default;
+}
+.tn-steps-name {
+  display: grid;
+  min-width: calc(var(--longest) * 0.82ch);
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  white-space: nowrap;
+}
+.tn-steps-name > span {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0 7px;
+}
+.tn-steps-name b {
+  font-weight: 700;
+}
+.tn-steps-name small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+/* Every step as a place on a line. */
+.tn-steps-range {
+  --thumb: 22px;
+  --ring: transparent;
+  display: block;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  background: none;
+  cursor: ew-resize;
+  appearance: none;
+}
+.tn-steps-range:focus-visible {
+  --ring: var(--hub-accent);
+  outline: none;
+}
+.tn-steps-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--hub-accent) calc(var(--thumb) / 2 + var(--share) * (100% - var(--thumb))),
+    color-mix(in srgb, var(--hub-text) 16%, transparent) 0
+  );
+}
+.tn-steps-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--hub-accent) calc(var(--thumb) / 2 + var(--share) * (100% - var(--thumb))),
+    color-mix(in srgb, var(--hub-text) 16%, transparent) 0
+  );
+}
+.tn-steps-range::-webkit-slider-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((4px - var(--thumb)) / 2);
+  border: 0;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  appearance: none;
+}
+.tn-steps-range::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 0;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+/* Over the axis of a race the thumb is the mark of the step, so the range itself is not seen; its ends stand out. */
+.tn-steps-range[data-axis] {
+  width: calc(100% + var(--thumb));
+  margin-inline: calc(var(--thumb) / -2);
+}
+@media (min-width: 1100px) {
+  .tn-steps-range[data-axis] {
+    --thumb: 24px;
+    height: 100%;
+    opacity: 0;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-steps {
+    justify-content: space-between;
+  }
+  .tn-steps > button {
+    width: 40px;
+    height: 40px;
+  }
+  .tn-steps-name {
+    min-width: 0;
+    flex: 1;
+  }
+  .tn-steps-range {
+    --thumb: 24px;
+    height: 40px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-steps-range {
+    forced-color-adjust: none;
+  }
+}

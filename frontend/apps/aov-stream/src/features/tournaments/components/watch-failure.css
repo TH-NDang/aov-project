@@ -1,0 +1,31 @@
+.tn-room-failure {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: safe center;
+  justify-items: center;
+  gap: 14px;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--aov-stream-dusk);
+  text-align: center;
+}
+.tn-room-failure > p {
+  max-width: 24ch;
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 26px;
+  text-wrap: balance;
+}
+/* All of it stands in the two hundred pixels of a phone. */
+.tn-room[data-phone] .tn-room-failure {
+  gap: 8px;
+  padding: 8px 16px;
+}
+.tn-room[data-phone] .tn-room-failure > p {
+  max-width: 30ch;
+  font-size: 17px;
+  line-height: 22px;
+}

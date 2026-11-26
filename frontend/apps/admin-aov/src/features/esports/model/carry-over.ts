@@ -1,4 +1,5 @@
 import type { GameContent, Lane, Loadout, Participant, Selection, Side } from "@aov/community-contracts"
+import type { RecordedChange } from "./desk"
 import { heroKeys } from "./series-rules"
 
 /** What one seat can take over from elsewhere: who played it, or that player's spell, emblems and arcana. */
@@ -137,6 +138,13 @@ function write(content: GameContent, changes: CarryChange[], from: "before" | "a
 
 export const applyCarry = (content: GameContent, changes: CarryChange[]) => write(content, changes, "before")
 export const revertCarry = (content: GameContent, changes: CarryChange[]) => write(content, changes, "after")
+
+/** Values taken over from elsewhere, as one change that can be taken back. */
+export const carryChange = (changes: CarryChange[], text: string): RecordedChange => ({
+  text,
+  apply: (content) => applyCarry(content, changes),
+  revert: (content) => revertCarry(content, changes),
+})
 
 /** The game to take line-ups from: the latest earlier game of the match that names any player. */
 export function previousGame(games: readonly { content: GameContent }[], number: number): GameContent | null {

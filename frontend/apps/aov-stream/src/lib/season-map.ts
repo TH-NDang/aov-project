@@ -25,6 +25,9 @@ const tierRank = (view: CompetitionView) => {
   return rank < 0 ? TIERS.length : rank
 }
 
+/** The highest tier of these seasons: a circuit is known by its main events, not by the latest part of one. */
+export const topTier = (views: CompetitionView[]) => TIERS[Math.min(...views.map(tierRank))]
+
 /** Competitions by circuit, each list newest first, the circuits in the order of their newest season. */
 function byCircuit(views: CompetitionView[]) {
   const circuits = new Map<string, CompetitionView[]>()

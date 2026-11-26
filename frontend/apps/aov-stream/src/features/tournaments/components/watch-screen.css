@@ -1,0 +1,6 @@
+.tn-room-screen {
+  position: relative;
+  width: var(--room-video-w);
+  height: var(--room-video-h);
+  background: rgb(0 0 0 / 60%);
+}

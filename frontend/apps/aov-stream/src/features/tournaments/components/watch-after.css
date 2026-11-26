@@ -1,0 +1,53 @@
+.tn-room-after {
+  display: grid;
+  flex: none;
+  gap: 8px;
+  padding-top: 2px;
+}
+/* Its words, not its area to press, keep to the margin. */
+.tn-room-after > button {
+  margin-left: -10px;
+  justify-self: start;
+}
+/* The match after this one. */
+.tn-room-following {
+  --stream-image-size: 34px;
+  --stream-image-radius: 8px;
+  --stream-image-plate: transparent;
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--room-line);
+}
+.tn-room-following > a:first-child {
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  gap: 0 12px;
+}
+.tn-room-following > a:first-child > span {
+  display: flex;
+  grid-row: 1 / 3;
+  align-items: center;
+  gap: 6px;
+}
+.tn-room-following > a:first-child > b {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-room-following > a:first-child:is(:hover, :focus-visible) > b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-room-following > a:first-child > small {
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}

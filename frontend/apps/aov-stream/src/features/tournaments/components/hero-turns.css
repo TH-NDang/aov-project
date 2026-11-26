@@ -1,0 +1,142 @@
+/* The turns of a draft as a staff: the line runs through it, blue stands above the line and red hangs below. */
+.tn-turns {
+  --turns-ban: color-mix(in srgb, var(--hub-muted) 78%, var(--hub-bg));
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+.tn-turns-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: -8px 0 0;
+  padding: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  list-style: none;
+}
+.tn-turns-legend > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.tn-turns-legend > li::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.tn-turns-legend > [data-side="BLUE"]::before {
+  background: var(--hub-blue);
+}
+.tn-turns-legend > [data-side="RED"]::before {
+  background: var(--hub-red);
+}
+.tn-turns-legend > [data-kind="BAN"]::before {
+  border: 1.5px solid var(--turns-ban);
+}
+/* The longest bar is as tall as the scale; a number stands at the end of every bar. */
+.tn-turns-acts {
+  --scale: 92px;
+  --number: 20px;
+  --line: calc(var(--number) + var(--up) * var(--scale));
+  display: flex;
+  min-width: 0;
+  gap: 16px;
+}
+.tn-turns-act {
+  min-width: 0;
+  flex: var(--turns) 1 0;
+}
+.tn-turns-act > h3 {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.tn-turns-act > ol {
+  display: grid;
+  height: calc(var(--line) + var(--down) * var(--scale) + var(--number));
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(var(--hub-border-strong), var(--hub-border-strong)) 0 var(--line) / 100% 1px no-repeat;
+  list-style: none;
+}
+.tn-turns-beat {
+  --side: var(--hub-blue);
+  display: grid;
+  min-width: 0;
+}
+.tn-turns-beat[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-turns-beat > a {
+  --bar: max(3px, var(--share) * var(--scale));
+  position: relative;
+  color: var(--hub-text);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-align: center;
+}
+.tn-turns-beat i {
+  position: absolute;
+  bottom: calc(100% - var(--line));
+  left: 50%;
+  width: min(24px, 78%);
+  height: var(--bar);
+  border-radius: 3px 3px 0 0;
+  background: var(--side);
+  transform: translateX(-50%);
+}
+.tn-turns-beat b {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% - var(--line) + var(--bar) + 2px);
+  left: 0;
+  font-weight: 700;
+}
+.tn-turns-beat[data-side="RED"] i {
+  top: var(--line);
+  bottom: auto;
+  border-radius: 0 0 3px 3px;
+}
+.tn-turns-beat[data-side="RED"] b {
+  top: calc(var(--line) + var(--bar) + 2px);
+  bottom: auto;
+}
+.tn-turns-beat[data-kind="BAN"] i {
+  border: 1.5px solid var(--turns-ban);
+  background: none;
+}
+.tn-turns-beat > a:is(:hover, :focus-visible) i {
+  filter: brightness(1.18);
+}
+.tn-turns-beat > a:is(:hover, :focus-visible) b {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.tn-turns-beat > a:focus-visible {
+  outline-offset: -2px;
+}
+@media (max-width: 759.98px) {
+  .tn-turns-acts {
+    --scale: 76px;
+    display: grid;
+    grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+    gap: 14px 0;
+  }
+  .tn-turns-act {
+    grid-column: span var(--turns);
+  }
+}
+@media (forced-colors: active) {
+  .tn-turns-beat i,
+  .tn-turns-legend > li::before {
+    forced-color-adjust: none;
+  }
+}

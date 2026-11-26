@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 import { SlidersHorizontal } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { PublicDrawer, PublicDrawerContent } from "./public-overlay"
@@ -32,9 +32,11 @@ export function PublicFilterSheet({
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
+  const button = useRef<HTMLButtonElement>(null)
   return (
     <>
       <button
+        ref={button}
         type="button"
         className={cn("public-filter-button", triggerClassName)}
         aria-haspopup="dialog"
@@ -49,7 +51,15 @@ export function PublicFilterSheet({
         {count > 0 && <span className="public-filter-count">{count}</span>}
       </button>
       <PublicDrawer open={open} onOpenChange={setOpen}>
-        <PublicDrawerContent title={title} aria-describedby={undefined}>
+        {/* The button opens the sheet from outside it, so the sheet cannot find its own way back to it. */}
+        <PublicDrawerContent
+          title={title}
+          aria-describedby={undefined}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            button.current?.focus()
+          }}
+        >
           <div className="public-filter-body">{children}</div>
           <div className="public-filter-actions">
             <button type="button" disabled={count === 0} onClick={onReset}>

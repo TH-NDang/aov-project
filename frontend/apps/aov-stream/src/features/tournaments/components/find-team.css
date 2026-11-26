@@ -1,0 +1,36 @@
+/* The team of one side of the board: its name turned towards its seats. */
+.tn-find-team {
+  --stream-image-size: 28px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: inline-flex;
+  min-width: 0;
+  min-height: max(40px, var(--seat, 0px));
+  align-items: center;
+  gap: 9px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-find-team > span:not(.stream-image) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-find-team > svg {
+  flex: none;
+  opacity: 0.8;
+  transform: rotate(90deg);
+}
+.tn-find-team:is(:hover, [data-state="open"]) > span:not(.stream-image) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+/* The place of a crest in the menu, for no team in particular. */
+.tn-find-any {
+  width: 24px;
+  height: 24px;
+  border: 1px dashed var(--hub-border-strong);
+  border-radius: 5px;
+}

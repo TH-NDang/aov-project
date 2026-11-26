@@ -1,0 +1,53 @@
+.tn-room-used {
+  display: grid;
+  flex: none;
+  grid-template-columns: fit-content(72px) minmax(0, 1fr);
+  gap: 6px 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--room-line);
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-room-used > h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: inherit;
+  font-weight: 400;
+}
+/* Both teams share the column of their names. */
+.tn-room-used > p {
+  display: contents;
+}
+.tn-room-used b {
+  overflow: hidden;
+  font-weight: 400;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Two games stand in a row. */
+.tn-room-used > p > span {
+  --reference-size: 100%;
+  --reference-radius: 4px;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 24px));
+  align-content: start;
+  align-items: start;
+  gap: 3px;
+}
+/* A low companion has no room for a row of each team. */
+@container tn-room-side (max-height: 454.98px) {
+  .tn-room:not([data-shape="stack"]) .tn-room-used {
+    display: none;
+  }
+}
+/* Beside the board there is no line above it to end. */
+@container tn-room-side (min-width: 700px) {
+  .tn-room[data-shape="stack"] .tn-room-used {
+    margin-top: 0;
+    padding-top: 6px;
+    border-top: 0;
+  }
+}

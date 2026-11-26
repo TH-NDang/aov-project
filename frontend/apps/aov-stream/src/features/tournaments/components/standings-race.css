@@ -1,0 +1,221 @@
+/*
+ * The race of a table. Its parts stand in the grid of the stage (standings-stage.css), so that the range over the steps
+ * lies on the same width as the lines, whatever the names beside them take.
+ */
+.tn-race {
+  display: contents;
+}
+.tn-race-axis,
+.tn-race-places,
+.tn-race-field {
+  position: relative;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+.tn-race-axis {
+  grid-area: axis;
+}
+.tn-race-axis > span {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--at) * 100%);
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+.tn-race-axis > [data-now] {
+  min-width: 24px;
+  padding: 3px 5px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-weight: 700;
+  text-align: center;
+}
+/* The range over the race is not seen, so its focus shows on the mark it moves. */
+.tn-stand-table:has(> input:focus-visible) .tn-race-axis > [data-now] {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 3px;
+}
+.tn-race-places {
+  grid-area: places;
+}
+.tn-race-places > span {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+}
+/* Behind the lines and their landing: the zones, and where one way ends and the next begins. */
+.tn-race-ground {
+  position: relative;
+  grid-area: field-start / field-start / field-end / landing-end;
+}
+.tn-race-ground > :is(span, i) {
+  position: absolute;
+  right: 0;
+  left: 0;
+}
+.tn-race-ground > span {
+  background: color-mix(in srgb, var(--hub-accent) var(--band, 0%), transparent);
+}
+.tn-race-ground > [data-mark="first"] {
+  --band: 10%;
+}
+.tn-race-ground > [data-mark="second"] {
+  --band: 5%;
+}
+.tn-race-ground > i {
+  height: 1px;
+  background: var(--hub-border-strong);
+  opacity: 0.6;
+}
+.tn-race-field {
+  min-width: 0;
+  grid-area: field;
+}
+.tn-race-landing {
+  grid-area: landing;
+}
+.tn-race-field > svg,
+.tn-race-landing {
+  display: block;
+  overflow: visible;
+  fill: none;
+}
+.tn-race-field > svg {
+  width: 100%;
+}
+.tn-race-field,
+.tn-race-landing {
+  --race-gold: light-dark(color-mix(in srgb, var(--aov-medal-gold) 82%, var(--aov-stream-ink)), var(--aov-medal-gold));
+  --line: color-mix(in srgb, var(--hub-muted) 72%, var(--hub-bg));
+}
+.tn-race path {
+  vector-effect: non-scaling-stroke;
+}
+.tn-race-line {
+  stroke: var(--line);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+.tn-race-guide {
+  stroke: var(--line);
+  stroke-dasharray: 0.5 5;
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}
+.tn-race g[data-look="gold"] {
+  --line: var(--race-gold);
+}
+.tn-race g[data-look="lit"] {
+  --line: var(--hub-accent);
+}
+.tn-race g[data-look="gold"] > .tn-race-line {
+  stroke-width: 3;
+}
+.tn-race g[data-look="lit"] > .tn-race-line {
+  stroke-width: 4;
+}
+.tn-race g:not([data-look="plain"]) > .tn-race-guide {
+  stroke-width: 2;
+}
+/* Following one team: the others step back. */
+.tn-race :is(.tn-race-field, .tn-race-landing)[data-lit] g[data-look="plain"] {
+  opacity: 0.5;
+}
+.tn-race :is(.tn-race-field, .tn-race-landing)[data-lit] g[data-look="gold"] {
+  opacity: 0.66;
+}
+/* The step shown. */
+.tn-race-now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--at) * 100%);
+  width: 1px;
+  background: color-mix(in srgb, var(--hub-text) 26%, transparent);
+  transform: translateX(-50%);
+}
+/* Where a line has come to, and every match of the team that is lit: won filled, lost hollow. */
+.tn-race-field > i {
+  --dot: 10px;
+  position: absolute;
+  left: calc(var(--at) * 100% - var(--after, 0) * min(12px, var(--step) * 22%));
+  width: var(--dot);
+  height: var(--dot);
+  border: 2px solid var(--hub-bg);
+  border-radius: 50%;
+  background: var(--line);
+  transform: translate(-50%, -50%);
+}
+.tn-race-field[data-lit] > i[data-look="plain"] {
+  background: color-mix(in srgb, var(--line) 60%, var(--hub-bg));
+}
+.tn-race-field > i[data-look="gold"] {
+  background: var(--race-gold);
+}
+.tn-race-field > i[data-look="rest"] {
+  background: var(--hub-accent);
+}
+.tn-race-field > i[data-look="lit"] {
+  --dot: 11px;
+  border-color: var(--hub-accent);
+  background: var(--hub-bg);
+}
+.tn-race-field > i[data-outcome="won"] {
+  background: var(--hub-accent);
+}
+.tn-race-field > i[data-outcome="drawn"] {
+  background: linear-gradient(90deg, var(--hub-accent) 50%, var(--hub-bg) 50%);
+}
+.tn-race-names {
+  display: grid;
+  max-width: 96px;
+  padding-left: 6px;
+  grid-area: names;
+  align-items: center;
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.tn-race-names > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-race-names > [data-lit] {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+/* In the narrower race the marks beside the one shown would touch it. */
+@media (max-width: 1239.98px) {
+  .tn-race-axis > [data-near] {
+    visibility: hidden;
+  }
+}
+@media (max-width: 1099.98px) {
+  .tn-race[data-form="beside"] {
+    display: none;
+  }
+}
+@media (min-width: 1100px) {
+  .tn-race[data-form="above"] {
+    display: none;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-race-field > i {
+    --dot: 9px;
+  }
+  .tn-race-field > i[data-look="lit"] {
+    --dot: 10px;
+  }
+}
+@media (forced-colors: active) {
+  .tn-race {
+    forced-color-adjust: none;
+  }
+}

@@ -1,0 +1,458 @@
+/* The recording screen of a match: one desk that fills Admin's content region. Wide, only the body of the dock scrolls;
+   below 900px the same parts stand in one column that scrolls with the page. */
+@layer components {
+  .esp-studio {
+    flex: none;
+    min-width: 0;
+    container: studio / inline-size;
+    color: var(--foreground);
+    background: var(--background);
+  }
+  .esp-head {
+    grid-area: head;
+  }
+  .esp-watch {
+    grid-area: watch;
+    min-width: 0;
+    container: watch / inline-size;
+  }
+  .esp-dock {
+    isolation: isolate;
+    grid-area: dock;
+    min-width: 0;
+    container: dock / inline-size;
+    background: var(--card);
+  }
+  .esp-view {
+    display: grid;
+    min-height: 0;
+    background: var(--esp-ink);
+  }
+
+  @media (min-width: 900px) {
+    .esp-studio {
+      flex: 1 1 0;
+      min-height: 460px;
+      container-type: size;
+    }
+    .esp-desk {
+      --head: 48px;
+      --bar: 44px;
+      --strip: 28px;
+      --track-min: 140px;
+      --time-min: calc(var(--bar) + var(--strip) + var(--track-min));
+      --dock-min: max(clamp(320px, 40cqw, 380px), 25cqw);
+      --dock: clamp(var(--dock-min), 100cqw - (100cqh - var(--head) - var(--time-min)) * 16 / 9, 640px);
+      --picture: max(200px, min((100cqw - var(--dock)) * 9 / 16, 100cqh - var(--head) - var(--time-min)));
+      display: grid;
+      height: 100cqh;
+      grid-template: "head head" var(--head) "watch dock" minmax(0, 1fr) / minmax(0, 1fr) var(--dock);
+    }
+    .esp-watch {
+      display: grid;
+      min-height: 0;
+      grid-template-rows: var(--picture) var(--bar) var(--strip) minmax(var(--track-min), 1fr);
+    }
+    /* minmax(0, 1fr) for the column too: an auto column grows past the dock with its widest row. */
+    .esp-dock {
+      display: grid;
+      min-height: 0;
+      grid-template: 40px 40px auto minmax(0, 1fr) auto / minmax(0, 1fr);
+      border-left: 1px solid var(--border);
+    }
+    .esp-body {
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+    .esp-desk[data-video="none"] {
+      grid-template: "head head" var(--head) "watch watch" 52px "dock dock" minmax(0, 1fr) / minmax(0, 1fr);
+    }
+    .esp-desk[data-video="none"] > .esp-watch {
+      display: block;
+    }
+    .esp-desk[data-video="none"] > .esp-dock {
+      border-left: 0;
+      grid-template: 44px auto minmax(0, 1fr) auto / minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .esp-desk[data-video="none"] > .esp-dock > :is(.esp-notice, .esp-body, .esp-foot) {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 899.98px) {
+    /* The dock reaches the bottom of the screen also where it holds little. */
+    .esp-studio,
+    .esp-desk {
+      display: flex;
+      flex-direction: column;
+    }
+    .esp-desk {
+      overflow: clip;
+    }
+    /* What is left of the screen under the video, for the popovers of the dock to keep to. */
+    .esp-room {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      left: 0;
+      height: 100svh;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .esp-studio,
+    .esp-desk,
+    .esp-dock {
+      flex: 1 0 auto;
+    }
+    .esp-watch {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      border-bottom: 1px solid var(--border);
+      background: var(--background);
+    }
+    .esp-view {
+      height: max(200px, min(56.25cqw, 56svh));
+    }
+    .esp-games,
+    .esp-tools {
+      height: 44px;
+    }
+    .esp-desk[data-video="none"] > .esp-watch {
+      position: static;
+    }
+  }
+  /* A lying phone has no height to keep anything on screen. */
+  @media (max-width: 899.98px) and (max-height: 560px) {
+    .esp-watch {
+      position: relative;
+    }
+  }
+  /* Without a video, and on tablets, a tool stands in two columns and the foot in one line. */
+  @container dock (min-width: 760px) {
+    .esp-two {
+      display: grid;
+      grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+      align-items: start;
+    }
+    .esp-foot {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+      align-items: center;
+    }
+  }
+  .esp-studio[data-fullscreen] {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    height: 100dvh;
+    overflow: auto;
+  }
+
+  /* Head: where the match belongs, who plays it and what can be done with the whole of it. */
+  .esp-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    height: 48px;
+    padding-inline: 14px 8px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  /* Where there is too little room the tournament gives way first, then the round, then the time: the factors are so
+     far apart that none of them loses a letter before the one in front of it is at its end. */
+  .esp-head-trail {
+    display: flex;
+    flex: 0 1e8 auto;
+    align-items: center;
+    gap: 6px;
+    min-width: 88px;
+    color: var(--muted-foreground);
+  }
+  .esp-head-teams {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .esp-head-teams [data-lost] {
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+  .esp-head-full,
+  .esp-head-when {
+    display: none;
+  }
+  .esp-head-round,
+  .esp-head-when {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--muted-foreground);
+  }
+  .esp-head-round {
+    flex-shrink: 1e4;
+  }
+  .esp-head-acts {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .esp-head-more {
+    position: relative;
+  }
+  .esp-head-more > .esp-tab-mark {
+    display: none;
+  }
+  @container studio (min-width: 1300px) {
+    .esp-head-full {
+      display: inline;
+    }
+    .esp-head-short {
+      display: none;
+    }
+    .esp-head-when {
+      display: block;
+    }
+  }
+  @container studio (max-width: 899.98px) {
+    .esp-head-trail,
+    .esp-head-round {
+      display: none;
+    }
+  }
+  /* A phone keeps the teams, the mode and the menu in the head; the rest is in the panel of the match. */
+  @container studio (max-width: 599.98px) {
+    .esp-head-wide {
+      display: none;
+    }
+    .esp-head-more > .esp-tab-mark {
+      display: block;
+    }
+  }
+
+  /* Games and tools: two rows of tabs. */
+  .esp-games,
+  .esp-tools {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .esp-games {
+    overflow-x: auto;
+    padding-inline: 12px 6px;
+    scrollbar-width: none;
+  }
+  .esp-games-label {
+    flex: none;
+    align-self: center;
+    padding-right: 4px;
+  }
+  .esp-tab {
+    position: relative;
+    display: inline-flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding-inline: 4px;
+    white-space: nowrap;
+    color: var(--muted-foreground);
+  }
+  .esp-tab:hover:not(:disabled) {
+    color: var(--foreground);
+  }
+  .esp-tab:disabled {
+    opacity: 0.45;
+  }
+  .esp-tab:focus-visible {
+    border-radius: var(--aov-radius-control);
+    outline: 2px solid var(--ring);
+    outline-offset: -3px;
+  }
+  .esp-games > .esp-tab {
+    flex: 1 1 0;
+    min-width: 40px;
+    max-width: 76px;
+    font-weight: 600;
+  }
+  .esp-games > .esp-tab[data-missing] {
+    font-weight: 400;
+  }
+  .esp-tab[aria-current="true"],
+  .esp-tab[aria-pressed="true"] {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .esp-tab[aria-current="true"]::after,
+  .esp-tab[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    inset: auto 6px -1px;
+    height: 2px;
+    background: var(--foreground);
+  }
+  /* A small mark: something waits (filled), is being recorded (ring), or needs a look (amber). */
+  .esp-tab-mark {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--muted-foreground);
+  }
+  .esp-tab-mark[data-mark="recording"] {
+    background: none;
+    box-shadow: inset 0 0 0 1.5px var(--muted-foreground);
+  }
+  .esp-tab-mark[data-mark="lacks"] {
+    background: var(--aov-warning);
+  }
+  .esp-games > .esp-tab > :is(.esp-tab-mark, .esp-tab-icon),
+  .esp-head-more > .esp-tab-mark {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+  }
+  .esp-tab-icon {
+    color: var(--muted-foreground);
+  }
+  .esp-tab-icon[data-mark="attention"] {
+    color: var(--aov-warning);
+  }
+  @container dock (max-width: 339.98px) {
+    .esp-tools .esp-tab-count {
+      display: none;
+    }
+  }
+
+  /* What stands between the tabs and the tool, only when there is something to say. */
+  .esp-notice > * {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* A panel in the place of a tool, under its own head. */
+  .esp-panel-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding-inline: 12px 6px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+  }
+  .esp-setup,
+  .esp-match {
+    display: grid;
+    justify-items: start;
+    gap: 10px;
+    padding: 14px 12px;
+  }
+  .esp-match {
+    justify-items: stretch;
+    gap: 14px;
+  }
+  .esp-match-narrow {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  @container studio (max-width: 599.98px) {
+    .esp-match-narrow {
+      display: flex;
+    }
+  }
+
+  /* Foot: what was last recorded, and the one thing to do next. */
+  .esp-foot {
+    border-top: 1px solid var(--border);
+    background: var(--card);
+  }
+  .esp-said {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    height: 32px;
+    padding-inline: 12px 6px;
+  }
+  /* Two lines of its text fill the row; a reason something was not saved is read to its end. */
+  .esp-said > span {
+    display: -webkit-box;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .esp-said[role="alert"] {
+    height: auto;
+    min-height: 32px;
+    padding-block: 6px;
+  }
+  .esp-said[role="alert"] > span {
+    display: block;
+  }
+  .esp-next {
+    display: flex;
+    gap: 6px;
+    padding: 0 12px 12px;
+  }
+  .esp-next > button[aria-disabled="true"] {
+    opacity: 0.45;
+  }
+  @media (pointer: coarse) {
+    .esp-next kbd {
+      display: none;
+    }
+  }
+  @container dock (max-width: 359.98px) {
+    .esp-next:has(> button + button) .esp-next-at {
+      display: none;
+    }
+  }
+  @container dock (min-width: 760px) {
+    .esp-said:not([role="alert"]) {
+      height: 44px;
+    }
+    .esp-next {
+      padding-block: 8px;
+    }
+  }
+  @media (max-width: 899.98px) {
+    .esp-foot {
+      border-top: 0;
+    }
+  }
+
+  /* The row in the place of a video: gives the match one, or says there is none. */
+  .esp-linkrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    min-height: 52px;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .esp-linkrow-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  @container studio (max-width: 599.98px) {
+    .esp-linkrow-label {
+      flex: 1 0 100%;
+    }
+  }
+}

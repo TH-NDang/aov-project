@@ -1,0 +1,24 @@
+/* The card of two teams: beside the cell that opened it, or the phone's sheet. */
+.tn-meet-panel {
+  --public-bottom-body-padding: 0 4px max(10px, env(safe-area-inset-bottom));
+  width: 372px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+  overflow: hidden;
+}
+.tn-meet-panel:focus-visible {
+  outline: none;
+}
+.tn-meet-title {
+  --stream-image-size: 28px;
+  --stream-image-radius: var(--aov-radius-control);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 10px 10px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+}

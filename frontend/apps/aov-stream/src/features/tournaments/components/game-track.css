@@ -76,19 +76,24 @@
 .tn-objectives-lane li {
   position: absolute;
   bottom: calc(6px + var(--level) * 54px);
-  left: calc(var(--at) * 100%);
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  gap: 1px;
+  left: clamp(15px, calc(var(--at) * 100%), calc(100% - 15px));
   transform: translateX(-50%);
 }
 .tn-objectives-lane[data-at="below"] li {
   top: calc(6px + var(--level) * 54px);
   bottom: auto;
+}
+.tn-objectives-mark {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 1px;
+}
+.tn-objectives-lane[data-at="below"] .tn-objectives-mark {
   flex-direction: column;
 }
-.tn-objectives-lane li > span {
+.tn-objectives-mark > span {
   display: grid;
   width: 30px;
   height: 30px;
@@ -97,11 +102,27 @@
   background: color-mix(in srgb, var(--side) 18%, var(--hub-bg));
   color: var(--side);
 }
-.tn-objectives-lane li > time {
+.tn-objectives-mark > time {
   color: var(--hub-muted);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   line-height: 16px;
+}
+/* A mark that can be watched: its time reads as the link, and it is pressed a little beyond what is drawn. */
+a.tn-objectives-mark > time {
+  color: var(--hub-accent-strong);
+}
+a.tn-objectives-mark::before {
+  content: "";
+  position: absolute;
+  inset: -2px -3px;
+}
+a.tn-objectives-mark:is(:hover, :focus-visible) > span {
+  background: color-mix(in srgb, var(--side) 38%, var(--hub-bg));
+}
+a.tn-objectives-mark:is(:hover, :focus-visible) > time {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 /* The time of the game, between the two teams. */
 .tn-objectives-line {

@@ -1,0 +1,98 @@
+/* What can be asked of a hero on the board. */
+.tn-find-panel {
+  width: min(340px, calc(100vw - 32px));
+  max-height: min(70vh, var(--radix-popover-content-available-height, 70vh));
+  overflow-y: auto;
+}
+.tn-find-panel-body {
+  display: grid;
+  min-width: 0;
+  color: var(--hub-text);
+}
+.tn-find-panel-head {
+  --portrait: 44px;
+  --portrait-radius: 8px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-find-panel-head > span:not(.tn-portrait) {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.tn-find-panel-head b {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-find-panel-head small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-find-panel-head > a {
+  display: inline-flex;
+  min-height: 36px;
+  flex: none;
+  align-items: center;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+}
+.tn-find-asks {
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--hub-border);
+}
+.tn-find-moves {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+.tn-find-moves button {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  text-align: left;
+}
+.tn-find-moves button:is(:hover, :focus-visible) {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.tn-find-moves button:focus-visible {
+  outline-offset: -2px;
+}
+.tn-find-moves small {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 899.98px) {
+  .tn-find-panel[data-vaul-drawer] {
+    --public-bottom-body-padding: 0 0 max(8px, env(safe-area-inset-bottom));
+
+    width: 100%;
+    max-height: min(85dvh, calc(100dvh - 48px));
+    overflow: hidden;
+  }
+  /* The sheet says the role in its heading. */
+  .tn-find-panel-head {
+    padding-top: 0;
+  }
+  .tn-find-panel-head small {
+    display: none;
+  }
+  .tn-find-moves button {
+    min-height: 44px;
+  }
+}

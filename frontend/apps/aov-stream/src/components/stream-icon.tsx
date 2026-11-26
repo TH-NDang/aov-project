@@ -56,6 +56,14 @@ const paths = {
   core: "m12 3 6.5 5.5L12 21 5.5 8.5 12 3Zm-6.5 5.5h13",
   /** A megaphone: news posts, kept apart from the whole feed (feed) and from discussion posts (message). */
   news: "M3.5 10v4a1 1 0 0 0 1 1H8l8 4.5v-15L8 9H4.5a1 1 0 0 0-1 1ZM8 15l1.5 5H12l-1-4.5M19 9.5a3.5 3.5 0 0 1 0 5",
+  chevronDown: "m5 9 7 7 7-7",
+  /** The way ahead and back on a video: past a break, or from one mark to the next. */
+  skip: "M5 5l10 7-10 7V5ZM18.5 5v14",
+  skipBack: "M19 5 9 12l10 7V5ZM5.5 5v14",
+  /** A video into the corner of the window, and back to its room. */
+  shrink: "M3 5h18v14H3V5Zm9 7h6v4h-6v-4Z",
+  expand: "M9 4H4v5m0-5 6 6M15 20h5v-5m0 5-6-6",
+  keyboard: "M3 7h18v10H3V7Zm4 3.2h.1m3.2 0h.1m3.2 0h.1m3.2 0h.1M8 14h8",
 } as const
 
 export type StreamIconName = keyof typeof paths
