@@ -99,6 +99,7 @@ export function stand({ kept = { text: null } as Kept, attached = true } = {}) {
         mute(on) {
           player.quiet = on
         },
+        volume() {},
         focus() {
           player.focused += 1
         },

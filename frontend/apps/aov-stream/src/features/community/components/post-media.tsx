@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { music } from "../../../components/music-session"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { watch } from "../../../components/watch-session"
@@ -40,6 +41,7 @@ export function PostVideo({ url, title }: { url: string; title: string }) {
             aria-label={text(`Phát video: ${title}`, `Play video: ${title}`)}
             onClick={() => {
               watch.pause()
+              music.yieldTo()
               setPlaying(true)
             }}
           >

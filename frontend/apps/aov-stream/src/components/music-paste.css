@@ -1,0 +1,44 @@
+/* A link of the reader's own: one field with its button, and a line that says what is wrong. */
+.hub-music-paste {
+  padding: 10px 12px 2px;
+}
+.hub-music-paste-field {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 12px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: var(--aov-radius-pill);
+  background: rgb(0 0 0 / 22%);
+  color: var(--hub-muted);
+}
+.hub-music-paste-field:focus-within {
+  border-color: var(--aov-stream-lavender);
+}
+.hub-music-paste-field input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+  outline: none;
+}
+.hub-music-paste-field input::placeholder {
+  color: var(--hub-muted);
+}
+.hub-music-paste-field button {
+  height: 32px;
+  flex: none;
+  padding: 0 14px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-stream-lavender);
+  color: var(--aov-stream-night);
+  font-size: 13px;
+  font-weight: 700;
+}
+.hub-music-paste-field button:disabled {
+  opacity: 0.5;
+}
