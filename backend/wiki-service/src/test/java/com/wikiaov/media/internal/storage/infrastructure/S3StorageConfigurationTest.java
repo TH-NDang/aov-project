@@ -41,6 +41,6 @@ class S3StorageConfigurationTest {
 
     private static StorageProperties properties(URI endpoint, URI publicEndpoint) {
         return new StorageProperties(endpoint, "us-east-1", "wiki-media", null, null, true, "key", "secret",
-                false, publicEndpoint);
+                false, publicEndpoint, false);
     }
 }

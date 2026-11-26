@@ -41,13 +41,6 @@ record StorageProperties(
         @DefaultValue("false") boolean signUploadSize
 ) {
 
-    StorageProperties(@Nullable URI endpoint, String region, String bucket, @Nullable String assetsBucket,
-            @Nullable String sourcesBucket, boolean pathStyleAccess, @Nullable String accessKey,
-            @Nullable String secretKey, boolean createBucketIfMissing, @Nullable URI publicEndpoint) {
-        this(endpoint, region, bucket, assetsBucket, sourcesBucket, pathStyleAccess, accessKey, secretKey,
-                createBucketIfMissing, publicEndpoint, false);
-    }
-
     String bucketFor(String key) {
         if (key.startsWith(MediaObjectKeys.ASSETS_PREFIX)) {
             return effectiveAssetsBucket();
