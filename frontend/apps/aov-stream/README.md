@@ -35,6 +35,11 @@ Trang hồ sơ đặt nút Theo dõi ở đầu trang cho cả khách và thành
 Mạng xã hội/website hiển thị bằng icon thương hiệu ở chân đầu trang, cạnh các con số. Hover mở ngay popup thông tin;
 bấm icon giữ popup mở, không chuyển trang. Chỉ nút “Mở liên kết” mới mở kênh ở tab mới. Popup không có hiệu ứng
 zoom/trượt và có khoảng chờ đóng ngắn để di chuột từ icon vào nội dung. Trên mobile, chạm icon mở drawer dưới.
+Riêng link kênh YouTube mở khung kênh ngay trong Stream (`channel-viewer.tsx`, ADR-034): bảng trượt từ phải trên màn
+hình rộng, cả màn hình trên điện thoại (nút quay lại thay cho X). Khung có ảnh bìa, ảnh đại diện, tên, handle, số người
+đăng ký, nút Đăng ký (mở YouTube, vì chỉ YouTube đăng ký được) và Mở YouTube; video mới nhất là thẻ lớn có tên đè lên
+ảnh, Shorts là hàng thẻ dọc vuốt ngang, các video còn lại xếp lưới hai cột. Bấm video thì phát ở đầu khung và trình
+phát dính ở trên khi cuộn; cuộn tới cuối thì tải video cũ hơn. Rê chuột lên icon đã bắt đầu tải kênh.
 Menu “⋯” của trang chứa nguồn thông tin, đề xuất chỉnh sửa và yêu cầu/quyền quản lý trang.
 Nguồn được xem công khai trong hộp thoại; gửi đề xuất hoặc yêu cầu đại diện vẫn cần đăng nhập.
 

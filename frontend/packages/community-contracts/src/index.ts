@@ -2,6 +2,7 @@ import type { MatchTitle } from "./match-titles"
 import type { PersonRole } from "./pages"
 
 export * from "./pages"
+export * from "./channels"
 export * from "./competition"
 export * from "./match-titles"
 export * from "./references"

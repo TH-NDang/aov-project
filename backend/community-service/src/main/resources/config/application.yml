@@ -47,3 +47,13 @@ community:
     history-start: 2016-01-01
     # The units readers can pick, then every other unit tournaments were recorded in so far.
     currencies: VND,THB,TWD,IDR,EUR,TRY,PHP,BDT,JPY,KRW,HKD,SGD,INR,CNY,MYR,AUD,RUB,BRL
+  youtube:
+    # The Data API key, set in the environment only. Without it a page's YouTube channel is shown from its feed alone,
+    # and only when the page links it by its id (ADR-034).
+    api-key: ${YOUTUBE_API_KEY:}
+    api-url: ${COMMUNITY_YOUTUBE_API_URL:https://www.googleapis.com/youtube/v3}
+    feed-url: ${COMMUNITY_YOUTUBE_FEED_URL:https://www.youtube.com/feeds/videos.xml}
+    # Google's free quota is 10,000 units a day; the rest is left for checks by hand.
+    daily-units: 8000
+    channel-ttl: PT24H
+    videos-ttl: PT30M

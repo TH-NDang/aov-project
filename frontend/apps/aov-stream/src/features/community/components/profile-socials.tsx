@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import type { ProfileLink } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
@@ -6,23 +7,68 @@ import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { communityApi } from "../../../lib/community-api"
+import { communityKeys } from "../../../lib/community-keys"
+import { isYouTubeChannel } from "../model/channel-model"
+import { ChannelViewer } from "./channel-viewer"
 
-export function ProfileSocials({ links }: { links: ProfileLink[] }) {
+/** The page's channels and website. A YouTube channel opens inside the site; any other link in a small card first. */
+export function ProfileSocials({ pageId, links }: { pageId: string; links: ProfileLink[] }) {
   const { text } = useStreamLocale()
   const [active, setActive] = useState<number | null>(null)
   if (!links.length) return null
 
   return (
     <nav className="pf-socials" aria-label={text("Mạng xã hội và website", "Social media and website")}>
-      {links.map((link, i) => (
-        <SocialChannel
-          key={`${link.url}-${i}`}
-          link={link}
-          open={active === i}
-          onOpenChange={(open) => setActive((current) => (open ? i : current === i ? null : current))}
-        />
-      ))}
+      {links.map((link, i) =>
+        isYouTubeChannel(link.url) ? (
+          <YouTubeChannelButton key={`${link.url}-${i}`} pageId={pageId} link={link} />
+        ) : (
+          <SocialChannel
+            key={`${link.url}-${i}`}
+            link={link}
+            open={active === i}
+            onOpenChange={(open) => setActive((current) => (open ? i : current === i ? null : current))}
+          />
+        ),
+      )}
     </nav>
+  )
+}
+
+/** Opens the channel panel; a pointer resting on it starts loading the channel, so the panel opens filled. */
+function YouTubeChannelButton({ pageId, link }: { pageId: string; link: ProfileLink }) {
+  const { text } = useStreamLocale()
+  const queries = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const prefetch = () =>
+    void queries.prefetchQuery({
+      queryKey: communityKeys.youtubeChannel(pageId, link.url),
+      queryFn: () => communityApi.youtubeChannel(pageId, link.url),
+      staleTime: 5 * 60_000,
+      retry: false,
+    })
+  return (
+    <>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-label={text(
+          `Xem kênh YouTube ${link.label}${link.official ? " — Kênh chính thức" : ""}`,
+          `View the YouTube channel ${link.label}${link.official ? " — Official channel" : ""}`,
+        )}
+        data-state={open ? "open" : undefined}
+        onPointerEnter={(event) => event.pointerType === "mouse" && prefetch()}
+        onFocus={prefetch}
+        onClick={() => setOpen(true)}
+      >
+        <SocialPlatformIcon url={link.url} />
+        {link.official && (
+          <OfficialBadge className="pf-social-official" label={text("Kênh chính thức", "Official channel")} />
+        )}
+      </button>
+      <ChannelViewer pageId={pageId} link={link} open={open} onOpenChange={setOpen} />
+    </>
   )
 }
 
