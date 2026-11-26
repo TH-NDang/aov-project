@@ -1015,6 +1015,24 @@ cặp nào cùng ngồi trong một ván.
 Trả `{player, moved:{rosterLines,repeatedRosterLines,tournaments,series,games,plans,planRevisions}}`. Khôi phục hồ sơ bị gộp không trả
 lại các liên kết đã chuyển.
 
+## Tổ chức là kênh phát sóng (26/11/2026)
+
+Hồ sơ ORGANIZATION của một giải là kênh đã tổ chức và phát sóng giải, không phải công ty phát hành game. Liquipedia ghi
+"Organizer: Garena" cho nhiều giải mà phần Links trỏ tới kênh YouTube của từng khu vực, nên lần nhập 06/11/2026 gắn các
+giải đó vào một hồ sơ chung "Garena". Người dùng yêu cầu dùng kênh và bỏ hồ sơ chung này ngày 26/11/2026.
+
+- Nguồn ghi nhà phát hành (Garena) làm tổ chức và link của giải có một kênh YouTube: tổ chức của giải là hồ sơ
+  ORGANIZATION có link tới đúng kênh đó. Kênh chưa có hồ sơ thì tạo hồ sơ cho kênh. Không tạo lại hồ sơ "Garena". Các lần
+  nhập sau theo cùng quy tắc.
+- Hai địa chỉ là một kênh khi phần sau `youtube.com/` trùng nhau ở dạng `channel/<id>`, `@<tên>`, `c/<tên>` hoặc
+  `user/<tên>`, không phân biệt hoa thường, bỏ qua tab (`/live`, `/videos`), dấu `/` cuối và query. Địa chỉ video không
+  chỉ kênh nào. `@<tên>` và `channel/<id>` của cùng một kênh không so được với nhau, nên link của hồ sơ kênh dùng dạng mà
+  link của giải dùng.
+- Dữ liệu đã nhập được đổi một lần bằng V027 (xem "Cơ sở dữ liệu"). Đây là ngoại lệ có chủ ý của hai quy tắc: snapshot
+  và lịch sử kế hoạch được viết lại theo tổ chức mới, và hồ sơ "Garena" đã công bố bị xóa thay vì thu hồi, vì nó chưa
+  từng là một kênh. Nguồn ảnh của Wiki trỏ `ownerPageId` tới hồ sơ này, nếu có, đọc như tham chiếu hỏng và giữ tên ghi
+  công.
+
 ## Cơ sở dữ liệu
 
 V006 tạo schema community và các bảng page, page_audit, page_member, page_claim, page_invitation,
@@ -1095,6 +1113,17 @@ trong view; view đọc sổ đăng ký lúc truy vấn nên khôi phục danh t
 
 "Liên kết giữa các bản ghi thi đấu" (19/11/2026) không thêm migration: các trường mới nằm trong tài liệu jsonb, và dữ liệu
 cũ được điền bằng script chạy tay thay vì migration (ADR-032).
+
+V027 phục vụ "Tổ chức là kênh phát sóng", chạy một lần. Xét mọi giải (kể cả ở thùng rác) mà bản nháp kế hoạch, snapshot
+công bố hoặc lịch sử kế hoạch còn ghi hồ sơ ORGANIZATION mã `garena`. Khi link YouTube của giải trong sổ đăng ký chỉ
+đúng một hồ sơ ORGANIZATION khác theo quy tắc so kênh ở trên, giải đổi sang hồ sơ đó: bản nháp (`organizerPageId`,
+`organizer` lấy tên nháp, `version` tăng một), snapshot công bố và các snapshot trong `plan_revision` (`organizer`,
+`plan.organizerPageId`, `plan.organizer`, tên và logo theo bản công bố của hồ sơ kênh). Snapshot công bố chỉ đổi khi hồ
+sơ kênh đã công bố. Kênh Arena of Valor toàn cầu (`channel/UCgYkGvtBuY4onYm2Eh61zwQ`) chưa có hồ sơ nên được tạo hồ sơ
+nháp mã `arena-of-valor` khi có giải của Garena trỏ tới nó. Sau đó hồ sơ `garena` bị xóa cùng nhật ký của nó nếu không còn
+kế hoạch, lịch sử, giải, loạt trận hay page nào nhắc tới và không có thành viên, yêu cầu, lời mời, bài viết, người theo
+dõi, báo cáo, thông báo hay phát trực tiếp; còn thì giữ nguyên và ghi NOTICE. Trên dữ liệu ngày 26/11/2026: 11 giải về
+"Liên Quân Mobile eSports-Garena", 4 giải về "Garena RoV Thailand", 2 giải về hồ sơ mới "Arena of Valor".
 
 ## API
 
