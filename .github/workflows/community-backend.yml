@@ -6,6 +6,7 @@ on:
     paths:
       - "backend/community-service/**"
       - "backend/wiki-service/scripts/dev/initialize-community-database.ps1"
+      - "backend/wiki-service/scripts/dev/LocalEnvironment.psm1"
       - "backend/wiki-service/scripts/sync-community-roles.ps1"
       - "backend/wiki-service/scripts/sync-community-client.ps1"
       - "backend/wiki-service/scripts/dev/test-community-setup.ps1"
@@ -15,6 +16,7 @@ on:
     paths:
       - "backend/community-service/**"
       - "backend/wiki-service/scripts/dev/initialize-community-database.ps1"
+      - "backend/wiki-service/scripts/dev/LocalEnvironment.psm1"
       - "backend/wiki-service/scripts/sync-community-roles.ps1"
       - "backend/wiki-service/scripts/sync-community-client.ps1"
       - "backend/wiki-service/scripts/dev/test-community-setup.ps1"
@@ -51,6 +53,9 @@ jobs:
       - name: Validate local setup scripts
         shell: pwsh
         run: ../wiki-service/scripts/dev/test-community-setup.ps1
+      - name: Check the local launcher
+        shell: pwsh
+        run: ./scripts/dev/test-start-local.ps1
       - name: Verify metadata import safety
         run: python3 scripts/test_import_collected_metadata.py
       - name: Upload test reports
