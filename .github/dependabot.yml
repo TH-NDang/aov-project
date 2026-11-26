@@ -1,0 +1,43 @@
+# Weekly update pull requests, security fixes included, for every place that pins a dependency.
+# Patch and minor updates of one ecosystem come in one pull request so they do not flood the queue.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directories:
+      - /backend/wiki-service
+      - /backend/community-service
+    schedule:
+      interval: weekly
+    groups:
+      maven-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories:
+      - /backend/wiki-service
+      - /backend/community-service
+      - /infra/keycloak
+      - /infra/proxy
+      - /infra/web
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker-compose
+    directories:
+      - /infra
+      - /backend/wiki-service
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

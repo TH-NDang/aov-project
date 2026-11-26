@@ -22,6 +22,8 @@ import org.springframework.validation.annotation.Validated;
  * @param secretKey             secret key paired with {@code accessKey}
  * @param createBucketIfMissing create the bucket at startup; meant for local development only
  * @param publicEndpoint        endpoint written into presigned URLs for browsers; empty uses {@code endpoint}
+ * @param signUploadSize        sign the declared size into presigned uploads, so that storage refuses a body of another
+ *                              length. Off until the storage provider is known to check it (R2 does not document it)
  */
 @Validated
 @ConfigurationProperties("wiki.storage")
@@ -35,8 +37,16 @@ record StorageProperties(
         @Nullable String accessKey,
         @Nullable String secretKey,
         @DefaultValue("false") boolean createBucketIfMissing,
-        @Nullable URI publicEndpoint
+        @Nullable URI publicEndpoint,
+        @DefaultValue("false") boolean signUploadSize
 ) {
+
+    StorageProperties(@Nullable URI endpoint, String region, String bucket, @Nullable String assetsBucket,
+            @Nullable String sourcesBucket, boolean pathStyleAccess, @Nullable String accessKey,
+            @Nullable String secretKey, boolean createBucketIfMissing, @Nullable URI publicEndpoint) {
+        this(endpoint, region, bucket, assetsBucket, sourcesBucket, pathStyleAccess, accessKey, secretKey,
+                createBucketIfMissing, publicEndpoint, false);
+    }
 
     String bucketFor(String key) {
         if (key.startsWith(MediaObjectKeys.ASSETS_PREFIX)) {

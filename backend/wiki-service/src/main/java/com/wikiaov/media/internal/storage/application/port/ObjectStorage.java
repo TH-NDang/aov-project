@@ -39,7 +39,16 @@ public interface ObjectStorage {
     void delete(String key);
 
     /** Creates a URL that lets a client upload one object directly, without going through the backend. */
-    PresignedRequest presignPut(String key, String contentType, Duration validity);
+    default PresignedRequest presignPut(String key, String contentType, Duration validity) {
+        return presignPut(key, contentType, -1, validity);
+    }
+
+    /**
+     * Creates a URL that lets a client upload one object of {@code contentLength} bytes directly. Where the storage
+     * supports it, the length is part of the signature and a body of another size is refused; a negative length
+     * leaves the size unsigned. The returned headers never include {@code Content-Length}: HTTP clients set it.
+     */
+    PresignedRequest presignPut(String key, String contentType, long contentLength, Duration validity);
 
     /** Creates a temporary download URL for a private object. */
     default PresignedRequest presignGet(String key, Duration validity) {

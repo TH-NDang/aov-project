@@ -102,6 +102,9 @@ wiki:
   security:
     # Client whose client roles (resource_access.<client>.roles) carry the capabilities.
     resource-client-id: ${JWT_RESOURCE_CLIENT_ID:wiki-service}
+    # Clients (the token's azp) whose tokens carry those capabilities. Tokens of the public Wiki and Stream sign people
+    # in without any: those apps share the origin with user content, and a script injected there must not act as admin.
+    capability-clients: ${JWT_CAPABILITY_CLIENTS:admin-aov-backend,wiki-importer}
   storage:
     # Any S3-compatible service (ADR-006): Cloudflare R2 for development and production, SeaweedFS in tests.
     endpoint: ${STORAGE_ENDPOINT:}
@@ -120,6 +123,9 @@ wiki:
     access-key: ${STORAGE_ACCESS_KEY:}
     secret-key: ${STORAGE_SECRET_KEY:}
     create-bucket-if-missing: false
+    # Sign the declared size into presigned uploads so storage refuses a larger body. R2 does not document that it
+    # checks a signed Content-Length: turn on after one upload on the development buckets has gone through.
+    sign-upload-size: ${STORAGE_SIGN_UPLOAD_SIZE:false}
   # Private source files: evidence captures and import data (ADR-030).
   sources:
     max-upload-size: 2GB
