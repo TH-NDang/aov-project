@@ -25,13 +25,13 @@
     "generate:hero-api": "openapi-typescript ../backend/wiki-service/src/main/resources/contracts/hero-authoring.openapi.json -o apps/admin-aov/src/features/publishing/generated/hero-api.d.ts && prettier --write apps/admin-aov/src/features/publishing/generated/hero-api.d.ts"
   },
   "devDependencies": {
-    "@tanstack/intent": "^0.5.5",
+    "@tanstack/intent": "^0.5.6",
     "@types/node": "^22.0.0",
     "eslint": "^10.15.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "openapi-typescript": "^7.13.0",
-    "prettier": "3.9.9",
-    "turbo": "^2.5.0",
+    "prettier": "3.10.1",
+    "turbo": "^2.11.13",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.73.0"
   }
