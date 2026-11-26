@@ -73,6 +73,11 @@ management:
 
 
 wiki:
+  # Patch watch (ADR-035): reads the publishers' patch-note pages on the schedule set in Admin. The Indonesian list
+  # needs the page reader (a headless browser) that only the server stack runs; without its address that source waits.
+  patch-watch:
+    enabled: ${PATCH_WATCH_ENABLED:true}
+    page-reader-url: ${PATCH_WATCH_PAGE_READER_URL:}
   read-model-cache:
     enabled: ${READ_MODEL_CACHE_ENABLED:false}
     prefix: ${READ_MODEL_CACHE_PREFIX:wiki:read-model:v1}
