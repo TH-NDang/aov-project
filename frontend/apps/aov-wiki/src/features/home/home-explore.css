@@ -59,12 +59,12 @@
 .wiki-home-card[data-section="terms"] {
   grid-area: terms;
 }
-/* Each card is a game frame (styles/game-frame.css); its pictures sit inside the frame's inner line. */
+/* The card itself; each design below (data-look on the list) dresses it differently. */
 .wiki-home-card {
-  --wiki-frame-cut: 12px;
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
-  padding: 6px;
   color: var(--aov-text);
   transition: transform 180ms ease-out;
 }
@@ -84,9 +84,6 @@
   justify-content: center;
   gap: 10px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--aov-wiki-bar) 80%, transparent);
 }
 .wiki-home-card-frame {
   position: relative;
@@ -152,6 +149,10 @@
   gap: 8px;
   padding: 0 20px;
 }
+/* At most four terms, so the card keeps its height. */
+.wiki-home-card-strip[data-shape="words"] > :nth-child(n + 5) {
+  display: none;
+}
 .wiki-home-card-strip[data-shape="words"] > span {
   font: italic 600 0.9375rem/1.375rem var(--wiki-font-display);
   border: 1px solid var(--aov-line-strong);
@@ -204,6 +205,251 @@
 }
 .wiki-home-card-tally {
   margin-left: auto;
+}
+/* Changed this season: an angled "New" tag on the card's top right, in the update blue. */
+.wiki-home-card-new {
+  font: 700 0.75rem/1rem var(--wiki-font-reading);
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  right: 8px;
+  padding: 1px 8px 1px 9px;
+  background: linear-gradient(180deg, var(--aov-info), color-mix(in srgb, var(--aov-info) 70%, var(--aov-wiki-bar)));
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  color: var(--aov-wiki-bar);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+/*
+ * A) Hero card: the pictures fill the whole card, a dark gradient rises from its foot, a thin inner light edge
+ *    replaces the frame; the section's socket sits on the top edge of a small metal plate that carries the name.
+ */
+.wiki-home-cards[data-look="a"] .wiki-home-card {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--aov-wiki-panel-deep);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--aov-wiki-gold-bright) 45%, transparent);
+}
+.wiki-home-cards[data-look="a"] .wiki-home-card:hover {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent),
+    inset 0 1px 0 var(--aov-wiki-gold-bright),
+    0 14px 30px -16px rgb(0 0 0 / 70%);
+}
+.wiki-home-cards[data-look="a"] .wiki-home-card-strip {
+  min-height: 176px;
+  padding-bottom: 52px;
+  background:
+    radial-gradient(90% 80% at 50% 30%, color-mix(in srgb, var(--aov-wiki-gold) 8%, transparent), transparent 70%),
+    var(--aov-wiki-bar);
+}
+.wiki-home-cards[data-look="a"] .wiki-home-card-strip[data-shape="photo"] {
+  padding-bottom: 0;
+}
+/* An overlay on artwork: the foot of the card darkens under the plate. */
+.wiki-home-cards[data-look="a"] .wiki-home-card-body {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 26px 14px 12px;
+  background: linear-gradient(180deg, transparent, rgb(8 10 14 / 92%) 55%);
+}
+.wiki-home-cards[data-look="a"] .wiki-home-card[data-section="heroes"] .wiki-home-card-body {
+  bottom: auto;
+  top: 106px;
+}
+.wiki-home-cards[data-look="a"] .wiki-home-card-link {
+  padding: 3px 14px 3px 22px;
+  margin-left: -18px;
+  background: linear-gradient(180deg, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--aov-wiki-gold-bright) 40%, transparent);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+}
+.wiki-home-cards[data-look="a"] .wiki-home-card-socket {
+  --socket-size: 38px;
+  z-index: 1;
+}
+
+/*
+ * B) Medallion plate: a low plate lit along its bevelled top edge, a round medallion on the left with a ring and a
+ *    glow, and the pictures fading in from the right; no corner ornaments.
+ */
+.wiki-home-cards[data-look="b"] .wiki-home-card {
+  min-height: 132px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep) 60%, var(--aov-wiki-bar));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--aov-wiki-gold-bright) 55%, transparent),
+    inset 0 2px 0 color-mix(in srgb, var(--aov-wiki-bronze) 50%, transparent),
+    inset 0 -1px 0 rgb(0 0 0 / 50%);
+}
+.wiki-home-cards[data-look="b"] .wiki-home-card-strip {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 64%;
+  min-height: 0;
+  justify-content: flex-end;
+  padding-right: 16px;
+  mask-image: linear-gradient(to right, transparent, black 45%);
+}
+.wiki-home-cards[data-look="b"] .wiki-home-card-strip[data-shape="photo"] {
+  padding-right: 0;
+}
+.wiki-home-cards[data-look="b"] .wiki-home-card-body {
+  flex: 1;
+  gap: 14px;
+  padding: 16px 18px;
+}
+.wiki-home-card-medallion {
+  position: relative;
+  display: grid;
+  width: 60px;
+  height: 60px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--aov-wiki-gold);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, var(--aov-wiki-panel-high), var(--aov-wiki-bar) 75%);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--aov-wiki-gold) 14%, transparent),
+    0 0 18px color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent),
+    inset 0 0 0 1px var(--aov-wiki-bronze);
+  color: var(--aov-wiki-gold-bright);
+  transition: box-shadow 180ms ease-out;
+}
+.wiki-home-card:hover .wiki-home-card-medallion {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--aov-wiki-gold) 24%, transparent),
+    0 0 26px color-mix(in srgb, var(--aov-wiki-gold) 50%, transparent),
+    inset 0 0 0 1px var(--aov-wiki-bronze);
+}
+/* The name and its count stack beside the medallion, clear of the pictures on the right. */
+.wiki-home-cards[data-look="b"] .wiki-home-card-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  justify-items: start;
+  row-gap: 4px;
+}
+.wiki-home-cards[data-look="b"] .wiki-home-card-medallion {
+  grid-row: span 2;
+}
+.wiki-home-cards[data-look="b"] :is(.wiki-home-card-count, .wiki-home-card-tally) {
+  margin-left: 0;
+}
+.wiki-home-cards[data-look="b"] .wiki-home-card-link {
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+}
+/* One-column cards keep two pictures, small enough to stay on the right half. */
+.wiki-home-cards[data-look="b"]
+  .wiki-home-card:is(
+    [data-section="items"],
+    [data-section="enchantments"],
+    [data-section="arcana"],
+    [data-section="spells"],
+    [data-section="modes"]
+  )
+  .wiki-home-card-strip {
+  width: 40%;
+}
+.wiki-home-cards[data-look="b"]
+  .wiki-home-card:is(
+    [data-section="items"],
+    [data-section="enchantments"],
+    [data-section="arcana"],
+    [data-section="spells"]
+  )
+  .wiki-home-card-frame:nth-child(n + 3) {
+  display: none;
+}
+/* The glossary's terms do not fit beside its name on a low plate. */
+.wiki-home-cards[data-look="b"] .wiki-home-card-strip[data-shape="words"] {
+  display: none;
+}
+
+/*
+ * C) Glass and rim light: a dark glass panel over a blurred wash of the section's own picture, the pictures crisp on
+ *    it, and a gradient rim that sweeps round once under the pointer.
+ */
+@property --card-rim {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.wiki-home-cards[data-look="c"] .wiki-home-card {
+  overflow: hidden;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgb(16 18 24 / 55%), rgb(10 12 16 / 82%)),
+    var(--card-wash, none) center / cover no-repeat,
+    var(--aov-wiki-bar);
+}
+/* The wash: the card's own picture, blurred into colour behind the glass. */
+.wiki-home-cards[data-look="c"] .wiki-home-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -30%;
+  background: var(--card-wash, none) center / cover no-repeat;
+  filter: blur(36px) saturate(1.6);
+  opacity: 0.45;
+}
+.wiki-home-cards[data-look="c"] .wiki-home-card::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--card-rim),
+    color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent),
+    transparent 22% 48%,
+    color-mix(in srgb, var(--aov-wiki-gold-bright) 70%, transparent) 62%,
+    transparent 80%,
+    color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wiki-home-cards[data-look="c"] .wiki-home-card:hover::before {
+    animation: wiki-home-rim 1.4s ease-out;
+  }
+}
+@keyframes wiki-home-rim {
+  to {
+    --card-rim: 360deg;
+  }
+}
+.wiki-home-cards[data-look="c"] .wiki-home-card-strip {
+  min-height: 140px;
+  background: transparent;
+}
+.wiki-home-cards[data-look="c"] .wiki-home-card-picture {
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 55%));
+}
+.wiki-home-cards[data-look="c"] .wiki-home-card-strip[data-shape="photo"] .wiki-home-card-picture {
+  filter: none;
+}
+.wiki-home-cards[data-look="c"] .wiki-home-card-body {
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(8 10 14 / 40%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 @media (prefers-reduced-motion: reduce) {
   .wiki-home-card {
@@ -280,5 +526,53 @@
   }
   .wiki-home-card-count {
     padding: 2px 6px;
+  }
+  .wiki-home-cards[data-look="a"] .wiki-home-card-strip {
+    min-height: 136px;
+    padding-bottom: 46px;
+  }
+  .wiki-home-cards[data-look="a"] .wiki-home-card[data-section="heroes"] .wiki-home-card-body {
+    top: 82px;
+  }
+  .wiki-home-cards[data-look="a"] .wiki-home-card-body {
+    gap: 4px;
+    padding: 22px 8px 10px;
+  }
+  .wiki-home-cards[data-look="a"] .wiki-home-card-socket {
+    --socket-size: 28px;
+  }
+  .wiki-home-cards[data-look="a"] .wiki-home-card-link {
+    padding: 2px 8px 2px 14px;
+    margin-left: -12px;
+  }
+  .wiki-home-cards[data-look="b"] .wiki-home-card {
+    min-height: 96px;
+  }
+  /* Two cards to a row leave no room beside the name: their pictures give way to it. */
+  .wiki-home-cards[data-look="b"]
+    .wiki-home-card:is(
+      [data-section="items"],
+      [data-section="enchantments"],
+      [data-section="arcana"],
+      [data-section="spells"],
+      [data-section="terms"],
+      [data-section="modes"]
+    )
+    .wiki-home-card-strip {
+    display: none;
+  }
+  .wiki-home-cards[data-look="b"] .wiki-home-card-body {
+    gap: 8px;
+    padding: 12px 10px;
+  }
+  .wiki-home-card-medallion {
+    width: 40px;
+    height: 40px;
+  }
+  .wiki-home-cards[data-look="b"] .wiki-home-card-link {
+    font-size: 0.875rem;
+  }
+  .wiki-home-cards[data-look="c"] .wiki-home-card-strip {
+    min-height: 100px;
   }
 }

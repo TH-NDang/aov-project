@@ -1,8 +1,11 @@
-import { Link } from "react-router"
+import type { CSSProperties } from "react"
+import { Link, useSearchParams } from "react-router"
 import { ChangeKindMark } from "../../components/change-tag"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, useWikiText } from "../../context/wiki-context"
+import { useSeasonMarks } from "../../lib/season-updates"
+import { resizedImageUrl } from "../../lib/sized-image"
 import { HomeChangeCounts } from "./home-change-counts"
 import { HomeRoles } from "./home-roles"
 import { useHomeSections, type HomeSection } from "./use-home-sections"
@@ -53,29 +56,47 @@ function Strip({ section }: { section: HomeSection }) {
   )
 }
 
+// TODO: temporary switch between three card designs for review (?homeframe=a|b|c); keep the chosen one, drop the rest.
+const LOOKS = ["a", "b", "c"] as const
+type Look = (typeof LOOKS)[number]
+
 /**
- * Every section of the Wiki as a card in the game frame: a strip of real pictures on top, then the section's mark in a
- * hexagonal socket, its name and count (for updates, the change marks with their numbers). Heroes, skins and updates
- * take two columns; the four armory catalogs, the glossary and game modes one each (the glossary two when there are no
- * modes). The heroes card ends with the roles, under a title of their own, apart from the portraits.
+ * Every section of the Wiki as a card: a strip of real pictures, the section's mark in a socket, its name and count
+ * (for updates, the change marks with their numbers), and a "New" tag when the season in force changed it. Heroes,
+ * skins and updates take two columns; the four armory catalogs, the glossary and game modes one each (the glossary two
+ * when there are no modes). The heroes card ends with the roles, under a title of their own, apart from the portraits.
  */
 export function HomeExplore() {
   const { locale } = useWikiContext()
   const t = useWikiText()
   const sections = useHomeSections()
+  const { marks } = useSeasonMarks()
+  const [search] = useSearchParams()
+  const asked = search.get("homeframe") as Look
+  const look: Look = LOOKS.includes(asked) ? asked : "a"
 
   return (
     <section className="wiki-home-explore" aria-labelledby="wiki-home-explore-title">
       <header className="wiki-home-heading">
         <h2 id="wiki-home-explore-title">{t("Khám phá", "Explore")}</h2>
       </header>
-      <ul className="wiki-home-cards">
+      <ul className="wiki-home-cards" data-look={look}>
         {sections.map((section) => (
-          <li key={section.key} className="wiki-home-card wiki-frame wiki-frame-hover" data-section={section.key}>
+          <li
+            key={section.key}
+            className="wiki-home-card"
+            data-section={section.key}
+            style={
+              section.pictures[0]
+                ? ({ "--card-wash": `url("${resizedImageUrl(section.pictures[0].url, 256)}")` } as CSSProperties)
+                : undefined
+            }
+          >
             <Strip section={section} />
+            {marks[section.key] && <span className="wiki-home-card-new">{t("Mới", "New")}</span>}
             <span className="wiki-home-card-body">
-              <span className="wiki-frame-socket wiki-home-card-socket">
-                <WikiIcon name={section.icon} size={20} />
+              <span className={look === "b" ? "wiki-home-card-medallion" : "wiki-frame-socket wiki-home-card-socket"}>
+                <WikiIcon name={section.icon} size={look === "b" ? 26 : 20} />
               </span>
               <Link className="wiki-home-card-link" to={section.to}>
                 {section.name}
