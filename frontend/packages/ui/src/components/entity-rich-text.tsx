@@ -54,6 +54,16 @@ type ReferenceIconProps = {
   defer?: boolean
 }
 
+let sizeIcon: (url: string) => string = (url) => url
+
+/**
+ * Lets an app fetch reference icons through its image service at the size they are drawn, instead of the stored
+ * picture. An icon whose resized copy fails falls back to the stored one.
+ */
+export function sizeReferenceIcons(sizer: (url: string) => string) {
+  sizeIcon = sizer
+}
+
 export function EntityReferenceIcon(props: ReferenceIconProps) {
   return props.defer ? <DeferredReferenceIcon {...props} /> : <ResolvedReferenceIcon {...props} />
 }
@@ -74,7 +84,7 @@ function DeferredReferenceIcon(props: ReferenceIconProps) {
 
 function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: ReferenceIconProps) {
   const [resolved, setResolved] = React.useState<EntityIcon | null | undefined>(undefined)
-  const [failed, setFailed] = React.useState<string | null>(null)
+  const [failed, setFailed] = React.useState<readonly string[]>([])
   // The entity object can be rebuilt on every render; its id, kind and icon decide when the icon is looked up again.
   const currentEntity = React.useEffectEvent(() => entity)
   React.useEffect(() => {
@@ -95,7 +105,8 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
   }, [entity.id, entity.kind, entity.iconAssetId, resolveIcon])
   const own = safeEntityIconUrl(entity.icon)
   const logo = !own && typeof resolved === "object" ? resolved : undefined
-  const icon = own ?? safeEntityIconUrl(logo ? logo.url : resolved)
+  const stored = own ?? safeEntityIconUrl(logo ? logo.url : resolved)
+  const icon = stored && [sizeIcon(stored), stored].find((url) => !failed.includes(url))
   const Fallback = entityKindIcons[entity.kind]
   if (entity.kind === "country") {
     const flag = countryReferenceFlag(entity.id)
@@ -118,7 +129,7 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
         </span>
       )
   }
-  return icon && failed !== icon ? (
+  return icon ? (
     <img
       src={icon}
       alt=""
@@ -127,7 +138,7 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
       decoding="async"
       data-logo-plate={logo?.plate}
       className={`inline shrink-0 rounded-sm align-text-bottom ${logo ? "object-contain" : "bg-muted object-cover"} ${className}`}
-      onError={() => setFailed(icon)}
+      onError={() => setFailed((current) => [...current, icon])}
     />
   ) : (
     <span
