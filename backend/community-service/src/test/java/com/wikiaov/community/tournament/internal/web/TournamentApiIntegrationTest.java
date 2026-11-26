@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
@@ -24,6 +25,8 @@ import com.wikiaov.community.tournament.internal.archive.application.RecordLifec
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.catalog.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CompetitionType;
@@ -40,6 +43,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Observ
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ResolvedContext;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
@@ -115,9 +119,7 @@ class TournamentApiIntegrationTest {
 
     @BeforeEach
     void references() {
-        when(catalog.read(anyString(), anyString(), nullable(UUID.class), nullable(UUID.class), anyBoolean()))
-                .thenReturn(new Catalog(List.of(), List.of(), List.of(), List.of(), List.of(), new ResolvedContext("VN",
-                        "vi-VN", UUID.randomUUID(), null, null, null, null, null, true, false)));
+        catalogHolds();
     }
 
     @Test
@@ -343,6 +345,70 @@ class TournamentApiIntegrationTest {
                 .andExpect(jsonPath("$.content.sides[0].participants[0].enchantments.observedAtSeconds").value(45))
                 .andExpect(jsonPath("$.content.sides[0].participants[0].spellObservedAtSeconds").value(45))
                 .andExpect(jsonPath("$.missingFields").isEmpty());
+    }
+
+    @Test
+    void aBuildKeepsItsPlacesPartsAndTimesAndIsFrozenWithThePublishedGame() throws Exception {
+        var game = fixture().game();
+        var draft = create("games", withBuild(game, List.of(
+                new BuildStep(new Selection(null, "Boots"), List.of(), BuildPlace.REPLACED, null),
+                new BuildStep(new Selection(null, "Blade"), List.of(new Selection(null, "Half a blade")),
+                        BuildPlace.KEPT, 540),
+                new BuildStep(new Selection(null, "Revive"), null, BuildPlace.SITUATIONAL, null))));
+
+        var published = write(post(ADMIN + "/games/" + draft.get("id") + "/publish"),
+                Map.of("version", version(draft)));
+        write(put(ADMIN + "/games/" + draft.get("id")), Map.of("version", version(published), "content",
+                withBuild(game, List.of())));
+
+        String build = "$.content.sides[0].participants[0].build";
+        mvc.perform(get(PUBLIC + "/games/" + draft.get("id"))).andExpect(status().isOk())
+                .andExpect(jsonPath(build + ".length()").value(3))
+                .andExpect(jsonPath(build + "[0].place").value("REPLACED"))
+                .andExpect(jsonPath(build + "[1].from[0].name").value("Half a blade"))
+                .andExpect(jsonPath(build + "[1].atSeconds").value(540))
+                .andExpect(jsonPath(build + "[2].place").value("SITUATIONAL"));
+    }
+
+    @Test
+    void theItemsAndPartsOfABuildAreInTheCatalogOfThePublishedGameAndRecipesAreNot() throws Exception {
+        // Every field of the entries is set, so one that the snapshot loses shows.
+        var part = new Reference(UUID.randomUUID(), "half-a-blade", "Half a blade", "https://img/half-a-blade.png", 2,
+                "RED", "edge", UUID.randomUUID());
+        var blade = new Reference(UUID.randomUUID(), "blade", "Blade", "https://img/blade.png", 3, "GREEN", "hilt",
+                UUID.randomUUID(), List.of(part.id()));
+        catalogHolds(blade, part);
+        var draft = create("games", withBuild(fixture().game(),
+                List.of(new BuildStep(new Selection(blade.id(), "Blade"),
+                        List.of(new Selection(part.id(), "Half a blade")), BuildPlace.KEPT, null))));
+
+        write(post(ADMIN + "/games/" + draft.get("id") + "/publish"), Map.of("version", version(draft)));
+
+        var published = mvc.perform(get(PUBLIC + "/games/" + draft.get("id"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$..components").doesNotHaveJsonPath()).andReturn().getResponse()
+                .getContentAsString();
+        assertThat(json.readValue(published, PublishedGame.class).catalog().items())
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("components").containsExactly(blade, part);
+    }
+
+    @Test
+    void aGameWhoseSourceHidSomeOfItIsStillPublished() throws Exception {
+        var game = fixture().game();
+        var blue = game.sides().getFirst();
+        var first = blue.participants().getFirst();
+        var participants = new ArrayList<>(blue.participants());
+        participants.set(0, new Participant(null, first.lane(), first.hero(), null, null, null, List.of(), List.of(),
+                null));
+        var draft = create("games", new Game(game.seriesId(), 1, "VN", "vi-VN", null, null, null, null, null, null,
+                null, null, List.of(new GameSide(blue.side(), blue.teamId(), blue.bans().subList(0, 2), participants),
+                        game.sides().getLast()),
+                false));
+
+        write(post(ADMIN + "/games/" + draft.get("id") + "/publish"), Map.of("version", version(draft)));
+
+        mvc.perform(get(PUBLIC + "/games/" + draft.get("id"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.sides[0].participants[0].playerId").value(nullValue()))
+                .andExpect(jsonPath("$.content.sides[0].participants[0].spell").value(nullValue()));
     }
 
     @Test
@@ -1416,6 +1482,28 @@ class TournamentApiIntegrationTest {
         }
         return new Fixture(tournamentId, seriesId, new Game(seriesId, 1, "VN", "vi-VN", null, null, null, null, null,
                 null, null, "published observation", sides, false));
+    }
+
+    /** The wiki knows these items and nothing else. */
+    private void catalogHolds(Reference... items) {
+        var context = new ResolvedContext("VN", "vi-VN", UUID.randomUUID(), null, null, null, null, null, true, false);
+
+        when(catalog.read(anyString(), anyString(), nullable(UUID.class), nullable(UUID.class), anyBoolean()))
+                .thenReturn(new Catalog(List.of(), List.of(items), List.of(), List.of(), List.of(), context));
+    }
+
+    private static Game withBuild(Game game, List<BuildStep> build) {
+        var blue = game.sides().getFirst();
+        var first = blue.participants().getFirst();
+        var participants = new ArrayList<>(blue.participants());
+        participants.set(0, new Participant(first.playerId(), first.lane(), first.hero(), first.spell(), null, null,
+                List.of(), List.of(), null, null, build));
+
+        return new Game(game.seriesId(), game.number(), game.region(), game.locale(), null, null, null, 1200, null,
+                null,
+                null, null, List.of(new GameSide(blue.side(), blue.teamId(), blue.bans(), participants),
+                        game.sides().getLast()),
+                false);
     }
 
     private Map<String, Object> create(String kind, Object content) throws Exception {

@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.statistics.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -13,12 +14,18 @@ import com.wikiaov.community.tournament.internal.statistics.persistence.Publishe
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.PlatformTransactionManager;
 
 class CompetitionStatisticsTest {
     private static final UUID CUP = UUID.randomUUID();
+    private static final int WAITING = 8;
 
     private final CompetitionPlanRepository plans = mock(CompetitionPlanRepository.class);
     private final PublishedLineups games = mock(PublishedLineups.class);
@@ -69,6 +76,45 @@ class CompetitionStatisticsTest {
     }
 
     @Test
+    void requestsThatWaitedDuringAReadingShareTheOneThatBeganAfterThem() throws Exception {
+        // Games are published all the time: every look at the publications finds another one.
+        var publications = new AtomicInteger();
+        when(games.publications()).thenAnswer(call -> "publication " + publications.incrementAndGet());
+        var reading = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var readings = new AtomicInteger();
+        when(games.of(CUP)).thenAnswer(call -> {
+            if (readings.incrementAndGet() == 1) {
+                reading.countDown();
+                release.await();
+            }
+            return List.of(game());
+        });
+
+        try (var requests = Executors.newFixedThreadPool(WAITING + 1)) {
+            try {
+                var first = requests.submit(() -> statistics.of(CUP));
+                assertThat(reading.await(10, TimeUnit.SECONDS)).isTrue();
+                var waiting = IntStream.range(0, WAITING)
+                        .mapToObj(number -> requests.submit(() -> statistics.of(CUP))).toList();
+                // Every waiting request has looked at the publications once; the other two are those of the reading.
+                await().until(() -> publications.get() == WAITING + 2);
+                release.countDown();
+
+                assertThat(first.get().statistics().games()).isEqualTo(1);
+                for (var request : waiting) {
+                    assertThat(request.get().statistics().games()).isEqualTo(1);
+                }
+            } finally {
+                // Closing the pool waits for the first reading, also when an expectation above did not hold.
+                release.countDown();
+            }
+        }
+
+        assertThat(readings).hasValue(2);
+    }
+
+    @Test
     void theCompetitionAskedForLongestAgoMakesRoomForANewOne() {
         statistics.of(CUP);
         var second = UUID.randomUUID();
@@ -91,6 +137,7 @@ class CompetitionStatisticsTest {
     }
 
     private static PublishedLineup publishedAt(UUID id, Instant publishedAt) {
-        return new PublishedLineup(id, publishedAt, null, null, null, List.of(), List.of());
+        return new PublishedLineup(id, publishedAt, UUID.randomUUID(), 1, null, null, null, List.of(), List.of(), null,
+                null);
     }
 }
