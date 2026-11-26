@@ -1,34 +1,34 @@
-import { useQuery } from "@tanstack/react-query"
+import { useId } from "react"
 import { Link } from "react-router"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { heroCatalogQuery } from "../../lib/hero-api"
-import { HERO_ROLES, localizedHeroOptions } from "../../lib/hero-classifications"
 import { HeroGlyph } from "../../components/hero-glyph"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
+import { useHomeRoles } from "./use-home-sections"
+import "./home-roles.css"
 
-/** The six roles as shortcuts into the hero list, each with how many published heroes play it. */
+/**
+ * The six roles at the foot of the heroes card, under a title of their own and apart from the portraits, so they read
+ * as shortcuts into the hero list rather than as the roles of the heroes pictured. Each holds its mark, its name and how
+ * many heroes it has.
+ */
 export function HomeRoles() {
-  const scope = useWikiContext()
-  const { locale, href } = scope
-  const catalog = useQuery(heroCatalogQuery(scope))
-  const heroes = catalog.data?.items ?? []
+  const { locale } = useWikiContext()
+  const t = useWikiText()
+  const roles = useHomeRoles()
+  const titleId = useId()
+
   return (
-    <nav className="wiki-home-roles" aria-labelledby="wiki-home-roles-title">
-      <header className="wiki-home-heading">
-        <h2 id="wiki-home-roles-title">{wikiText(locale, "Tìm tướng theo vai trò", "Heroes by role")}</h2>
-      </header>
+    <nav className="wiki-home-roles" aria-labelledby={titleId}>
+      <p id={titleId}>{t("Theo vai trò", "By role")}</p>
       <ul>
-        {localizedHeroOptions(HERO_ROLES, locale).map((role) => {
-          const count = heroes.filter((hero) => hero.roles.includes(role.value)).length
-          return (
-            <li key={role.value}>
-              <Link to={href(`/hero?role=${role.value}`)}>
-                <HeroGlyph name={role.glyph} className="wiki-home-role-mark" />
-                <strong>{role.label}</strong>
-                {count > 0 && <small>{count}</small>}
-              </Link>
-            </li>
-          )
-        })}
+        {roles.map((role) => (
+          <li key={role.value}>
+            <Link to={role.to}>
+              <HeroGlyph name={role.glyph} />
+              <span>{role.label}</span>
+              {role.count != null && <small>{role.count.toLocaleString(locale)}</small>}
+            </Link>
+          </li>
+        ))}
       </ul>
     </nav>
   )

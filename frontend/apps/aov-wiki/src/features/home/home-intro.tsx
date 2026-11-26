@@ -1,71 +1,41 @@
-import { resizedImageUrl } from "../../lib/sized-image"
 import type { CSSProperties } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Link } from "react-router"
-import { LocalTime } from "@aov/ui/components/local-time"
-import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { usePublishedChanges } from "../../lib/wiki-patch-changes"
-import { seasonUpdatesQuery } from "./home-api"
+import { resizedImageUrl } from "../../lib/sized-image"
 import { bannerOfDay } from "./home-banners"
-import { patchDayLabel } from "../../lib/patch-day-label"
-import { SITE_NAME } from "../../lib/seo/page-meta"
+import "./home-intro.css"
 
 /**
- * The opening of the home page: what the Wiki is and one line about the version the data comes from. Search lives in
- * the header on every page.
+ * The opening of the home page: a short title on a stage lit by the artwork of the day. The artwork stands large on the
+ * right; a blurred copy of it washes its colours across the whole width, so the band is as rich on the left as on the
+ * right. Search stays in the header.
  */
 export function HomeIntro() {
-  const scope = useWikiContext()
-  const { locale, href, region, regions } = scope
-  const updates = useQuery(seasonUpdatesQuery(scope))
-  const { subjects } = usePublishedChanges("HERO")
+  const { locale } = useWikiContext()
   const banner = bannerOfDay()
-  const current = updates.data?.patches.find((patch) => patch.isCurrent)
-  const date = current?.effectiveOn ?? current?.effectiveAt ?? ""
 
   return (
     <section
       className="wiki-home-intro"
+      aria-labelledby="wiki-home-title"
       style={
         {
           "--home-art": `url("${resizedImageUrl(banner.image, 1536)}")`,
+          "--home-wash": `url("${resizedImageUrl(banner.image, 384)}")`,
           "--home-art-position": banner.position,
         } as CSSProperties
       }
     >
+      <span className="wiki-home-stage" aria-hidden="true">
+        <span className="wiki-home-stage-wash" />
+        <span className="wiki-home-stage-art" />
+        <span className="wiki-home-stage-scrim" />
+      </span>
       <div className="wiki-home-intro-inner">
-        <p className="wiki-home-eyebrow">
-          {SITE_NAME} · {wikiText(locale, "Liên Quân Mobile", "Arena of Valor")}
-        </p>
-        <h1>
-          {wikiText(
-            locale,
-            "Tra cứu tướng, trang bị và mọi thay đổi của Liên Quân",
-            "Look up heroes, equipment and every change in Arena of Valor",
-          )}
+        <h1 id="wiki-home-title">
+          {wikiText(locale, "Cẩm nang ", "The ")}
+          <em>{wikiText(locale, "Liên Quân Mobile", "Arena of Valor")}</em>
+          {wikiText(locale, "", " handbook")}
         </h1>
-        {current && (
-          <Link className="wiki-home-patch-pill" to={href(`/updates/${current.code}`)}>
-            <span className="wiki-home-live" aria-hidden="true" />
-            <span>
-              {wikiText(locale, "Bản ", "Version ")}
-              <LocalTime
-                value={date}
-                sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
-                label={(zone) => patchDayLabel(date, zone)}
-                fallback={current.code}
-              />
-            </span>
-            <span className="wiki-home-patch-pill-title">{current.title || current.code}</span>
-            {subjects.size > 0 && (
-              <span className="wiki-home-patch-pill-count">
-                {wikiText(locale, `${subjects.size} tướng thay đổi`, `${subjects.size} heroes changed`)}
-              </span>
-            )}
-            <WikiIcon name="arrow" size={16} />
-          </Link>
-        )}
       </div>
       <span className="wiki-home-art-credit">{banner.character}</span>
     </section>

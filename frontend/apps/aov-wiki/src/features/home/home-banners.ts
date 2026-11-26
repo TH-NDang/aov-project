@@ -1,5 +1,5 @@
 /** Hero artwork behind the home page's opening; `position` keeps the character in view when the band crops it. */
-const HOME_BANNERS = [
+export const HOME_BANNERS = [
   {
     image:
       "https://img.athahub.com/assets/6bd9e53a-97f0-49b1-a138-5d33bd2851c7/77f2495e-6bd4-446a-8fb8-beb226430adf.jpg",

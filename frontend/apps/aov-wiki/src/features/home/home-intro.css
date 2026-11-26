@@ -1,0 +1,116 @@
+/*
+ * The opening as a stage across the whole window. Three layers: a blurred, saturated copy of the artwork stretched over
+ * the full width (its colours wash the band edge to edge), the artwork itself large on the right, and a soft scrim that
+ * keeps the title readable without darkening a whole half. The stage fades into the page only at its foot. It is always
+ * dark, in either theme, so the title reads in light text over it.
+ */
+.wiki-home-intro {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 300px;
+  align-items: center;
+  color-scheme: dark;
+  color: var(--aov-text);
+}
+.wiki-home-stage {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  background: var(--aov-bg);
+  mask-image: linear-gradient(to bottom, black 72%, transparent);
+}
+.wiki-home-stage-wash {
+  position: absolute;
+  inset: -20%;
+  background: var(--home-wash) var(--home-art-position, 60% 30%) / cover no-repeat;
+  filter: blur(56px) saturate(1.7) brightness(0.72);
+}
+.wiki-home-stage-art {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(72%, 1100px);
+  background: var(--home-art) var(--home-art-position, 60% 30%) / cover no-repeat;
+  mask-image: linear-gradient(to right, transparent, black 38%);
+}
+/* An overlay on artwork: a light shade behind the title and a vignette that grades both edges alike. */
+.wiki-home-stage-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 90% at 18% 55%, rgb(6 8 12 / 52%), transparent 70%),
+    radial-gradient(ellipse 120% 140% at 50% 40%, transparent 55%, rgb(6 8 12 / 55%));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wiki-home-stage-wash {
+    animation: wiki-home-wash 48s ease-in-out infinite alternate;
+  }
+}
+@keyframes wiki-home-wash {
+  to {
+    transform: translate(4%, -3%) scale(1.08);
+  }
+}
+.wiki-home-intro-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(100%, var(--aov-page-max));
+  justify-items: start;
+  gap: 20px;
+  margin-inline: auto;
+  padding: 56px var(--wiki-gutter) 64px;
+}
+.wiki-home-intro h1 {
+  font: 700 2.75rem/3.25rem var(--wiki-font-display);
+  max-width: 14ch;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 55%);
+  text-wrap: balance;
+}
+.wiki-home-intro h1 em {
+  color: var(--aov-accent-strong);
+  font-style: normal;
+  white-space: nowrap;
+}
+.wiki-home-art-credit {
+  font: var(--wiki-type-meta);
+  position: absolute;
+  right: var(--wiki-gutter);
+  bottom: 28%;
+  color: color-mix(in srgb, var(--aov-text) 62%, transparent);
+  text-shadow: 0 1px 6px rgb(0 0 0 / 80%);
+}
+@media (max-width: 899.98px) {
+  .wiki-home-intro {
+    min-height: 0;
+    /* The compact header lies over the stage. */
+    margin-top: calc(-1 * var(--wiki-header-height));
+  }
+  .wiki-home-stage {
+    mask-image: linear-gradient(to bottom, black 64%, transparent);
+  }
+  /* On a phone the artwork fills the stage, cropped to the hero's face. */
+  .wiki-home-stage-art {
+    width: 100%;
+    mask-image: linear-gradient(to right, transparent, black 30%);
+  }
+  .wiki-home-stage-scrim {
+    background:
+      linear-gradient(0deg, rgb(6 8 12 / 55%), transparent 55%),
+      radial-gradient(ellipse 120% 120% at 50% 30%, transparent 50%, rgb(6 8 12 / 50%));
+  }
+  .wiki-home-intro-inner {
+    gap: 14px;
+    padding: calc(var(--wiki-header-height) + 96px) var(--wiki-gutter) 32px;
+  }
+  .wiki-home-intro h1 {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+  }
+  .wiki-home-art-credit {
+    top: calc(var(--wiki-header-height) + 8px);
+    bottom: auto;
+  }
+}

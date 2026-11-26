@@ -1,0 +1,175 @@
+/*
+ * The season bar at the foot of the current version's block: the season's name and the way to every version on the
+ * left, then a track with a node per version, newest first. Each node has its day in tabular figures and its short
+ * name; the version in force has a gold node with a halo and the "In force" tag. Phones scroll the track sideways.
+ */
+.wiki-home-season {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 14px;
+}
+.wiki-home-season-head {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding-top: 2px;
+}
+.wiki-home-season-head h3 {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-home-season-all {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 4px;
+  color: var(--aov-accent);
+  text-decoration: none;
+}
+.wiki-home-season-all:hover {
+  color: var(--aov-accent-strong);
+}
+.wiki-home-timeline {
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+}
+.wiki-home-timeline > li {
+  position: relative;
+  min-width: 168px;
+  flex: 1;
+}
+/* The track: a line through every node, drawn by each stop to the next one. */
+.wiki-home-timeline > li::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 0;
+  left: 6px;
+  height: 2px;
+  background: var(--aov-line-strong);
+}
+.wiki-home-timeline > li:last-child::before {
+  right: auto;
+  width: 24px;
+  background: linear-gradient(90deg, var(--aov-line-strong), transparent);
+}
+.wiki-home-timeline a {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding: 24px 16px 2px 0;
+  color: var(--aov-text);
+  text-decoration: none;
+}
+.wiki-home-timeline a::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 2px;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--aov-surface);
+  box-shadow: inset 0 0 0 2px var(--aov-line-strong);
+}
+.wiki-home-timeline li[data-current] a::before {
+  background: var(--aov-accent);
+  box-shadow: 0 0 0 4px var(--aov-accent-soft);
+}
+.wiki-home-stop-date {
+  font: 600 0.875rem/1.25rem var(--wiki-font-reading);
+  color: var(--aov-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-home-timeline li[data-current] .wiki-home-stop-date {
+  color: var(--aov-accent-strong);
+}
+.wiki-home-stop-when {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wiki-home-stop-now {
+  font: 600 0.75rem/1.125rem var(--wiki-font-reading);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 8px;
+  background: var(--aov-success-soft);
+  color: var(--aov-success);
+  white-space: nowrap;
+}
+.wiki-home-stop-title {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--aov-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-home-timeline a:hover .wiki-home-stop-title {
+  color: var(--aov-accent-strong);
+}
+.wiki-home-timeline a:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-home-season-loading {
+  height: 48px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+}
+.wiki-home-season-empty {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-home-retry {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--aov-accent);
+}
+@media (max-width: 899.98px) {
+  .wiki-home-season {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .wiki-home-season-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .wiki-home-season-all {
+    min-height: 36px;
+  }
+  /* On a phone the track runs to the edges of the screen and snaps to each version under the thumb. */
+  .wiki-home-timeline {
+    margin-inline: calc(-1 * var(--wiki-gutter));
+    padding-inline: var(--wiki-gutter);
+    scroll-padding-inline: var(--wiki-gutter);
+    scroll-snap-type: x mandatory;
+  }
+  .wiki-home-timeline[data-dragging] {
+    scroll-snap-type: none;
+  }
+  .wiki-home-timeline > li {
+    min-width: 150px;
+    flex: 0 0 150px;
+    scroll-snap-align: start;
+  }
+  .wiki-home-timeline > li[data-current] {
+    flex-basis: 196px;
+  }
+}

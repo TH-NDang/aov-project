@@ -1,0 +1,212 @@
+/*
+ * The version in force, compact: one line with its day, name, tally and the way to the notes, then the changed heroes
+ * as small portrait cards in one row that scrolls sideways and snaps to each card. On a phone the head stacks in three
+ * short lines, the block spans the screen and its row runs to the edges, its cards larger, the next one peeking in.
+ */
+.wiki-home-patch {
+  display: grid;
+  gap: 14px;
+  border-radius: var(--aov-radius-card);
+  padding: 16px 18px;
+  background: var(--aov-surface);
+}
+.wiki-home-patch-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.wiki-home-patch-live {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-success);
+  font-weight: 600;
+}
+.wiki-home-patch-live::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent);
+}
+.wiki-home-patch-head h2 {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+.wiki-home-patch-name {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-home-patch-notes {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--aov-accent);
+  text-decoration: none;
+}
+.wiki-home-patch-notes:hover {
+  color: var(--aov-accent-strong);
+}
+.wiki-home-patch-heroes,
+.wiki-home-patch-loading {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+/* A mouse drag moves the row freely; it snaps again once released. */
+.wiki-home-patch-heroes[data-dragging] {
+  scroll-snap-type: none;
+}
+.wiki-home-patch-heroes > li {
+  --change-tone: var(--aov-info);
+  flex: 0 0 92px;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+.wiki-home-patch-heroes > li[data-tone="up"] {
+  --change-tone: var(--aov-danger);
+}
+.wiki-home-patch-heroes > li[data-tone="down"] {
+  --change-tone: var(--aov-success);
+}
+.wiki-home-patch-heroes > li[data-tone="rework"] {
+  --change-tone: var(--aov-warning);
+}
+.wiki-home-patch-heroes > li[data-tone="new"] {
+  --change-tone: var(--aov-accent);
+}
+.wiki-home-patch-heroes > li > * {
+  display: block;
+  color: var(--aov-text);
+  text-decoration: none;
+}
+.wiki-home-patch-heroes > li > a:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-home-patch-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  box-shadow: inset 0 -3px 0 var(--change-tone);
+}
+.wiki-home-patch-image {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  object-position: top;
+  transition: transform 220ms ease-out;
+}
+.wiki-home-patch-heroes > li > a:hover .wiki-home-patch-image {
+  transform: scale(1.05);
+}
+/* An overlay on artwork: dark at the foot under the name. */
+.wiki-home-patch-art::after {
+  content: "";
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(transparent, rgb(8 9 12 / 88%));
+}
+.wiki-home-patch-art > strong {
+  font: 600 var(--wiki-type-meta-size, 0.8125rem) / 1.125rem var(--wiki-font-reading);
+  position: absolute;
+  z-index: 1;
+  right: 6px;
+  bottom: 7px;
+  left: 6px;
+  overflow: hidden;
+  color: rgb(255 255 255);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-home-patch-tag {
+  position: absolute;
+  z-index: 1;
+  top: 5px;
+  left: 5px;
+  border-radius: var(--aov-radius-pill);
+  padding: 2px 6px 2px 3px;
+  background: rgb(8 9 12 / 72%);
+}
+.wiki-home-patch-empty {
+  font: var(--wiki-type-body);
+  color: var(--aov-muted);
+}
+.wiki-home-patch-empty button {
+  color: var(--aov-accent);
+}
+.wiki-home-patch-loading > span:not(.sr-only) {
+  flex: 0 0 92px;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-home-patch-image {
+    transition: none;
+  }
+}
+@media (max-width: 899.98px) {
+  /* The block spans the screen edge to edge, so its rows can be swiped from edge to edge. */
+  .wiki-home-patch {
+    gap: 12px;
+    margin-inline: calc(-1 * var(--wiki-gutter));
+    border-radius: 0;
+    padding: 16px var(--wiki-gutter);
+  }
+  /* Three short lines: the state and the way to the notes, the version, then the tally. */
+  .wiki-home-patch-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "live notes"
+      "title title"
+      "name name"
+      "tally tally";
+    gap: 2px 12px;
+  }
+  .wiki-home-patch-live {
+    grid-area: live;
+  }
+  .wiki-home-patch-notes {
+    grid-area: notes;
+    min-height: 40px;
+  }
+  .wiki-home-patch-head h2 {
+    grid-area: title;
+    font: 700 1.25rem/1.75rem var(--wiki-font-display);
+  }
+  .wiki-home-patch-name {
+    grid-area: name;
+  }
+  .wiki-home-patch-tally {
+    grid-area: tally;
+    margin-top: 6px;
+  }
+  .wiki-home-patch-heroes,
+  .wiki-home-patch-loading {
+    gap: 8px;
+    margin-inline: calc(-1 * var(--wiki-gutter));
+    padding-inline: var(--wiki-gutter);
+    scroll-padding-inline: var(--wiki-gutter);
+  }
+  .wiki-home-patch-heroes > li,
+  .wiki-home-patch-loading > span:not(.sr-only) {
+    flex-basis: 108px;
+  }
+}

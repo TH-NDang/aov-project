@@ -38,33 +38,50 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Trang chủ
 
-- Thứ tự giống nhau ở hai bố cục (`src/features/home/wiki-home.tsx`): mở đầu → các mục của Wiki → thay đổi
-  của bản đang áp dụng → các bản cập nhật trong mùa và các vai trò. Hai bố cục chỉ khác tỉ lệ.
-- Mở đầu (`HomeIntro`): dòng nhỏ "AOV Wiki · Liên Quân Mobile", tiêu đề và một dòng về bản đang áp dụng (ngày, tên bản, số tướng thay đổi) dẫn tới ghi chú của bản đó. Phía sau là
-  ảnh tướng của ngày (`home-banners.ts`: mỗi ngày một trong ba ảnh, tên tướng ghi ở góc), phủ nửa phải và mờ dần vào
-  nền ở mép trái và mép dưới. Ảnh không tự chuyển trong lúc đọc. Trên compact ảnh nằm trên cùng, header trong suốt đè lên.
-- Các mục (`HomeSections`, dùng `WikiSectionTiles` trong `src/components/wiki-section-tiles.tsx`): chín ô Tướng, Trang
-  phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, Chế độ chơi, Cập nhật, Thuật ngữ, lấy từ `src/lib/wiki-sections.ts`. Sáu
-  ô đầu ghi số mục đã xuất bản, đọc từ tổng của một trang một dòng ở từng API danh mục (số tướng lấy từ danh sách tướng);
-  ba ô sau ghi một dòng mô tả. Mỗi ô không có nền card: icon ở trên, tên, rồi dòng phụ mờ; rê chuột thì tên chuyển vàng
-  và icon nhích lên. Luôn tối đa hai hàng: từ 1180px chín ô một hàng; 900–1179px năm rồi bốn; compact ba ô một hàng, hiện
-  hai hàng đầu và phần trên của hàng thứ ba mờ dần (không bấm được) để người đọc biết còn mục; mũi tên mờ đè lên đó mở
-  hàng thứ ba và đổi chiều để thu gọn. Trang không tìm thấy dùng cùng bộ ô này.
-- Thay đổi ở bản đang áp dụng (`HomePatchChanges`): các tướng có ghi chú thay đổi ở bản đang áp dụng, nhóm theo loại
-  thay đổi (mới, làm lại, tăng sức mạnh, giảm sức mạnh, rồi các loại khác), mỗi nhóm có hình và tên loại cùng số tướng.
-  Mỗi tướng là một thẻ nhỏ có ảnh, tên và vai trò, vạch màu của loại bên trái; tướng đã có hồ sơ công khai thì mở trang
-  tướng (đúng dạng tướng khi thay đổi ghi theo dạng, ADR-024), tướng chưa có hồ sơ vẫn được liệt kê nhưng không có liên
-  kết. Liên kết "Xem ghi chú đầy đủ" nằm ở đầu mục trên wide, cuối mục trên compact. Trong lúc chờ danh sách tướng, mục
-  giữ chỗ bằng các ô trống.
-- Các bản cập nhật (`SeasonUpdates`): các bản của mùa đang áp dụng, mới nhất trước, mỗi bản một hàng có ngày, tên và nhãn
-  Đang áp dụng, mở trang ghi chú của bản đó; liên kết "Tất cả" tới `/updates`. Dữ liệu lấy từ API public
+- Thứ tự giống nhau ở hai bố cục (`src/features/home/wiki-home.tsx`): mở đầu → bản đang áp dụng (kèm các bản của mùa) →
+  khám phá. Chữ trên trang ngắn: tiêu đề vài chữ, không có câu giải thích. Tiêu đề các phần màu chữ thường; vàng dành
+  cho số liệu nổi bật, mục đang áp dụng và liên kết. Compact có cách trình bày riêng cho từng khối (xem từng mục dưới),
+  không chỉ là bố cục wide co lại.
+- Mở đầu (`HomeIntro`): chỉ có tiêu đề "Cẩm nang Liên Quân Mobile" ("Liên Quân Mobile" màu vàng sáng, không ngắt dòng);
+  ô tìm kiếm nằm trên thanh đầu trang như mọi trang. Phía sau là một sân khấu tràn hết bề ngang cửa sổ, luôn tối ở cả hai
+  giao diện: ảnh trang phục của ngày (`home-banners.ts`, mỗi ngày một trong ba ảnh chọn sẵn, tên tướng ghi ở góc) đặt lớn
+  bên phải, phía sau là bản làm mờ và tăng màu của chính ảnh đó trải hết bề ngang nên bên trái cũng đầy màu, thêm một
+  lớp tối nhẹ sau tiêu đề và viền tối đều hai mép. Sân khấu chỉ mờ vào trang ở mép dưới. Lớp mờ trôi rất chậm, đứng yên
+  khi người đọc chọn giảm chuyển động. Compact: ảnh phủ kín sân khấu, cắt vào mặt tướng, header trong suốt đè lên; tiêu
+  đề 28px ngay dưới, không chừa khoảng trống thừa.
+- Bản đang áp dụng (`HomePatch`, `home-patch.tsx`) là một bề mặt gọn: dòng đầu có chấm xanh "Đang áp dụng", "Bản <ngày>",
+  tên bản, số tướng theo từng loại thay đổi (`ChangeTally`) và liên kết "Ghi chú đầy đủ" ở cuối dòng. Bên dưới, mỗi tướng
+  thay đổi là một thẻ chân dung nhỏ 4:5 (rộng 92px) trên một hàng cuộn ngang, dừng đúng từng thẻ, kéo được bằng chuột
+  (`useDragScroll`): chữ loại thay đổi (Buff, Nerf, Rework, Fix…) trên nền tối ở góc, tên trên lớp tối ở chân ảnh, vạch
+  màu của loại ở đáy ảnh; câu tóm tắt của ghi chú là tooltip của thẻ. Thứ tự: mới, làm lại, tăng sức mạnh, giảm sức
+  mạnh, rồi các loại khác; cùng loại theo tên. Tướng đã có hồ sơ công khai thì mở trang tướng (đúng dạng khi thay đổi ghi
+  theo dạng, ADR-024); tướng chưa có hồ sơ vẫn được liệt kê nhưng không có liên kết. Dữ liệu: `useChangedHeroes`
+  (`src/lib/use-changed-heroes.ts`, dùng chung với ô tìm kiếm) ghép thay đổi đã công bố của bản
+  (`GET /patches/{id}/changes?domain=HERO`) với danh sách tướng. Compact: bề mặt tràn hai mép màn hình; phần đầu thành ba
+  dòng ngắn (trạng thái và "Ghi chú đầy đủ" cùng dòng, rồi "Bản <ngày>" 20px và tên bản, rồi số tướng theo loại); hàng
+  thẻ vuốt ngang từ mép tới mép, thẻ rộng 108px để thẻ kế tiếp ló ra ở mép phải, không hiện thanh cuộn.
+- Cuối bề mặt đó, sau một đường mảnh, là các bản của mùa (`SeasonUpdates`): "Mùa <tên mùa>" và liên kết "Tất cả" tới
+  `/updates`, rồi một dòng thời gian ngang, mới nhất bên trái: mỗi bản một mốc trên một đường kẻ, ngày dưới mốc và tên
+  dưới ngày; bản đang áp dụng có mốc vàng sáng và nhãn "Đang áp dụng". Không đủ chỗ thì dòng thời gian cuộn ngang, dừng
+  đúng từng mốc, kéo được bằng chuột và mở sẵn ở bản đang áp dụng. Compact: tên mùa và "Tất cả" trên một dòng, dòng thời
+  gian vuốt từ mép tới mép, mỗi mốc rộng 150px. Dữ liệu lấy từ API public
   `GET /api/wiki/v1/seasons/current/updates?region=VN&locale=vi-VN&limit=4`, dùng TanStack Query: dữ liệu mới trong 60
   giây, tự kiểm tra lại mỗi 5 phút khi tab đang mở. Chỉ hiện patch đã công bố và có hiệu lực trong mùa áp dụng cho thị
   trường đang chọn; không suy đoán mùa nếu backend chưa xác nhận. Ngày patch giữ đúng độ chính xác backend. Lỗi kết nối
   có nút thử lại.
-- Vai trò (`HomeRoles`): sáu vai trò, mỗi ô có icon, tên và số tướng, mở `/hero?role=...`.
-- Wide: thay đổi của bản bên trái, cột phải 340px (300px dưới 1180px) chứa các bản cập nhật và vai trò. Compact: một cột,
-  thẻ tướng thay đổi xếp hai thẻ một hàng.
+- Khám phá (`HomeExplore`, `home-explore.tsx`): mỗi mục của Wiki là một thẻ: trên cùng một dải ảnh thật của mục, dưới là
+  dấu mục trong ô vuông vàng nhạt, tên mục (liên kết phủ cả thẻ) và số mục thành chip. Wide bốn cột: Tướng và Trang phục
+  mỗi thẻ hai cột ở hàng đầu, bốn phần kho mỗi thẻ một cột ở hàng hai, Cập nhật và Thuật ngữ mỗi thẻ hai cột ở hàng ba.
+  Dải ảnh (`useHomeSections`, `use-home-sections.ts`, chọn theo ngày bằng `dailySpread`): Tướng tám chân dung; Trang
+  phục ba ảnh trang phục từ một trang nhỏ của `GET /skins`; Trang bị bốn món cấp 3 (đồ hoàn chỉnh) từ danh mục trang bị;
+  Phù hiệu biểu tượng của mọi hệ (`GET /enchantment-branches`); Bảng ngọc ba viên cấp 3, mỗi màu đỏ, tím, xanh một viên;
+  Phụ trợ bốn biểu tượng; Cập nhật mặt các tướng đổi ở bản đang áp dụng, mỗi mặt có dấu loại thay đổi ở góc, và ở dòng
+  tên là các dấu kèm số tướng thay vì số mục; Thuật ngữ vài thuật ngữ thành chip chữ nghiêng. Thẻ Tướng kết thúc bằng
+  "Theo vai trò" (`HomeRoles`), tách khỏi dải ảnh bằng một đường kẻ để không bị hiểu là vai trò của các tướng trong ảnh:
+  sáu ô bằng nhau, mỗi ô có dấu, tên và số tướng, mở `/hero?role=...`. Số mục đọc từ tổng của một trang một dòng ở từng
+  API danh mục (`sectionCountsQuery`). Thẻ Chế độ chơi chỉ hiện khi `GET /game-modes` đã có chế độ nào. Rê chuột thì thẻ
+  nhích lên, viền và tên chuyển vàng. Compact hai cột: Tướng, Trang phục, Cập nhật, Thuật ngữ chiếm cả hàng, bốn phần kho
+  hai thẻ một hàng với dải ảnh thấp hơn; "Theo vai trò" là một hàng chip có đủ tên, vuốt ngang.
 
 ## Thư viện Tướng
 

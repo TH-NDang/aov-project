@@ -1,0 +1,15 @@
+/* The change marks of a version, each followed by its number of heroes, on one line. */
+.wiki-home-change-counts {
+  font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-home-change-counts > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
