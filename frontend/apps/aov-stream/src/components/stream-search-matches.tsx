@@ -14,9 +14,6 @@ import { markMatch } from "../lib/search-model"
 import type { Suggestion, SuggestionGroup, useSearchSuggestions } from "../lib/use-search-suggestions"
 import "./stream-search-matches.css"
 
-/** `card` draws the closest name as a card above the groups; `list` keeps it in its group. */
-export type SearchLook = "card" | "list"
-
 const GROUP_NAMES: Record<SuggestionGroup["key"], readonly [string, string]> = {
   TEAM: ["Đội tuyển", "Teams"],
   PLAYER: ["Tuyển thủ", "Players"],
@@ -214,16 +211,15 @@ function MatchRow({
 }
 
 /**
- * The suggestions for what is typed. The first row opens every result of the search; then the groups, each drawn its
- * own way, with the matching part of each name marked. Option ids follow the order of `suggestionList`, after the row
- * of all results at 0.
+ * The suggestions for what is typed. The first row opens every result of the search; a name that is or starts with the
+ * search stands above the groups as a card; then the groups, each drawn its own way, with the matching part of each
+ * name marked. Option ids follow the order of `suggestionList`, after the row of all results at 0.
  */
 export function StreamSearchMatches({
   listId,
   search,
   resultsTo,
   suggestions,
-  look,
   marked,
   onHover,
   onPick,
@@ -232,7 +228,6 @@ export function StreamSearchMatches({
   search: string
   resultsTo: string
   suggestions: ReturnType<typeof useSearchSuggestions>
-  look: SearchLook
   marked: number
   onHover: (index: number) => void
   onPick: (results: boolean) => void
@@ -240,7 +235,7 @@ export function StreamSearchMatches({
   const { text } = useStreamLocale()
   const { groups, pending, failed, retry } = suggestions
   const first = groups[0]?.items[0]
-  const top = look === "card" && first && first.rank <= 1 ? first : null
+  const top = first && first.rank <= 1 ? first : null
   let index = 0
   const option = (suggestion: Suggestion) => {
     index += 1

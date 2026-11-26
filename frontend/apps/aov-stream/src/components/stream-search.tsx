@@ -2,7 +2,7 @@ import { useId, useRef, useState, type FormEvent, type KeyboardEvent, type RefOb
 import { useLocation, useNavigate } from "react-router"
 import { StreamIcon } from "./stream-icon"
 import { useStreamLocale } from "./stream-locale"
-import { StreamSearchMatches, type SearchLook } from "./stream-search-matches"
+import { StreamSearchMatches } from "./stream-search-matches"
 import { StreamSearchStart, type StartEntry } from "./stream-search-start"
 import { rememberSearch } from "../lib/recent-searches"
 import { suggestionList, useSearchSuggestions } from "../lib/use-search-suggestions"
@@ -12,21 +12,6 @@ import "./stream-search.css"
 export type PageSearch = { value: string; onChange: (value: string) => void; placeholder: string; label: string }
 
 const resultsOf = (search: string) => `/explore?${new URLSearchParams({ q: search.trim() })}`
-
-const LOOK_KEY = "aov-stream-search-look"
-/**
- * The look of the suggestions while the owner chooses between them: `?search-look=card` (the closest name as a card)
- * or `?search-look=list`; the choice stays on this device.
- */
-function searchLook(): SearchLook {
-  try {
-    const asked = new URLSearchParams(window.location.search).get("search-look")
-    if (asked === "card" || asked === "list") localStorage.setItem(LOOK_KEY, asked)
-    return localStorage.getItem(LOOK_KEY) === "list" ? "list" : "card"
-  } catch {
-    return "card"
-  }
-}
 
 /**
  * The search of the bar. It suggests as the reader types: teams, players, staff, competitions and pages, each group
@@ -59,7 +44,6 @@ export function StreamSearch({
   const [value, setValue] = useState(() => (pathname === "/explore" ? new URLSearchParams(address).get("q") || "" : ""))
   const [focused, setFocused] = useState(false)
   const [active, setActive] = useState(-1)
-  const [look] = useState(searchLook)
   const startEntries = useRef<StartEntry[]>([])
   const listId = useId()
   const typed = value.trim()
@@ -177,7 +161,6 @@ export function StreamSearch({
               search={typed}
               resultsTo={resultsOf(typed)}
               suggestions={suggestions}
-              look={look}
               marked={marked}
               onHover={setActive}
               onPick={finish}
