@@ -73,7 +73,7 @@ export function HomeExplore() {
   const { marks } = useSeasonMarks()
   const [search] = useSearchParams()
   const asked = search.get("homeframe") as Look
-  const look: Look = LOOKS.includes(asked) ? asked : "a"
+  const look: Look = LOOKS.includes(asked) ? asked : "c"
 
   return (
     <section className="wiki-home-explore" aria-labelledby="wiki-home-explore-title">
