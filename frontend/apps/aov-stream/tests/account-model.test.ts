@@ -3,11 +3,11 @@ import { test } from "node:test"
 import { inboxDays, memberSince } from "../src/lib/account-model.ts"
 
 test("the inbox is cut into today, yesterday and earlier by the reader's own days", () => {
-  const now = "2026-11-26T03:00:00Z" // 10:00 in Hà Nội, 22:00 the day before in New York
+  const now = "2026-11-26T03:00:00Z" // 10:00 in Hanoi, 22:00 the day before in New York
   const items = [
-    { id: "a", createdAt: "2026-11-25T18:00:00Z" }, // 01:00 on the 26th in Hà Nội
+    { id: "a", createdAt: "2026-11-25T18:00:00Z" }, // 01:00 on the 26th in Hanoi
     { id: "b", createdAt: "2026-11-25T10:00:00Z" },
-    { id: "c", createdAt: "2026-11-24T16:30:00Z" }, // 23:30 on the 24th in Hà Nội
+    { id: "c", createdAt: "2026-11-24T16:30:00Z" }, // 23:30 on the 24th in Hanoi
     { id: "d", createdAt: "2026-11-01T10:00:00Z" },
   ]
   const ids = (parts: ReturnType<typeof inboxDays<{ id: string; createdAt: string }>>) =>

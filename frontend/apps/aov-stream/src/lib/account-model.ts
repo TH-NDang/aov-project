@@ -19,7 +19,7 @@ export function inboxDays<T extends { createdAt: string }>(items: readonly T[], 
   return parts
 }
 
-/** The month and year an account was made, such as "tháng 3 năm 2026"; nothing for an unknown or broken date. */
+/** The month and year an account was made, such as "March 2026" in English; nothing for an unknown or broken date. */
 export function memberSince(createdAt: string | null | undefined, locale: string, timeZone: string) {
   const date = createdAt ? new Date(createdAt) : null
   if (!date || Number.isNaN(date.getTime())) return null
