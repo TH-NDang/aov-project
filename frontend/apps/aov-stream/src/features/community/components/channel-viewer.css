@@ -102,15 +102,16 @@
 .pf-channel-close[data-back] > svg {
   transform: scaleX(-1);
 }
+/* The picture overlaps the banner; the name starts below it, so a busy banner never sits behind the text. */
 .pf-channel-who {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 12px;
   margin-top: -32px;
 }
 .pf-channel-who > div {
   min-width: 0;
-  padding-bottom: 2px;
+  padding-top: 38px;
 }
 .pf-channel-avatar {
   width: 76px;
