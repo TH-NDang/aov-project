@@ -11,7 +11,7 @@
     "lint": "node --experimental-strip-types lint/source-rules.ts && eslint src",
     "test": "node --experimental-strip-types --test \"tests/*.test.ts\"",
     "test:tournaments": "node --experimental-strip-types --test tests/tournament-model.test.ts tests/match-model.test.ts tests/competition-model.test.ts tests/match-schedule.test.ts tests/bracket-model.test.ts tests/champion-model.test.ts tests/standings-model.test.ts tests/stage-phases.test.ts tests/directory-model.test.ts tests/match-wording.test.ts tests/series-model.test.ts",
-    "test:account": "node --experimental-strip-types --test tests/account-profile.test.ts",
+    "test:account": "node --experimental-strip-types --test tests/account-profile.test.ts tests/account-model.test.ts",
     "test:community": "node --experimental-strip-types --test tests/post-media-model.test.ts tests/time-zone-days.test.ts"
   },
   "dependencies": {

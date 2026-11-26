@@ -24,8 +24,15 @@ export const COPY_PART_LABELS: Record<CopyPart, string> = {
 export const copiedStages = (stages: readonly CompetitionStage[], sourceUrl = ""): CompetitionStage[] =>
   stages.map((stage) => ({ ...stage, sourceUrl, patches: [], teamIds: [] }))
 
-/** A roster line as it starts in another tournament: who plays where, without the old dates, source and note. */
-const copiedLine = (line: RosterMembershipContent, tournamentId: string): RosterMembershipContent => ({
+/**
+ * A roster line as it starts in another tournament: who plays where and who leads, without the old dates, source and
+ * note. The captain's mark stays only where the team has no captain yet.
+ */
+const copiedLine = (
+  line: RosterMembershipContent,
+  tournamentId: string,
+  captains: boolean,
+): RosterMembershipContent => ({
   tournamentId,
   teamId: line.teamId,
   playerId: line.playerId,
@@ -37,6 +44,7 @@ const copiedLine = (line: RosterMembershipContent, tournamentId: string): Roster
   sourceUrl: null,
   verification: "UNVERIFIED",
   note: null,
+  captain: captains && line.captain === true ? true : null,
 })
 
 /**
@@ -50,10 +58,11 @@ export function copiedRoster(
   teamIds?: ReadonlySet<string>,
 ): RosterMembershipContent[] {
   const taken = new Set(existing.map((line) => `${line.teamId}:${line.playerId}`))
+  const captained = new Set(existing.filter((line) => line.captain === true).map((line) => line.teamId))
   return from
     .filter((line) => line.status !== "INACTIVE" && (!teamIds || teamIds.has(line.teamId)))
     .filter((line) => !taken.has(`${line.teamId}:${line.playerId}`))
-    .map((line) => copiedLine(line, tournamentId))
+    .map((line) => copiedLine(line, tournamentId, !captained.has(line.teamId)))
 }
 
 /** The plan with the chosen parts of another one taken over. Teams already entered stay, stages are replaced. */

@@ -58,6 +58,16 @@ export function useFollowPage() {
   })
 }
 
+/** The pages the reader manages; the account card counts them and the Pages tab lists them. */
+export function useManagedPages() {
+  const { revision, enabled } = useAccountQuery()
+  return useQuery({
+    queryKey: communityKeys.managedPages(revision),
+    queryFn: () => communityApi.managedPages(),
+    enabled,
+  })
+}
+
 export function useUnreadCount() {
   const { revision, enabled } = useAccountQuery()
   return useQuery({

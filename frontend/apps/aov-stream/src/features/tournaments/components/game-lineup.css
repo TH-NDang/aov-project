@@ -85,6 +85,8 @@
 .tn-bans {
   --reference-size: 32px;
   --reference-radius: 7px;
+  /* The head sizes its logos with this; a ban's picture takes the size of its own square instead. */
+  --stream-image-size: var(--reference-size);
   display: flex;
   margin: 0 0 0 auto;
 }
@@ -159,6 +161,11 @@
   display: grid;
   place-items: center;
   color: var(--hub-muted);
+}
+/* The mark spans the whole row; its tooltip hangs from the icon alone. */
+.tn-lane-icon {
+  display: inline-grid;
+  place-items: center;
 }
 /* How complete the record is, once for the whole game. */
 .tn-lineup-note {
@@ -279,7 +286,8 @@
   .tn-lineup:not([data-shown="ITEMS"]) .tn-lane-mark {
     height: calc(var(--seat-art) + 24px);
   }
-  .tn-lane-mark > svg {
+  .tn-lane-mark > svg,
+  .tn-lane-icon > svg {
     width: 18px;
     height: 18px;
   }

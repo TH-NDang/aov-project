@@ -455,6 +455,31 @@ tên. Không ứng dụng nào tìm chữ trong `role` để biết ai là độ
 thành viên có `lane`, Stream hiện tên vị trí theo mã và dấu đội trưởng, không hiện phần ghi chú sau vị trí trong `role`
 (chữ đầy đủ vẫn xem được khi rê chuột).
 
+### Đội trưởng của đội ở giải (26/11/2026)
+
+Người dùng hỏi ngày 26/11/2026 vì Liquipedia ghi "Captain" trong đội hình từng đội của giải. Trước đó chỉ đội hình trên
+trang đội có đội trưởng; dòng đội hình của giải không có, và bước nhập gói JSON bỏ dấu đội trưởng của gói đi.
+
+- Dòng đội hình của giải (`roster_membership`) có thêm `captain`: chỉ lưu `true`, thiếu là không phải đội trưởng. Gửi
+  `false` hay `null` đều lưu thành thiếu. Một đội có một đội trưởng ở mỗi giải: Admin giữ điều này khi sửa, backend không
+  chặn hai dòng cùng có dấu.
+- Admin: bảng đội hình của đội có nút vương miện ở mỗi dòng. Bấm một người thì người đó là đội trưởng và người cũ thôi;
+  bấm lại chính người đó thì đội không còn đội trưởng. Khối đội ở bước "Đội & đội hình" vẽ vương miện nhỏ cạnh tên.
+- "Chép đội hình từ giải khác" mang dấu đội trưởng theo, trừ khi đội ở giải này đã có đội trưởng.
+- Gói JSON: dấu `captain` (true/false) đứng cạnh dòng `rosters`, như gói lấy từ Liquipedia, hoặc trong `content`. Dòng
+  không có dấu giữ đội trưởng đang lưu; giá trị khác true/false bị từ chối.
+- Stream: tab Đội của trang giải và đội hình vẽ trên trang đội có chữ "C" nhỏ sau tên đội trưởng, tooltip "Đội trưởng"/
+  "Captain". Đội hình trên trang đội (TEAM page) dùng cùng dấu này.
+- Snapshot công bố chép dòng đội hình như mọi trường khác, nên dấu mới hiện trên Stream sau khi công bố lại giải.
+
+Dữ liệu cũ (migration V028): Liquipedia ghi đội trưởng bằng `role=…, captain` trong `{{Person}}` của
+`{{TeamParticipants}}`. Ngày 26/11/2026 chỉ 11 trang giải có dấu này (đều năm 2026: AOG, APL, AIC, RPL, Queens of Glory,
+Tứ Phương Đại Chiến), tổng 97 người; trang cũ hơn dùng `{{TeamCard}}` không có ô đội trưởng. V028 tìm giải theo
+`sourceUrl` trỏ tới trang đó (đã giải mã, `_` là dấu cách) và gắn dấu cho dòng đội hình duy nhất của giải có tuyển thủ
+mang tên đó, tên trang Liquipedia của người đó, mã hoặc tên khác (so như kiểm tra trùng tên). Tên hai dòng cùng mang thì
+bỏ qua. Lần nhập trước đã ghi đội trưởng của AOG 2026 Mùa Đông thành câu "Đội trưởng." trong `note`; câu đó thành dấu và
+rời khỏi ghi chú. Snapshot công bố đổi theo dòng của nó, `version` của dòng tăng một; lịch sử kế hoạch giữ nguyên.
+
 ## Dữ liệu giải lịch sử (06/11/2026)
 
 Giải đã kết thúc được nhập từ nguồn ngoài (Liquipedia, kho phân tích YouTube) nên mô hình nhận thêm những gì

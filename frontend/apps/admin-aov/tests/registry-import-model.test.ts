@@ -88,9 +88,24 @@ test("a registry package imports its records without treating source metadata as
     ],
   )
   assert.equal(
-    rosters.some((row) => "sourceFlags" in row.content || "captain" in row.content),
+    rosters.some((row) => "sourceFlags" in row.content),
     false,
   )
+  assert.deepEqual(
+    rosters.map((row) => [row.references.playerCode, row.references.teamCode, row.content.captain]),
+    [
+      ["maris", "rex-regum-qeon-vn-vn", true],
+      ["maris", "team-flash-vn", undefined],
+      ["lai-bang", "team-flash-vn", undefined],
+    ],
+  )
+})
+
+test("a captain's mark has to be true or false", () => {
+  const source = JSON.parse(sample("registries-and-rosters.json"))
+  source.rosters[0].captain = "yes"
+
+  assert.throws(() => parseRegistryImport(JSON.stringify(source)), /đội trưởng cần true hoặc false/)
 })
 
 test("a series package keeps every timestamp and sourced result without importing the blocked final", () => {

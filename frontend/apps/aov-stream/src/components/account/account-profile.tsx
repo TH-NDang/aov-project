@@ -43,7 +43,8 @@ const fieldLabels: Record<keyof ProfileDraft, readonly [string, string]> = {
   avatarAssetId: ["ảnh đại diện", "avatar"],
 }
 
-function AccountAvatar({ url, name, large = false }: { url?: string | null; name: string; large?: boolean }) {
+/** The reader's picture over their initials, which show while it loads or when it cannot. */
+export function AccountAvatar({ url, name, large = false }: { url?: string | null; name: string; large?: boolean }) {
   const [failed, setFailed] = useState<string | null>(null)
   return (
     <span className={large ? "account-avatar account-avatar-large" : "account-avatar"} aria-hidden="true">
@@ -63,7 +64,7 @@ export function AccountProfile() {
   return (
     <section className="cp-section account-profile" aria-labelledby="account-profile-title">
       <div className="tn-heading" data-flush="">
-        <h2 id="account-profile-title">{text("Hồ sơ dùng chung", "Shared profile")}</h2>
+        <h2 id="account-profile-title">{text("Hồ sơ", "Profile")}</h2>
       </div>
       {profile.isError ? (
         <div className="cp-error" role="alert">
@@ -191,12 +192,12 @@ function ProfileEditor({
   return (
     <form className="cp-section account-profile" aria-labelledby="account-profile-title" onSubmit={save}>
       <div className="tn-heading" data-flush="">
-        <h2 id="account-profile-title">{text("Hồ sơ dùng chung", "Shared profile")}</h2>
+        <h2 id="account-profile-title">{text("Hồ sơ", "Profile")}</h2>
       </div>
       <p className="cp-section-lead">
         {text(
-          "Tên và ảnh đại diện dùng chung cho AOV Stream, Wiki và cộng đồng. Mật khẩu và email được quản lý ở trang đăng nhập.",
-          "Your name and avatar are shared across AOV Stream, Wiki and the community. Your password and email are managed on the sign-in page.",
+          "Hiện trên Wiki, Stream và trong bình luận. Mật khẩu và email đổi ở trang đăng nhập AOV.",
+          "Shown on Wiki, Stream and in comments. Change your password and email on the AOV sign-in page.",
         )}
       </p>
       <div className="account-avatar-field">
@@ -324,7 +325,8 @@ function ProfileEditor({
           )}
         </div>
       )}
-      <div className="cp-form-actions">
+      {/* While there is something to save, the buttons stay in reach at the foot of the screen. */}
+      <div className="cp-form-actions account-save" data-dirty={dirty || undefined}>
         <button className="cp-button cp-primary" disabled={!canSave}>
           {busy ? text("Đang lưu…", "Saving…") : text("Lưu thay đổi", "Save changes")}
         </button>

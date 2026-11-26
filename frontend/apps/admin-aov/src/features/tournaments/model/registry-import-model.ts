@@ -65,7 +65,17 @@ const FIELDS: Record<ImportKind, string[]> = {
     "links",
   ],
   series: ["code", "name", "stage", "bestOf", "scheduledAt", "sourceUrl", "note", "result", "repeatPicksAllowed"],
-  "roster-memberships": ["lane", "jerseyNumber", "status", "startsOn", "endsOn", "sourceUrl", "verification", "note"],
+  "roster-memberships": [
+    "lane",
+    "jerseyNumber",
+    "status",
+    "startsOn",
+    "endsOn",
+    "sourceUrl",
+    "verification",
+    "note",
+    "captain",
+  ],
 }
 const ENUMS: Record<string, string[]> = {
   lane: ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"],
@@ -128,6 +138,10 @@ function cleanField(key: string, value: unknown, label: string): unknown {
     })
   }
   if (key === "repeatPicksAllowed") return value === true
+  if (key === "captain") {
+    if (value != null && typeof value !== "boolean") throw new Error(`${label}: đội trưởng cần true hoặc false.`)
+    return value === true || null
+  }
   if (value == null) {
     if (key === "aliases" || key === "signatureHeroes") return []
     if (key === "verification") return "UNVERIFIED"
@@ -284,6 +298,9 @@ export function parseRegistryImport(text: string): RegistryImport {
     const data = content(kind, row.content, label)
     const references: ImportRow["references"] = {}
     if (kind === "roster-memberships") {
+      // Liquipedia packages mark the captain beside the line rather than in it; a line without the mark keeps the
+      // captain it has.
+      if (row.captain != null) data.captain = cleanField("captain", row.captain, `${label}.captain`)
       references.tournamentCode = code(row.tournamentCode ?? eventCode, `${label}.tournamentCode`)
       references.teamCode = code(row.teamCode, `${label}.teamCode`)
       references.playerCode = code(row.playerCode, `${label}.playerCode`)

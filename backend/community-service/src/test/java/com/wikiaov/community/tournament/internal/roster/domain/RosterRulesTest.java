@@ -35,7 +35,7 @@ class RosterRulesTest {
     @Test
     void boundedLabelsAndThreeRequiredIdentitiesAreChecked() {
         var content = new RosterMembership(null, null, null, null, "x".repeat(21), null, null, null, null, null,
-                "n".repeat(2001));
+                "n".repeat(2001), null);
         assertThat(RosterRules.violations(content)).hasSize(5);
         assertThat(RosterRules.violations(null)).containsExactly("content is required.");
     }
@@ -43,6 +43,6 @@ class RosterRulesTest {
     private static RosterMembership membership(Lane lane, String jersey, RosterStatus status, LocalDate start,
             LocalDate end, String source, Verification verification) {
         return new RosterMembership(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), lane, jersey, status,
-                start, end, source, verification, null);
+                start, end, source, verification, null, null);
     }
 }

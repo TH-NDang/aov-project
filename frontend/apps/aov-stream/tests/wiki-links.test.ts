@@ -19,21 +19,27 @@ test("an entry opens on the Wiki by its code, by its id without one, in the read
   )
 })
 
-test("an item's card keeps its stats and the first line of what it does; others keep their first line", () => {
+test("a card keeps an item's stats and the whole of what it does, with the heading of each line apart", () => {
   assert.deepEqual(
     describeEntry(
-      "+10% Giảm hồi chiêu\n+200 Giáp\n+800 Máu tối đa\n+5 Hồi máu\n+1 Khác\n\nNội tại duy nhất – Sức mạnh: gây thêm\nDòng sau",
+      "+10% Giảm hồi chiêu\n+200 Giáp\n+800 Máu tối đa\n+5 Hồi máu\n+1 Khác\n\nNội tại duy nhất – Sức mạnh: gây thêm\nDòng sau\n\nHồi chiêu: 60 giây.",
     ),
     {
-      stats: ["+10% Giảm hồi chiêu", "+200 Giáp", "+800 Máu tối đa", "+5 Hồi máu"],
-      line: "Nội tại duy nhất – Sức mạnh: gây thêm",
+      stats: ["+10% Giảm hồi chiêu", "+200 Giáp", "+800 Máu tối đa", "+5 Hồi máu", "+1 Khác"],
+      text: [
+        [
+          { label: "Nội tại duy nhất – Sức mạnh", body: "gây thêm" },
+          { label: null, body: "Dòng sau" },
+        ],
+        [{ label: "Hồi chiêu", body: "60 giây." }],
+      ],
     },
   )
-  assert.deepEqual(describeEntry("Chuyển 16% máu đã mất thành sát thương.\nHồi chiêu: 60 giây."), {
+  assert.deepEqual(describeEntry("Chuyển 16% máu đã mất thành sát thương. Hồi chiêu: 60 giây."), {
     stats: [],
-    line: "Chuyển 16% máu đã mất thành sát thương.",
+    text: [[{ label: null, body: "Chuyển 16% máu đã mất thành sát thương. Hồi chiêu: 60 giây." }]],
   })
-  assert.deepEqual(describeEntry("<b>+1.6</b> Công phép"), { stats: ["+1.6 Công phép"], line: null })
-  assert.deepEqual(describeEntry(""), { stats: [], line: null })
-  assert.deepEqual(describeEntry(null), { stats: [], line: null })
+  assert.deepEqual(describeEntry("<b>+1.6</b> Công phép"), { stats: ["+1.6 Công phép"], text: [] })
+  assert.deepEqual(describeEntry(""), { stats: [], text: [] })
+  assert.deepEqual(describeEntry(null), { stats: [], text: [] })
 })

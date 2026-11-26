@@ -637,7 +637,7 @@ class CompetitionRecencyIntegrationTest {
 
     private void roster(UUID tournament, UUID team, UUID player, RosterStatus status) throws Exception {
         send(post(ADMIN + "/roster-memberships"), Map.of("content", new RosterMembership(tournament, team, player,
-                null, null, status, null, null, null, null, null)));
+                null, null, status, null, null, null, null, null, null)));
     }
 
     private JsonNode page(String kind, String code, UUID entityId, Map<String, ?> content) throws Exception {

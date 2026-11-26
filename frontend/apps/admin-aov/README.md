@@ -796,7 +796,8 @@ chưa có lịch vẫn được giữ trong danh sách.
 Mục Nhập dữ liệu nhận JSON `schemaVersion: 1`, tối đa 1 MB, có bước xem trước tên và thao tác của
 từng mục trước khi ghi. Gói hồ sơ chứa `teams`, `players`, `tournament` và `rosters`; gói trận chứa
 `series`. Mỗi mục có `content`; liên kết dùng `tournamentCode`, `teamCode`, `playerCode`, `teamACode`
-và `teamBCode` thay vì UUID của máy khác. Đội hình có thể lấy mã giải chung từ `scope.eventCode`.
+và `teamBCode` thay vì UUID của máy khác. Đội hình có thể lấy mã giải chung từ `scope.eventCode`. Dòng đội hình nhận dấu `captain` (true/false) đặt cạnh
+`content` như gói Liquipedia, hoặc trong `content`; dòng không có dấu giữ đội trưởng đang lưu.
 Nhập gói hồ sơ trước gói trận nếu các danh tính cha chưa có. Gói mẫu và bằng chứng nằm trong bộ tệp nguồn
 `esports-2026-post-apl` (thư mục `aog-sample/`); `pnpm sources:sync pull` kéo về `resources/esports/2026-post-apl/` khi cần.
 Kiểm thử đọc mẫu nhỏ cùng dạng trong `tests/fixtures/registry-import/`; sau khi kéo dữ liệu, `pnpm check:source-data`
