@@ -81,8 +81,8 @@ Một hàng cao 48px (`WikiHeaderCompact`):
 - Mục lục (`LibraryContents` trong `src/components/library-contents.tsx`, cùng danh sách `LibraryNavigation` với sidebar
   của bố cục wide) mở tấm trượt từ phải, rộng tối đa 320px, liệt
   kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong
-  `src/components/library-navigation.tsx`), cùng kiểu với sidebar: ô vuông dấu mục, tên, số mục, hàng cao 44px. Mục
-  đang xem được đánh dấu như sidebar; chọn một mục thì tấm đóng.
+  `src/components/library-navigation.tsx`), cùng kiểu sảnh game với sidebar nhưng ba ô một hàng: ô khung nhỏ, ổ lục
+  giác, tên, nhãn "MỚI" cho mục có thay đổi trong mùa. Mục đang xem sáng như sidebar; chọn một mục thì tấm đóng.
 - Nền: trên wide các trang danh sách có nền đặc. Trên điện thoại, mọi trang thư viện trừ trang một chế độ (`clear`) để
   thanh trong suốt, trên phần trưng bày hoặc trên chính trang, rồi phủ kính mờ dần (nền tối 58% và blur, vẫn thấy trang
   bên dưới) trong 100px cuộn đầu tiên; thanh công cụ ghim ngay dưới (Tướng, Trang phục) dùng cùng lớp kính. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt

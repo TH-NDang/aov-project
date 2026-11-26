@@ -10,13 +10,20 @@
   nội dung bắt đầu trên cùng một đường.
 - Trên wide, `WikiLibraryLayout` đặt sidebar các mục (`LibraryNavigation layout="sidebar"` trong
   `src/components/library-navigation.tsx`) bên trái trang: Trang chủ, rồi các mục theo nhóm Sổ tay nhân vật, Kho trang
-  bị, Lối chơi, Tham khảo. Mỗi hàng vẽ như thẻ của trang chủ: dấu mục 18px trên ô vuông 28px tô vàng nhạt, tên mục, và
-  bên phải số mục đã xuất bản bằng chữ mờ, số đều cột (Tướng từ danh sách tướng, Trang phục và bốn phần kho từ
-  `sectionCountsQuery` trong `src/lib/section-counts.ts`, dùng chung với trang chủ; mục không đếm thì không có số). Tên
-  nhóm là chữ hoa nhỏ màu mờ. Rê chuột thì hàng có nền mờ; mục đang ở có nền vàng nhạt, chữ vàng đậm, ô vuông vàng đặc
-  với dấu tối và một vạch tròn ngắn ở mép trái (`aria-current="page"`); focus bằng bàn phím có viền vàng. Sidebar rộng
-  200px, dính dưới thanh đầu trang và tự cuộn nếu cửa sổ thấp; dưới 1180px chỉ còn các ô vuông 32px (cột 52px), tên mục
-  và số mục hiện trong tooltip bên phải ngay khi rê chuột hoặc focus bằng bàn phím. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng có sidebar trên
+  bị, Lối chơi, Tham khảo, như một sảnh game trong khung kiểu game (`GameFrame`, `src/styles/game-frame.css`): cả sidebar
+  là một khung vát góc viền vàng chuyển đồng, tên nhóm nằm giữa hai đường kẻ mờ dần (chữ hoa nhỏ vàng), mỗi mục là một ô
+  khung nhỏ, hai ô một hàng, dấu mục trong ổ lục giác phía trên tên (tên dài xuống hai dòng); Trang chủ là một ô rộng, ổ
+  bên cạnh tên. Không có số mục. Rê chuột thì viền ô sáng nhẹ; mục đang ở có viền sáng, ổ vàng đặc phát sáng và ô nhích
+  lên (`aria-current="page"`); focus bằng bàn phím có viền vàng. Mục có thay đổi trong mùa đang áp dụng có nhãn xiên
+  "MỚI" màu xanh cập nhật (`--aov-info`) ở góc trên phải, nhấp nháy nhẹ (đứng yên khi giảm chuyển động); dữ liệu từ
+  `useSeasonMarks` (`src/lib/season-updates.ts`): mỗi phần (Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ) một truy vấn
+  đọc tổng của trang một dòng `GET /patches/{id}/changes?domain=…` cho từng bản của mùa, giữ 5 phút, đang tải hoặc lỗi
+  thì không có nhãn. Rê chuột hoặc focus vào mục có nhãn (và mọi mục khi chỉ còn ổ) hiện chú thích sau 150ms: một khung
+  nhỏ có viên đá chỉ vào mục, tên mục đậm và một dòng ngắn: với Tướng là bản mới nhất có thay đổi kèm số tướng theo
+  loại có dấu màu ("Bản 17/11: 1 làm lại · 5 tăng · 1 giảm · 2 sửa lỗi"), với các phần kho là các bản đã đổi ("Đổi ở
+  bản 29/09"), với Ghi chú cập nhật là số bản của mùa. Sidebar rộng 200px, dính dưới thanh đầu trang và tự cuộn nếu cửa
+  sổ thấp; dưới 1180px chỉ còn các ổ 36px, nhãn "MỚI" thu thành viên đá xanh ở góc, tên và chi tiết nằm trong chú
+  thích. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng có sidebar trên
   wide: ảnh tướng nằm trong cột trang bên phải sidebar, vẫn bắt đầu dưới thanh đầu trang trong suốt. Phía trên tên tướng
   là breadcrumb Trang chủ › Tướng › tên tướng (`WikiBreadcrumb` trong `src/components/wiki-breadcrumb.tsx`) thay cho
   nút quay lại. Trên compact các mục nằm trong tấm mục lục mở từ header.
