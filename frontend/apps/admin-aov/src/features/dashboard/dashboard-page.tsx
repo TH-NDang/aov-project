@@ -30,7 +30,14 @@ import { defaultRulesetId } from "@/lib/default-ruleset"
 import { Button } from "@aov/ui/components/button"
 import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/api/warehouse-api"
 import { cn } from "@aov/ui/lib/utils"
-import { itemWork, useEsportsWork, useHeroWork, type WorkArea, type WorkRow } from "./use-dashboard-work"
+import {
+  itemWork,
+  useEsportsWork,
+  useHeroWork,
+  usePatchNoteWork,
+  type WorkArea,
+  type WorkRow,
+} from "./use-dashboard-work"
 import { mediaKeys } from "@/features/media/api/media-cache"
 import { characterImageKeys } from "../media/api/character-image-api"
 
@@ -162,7 +169,8 @@ export function DashboardPage() {
 
   const heroWork = useHeroWork(canReadHeroes, locale)
   const esportsWork = useEsportsWork()
-  const wikiRows = [...heroWork.rows, ...(itemStats ? itemWork(itemStats) : [])]
+  const patchNoteWork = usePatchNoteWork()
+  const wikiRows = [...patchNoteWork, ...heroWork.rows, ...(itemStats ? itemWork(itemStats) : [])]
   const waiting = heroWork.pending || esportsWork.pending || catalog.isPending
   const canWriteHeroes = actor?.capabilities.includes("hero:write") ?? false
   if (canReadHeroes && heroWork.total)

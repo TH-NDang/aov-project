@@ -1,6 +1,6 @@
 import type { AovNavIconName } from "@/app/aov-nav-icon"
 
-export type NavBadgeKey = "itemIssues"
+export type NavBadgeKey = "patchNotes"
 
 export interface NavItem {
   title: string
@@ -160,6 +160,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: "videos",
         to: "/videos",
         description: "Video của tướng, kỹ năng, trang phục, duyệt và nhập dữ liệu thu thập",
+        capability: "catalog:read",
+      },
+      {
+        title: "Theo dõi cập nhật",
+        icon: "patchWatch",
+        to: "/patch-watch",
+        description: "Bài cập nhật mới từ trang chính thức và máy chủ thử nghiệm",
+        badge: "patchNotes",
         capability: "catalog:read",
       },
       {

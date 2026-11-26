@@ -1,0 +1,73 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* A post reads like a ticket: the stamp names the region and whether it is the test server. */
+  .pw-post {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 6px 12px;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--aov-radius-card);
+    background: var(--card);
+  }
+  .pw-post-stamp {
+    grid-row: span 2;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 56px;
+    border: 1px dashed currentColor;
+    border-radius: var(--aov-radius-control);
+    color: var(--aov-info);
+    background: var(--aov-info-soft);
+    text-align: center;
+  }
+  .pw-post[data-channel="experimental"] .pw-post-stamp {
+    color: var(--aov-warning);
+    background: var(--aov-warning-soft);
+  }
+  .pw-post-region {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 20px;
+    letter-spacing: 0.06em;
+  }
+  .pw-post-channel {
+    font-size: 12px;
+    line-height: 14px;
+  }
+  .pw-post-title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+  .pw-post-title:hover {
+    text-decoration: underline;
+  }
+  .pw-post:not([data-state="new"]) .pw-post-title {
+    color: var(--muted-foreground);
+  }
+  .pw-post-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  @media (min-width: 900px) {
+    .pw-post {
+      grid-template-columns: 76px minmax(0, 1fr) auto;
+    }
+    .pw-post-stamp {
+      grid-row: auto;
+    }
+    .pw-post-actions {
+      justify-content: flex-end;
+    }
+  }
+}

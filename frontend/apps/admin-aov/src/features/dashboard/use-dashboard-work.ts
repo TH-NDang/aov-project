@@ -1,12 +1,23 @@
 import type { ComponentType } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { CalendarClock, CircleCheck, FilePen, Flag, Link2, ScrollText, ShieldAlert, Trophy } from "lucide-react"
+import {
+  CalendarClock,
+  CircleCheck,
+  FilePen,
+  Flag,
+  Link2,
+  Newspaper,
+  ScrollText,
+  ShieldAlert,
+  Trophy,
+} from "lucide-react"
 import { backendRequest } from "@/app/auth/session"
 import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { pageApi, pageKeys } from "@/features/community/api/page-api"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { useNewPatchNoteCount } from "@/features/patch-watch/use-patch-watch"
 import { readinessRows, readinessSummary } from "../publishing/model/publish-readiness"
 import { usePublicationOverview } from "../publishing/api/publication-overview"
 import { marketsAwaitingPatch } from "./dashboard-model"
@@ -173,6 +184,24 @@ export function useEsportsWork(): WorkArea {
     pending: links.isPending || claims.isPending || reports.isPending || plans.isPending,
     failed: links.isError || claims.isError || reports.isError || plans.isError,
   }
+}
+
+/** Patch notes the watch found on the publishers' sites that nobody has handled yet. */
+export function usePatchNoteWork(): WorkRow[] {
+  const waiting = useNewPatchNoteCount() ?? 0
+  return waiting > 0
+    ? [
+        {
+          key: "patch-notes",
+          title: "Bài cập nhật mới",
+          description: "Từ trang chính thức và máy chủ thử nghiệm",
+          count: waiting,
+          icon: Newspaper,
+          to: "/patch-watch",
+          tone: "attention",
+        },
+      ]
+    : []
 }
 
 /** The two checks of the item warehouse that block publishing, kept from the first dashboard. */
