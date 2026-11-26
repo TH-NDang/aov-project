@@ -10,6 +10,7 @@ import { copiedRoster, rosterContents } from "@/features/competition/model/copy-
 import { tournamentApi, tournamentError, tournamentKeys } from "../api/tournament-api"
 import {
   addedLine,
+  captainLines,
   lineChanged,
   rosterBatchOf,
   rosterLines,
@@ -216,6 +217,7 @@ export function RosterBoardSheet({
                   photoUrl={known(line.content.playerId)?.photoUrl}
                   disabled={!canWrite || busy}
                   onChange={(patch) => change(index, patch)}
+                  onCaptain={() => setLines((current) => captainLines(current, line.content.playerId))}
                   onRemove={() =>
                     setLines((current) =>
                       line.stored

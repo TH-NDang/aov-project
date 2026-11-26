@@ -9,7 +9,18 @@ import {
   type TeamContent,
   type TournamentContent,
 } from "@aov/community-contracts"
-import { ArrowDown, ArrowUp, ClipboardList, CopyPlus, Pencil, Plus, Trash2, UserRoundPlus, Users } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  ClipboardList,
+  CopyPlus,
+  Crown,
+  Pencil,
+  Plus,
+  Trash2,
+  UserRoundPlus,
+  Users,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
@@ -41,6 +52,14 @@ type Names = { players?: Map<string, PlayerContent>; loading: boolean }
 const nicknameOf = (names: Names, playerId: string) =>
   names.players?.get(playerId)?.nickname ?? (names.loading ? "…" : "Chưa rõ tên")
 
+/** The crown after a captain's name. */
+const CaptainMark = ({ row }: { row: RosterMembershipContent }) =>
+  row.captain ? (
+    <span role="img" aria-label="Đội trưởng" title="Đội trưởng" className="shrink-0 text-(--aov-warning)">
+      <Crown aria-hidden className="size-3.5 fill-current" />
+    </span>
+  ) : null
+
 /** A starter in the position they play: the largest thing in a roster, since it is what a reader looks for. */
 function Starter({ lane, rows, names }: { lane: Lane; rows: RosterMembershipContent[]; names: Names }) {
   if (!rows.length)
@@ -58,7 +77,10 @@ function Starter({ lane, rows, names }: { lane: Lane; rows: RosterMembershipCont
           <div key={row.playerId} className="flex min-w-0 items-center gap-2" title={row.note ?? undefined}>
             <PlayerPhoto name={nickname} url={names.players?.get(row.playerId)?.photoUrl} size={32} />
             <span className="min-w-0">
-              <span className="type-body block truncate">{nickname}</span>
+              <span className="type-body flex min-w-0 items-center gap-1">
+                <span className="truncate">{nickname}</span>
+                <CaptainMark row={row} />
+              </span>
               <span className="type-meta flex items-center gap-1">
                 <LaneIcon lane={lane} size={14} className="shrink-0" />
                 <span className="truncate">{LANE_LABELS[lane].short}</span>
@@ -100,6 +122,7 @@ function Others({
           >
             <PlayerPhoto name={nickname} url={names.players?.get(row.playerId)?.photoUrl} size={20} />
             {nickname}
+            <CaptainMark row={row} />
             {row.lane && <LaneIcon lane={row.lane} size={14} className="shrink-0" />}
           </span>
         )

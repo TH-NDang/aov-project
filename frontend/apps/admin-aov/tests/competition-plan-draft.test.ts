@@ -152,6 +152,29 @@ test("a copied roster leaves out who left, who is listed already and the old sou
   )
 })
 
+test("a copied roster brings its captain only to a team that has none yet", () => {
+  const line = (teamId: string, playerId: string, captain?: boolean) => ({
+    tournamentId: "old",
+    teamId,
+    playerId,
+    status: "ACTIVE" as const,
+    captain,
+  })
+
+  const copied = copiedRoster([line("a", "p1", true), line("b", "p2", true), line("b", "p3")], "new", [
+    { tournamentId: "new", teamId: "b", playerId: "p4", captain: true },
+  ])
+
+  assert.deepEqual(
+    copied.map((row) => [row.playerId, row.captain]),
+    [
+      ["p1", true],
+      ["p2", null],
+      ["p3", null],
+    ],
+  )
+})
+
 test("staff is copied for the teams taken over, and nobody is listed twice", () => {
   const coach = { teamId: "a", pageId: "p", role: "COACH" as const }
   const content = { code: "new", name: "New", region: "VN", staff: [coach] } as TournamentContent

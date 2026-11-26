@@ -1,5 +1,5 @@
 import type { RosterMembershipContent } from "@aov/community-contracts"
-import { Info, RotateCcw, X } from "lucide-react"
+import { Crown, Info, RotateCcw, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
@@ -18,13 +18,17 @@ const SHORT_STATUSES = [
   ["INACTIVE", "Đã rời"],
 ] as const
 
-/** One player of the roster: lane and standing are one click each, the source and dates wait behind a button. */
+/**
+ * One player of the roster: lane, standing and the captain's crown are one click each, the source and dates wait behind
+ * a button.
+ */
 export function RosterBoardRow({
   line,
   name,
   photoUrl,
   disabled,
   onChange,
+  onCaptain,
   onRemove,
   onRestore,
 }: {
@@ -33,6 +37,8 @@ export function RosterBoardRow({
   photoUrl?: string
   disabled: boolean
   onChange: (patch: Partial<RosterMembershipContent>) => void
+  /** Makes this player the team's captain, or no longer one. */
+  onCaptain: () => void
   onRemove: () => void
   onRestore: () => void
 }) {
@@ -40,6 +46,7 @@ export function RosterBoardRow({
   const changed = lineChanged(line)
   const status = content.status ?? "UNKNOWN"
   const hasSource = !!content.sourceUrl?.trim()
+  const captain = content.captain === true
   return (
     <li
       className={cn(
@@ -53,8 +60,27 @@ export function RosterBoardRow({
           <span className={cn("type-body block truncate", line.removed && "line-through")}>{name}</span>
           <span className="type-meta block">
             {line.removed ? "Sẽ bỏ khỏi đội hình" : !line.stored ? "Mới thêm" : ROSTER_STATUSES[status]}
+            {captain && !line.removed && " · Đội trưởng"}
           </span>
         </span>
+        {!line.removed && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={disabled}
+            aria-pressed={captain}
+            aria-label={`${name} là đội trưởng`}
+            title={captain ? "Đội trưởng · bấm để bỏ" : "Chọn làm đội trưởng"}
+            onClick={onCaptain}
+            className={cn(
+              "ml-auto shrink-0",
+              captain ? "text-(--aov-warning)" : "text-muted-foreground/50 hover:text-(--aov-warning)",
+            )}
+          >
+            <Crown aria-hidden className={cn(captain && "fill-current")} />
+          </Button>
+        )}
       </span>
       {line.removed ? (
         <Button type="button" variant="ghost" size="sm" disabled={disabled} onClick={onRestore}>

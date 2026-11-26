@@ -49,8 +49,19 @@ export function addedLine(
       sourceUrl: null,
       verification: "UNVERIFIED",
       note: null,
+      captain: null,
     },
   }
+}
+
+/** The lines with this player as the team's one captain at the tournament; a player who already is one stops being it. */
+export function captainLines(lines: readonly RosterLine[], playerId: string): RosterLine[] {
+  const was = lines.some((line) => line.content.playerId === playerId && line.content.captain === true)
+  return lines.map((line) => {
+    const captain = !was && line.content.playerId === playerId
+    if (captain === (line.content.captain === true)) return line
+    return { ...line, content: { ...line.content, captain: captain || null } }
+  })
 }
 
 const activeLines = (lines: readonly RosterLine[]) =>
@@ -67,6 +78,7 @@ const same = (a: RosterMembershipContent, b: RosterMembershipContent) => {
     content.sourceUrl ?? null,
     content.verification ?? "UNVERIFIED",
     content.note ?? null,
+    content.captain === true,
   ]
   return JSON.stringify(value(a)) === JSON.stringify(value(b))
 }

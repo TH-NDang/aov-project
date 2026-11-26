@@ -7,7 +7,7 @@ withDom({ url: "http://localhost:5175/tournaments/event" })
 
 const { tournamentApi } = await import("../src/features/tournaments/api/tournament-api")
 const { RosterBoardSheet } = await import("../src/features/tournaments/components/roster-board-sheet")
-const { addedLine, goesByName, pastedNames, rosterBatchOf, rosterLines, rosterWarnings } =
+const { addedLine, captainLines, goesByName, pastedNames, rosterBatchOf, rosterLines, rosterWarnings } =
   await import("../src/features/tournaments/model/roster-board-model")
 
 const line = (id: string, more: Partial<RosterMembershipContent> = {}): DocumentView<RosterMembershipContent> => ({
@@ -66,6 +66,28 @@ test("a save writes only what changed", () => {
   assert.deepEqual(
     [batch.create.map((row) => row.playerId), batch.update.map((row) => row.id), batch.remove],
     [["new"], ["moved"], [{ id: "dropped", version: 3 }]],
+  )
+})
+
+test("a team has one captain: choosing another takes the crown, choosing the same one again takes it off", () => {
+  const lines = rosterLines([line("one", { captain: true }), line("two", { lane: "MID" })])
+
+  const moved = captainLines(lines, "two")
+
+  assert.deepEqual(
+    moved.map((row) => row.content.captain ?? null),
+    [null, true],
+  )
+  assert.deepEqual(
+    rosterBatchOf(moved).update.map((row) => [row.id, row.content.captain ?? null]),
+    [
+      ["one", null],
+      ["two", true],
+    ],
+  )
+  assert.deepEqual(
+    captainLines(moved, "two").map((row) => row.content.captain ?? null),
+    [null, null],
   )
 })
 
@@ -153,5 +175,21 @@ test("taking someone off the roster asks first and can be taken back", async () 
 
   await click(button("Giữ lại"), "keep")
   assert.equal(button("Lưu đội hình")?.hasAttribute("disabled"), true)
+  await rendered.unmount()
+})
+
+test("the crown moves with one click and is saved with the roster", async () => {
+  batches.length = 0
+  const rendered = await sheet()
+
+  await click(button("Fish là đội trưởng"), "captain")
+  assert.equal(button("Fish là đội trưởng")?.getAttribute("aria-pressed"), "true")
+  await click(button("Lưu đội hình · 1"), "save")
+  await waitFor(() => batches.length === 1)
+
+  assert.deepEqual(
+    batches[0]!.update?.map((row) => [row.id, row.content.captain]),
+    [["two", true]],
+  )
   await rendered.unmount()
 })
