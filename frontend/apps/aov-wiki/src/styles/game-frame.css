@@ -1,0 +1,238 @@
+/*
+ * The Wiki's game frames, the Wiki's exception to the no-frames rule in frontend/docs/DESIGN-TOKENS.md. Drawn in CSS
+ * only, from the Wiki gold.
+ *
+ * - .wiki-frame: a panel with cut corners. Its own background is the rim, a gold that turns to bronze and fades along
+ *   the edges; ::before is the dark metal panel 1px inside it, lit faintly from the top; ::after is a second, inner line
+ *   that breaks at the corners. GameFrame adds a small gem on the top and bottom edges. data-selected lights the rim and
+ *   the panel; .wiki-frame-hover softens it under the pointer.
+ * - .wiki-frame-socket: a hexagonal socket for an icon or a small picture, its rim lit gold when data-lit is set.
+ * - .wiki-frame-divider: a thin line fading at both ends with a gem in the middle, optionally holding a title.
+ * - .wiki-frame-plate: a title bar with angled ends.
+ */
+:root {
+  --wiki-frame-cut: 10px;
+  --wiki-frame-rim: linear-gradient(
+    135deg,
+    var(--aov-wiki-gold-bright),
+    var(--aov-wiki-bronze) 24%,
+    color-mix(in srgb, var(--aov-wiki-bronze) 35%, transparent) 50%,
+    var(--aov-wiki-bronze) 76%,
+    var(--aov-wiki-gold)
+  );
+  --wiki-frame-rim-lit: linear-gradient(
+    135deg,
+    var(--aov-wiki-gold-bright),
+    var(--aov-wiki-gold) 30%,
+    var(--aov-wiki-bronze) 50%,
+    var(--aov-wiki-gold) 70%,
+    var(--aov-wiki-gold-bright)
+  );
+  --wiki-frame-panel:
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--aov-wiki-gold) 7%, transparent), transparent 65%),
+    linear-gradient(170deg, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep) 55%, var(--aov-wiki-bar));
+}
+
+.wiki-frame {
+  --frame-cut: var(--wiki-frame-cut);
+  --frame-shape: polygon(
+    var(--frame-cut) 0,
+    calc(100% - var(--frame-cut)) 0,
+    100% var(--frame-cut),
+    100% calc(100% - var(--frame-cut)),
+    calc(100% - var(--frame-cut)) 100%,
+    var(--frame-cut) 100%,
+    0 calc(100% - var(--frame-cut)),
+    0 var(--frame-cut)
+  );
+  position: relative;
+  isolation: isolate;
+  background: var(--wiki-frame-rim);
+  clip-path: var(--frame-shape);
+}
+.wiki-frame::before,
+.wiki-frame::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  clip-path: var(--frame-shape);
+}
+.wiki-frame::before {
+  inset: 1px;
+  background: var(--wiki-frame-panel);
+}
+/* The inner line: a 1px ring 4px inside the rim, brighter on the top and bottom edges. */
+.wiki-frame::after {
+  inset: 4px;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aov-wiki-gold) 40%, transparent),
+    color-mix(in srgb, var(--aov-wiki-gold) 8%, transparent) 40% 60%,
+    color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+/* The small gems on the middle of the top and bottom edges. */
+.wiki-frame-gem {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  background: linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze));
+  pointer-events: none;
+  transform: rotate(45deg);
+}
+.wiki-frame-gem[data-at="top"] {
+  top: 1px;
+}
+.wiki-frame-gem[data-at="bottom"] {
+  bottom: 1px;
+}
+.wiki-frame[data-selected] {
+  background: var(--wiki-frame-rim-lit);
+}
+.wiki-frame[data-selected]::before {
+  background:
+    radial-gradient(100% 90% at 50% 100%, color-mix(in srgb, var(--aov-wiki-gold) 18%, transparent), transparent 70%),
+    var(--wiki-frame-panel);
+}
+.wiki-frame[data-selected]::after {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aov-wiki-gold-bright) 70%, transparent),
+    color-mix(in srgb, var(--aov-wiki-gold) 25%, transparent) 50%,
+    color-mix(in srgb, var(--aov-wiki-gold-bright) 60%, transparent)
+  );
+}
+.wiki-frame-hover:hover:not([data-selected]) {
+  background: linear-gradient(
+    135deg,
+    var(--aov-wiki-gold-bright),
+    var(--aov-wiki-gold) 20%,
+    color-mix(in srgb, var(--aov-wiki-bronze) 60%, transparent) 50%,
+    var(--aov-wiki-gold) 80%,
+    var(--aov-wiki-gold-bright)
+  );
+}
+
+/* ---------- Icon socket ---------- */
+.wiki-frame-socket {
+  --socket-size: 40px;
+  --socket-shape: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: var(--socket-size);
+  height: var(--socket-size);
+  flex: none;
+  place-items: center;
+  color: var(--aov-wiki-gold);
+  transition: filter 180ms ease-out;
+}
+.wiki-frame-socket::before,
+.wiki-frame-socket::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  clip-path: var(--socket-shape);
+}
+.wiki-frame-socket::before {
+  inset: 0;
+  background: var(--wiki-frame-rim);
+}
+.wiki-frame-socket::after {
+  inset: 1.5px;
+  background:
+    radial-gradient(80% 80% at 50% 30%, color-mix(in srgb, var(--aov-wiki-gold) 12%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--aov-wiki-panel-high), var(--aov-wiki-bar));
+}
+/* A picture fills the socket inside its rim. */
+.wiki-frame-socket > .wiki-frame-socket-picture {
+  position: absolute;
+  inset: 1.5px;
+  clip-path: var(--socket-shape);
+}
+.wiki-frame-socket[data-lit] {
+  color: var(--aov-wiki-bar);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--aov-wiki-gold) 65%, transparent));
+}
+.wiki-frame-socket[data-lit]::before {
+  background: var(--wiki-frame-rim-lit);
+}
+.wiki-frame-socket[data-lit]::after {
+  background: linear-gradient(180deg, var(--aov-wiki-gold-bright), var(--aov-wiki-gold) 60%, var(--aov-wiki-bronze));
+}
+
+/* ---------- Divider ---------- */
+.wiki-frame-divider {
+  font: 600 0.8125rem/1rem var(--wiki-font-reading);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-wiki-gold);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.wiki-frame-divider::before,
+.wiki-frame-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--aov-wiki-gold) 55%, transparent));
+}
+.wiki-frame-divider::after {
+  background: linear-gradient(270deg, transparent, color-mix(in srgb, var(--aov-wiki-gold) 55%, transparent));
+}
+/* Without a title the divider holds a gem in its middle. */
+.wiki-frame-divider:empty {
+  gap: 13px;
+  height: 9px;
+  background: linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze)) center / 7px 7px no-repeat;
+}
+
+/* ---------- Plate ---------- */
+.wiki-frame-plate {
+  --plate-cut: 12px;
+  --plate-shape: polygon(
+    var(--plate-cut) 0,
+    calc(100% - var(--plate-cut)) 0,
+    100% 50%,
+    calc(100% - var(--plate-cut)) 100%,
+    var(--plate-cut) 100%,
+    0 50%
+  );
+  position: relative;
+  isolation: isolate;
+  font: 700 0.875rem/1.25rem var(--wiki-font-display);
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px calc(var(--plate-cut) + 8px);
+  background: var(--wiki-frame-rim);
+  clip-path: var(--plate-shape);
+  color: var(--aov-wiki-gold-bright);
+  letter-spacing: 0.04em;
+}
+.wiki-frame-plate::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1px;
+  background: linear-gradient(180deg, var(--aov-wiki-panel-high), var(--aov-wiki-bar));
+  clip-path: var(--plate-shape);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiki-frame-socket {
+    transition: none;
+  }
+}

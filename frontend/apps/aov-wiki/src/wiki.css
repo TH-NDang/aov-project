@@ -1,6 +1,7 @@
 @import "@aov/ui/styles.css";
 @import "./styles/typography.css";
 @import "./styles/controls.css";
+@import "./styles/game-frame.css";
 
 /* The Wiki's palette: the shared token names take the Wiki's colours from tokens.css. The Wiki is always dark. */
 :root.dark {
