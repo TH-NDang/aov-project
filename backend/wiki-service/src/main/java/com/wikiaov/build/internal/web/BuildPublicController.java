@@ -3,10 +3,10 @@ package com.wikiaov.build.internal.web;
 import com.wikiaov.build.internal.application.PublicBuilds;
 import com.wikiaov.build.internal.application.response.BuildViews;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.PublicResponses;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +27,7 @@ public class BuildPublicController implements BuildPublicApi {
     public ResponseEntity<BuildViews.HeroBuilds> heroBuilds(@RequestParam String hero, @RequestParam String region,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("hero", "region"));
-        return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
+        return ResponseEntity.ok().cacheControl(PublicResponses.current())
                 .body(builds.heroBuilds(hero, region));
     }
 }
