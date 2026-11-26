@@ -1,30 +1,65 @@
+import { lazy, Suspense, type ComponentType } from "react"
 import { Navigate, Route, Routes, useLocation, useSearchParams, type Location } from "react-router"
-import { GamePage } from "./features/tournaments/pages/game-page"
 import { CommunityHome } from "./features/community/pages/community-home"
-import { CommunityExplore } from "./features/community/pages/community-explore"
-import { CommunityProfilePage } from "./features/community/pages/community-profile"
-import {
-  CommunityAccount,
-  CommunityPageManager,
-  CommunityInvitation,
-} from "./features/community/pages/community-account"
 import { CommunityLoginCallback } from "./components/community-session"
+import { StreamShell } from "./components/stream-shell"
+import { useStreamLocale } from "./components/stream-locale"
 import { Travel } from "./components/travel"
 import "./features/community/components/community.css"
-import { PublicCompetitionPage } from "./features/tournaments/pages/competition-page"
-import { CompetitionDirectory } from "./features/tournaments/pages/competition-directory-page"
-import { MatchPage } from "./features/tournaments/pages/match-page"
-import { TeamPage } from "./features/tournaments/pages/team-page"
-import { PlayerPage } from "./features/tournaments/pages/player-page"
-import { PersonPage } from "./features/tournaments/pages/person-page"
-import { CreditsPage } from "./features/tournaments/pages/credits-page"
 import "./features/tournaments/tournaments.css"
 import "./features/tournaments/components/schedule.css"
+
+/*
+ * The feed is the page most readers open, so it ships with the app; every other page is loaded when it is first
+ * opened, which keeps the first download to what the feed needs. The shared styles stay global for now.
+ */
+const named = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) =>
+  lazy(() => load().then((module) => ({ default: module[name] })))
+const GamePage = named(() => import("./features/tournaments/pages/game-page"), "GamePage")
+const CommunityExplore = named(() => import("./features/community/pages/community-explore"), "CommunityExplore")
+const CommunityProfilePage = named(() => import("./features/community/pages/community-profile"), "CommunityProfilePage")
+const CommunityAccount = named(() => import("./features/community/pages/community-account"), "CommunityAccount")
+const CommunityPageManager = named(() => import("./features/community/pages/community-account"), "CommunityPageManager")
+const CommunityInvitation = named(() => import("./features/community/pages/community-account"), "CommunityInvitation")
+const PublicCompetitionPage = named(
+  () => import("./features/tournaments/pages/competition-page"),
+  "PublicCompetitionPage",
+)
+const CompetitionDirectory = named(
+  () => import("./features/tournaments/pages/competition-directory-page"),
+  "CompetitionDirectory",
+)
+const MatchPage = named(() => import("./features/tournaments/pages/match-page"), "MatchPage")
+const TeamPage = named(() => import("./features/tournaments/pages/team-page"), "TeamPage")
+const PlayerPage = named(() => import("./features/tournaments/pages/player-page"), "PlayerPage")
+const PersonPage = named(() => import("./features/tournaments/pages/person-page"), "PersonPage")
+const CreditsPage = named(() => import("./features/tournaments/pages/credits-page"), "CreditsPage")
+
 export default function App() {
   return <Travel>{(location) => <Pages location={location} />}</Travel>
 }
 
+/** What a page shows while its code is loaded for the first time. */
+function PageLoading() {
+  const { text } = useStreamLocale()
+  return (
+    <StreamShell>
+      <div className="cp-container pt-page">
+        <div className="hub-skeleton-rows" role="status" aria-label={text("Đang tải trang", "Loading the page")} />
+      </div>
+    </StreamShell>
+  )
+}
+
 function Pages({ location }: { location: Location }) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <PageRoutes location={location} />
+    </Suspense>
+  )
+}
+
+function PageRoutes({ location }: { location: Location }) {
   return (
     <Routes location={location}>
       <Route path="/" element={<CommunityHome />} />
