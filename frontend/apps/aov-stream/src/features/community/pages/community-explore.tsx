@@ -1,11 +1,6 @@
 import { Link, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
-import {
-  profileKindLabels,
-  type CompetitionParticipant,
-  type CompetitionView,
-  type ProfileKind,
-} from "@aov/community-contracts"
+import { profileKindLabels, type CompetitionParticipant, type ProfileKind } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
@@ -19,14 +14,13 @@ import { PageDirectory, ProfileCard, profileKinds } from "../components/communit
 import { LiveCards, useLivePages, videoThumbnail } from "../components/community-live"
 import { PostCard } from "../components/community-post"
 import { useFollowedIds } from "../../../lib/community-queries"
-import { competitionStatus } from "../../../lib/competition-model"
 import { profileKindEnglish, TimeAgo } from "../../../components/community-ui"
 import { CompetitionCard } from "../../../components/competition-card"
 import { isParticipantKind } from "../../../lib/participant-model"
-import { shortCompetitionName } from "../../../lib/season-name"
-import { competitionCatalogQuery, participantsQuery } from "../../../lib/tournament-api"
+import { matchingCompetitions } from "../../../lib/search-model"
+import { pageSearchQuery, participantSearchQuery, SEARCH_GROUP_SIZE } from "../../../lib/search-queries"
+import { competitionCatalogQuery } from "../../../lib/tournament-api"
 import { ParticipantCard, ParticipantList } from "../../../components/participant-list"
-import { foldSearchText } from "@aov/ui/lib/search-text"
 import { StreamHead } from "../../../components/stream-head"
 import "../components/community.css"
 import "./community-explore.css"
@@ -39,8 +33,6 @@ const PARTICIPANT_SEARCH = {
   PLAYER: ["Tìm tuyển thủ", "Search players"],
   PERSON: ["Tìm nhân sự", "Search staff"],
 } as const
-/** Pages a search shows per kind before the link to all of them: two rows of the widest grid. */
-const GROUP_SIZE = 8
 
 /**
  * Without a search: who is live, the newest videos, then the page directory with its kind and region filters. The
@@ -209,37 +201,17 @@ function NewVideos() {
   )
 }
 
-/** Published competitions whose name or circuit holds the search, those not yet finished first, then the newest. */
-function matchingCompetitions(catalog: CompetitionView[], search: string) {
-  return catalog
-    .filter((entry) =>
-      foldSearchText(
-        `${entry.content.tournament.name} ${shortCompetitionName(entry)} ${entry.content.plan.circuit}`,
-      ).includes(foldSearchText(search)),
-    )
-    .sort(
-      (a, b) =>
-        Number(competitionStatus(a.content) === "FINISHED") - Number(competitionStatus(b.content) === "FINISHED") ||
-        (b.content.tournament.year || 0) - (a.content.tournament.year || 0),
-    )
-}
-
 /** Everything a search found: pages by kind, competitions, then posts, which keep loading as the reader scrolls. */
 function SearchResults({ query }: { query: string }) {
   const { text, languageTag } = useStreamLocale()
   const layout = usePageLayout()
   const following = useFollowedIds()
-  const pages = useQueries({
-    queries: SEARCH_KINDS.map((kind) => ({
-      queryKey: communityKeys.pageSearch(kind, query),
-      queryFn: () => communityApi.pages({ kind, q: query, size: String(GROUP_SIZE) }),
-      staleTime: 60_000,
-    })),
-  })
+  // The same reads as the suggestions under the field, so the results open on what they already found.
+  const pages = useQueries({ queries: SEARCH_KINDS.map((kind) => pageSearchQuery(kind, query)) })
   const people = {
-    TEAM: useInfiniteQuery(participantsQuery("TEAM", query, GROUP_SIZE)),
-    PLAYER: useInfiniteQuery(participantsQuery("PLAYER", query, GROUP_SIZE)),
-    PERSON: useInfiniteQuery(participantsQuery("PERSON", query, GROUP_SIZE)),
+    TEAM: useInfiniteQuery(participantSearchQuery("TEAM", query)),
+    PLAYER: useInfiniteQuery(participantSearchQuery("PLAYER", query)),
+    PERSON: useInfiniteQuery(participantSearchQuery("PERSON", query)),
   }
   const peopleCount = PARTICIPANTS.reduce((sum, kind) => sum + (people[kind].data?.pages[0]?.totalElements ?? 0), 0)
   const catalog = useQuery(competitionCatalogQuery)
@@ -263,25 +235,45 @@ function SearchResults({ query }: { query: string }) {
     posts.isPending
   const failed = pages.some((group) => group.isError) || (catalog.isError && !catalog.data) || posts.isLoadingError
   const nothing = !searching && !failed && !peopleCount && !totals.pages && !totals.competitions && !totals.posts
-  const pageCount = totals.pages.toLocaleString(languageTag)
-  const competitionCount = totals.competitions.toLocaleString(languageTag)
-  const postCount = totals.posts.toLocaleString(languageTag)
-  const summary = [
-    totals.pages && text(`${pageCount} trang`, `${pageCount} ${totals.pages === 1 ? "page" : "pages"}`),
-    totals.competitions &&
-      text(
-        `${competitionCount} giải đấu`,
-        `${competitionCount} ${totals.competitions === 1 ? "tournament" : "tournaments"}`,
-      ),
-    totals.posts && text(`${postCount} bài viết`, `${postCount} ${totals.posts === 1 ? "post" : "posts"}`),
-  ].filter(Boolean)
-  const preview = layout === "compact" ? { pages: 4, competitions: 3 } : { pages: GROUP_SIZE, competitions: 6 }
+  // One pill per group found, which scrolls to it: the counts say at once where the search landed.
+  const groups = [
+    ...PARTICIPANTS.map((kind) => ({
+      id: `search-${kind}`,
+      label: text(profileKindLabels[kind], profileKindEnglish[kind]),
+      count: people[kind].data?.pages[0]?.totalElements ?? 0,
+    })),
+    ...SEARCH_KINDS.map((kind, index) => ({
+      id: `search-${kind}`,
+      label: text(profileKindLabels[kind], profileKindEnglish[kind]),
+      count: pages[index]?.data?.totalElements ?? 0,
+    })),
+    { id: "search-competitions", label: text("Giải đấu", "Tournaments"), count: totals.competitions },
+    { id: "search-posts", label: text("Bài viết", "Posts"), count: totals.posts },
+  ].filter((group) => group.count > 0)
+  const jump = (id: string) =>
+    document
+      .getElementById(id)
+      ?.closest("section")
+      ?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      })
+  const preview = layout === "compact" ? { pages: 4, competitions: 3 } : { pages: SEARCH_GROUP_SIZE, competitions: 6 }
   return (
     <>
       <header className="tn-page-head ex-page-head">
         <div>
           <h1>{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
-          {!searching && summary.length > 0 && <p>{summary.join(" · ")}</p>}
+          {!searching && groups.length > 1 && (
+            <nav className="hub-pills ex-jump" aria-label={text("Các nhóm kết quả", "Result groups")}>
+              {groups.map((group) => (
+                <button key={group.id} type="button" onClick={() => jump(group.id)}>
+                  {group.label}
+                  <small>{group.count.toLocaleString(languageTag)}</small>
+                </button>
+              ))}
+            </nav>
+          )}
         </div>
       </header>
       {nothing && (
@@ -303,7 +295,7 @@ function SearchResults({ query }: { query: string }) {
         if (!found?.items.length) return null
         const shown = found.items.slice(0, preview.pages)
         return (
-          <section key={kind} aria-labelledby={`search-${kind}`}>
+          <section key={kind} className="ex-result" aria-labelledby={`search-${kind}`}>
             <div className="tn-heading">
               <h2 id={`search-${kind}`}>
                 {text(profileKindLabels[kind], profileKindEnglish[kind])}{" "}
@@ -342,7 +334,7 @@ function SearchResults({ query }: { query: string }) {
         const total = group.data.totalElements
         const shown = group.data.items.slice(0, preview.pages)
         return (
-          <section key={kind} aria-labelledby={`search-${kind}`}>
+          <section key={kind} className="ex-result" aria-labelledby={`search-${kind}`}>
             <div className="tn-heading">
               <h2 id={`search-${kind}`}>
                 {text(profileKindLabels[kind], profileKindEnglish[kind])}{" "}
@@ -372,7 +364,7 @@ function SearchResults({ query }: { query: string }) {
         </p>
       ) : (
         competitions.length > 0 && (
-          <section aria-labelledby="search-competitions">
+          <section className="ex-result" aria-labelledby="search-competitions">
             <div className="tn-heading">
               <h2 id="search-competitions">
                 {text("Giải đấu", "Tournaments")} <small>{competitions.length.toLocaleString(languageTag)}</small>
@@ -401,7 +393,7 @@ function SearchResults({ query }: { query: string }) {
         </p>
       ) : (
         postItems.length > 0 && (
-          <section className="ex-posts" aria-labelledby="search-posts">
+          <section className="ex-result ex-posts" aria-labelledby="search-posts">
             <div className="tn-heading">
               <h2 id="search-posts">
                 {text("Bài viết", "Posts")} <small>{totals.posts.toLocaleString(languageTag)}</small>

@@ -1,0 +1,230 @@
+/* The suggestions for what is typed: a row to every result, the closest name as a card, then groups of rows. */
+.hub-matches {
+  --stream-image-size: 40px;
+  --stream-image-radius: var(--hub-radius-sm);
+  display: grid;
+  gap: 2px;
+}
+.hub-matches mark {
+  background: none;
+  color: var(--hub-accent-strong);
+  font-weight: 700;
+}
+/* The words themselves, opening every result; marked from the start, so Enter searches. */
+.hub-matches-all {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--hub-radius-sm);
+  color: var(--hub-text);
+}
+.hub-matches-all > svg {
+  flex: none;
+  color: var(--hub-accent);
+}
+.hub-matches-all > strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-matches-all > span {
+  flex: none;
+  margin-left: auto;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.hub-matches-all > kbd {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  border: 1px solid var(--hub-border-strong);
+  border-radius: 5px;
+  color: var(--hub-muted);
+  font: 600 11px/1 var(--hub-font);
+  visibility: hidden;
+}
+.hub-matches-all:is(:hover, [aria-selected="true"]) {
+  background: var(--hub-accent-soft);
+}
+.hub-matches-all[aria-selected="true"] > kbd {
+  visibility: visible;
+}
+/* The closest name, as a card washed with its own logo or the colour of its name. */
+.hub-top-match {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  min-height: 84px;
+  margin: 2px 0 4px;
+  padding: 14px 16px;
+  overflow: hidden;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background:
+    radial-gradient(120% 160% at 0% 0%, hsl(var(--hub-top-hue) 70% 55% / 16%), transparent 62%), var(--hub-surface);
+  color: var(--hub-text);
+  transition: border-color 120ms;
+}
+.hub-top-match-wash {
+  position: absolute;
+  z-index: -1;
+  top: -60%;
+  left: -12%;
+  width: 60%;
+  height: 220%;
+  object-fit: contain;
+  filter: blur(34px) saturate(1.6);
+  opacity: 0.32;
+  pointer-events: none;
+}
+.hub-top-match-mark {
+  --stream-image-size: 64px;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  place-items: center;
+}
+.hub-top-match-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+}
+.hub-top-match-text > small {
+  color: var(--hub-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+/* Two lines at most: what tells seasons apart is often at the end of the name. */
+.hub-top-match-text > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.hub-top-match > svg {
+  flex: none;
+  color: var(--hub-muted);
+  transition:
+    color 120ms,
+    translate 160ms;
+}
+.hub-top-match:is(:hover, [aria-selected="true"]) {
+  border-color: var(--hub-accent-border);
+}
+.hub-top-match:is(:hover, [aria-selected="true"]) > svg {
+  color: var(--hub-accent);
+  translate: 3px 0;
+}
+.hub-matches-group {
+  display: grid;
+  padding-top: 6px;
+}
+.hub-matches-group > p {
+  margin: 0 12px 4px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+/* One suggestion: its mark, its name with the matching part marked, and a second line. */
+.hub-match {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 12px;
+  border-radius: var(--hub-radius-sm);
+  color: var(--hub-text);
+}
+.hub-match:is(:hover, [aria-selected="true"]) {
+  background: var(--hub-hover);
+}
+.hub-match[aria-selected="true"] {
+  box-shadow: inset 3px 0 var(--hub-accent);
+}
+.hub-match-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+}
+/* Who plays and who works around them have no logo; their mark is round, unlike the plates of teams and events. */
+.hub-match[data-kind="PAGE"] .hub-match-mark {
+  --stream-image-radius: 50%;
+}
+.hub-match-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.hub-match-text > strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-match-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.hub-match-meta > span:not([class]) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hub-matches-note {
+  margin: 8px 12px 10px;
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+.hub-matches-note > button {
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+@media (max-width: 899.98px) {
+  .hub-matches {
+    padding-top: 6px;
+  }
+  .hub-matches-all > kbd {
+    display: none;
+  }
+  .hub-matches-all {
+    min-height: 48px;
+    margin-inline: -4px;
+  }
+  .hub-match {
+    min-height: 56px;
+    margin-inline: -4px;
+  }
+  .hub-matches-group > p {
+    margin-inline: 8px;
+  }
+}
