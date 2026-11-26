@@ -40,6 +40,7 @@ import { followersLabel, profileKindEnglish } from "../../../components/communit
 import { ProfileMark } from "../../../components/page-mark"
 import { AuthorMark } from "../components/post-comments"
 import { notificationText } from "../../../lib/notification-text"
+import { StreamHead } from "../../../components/stream-head"
 
 const roleLabels: Record<PageManager["role"], readonly [string, string]> = {
   OWNER: ["Quản trị chính", "Owner"],
@@ -83,7 +84,7 @@ export function CommunityAccount() {
   }, [tab, enabled, unread.data?.unread])
   return (
     <StreamShell>
-      <title>{text("Tài khoản — AOV Stream", "Account — AOV Stream")}</title>
+      <StreamHead title={text("Tài khoản — AOV Stream", "Account — AOV Stream")} noindex />
       <div className="cp-container">
         <header className="tn-page-head">
           <div>
@@ -430,7 +431,7 @@ export function CommunityPageManager() {
           <ManagerSkeleton />
         ) : !enabled ? (
           <>
-            <title>{text("Quản lý trang — AOV Stream", "Manage page — AOV Stream")}</title>
+            <StreamHead title={text("Quản lý trang — AOV Stream", "Manage page — AOV Stream")} noindex />
             <header className="tn-page-head">
               <div>
                 <h1>{text("Quản lý trang", "Manage page")}</h1>
@@ -499,7 +500,7 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
   const name = profile.content?.name || profile.code
   return (
     <>
-      <title>{text(`Quản lý ${name} — AOV Stream`, `Manage ${name} — AOV Stream`)}</title>
+      <StreamHead title={text(`Quản lý ${name} — AOV Stream`, `Manage ${name} — AOV Stream`)} noindex />
       <PlaceTrail
         places={[
           { to: "/account", name: text("Tài khoản", "Account") },
@@ -916,7 +917,10 @@ export function CommunityInvitation() {
   })
   return (
     <StreamShell>
-      <title>{text("Lời mời quản lý trang — AOV Stream", "Invitation to manage a page — AOV Stream")}</title>
+      <StreamHead
+        title={text("Lời mời quản lý trang — AOV Stream", "Invitation to manage a page — AOV Stream")}
+        noindex
+      />
       <div className="cp-container">
         <header className="tn-page-head">
           <div>

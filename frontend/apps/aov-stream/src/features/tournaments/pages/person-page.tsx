@@ -17,6 +17,7 @@ import { communityKeys } from "../../../lib/community-keys"
 import { personProfile, type PersonProfile } from "../../../lib/participant-model"
 import { personCompetitionsQuery } from "../../../lib/tournament-api"
 import { ParticipantMissing, Part, SeasonLine } from "../components/participant-parts"
+import { StreamHead } from "../../../components/stream-head"
 
 /** Competitions shown before the rest unfold. */
 const SEASONS = 12
@@ -39,11 +40,22 @@ export function PersonPage() {
   const profile = competitions.data ? personProfile(competitions.data, id) : null
   return (
     <StreamShell>
-      <title>
-        {profile
-          ? text(`${profile.name} — Nhân sự · AOV Stream`, `${profile.name} — Staff · AOV Stream`)
-          : text("Nhân sự — AOV Stream", "Staff — AOV Stream")}
-      </title>
+      <StreamHead
+        title={
+          profile
+            ? text(`${profile.name} — Nhân sự · AOV Stream`, `${profile.name} — Staff · AOV Stream`)
+            : text("Nhân sự — AOV Stream", "Staff — AOV Stream")
+        }
+        description={
+          profile
+            ? text(
+                `${profile.name}, nhân sự các giải Liên Quân Mobile: vai trò và các mùa giải đã tham gia.`,
+                `${profile.name}, Arena of Valor tournament staff: roles and seasons worked.`,
+              )
+            : undefined
+        }
+        noindex={!profile && competitions.isSuccess && !page.isPending}
+      />
       <div className="cp-container pt-page">
         {competitions.isPending || page.isPending ? (
           <div

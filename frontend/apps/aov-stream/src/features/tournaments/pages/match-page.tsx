@@ -30,6 +30,7 @@ import { MatchHead, matchHeadOf, SeriesTrack, seriesHeadOf } from "../components
 import { matchStateLabels, matchStatus } from "../components/match-row"
 import { ScheduleDays } from "../components/schedule-list"
 import { SeriesDraft } from "../components/series-draft"
+import { StreamHead } from "../../../components/stream-head"
 import "./match-page.css"
 
 /** Other matches shown under a match: enough to see how both teams are doing without becoming a schedule. */
@@ -230,7 +231,17 @@ export function MatchPage() {
   )
   return (
     <StreamShell>
-      <title>{`${head ? `${head.teams[0].name} vs ${head.teams[1].name}` : text("Trận đấu", "Match")} — AOV Stream`}</title>
+      <StreamHead
+        title={`${head ? `${head.teams[0].name} vs ${head.teams[1].name}` : text("Trận đấu", "Match")} — AOV Stream`}
+        description={
+          head
+            ? text(
+                `${head.teams[0].name} gặp ${head.teams[1].name}${competitionName ? ` tại ${competitionName}` : ""}: tỷ số, đội hình và từng ván đấu Liên Quân Mobile.`,
+                `${head.teams[0].name} against ${head.teams[1].name}${competitionName ? ` at ${competitionName}` : ""}: score, lineups and every Arena of Valor game.`,
+              )
+            : undefined
+        }
+      />
       <div className="tn-match-page">
         {match.loading ? (
           <div

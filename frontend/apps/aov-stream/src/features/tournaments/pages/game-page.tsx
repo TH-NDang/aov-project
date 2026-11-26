@@ -19,6 +19,7 @@ import { EquipmentEvents } from "../components/equipment-events"
 import { GameLineup } from "../components/game-lineup"
 import { GameTimeline } from "../components/game-timeline"
 import { MatchHead, SeriesTrack, seriesHeadOf } from "../components/match-head"
+import { StreamHead } from "../../../components/stream-head"
 import "./match-page.css"
 
 /** A patch code that is the day the patch came out. */
@@ -88,7 +89,13 @@ function PublishedGameView({
   const mvp = mvpOf(game.content.mvpPlayerId, game.players)
   return (
     <StreamShell>
-      <title>{`${head.teams[0].name} vs ${head.teams[1].name} · ${text(`Ván ${number}`, `Game ${number}`)} — AOV Stream`}</title>
+      <StreamHead
+        title={`${head.teams[0].name} vs ${head.teams[1].name} · ${text(`Ván ${number}`, `Game ${number}`)} — AOV Stream`}
+        description={text(
+          `Ván ${number} giữa ${head.teams[0].name} và ${head.teams[1].name} tại ${game.tournament.name}: tướng, trang bị và chỉ số từng tuyển thủ.`,
+          `Game ${number} between ${head.teams[0].name} and ${head.teams[1].name} at ${game.tournament.name}: heroes, items and every player's statistics.`,
+        )}
+      />
       <div className="tn-match-page" aria-busy={busy || undefined}>
         <div className="tn-match-top">
           <MatchHead
