@@ -3,6 +3,7 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { wikiAccessToken } from "../../lib/wiki-auth"
 import type { GuideContent, LineupUnit, ModeImage, RuleSection } from "./auto-chess-model"
+import type { MapContent } from "./map/map-model"
 import { WikiApiError, wikiGet, wikiRequest, type WikiRequest } from "../../lib/wiki-api"
 
 export interface ModeAvailability {
@@ -30,6 +31,7 @@ export interface ModeCard {
   availability?: ModeAvailability | null
   guideKind: "NONE" | "AUTO_CHESS"
   hasGuide: boolean
+  hasMap?: boolean
   art?: ModeImage | null
   publishedAt: string
 }
@@ -55,6 +57,7 @@ export interface PublicMode {
   contentLocale: string
   publishedAt: string
   hasGuide: boolean
+  hasMap?: boolean
   content: ModeContent
   images: Record<string, ModeImage>
 }
@@ -73,6 +76,17 @@ export interface PublicGuide {
   content: GuideContent
   images: Record<string, ModeImage>
   lineupLikes: Record<string, LikeCount>
+}
+
+/** The published battlefield map of a mode. */
+export interface PublicMap {
+  modeCode: string
+  modeName: string
+  contentLocale: string
+  revisionId: string
+  publishedAt: string
+  content: MapContent
+  images: Record<string, ModeImage>
 }
 
 export interface CommunityLineup {
@@ -126,6 +140,7 @@ export const modeKeys = {
   cards: ["wiki", "game-modes"] as const,
   mode: (code: string) => ["wiki", "game-mode", code] as const,
   guide: (code: string) => [...modeKeys.mode(code), "auto-chess"] as const,
+  map: (code: string) => [...modeKeys.mode(code), "map"] as const,
   community: (code: string, sort: string, unit: string | null | undefined) =>
     [...modeKeys.mode(code), "community", sort, unit] as const,
   insights: (code: string) => [...modeKeys.mode(code), "insights"] as const,
@@ -162,6 +177,16 @@ export const guideQuery = (code: string) =>
     queryFn: ({ signal }) => readPublic<PublicGuide>(`/${encodeURIComponent(code)}/auto-chess`, signal),
     staleTime: 30_000,
     retry: (count, error) => !(error instanceof WikiApiError && error.status === 404) && count < 1,
+  })
+
+/** A map changes rarely, so its last answer is kept in the browser and shown at once on the next visit. */
+export const mapQuery = (code: string) =>
+  queryOptions({
+    queryKey: modeKeys.map(code),
+    queryFn: ({ signal }) => readPublic<PublicMap>(`/${encodeURIComponent(code)}/map`, signal),
+    staleTime: 5 * 60_000,
+    retry: (count, error) => !(error instanceof WikiApiError && error.status === 404) && count < 1,
+    meta: { storedAnswer: "wiki-map@1" },
   })
 
 /** Community lineups load page by page as the reader scrolls. */

@@ -33,6 +33,7 @@ const SkinDirectory = lazy(() =>
 )
 const WarehousePage = lazy(() => import("./features/warehouse/warehouse-page"))
 const ModesPage = lazy(() => import("./features/modes/modes-page").then((module) => ({ default: module.ModesPage })))
+const MapPage = lazy(() => import("./features/modes/map/map-page").then((module) => ({ default: module.MapPage })))
 const ModeDetailPage = lazy(() =>
   import("./features/modes/mode-detail-page").then((module) => ({ default: module.ModeDetailPage })),
 )
@@ -160,6 +161,17 @@ export default function App() {
               element={
                 <Suspense fallback={null}>
                   <ModeDetailPage />
+                </Suspense>
+              }
+            />
+          ))}
+          {["/map", "/map/:code"].map((path) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <Suspense fallback={null}>
+                  <MapPage />
                 </Suspense>
               }
             />

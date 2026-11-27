@@ -1,0 +1,209 @@
+/*
+ * The details of a chosen place (map-details.tsx), in the wide panel and in the phone's sheet alike: a socket and the
+ * name, the game's tags, the forms of its family, the spawn times as two plates, then the game's texts.
+ */
+.wiki-map-details {
+  display: grid;
+  gap: 14px;
+  color: var(--aov-wiki-text-soft);
+}
+.wiki-map-details-picture {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.wiki-map-details-picture img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.wiki-map-details-credit {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+}
+.wiki-map-details-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.wiki-map-details-head h2 {
+  font: var(--wiki-type-section);
+  margin: 0;
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-details-socket {
+  --socket-size: 48px;
+}
+.wiki-map-details-socket[data-side="BLUE"] {
+  color: color-mix(in srgb, var(--aov-wiki-info) 70%, var(--aov-wiki-text));
+}
+.wiki-map-details-socket[data-side="RED"] {
+  color: color-mix(in srgb, var(--aov-wiki-danger) 70%, var(--aov-wiki-text));
+}
+.wiki-map-details-kind {
+  font: var(--wiki-type-meta);
+  margin: 2px 0 0;
+  color: var(--aov-wiki-text-muted);
+}
+
+.wiki-map-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-map-tags li {
+  font: 600 0.75rem/1.25rem var(--wiki-font-reading);
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 35%, transparent);
+  border-radius: 999px;
+  color: var(--aov-wiki-gold);
+}
+
+/* The family's forms and the about/changes switch: a row of plates, the pressed one lit. */
+.wiki-map-forms,
+.wiki-map-switch {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wiki-map-forms button,
+.wiki-map-switch button {
+  font: var(--wiki-type-category);
+  flex: none;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--aov-wiki-line-strong);
+  border-radius: 3px;
+  background: var(--aov-wiki-panel-deep);
+  color: var(--aov-wiki-text-soft);
+  cursor: pointer;
+}
+.wiki-map-forms button[aria-pressed="true"],
+.wiki-map-switch button[aria-pressed="true"] {
+  border-color: var(--aov-wiki-gold);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--aov-wiki-gold) 28%, transparent), transparent);
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-switch {
+  padding: 3px;
+  border-radius: 4px;
+  background: var(--aov-wiki-bar);
+}
+.wiki-map-switch button {
+  flex: 1;
+  border-color: transparent;
+  background: none;
+}
+
+.wiki-map-times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+}
+.wiki-map-times div {
+  padding: 8px 10px;
+  border-left: 2px solid var(--aov-wiki-gold);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-wiki-gold) 10%, transparent), transparent);
+}
+.wiki-map-times dt {
+  font: var(--wiki-type-meta);
+  color: var(--aov-wiki-text-muted);
+}
+.wiki-map-times dd {
+  font: var(--wiki-type-entry);
+  margin: 0;
+  color: var(--aov-wiki-text);
+}
+
+.wiki-map-summary {
+  font: var(--wiki-type-body);
+  margin: 0;
+  color: var(--aov-wiki-text);
+}
+.wiki-map-section h3 {
+  font: var(--wiki-type-category);
+  margin: 0 0 6px;
+  color: var(--aov-wiki-gold);
+}
+.wiki-map-section p,
+.wiki-map-section ul {
+  font: var(--wiki-type-body);
+  margin: 0 0 6px;
+}
+.wiki-map-section ul {
+  padding-left: 18px;
+  list-style: disc;
+}
+.wiki-map-section li::marker {
+  color: var(--aov-wiki-gold);
+}
+
+.wiki-map-found {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 !important;
+  list-style: none;
+}
+.wiki-map-found button,
+.wiki-map-found a {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--aov-wiki-line-strong);
+  border-radius: 3px;
+  background: var(--aov-wiki-panel-deep);
+  color: var(--aov-wiki-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+.wiki-map-found button:hover,
+.wiki-map-found a:hover {
+  border-color: var(--aov-wiki-gold);
+}
+.wiki-map-found img,
+.wiki-map-found svg {
+  color: var(--aov-wiki-gold);
+  border-radius: 50%;
+}
+
+.wiki-map-share {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--aov-wiki-line);
+}
+.wiki-map-share code {
+  font:
+    400 0.75rem/1rem ui-monospace,
+    monospace;
+  overflow: hidden;
+  color: var(--aov-wiki-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-map-share button {
+  font: var(--wiki-type-category);
+  flex: none;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent);
+  border-radius: 3px;
+  background: none;
+  color: var(--aov-wiki-gold-bright);
+  cursor: pointer;
+}

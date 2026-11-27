@@ -11,6 +11,7 @@ const SECTION_ICONS = {
   arcana: "gem-pendant",
   spells: "magic-swirl",
   mode: "gamepad",
+  map: "compass",
   updates: "tied-scroll",
   terms: "spell-book",
 } satisfies Record<string, GameIconName>

@@ -24,20 +24,23 @@ export function WikiLibraryLayout() {
   const isUpdates = useMatch("/updates/*")
   const isTerms = useMatch("/terms/*")
   const isModes = useMatch("/modes/*")
+  const isMap = useMatch("/map/*")
   const isModeDetail = useMatch("/modes/:code/*")
   const isPatchDetail = useMatch("/updates/:patchCode")
   const isWarehouseEntry = useMatch("/warehouse/:tab/:entryCode")
-  const active = isModes
-    ? "modes"
-    : isTerms
-      ? "terms"
-      : isUpdates
-        ? "updates"
-        : isWarehouse
-          ? warehouseKind(pathname.split("/")[2] ?? null)
-          : isSkins
-            ? "skins"
-            : "heroes"
+  const active = isMap
+    ? "map"
+    : isModes
+      ? "modes"
+      : isTerms
+        ? "terms"
+        : isUpdates
+          ? "updates"
+          : isWarehouse
+            ? warehouseKind(pathname.split("/")[2] ?? null)
+            : isSkins
+              ? "skins"
+              : "heroes"
   const pageTitle = t(...SECTION_NAMES[active])
   usePageHead(libraryPageMeta(pathname, locale))
 
@@ -52,7 +55,7 @@ export function WikiLibraryLayout() {
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
         clear={layout === "compact" && !isModeDetail}
         pageTitle={pageTitle}
-        pageTitleIsHeading={!isModeDetail && !isPatchDetail && !isWarehouseEntry}
+        pageTitleIsHeading={!isModeDetail && !isPatchDetail && !isWarehouseEntry && !isMap}
         section={active}
       />
       {layout === "compact" ? (

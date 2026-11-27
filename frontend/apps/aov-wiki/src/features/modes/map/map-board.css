@@ -1,0 +1,328 @@
+/*
+ * The battlefield board (map-board.tsx): a square ground drawn in SVG, with markers, area names and callouts placed
+ * over it in percent. Blue belongs to the reader's side at the bottom left, red to the other side; neutral places wear
+ * the Wiki gold. The ground sits inside a rim about half a marker wide. Markers keep a size in pixels, larger on wide
+ * screens, and fan out by --spread when they share a place.
+ */
+.wiki-map-board {
+  --marker: 22px;
+  --blue: var(--aov-wiki-info);
+  --red: var(--aov-wiki-danger);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--aov-wiki-bar);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 35%, transparent),
+    0 18px 40px -24px rgb(0 0 0 / 0.8);
+  touch-action: manipulation;
+  user-select: none;
+}
+@media (min-width: 900px) {
+  .wiki-map-board {
+    --marker: 28px;
+  }
+}
+
+/* The ground sits inside a dark rim so markers on the edge of the map are never cut. */
+.wiki-map-field {
+  position: absolute;
+  inset: calc(var(--marker) * 0.6);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 22%, transparent);
+}
+.wiki-map-ground {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.wiki-map-earth {
+  fill: color-mix(in srgb, var(--aov-wiki-success) 9%, var(--aov-wiki-panel-deep));
+}
+
+/* Areas: always a faint change of ground; outlined when the reader shows them, lit when one is chosen. */
+.wiki-map-area {
+  fill: color-mix(in srgb, var(--aov-wiki-bar) 30%, transparent);
+  stroke: none;
+  transition:
+    fill 160ms ease-out,
+    stroke 160ms ease-out;
+}
+.wiki-map-area[data-kind="river"] {
+  fill: color-mix(in srgb, var(--aov-wiki-info) 22%, transparent);
+}
+.wiki-map-area[data-kind="side"][data-side="BLUE"] {
+  fill: color-mix(in srgb, var(--blue) 6%, transparent);
+}
+.wiki-map-area[data-kind="side"][data-side="RED"] {
+  fill: color-mix(in srgb, var(--red) 6%, transparent);
+}
+.wiki-map-area[data-outlined] {
+  stroke: color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent);
+  stroke-width: 0.35;
+  stroke-dasharray: 1.2 0.9;
+}
+.wiki-map-area[data-lit] {
+  fill: color-mix(in srgb, var(--aov-wiki-gold) 22%, transparent);
+  stroke: var(--aov-wiki-gold-bright);
+  stroke-width: 0.5;
+  stroke-dasharray: none;
+}
+
+.wiki-map-lane-bed {
+  fill: none;
+  stroke: color-mix(in srgb, var(--aov-wiki-gold) 22%, var(--aov-wiki-panel-high));
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wiki-map-lane-line {
+  fill: none;
+  stroke: color-mix(in srgb, var(--aov-wiki-gold) 35%, transparent);
+  stroke-width: 0.35;
+  stroke-dasharray: 1.4 1.4;
+  stroke-linecap: round;
+}
+.wiki-map-lane[data-lit] .wiki-map-lane-bed {
+  stroke: color-mix(in srgb, var(--aov-wiki-gold) 55%, var(--aov-wiki-panel-high));
+}
+.wiki-map-lane[data-lit] .wiki-map-lane-line {
+  stroke: var(--aov-wiki-gold-bright);
+  stroke-width: 0.6;
+}
+.wiki-map-lane[data-faint] {
+  opacity: 0.45;
+}
+
+/* ---------- Markers ---------- */
+.wiki-map-marker,
+.wiki-map-lane-mark {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--aov-wiki-gold-bright);
+  cursor: pointer;
+  translate: calc(-50% + var(--spread, 0) * var(--marker) * 1.25) calc(-50% - var(--spread, 0) * var(--marker) * 1.25);
+  -webkit-tap-highlight-color: transparent;
+}
+/* A larger invisible target, so a fingertip finds a small marker. */
+.wiki-map-marker::after,
+.wiki-map-lane-mark::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}
+.wiki-map-marker-face {
+  --ring: var(--aov-wiki-gold);
+  display: grid;
+  width: var(--marker);
+  height: var(--marker);
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, var(--aov-wiki-panel-high), var(--aov-wiki-bar));
+  box-shadow:
+    0 0 0 1.5px var(--ring),
+    0 2px 6px rgb(0 0 0 / 0.6);
+  transition:
+    transform 160ms ease-out,
+    box-shadow 160ms ease-out;
+}
+.wiki-map-marker[data-side="BLUE"] .wiki-map-marker-face {
+  --ring: var(--blue);
+  color: color-mix(in srgb, var(--blue) 60%, var(--aov-wiki-text));
+}
+.wiki-map-marker[data-side="RED"] .wiki-map-marker-face {
+  --ring: var(--red);
+  color: color-mix(in srgb, var(--red) 60%, var(--aov-wiki-text));
+}
+.wiki-map-marker[data-category="STRUCTURE"] .wiki-map-marker-face {
+  border-radius: 0;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background:
+    linear-gradient(var(--ring), var(--ring)) padding-box,
+    var(--aov-wiki-bar);
+}
+.wiki-map-marker[data-category="STRUCTURE"] .wiki-map-marker-face > * {
+  color: var(--aov-wiki-bar);
+}
+.wiki-map-marker[data-category="MECHANIC"] .wiki-map-marker-face {
+  width: calc(var(--marker) * 0.82);
+  height: calc(var(--marker) * 0.82);
+  border-radius: 4px;
+}
+.wiki-map-marker[data-category="EPIC"] .wiki-map-marker-face {
+  width: calc(var(--marker) * 1.35);
+  height: calc(var(--marker) * 1.35);
+  box-shadow:
+    0 0 0 2px var(--aov-wiki-gold-bright),
+    0 0 14px color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent),
+    0 2px 6px rgb(0 0 0 / 0.6);
+}
+.wiki-map-marker[data-category="EPIC"] svg {
+  width: 70%;
+  height: 70%;
+}
+.wiki-map-marker svg {
+  width: 72%;
+  height: 72%;
+}
+.wiki-map-icon-picture {
+  border-radius: 50%;
+  object-fit: cover;
+}
+.wiki-map-marker-face > .wiki-map-icon-picture {
+  width: 100%;
+  height: 100%;
+}
+.wiki-map-marker-name {
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 4px;
+  padding: 0 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--aov-wiki-bar) 80%, transparent);
+  color: var(--aov-wiki-gold-bright);
+  white-space: nowrap;
+  translate: -50% 0;
+  pointer-events: none;
+}
+@media (max-width: 899.98px) {
+  .wiki-map-marker-name {
+    display: none;
+  }
+}
+.wiki-map-marker:hover .wiki-map-marker-face,
+.wiki-map-marker:focus-visible .wiki-map-marker-face {
+  transform: scale(1.12);
+}
+.wiki-map-marker[aria-pressed="true"] {
+  z-index: 3;
+}
+.wiki-map-marker[aria-pressed="true"] .wiki-map-marker-face {
+  transform: scale(1.22);
+  box-shadow:
+    0 0 0 2px var(--aov-wiki-gold-bright),
+    0 0 0 5px color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent),
+    0 0 18px color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
+}
+.wiki-map-marker[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border: 1.5px solid var(--aov-wiki-gold-bright);
+  border-radius: 50%;
+  animation: wiki-map-ping 1.6s ease-out infinite;
+  pointer-events: none;
+}
+.wiki-map-marker[data-dim] {
+  opacity: 0.3;
+}
+.wiki-map-marker:focus-visible,
+.wiki-map-lane-mark:focus-visible,
+.wiki-map-area-name:focus-visible {
+  outline: 2px solid var(--aov-wiki-gold-bright);
+  outline-offset: 4px;
+}
+
+@keyframes wiki-map-ping {
+  from {
+    opacity: 0.9;
+    scale: 0.7;
+  }
+  to {
+    opacity: 0;
+    scale: 1.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-map-marker[aria-pressed="true"]::before {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Lane roles: a gold diamond with the role's drawing. */
+.wiki-map-lane-mark {
+  width: calc(var(--marker) * 1.25);
+  height: calc(var(--marker) * 1.25);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: linear-gradient(160deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze));
+  color: var(--aov-wiki-bar);
+}
+.wiki-map-lane-mark[aria-pressed="true"] {
+  background: linear-gradient(160deg, var(--aov-wiki-text), var(--aov-wiki-gold-bright));
+  scale: 1.2;
+}
+
+/* ---------- Area names ---------- */
+.wiki-map-area-name {
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  position: absolute;
+  z-index: 3;
+  max-width: 28%;
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 40%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--aov-wiki-bar) 75%, transparent);
+  color: var(--aov-wiki-text-soft);
+  text-align: center;
+  cursor: pointer;
+  translate: -50% -50%;
+}
+.wiki-map-area-name[data-side="BLUE"] {
+  color: color-mix(in srgb, var(--blue) 70%, var(--aov-wiki-text));
+}
+.wiki-map-area-name[data-side="RED"] {
+  color: color-mix(in srgb, var(--red) 70%, var(--aov-wiki-text));
+}
+.wiki-map-area-name[aria-pressed="true"] {
+  border-color: var(--aov-wiki-gold-bright);
+  background: var(--aov-wiki-gold);
+  color: var(--aov-wiki-bar);
+}
+
+/* ---------- Timeline callouts ---------- */
+.wiki-map-callout-ring {
+  fill: color-mix(in srgb, var(--aov-wiki-gold) 18%, transparent);
+  stroke: var(--aov-wiki-gold-bright);
+  stroke-width: 0.45;
+}
+.wiki-map-callout {
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  position: absolute;
+  z-index: 4;
+  max-width: 42%;
+  padding: 3px 8px;
+  border-left: 2px solid var(--aov-wiki-gold-bright);
+  background: color-mix(in srgb, var(--aov-wiki-bar) 88%, transparent);
+  color: var(--aov-wiki-gold-bright);
+  translate: calc(var(--marker) * 0.9) -50%;
+  pointer-events: none;
+  animation: wiki-map-callout-in 220ms ease-out both;
+}
+.wiki-map-callout[data-flip] {
+  border-right: 2px solid var(--aov-wiki-gold-bright);
+  border-left: 0;
+  text-align: right;
+  translate: calc(-100% - var(--marker) * 0.9) -50%;
+}
+@keyframes wiki-map-callout-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-map-callout {
+    animation: none;
+  }
+}

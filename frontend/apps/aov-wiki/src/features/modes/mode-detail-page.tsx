@@ -117,6 +117,19 @@ export function ModeDetailPage() {
             <ModeFacts content={content} edition={guide.data?.content.edition} />
           </section>
 
+          {mode.data.hasMap && (
+            <Link className="wiki-mode-map-link" to={href(`/map/${encodeURIComponent(code)}`)}>
+              <WikiIcon name="map" size={28} />
+              <span>
+                <strong>{text("Bản đồ chiến trường", "Battlefield map")}</strong>
+                <small>
+                  {text("Trụ, quái, giờ xuất hiện và nhịp trận", "Towers, monsters, spawn times and tempo")}
+                </small>
+              </span>
+              <WikiIcon name="arrow" size={20} />
+            </Link>
+          )}
+
           {guide.data && <AutoChessOverview guide={guide.data} code={code} />}
           {guide.isError && (
             <div className="wiki-mode-notice" role="alert">

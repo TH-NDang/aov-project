@@ -83,7 +83,7 @@ export interface PatchLike {
 }
 
 export type WarehouseTab = (typeof WAREHOUSE_TABS)[number]
-export type SectionKey = "heroes" | "skins" | WarehouseTab | "updates" | "terms" | "modes"
+export type SectionKey = "heroes" | "skins" | WarehouseTab | "updates" | "terms" | "modes" | "map"
 
 const pick = (locale: string, vietnamese: string, english: string) => localeText(locale)(vietnamese, english)
 
@@ -119,6 +119,14 @@ export const DEFAULT_IMAGE: PageImage = {
 export const LOGO_IMAGE = "/images/mole-logo-v4.png"
 
 export const SECTIONS: Record<SectionKey, { path: string; name: [string, string]; description: [string, string] }> = {
+  map: {
+    path: "/map",
+    name: ["Bản đồ", "Map"],
+    description: [
+      "Bản đồ chiến trường Liên Quân Mobile: trụ, quái rừng, Caesar, Rồng, các đường và nhịp điệu trận đấu.",
+      "The Arena of Valor battlefield: towers, jungle monsters, Caesar, the dragon, the lanes and the tempo of a match.",
+    ],
+  },
   modes: {
     path: "/modes",
     name: ["Chế độ chơi", "Game modes"],
@@ -433,6 +441,39 @@ export function modeMeta(mode: ModeMetaSource, locale: string): PageMeta {
       ? { url: mode.art.url, width: mode.art.width, height: mode.art.height, alt: mode.name }
       : DEFAULT_IMAGE,
     breadcrumbs: crumbs(locale, sectionCrumb("modes", locale), { name: mode.name, path }),
+  }
+}
+
+export interface MapMetaSource {
+  code: string
+  modeName: string
+  name?: string | null
+}
+
+/** One mode's battlefield map; its tabs and chosen places share this address. */
+export function mapMeta(map: MapMetaSource, locale: string): PageMeta {
+  const section = pick(locale, ...SECTIONS.map.name)
+  const name = map.name || section
+  const path = `/map/${encodeURIComponent(map.code)}`
+  return {
+    title: titled(ofGame(`${name} ${map.modeName}`, section, locale)),
+    heading: `${name} — ${map.modeName}`,
+    description: clampDescription(
+      pick(
+        locale,
+        `${name} chế độ ${map.modeName}: vị trí trụ, quái rừng, Caesar, Rồng, thời điểm xuất hiện, các đường và nhịp điệu trận đấu Liên Quân Mobile.`,
+        `${name} of ${map.modeName}: where towers, jungle monsters, Caesar and the dragon stand, when they spawn, the lanes and the tempo of an Arena of Valor match.`,
+      ),
+    ),
+    path,
+    locale,
+    image: DEFAULT_IMAGE,
+    breadcrumbs: crumbs(
+      locale,
+      sectionCrumb("modes", locale),
+      { name: map.modeName, path: `/modes/${encodeURIComponent(map.code)}` },
+      { name: section, path },
+    ),
   }
 }
 

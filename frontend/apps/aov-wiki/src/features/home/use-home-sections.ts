@@ -125,7 +125,7 @@ export function useHomeSections(): HomeSection[] {
     key === "heroes" ? (heroes.data ? heroList.length : undefined) : counts.data?.[key as keyof typeof counts.data]
 
   return wikiSections
-    .filter((section) => section.key !== "modes" || modes.data)
+    .filter((section) => (section.key !== "modes" || modes.data?.modes) && (section.key !== "map" || modes.data?.map))
     .map((section) => ({
       key: section.key,
       icon: section.icon,
