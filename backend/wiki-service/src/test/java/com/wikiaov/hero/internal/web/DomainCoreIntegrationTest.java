@@ -867,11 +867,12 @@ class DomainCoreIntegrationTest {
 
     @Test
     void editorsSetTheOrderInWhichAPatchListsItsHeroes() throws Exception {
+        // The first hero seeds the import season, which only happens while no season exists yet.
+        var nakroth = create();
         UUID season = id(send(post(ROOT + "/admin/seasons"),
                 Map.of("code", "order-season", "displayName", "Order season"), 201));
         UUID listed = seasonPatch(season, "order-listed");
         UUID elsewhere = seasonPatch(season, "order-elsewhere");
-        var nakroth = create();
         UUID nakrothId = uuid(nakroth, "heroId");
         nakroth = complete(nakrothId, id(nakroth), nakroth);
         send(post(path(nakrothId, id(nakroth)) + "/publish"), Map.of("expectedVersion", nakroth.get("version")), 200);
@@ -921,10 +922,11 @@ class DomainCoreIntegrationTest {
     @Test
     @SuppressWarnings("unchecked")
     void editorsRewriteARecordedChangeSetInPlace() throws Exception {
+        // The hero seeds the import season, which only happens while no season exists yet.
+        var draft = create();
         UUID season = id(send(post(ROOT + "/admin/seasons"),
                 Map.of("code", "edit-season", "displayName", "Edit season"), 201));
         UUID listed = seasonPatch(season, "edit-listed");
-        var draft = create();
         UUID hero = uuid(draft, "heroId");
         draft = complete(hero, id(draft), draft);
         send(post(path(hero, id(draft)) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
