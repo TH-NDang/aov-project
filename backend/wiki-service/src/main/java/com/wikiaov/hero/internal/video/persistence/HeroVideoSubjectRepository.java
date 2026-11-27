@@ -25,16 +25,6 @@ public interface HeroVideoSubjectRepository extends Repository<HeroIdentity, UUI
 
     @Query("""
             select distinct new com.wikiaov.video.VideoSubjectName(
-                h.id, s.skillKey, h.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
-            from SkillIdentityRow s
-            join HeroIdentity h on h.id = s.heroId
-            left join HeroRevision r on r.heroId = s.heroId and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
-            left join SkillTranslationRow t on t.skillSetRevisionId = r.skillsRevisionId and t.skillKey = s.skillKey
-            """)
-    List<VideoSubjectName> skillNames();
-
-    @Query("""
-            select distinct new com.wikiaov.video.VideoSubjectName(
                 h.id, s.skinKey, h.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
             from SkinIdentityRow s
             join HeroIdentity h on h.id = s.heroId

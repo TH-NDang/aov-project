@@ -80,8 +80,7 @@ class VideoIntegrationTest {
         JsonNode combo = create(body("HERO", null, "GUIDE_ADVANCED", "Combo nâng cao", "https://youtu.be/bbbbbbbbbbb",
                 "PUBLISHED"), editor());
         assertThat(combo.get("displayOrder").asInt()).isEqualTo(1);
-        create(body("SKILL", "skill-1", "SKILL_DEMO", "Chiêu 1", "https://youtu.be/ccccccccccc", "PUBLISHED"),
-                editor());
+        create(body("HERO", null, "SKILL_DEMO", "Chiêu 1", "https://youtu.be/ccccccccccc", "PUBLISHED"), editor());
         create(body("SKIN", "lan-su", "SKIN_SHOWCASE", "Trang phục", "https://youtu.be/ddddddddddd", "PUBLISHED"),
                 editor());
         create(body("HERO", null, "LORE", "Chưa duyệt", "https://youtu.be/eeeeeeeeeee", "DRAFT"), editor());
@@ -94,9 +93,14 @@ class VideoIntegrationTest {
                 .param("subjectKey", "lan-su")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].purpose").value("SKIN_SHOWCASE"));
+    }
+
+    @Test
+    void skillsHaveNoVideosOfTheirOwn() throws Exception {
+        send(post(ADMIN), body("SKILL", "skill-1", "SKILL_DEMO", "Chiêu 1", "https://youtu.be/ccccccccccc", "DRAFT"),
+                editor()).andExpect(status().isBadRequest());
         mvc.perform(get(PUBLIC).param("subjectKind", "SKILL").param("subjectId", hero.toString())
-                .param("subjectKey", "other")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(0));
+                .param("subjectKey", "skill-1")).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -225,12 +229,11 @@ class VideoIntegrationTest {
         JsonNode subjects = json.readTree(mvc.perform(get(ADMIN + "/subjects").with(editor()))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("items");
 
-        assertThat(subjects.findValuesAsString("kind")).contains("HERO", "SKIN", "SKILL");
+        assertThat(subjects.findValuesAsString("kind")).contains("HERO", "SKIN").doesNotContain("SKILL");
         var heroRows = StreamSupport.stream(subjects.spliterator(), false)
                 .filter(row -> row.get("id").asText().equals(hero.toString())).toList();
-        assertThat(heroRows).hasSize(3);
         assertThat(heroRows.stream().map(row -> row.get("kind").asText()).toList())
-                .containsExactlyInAnyOrder("HERO", "SKIN", "SKILL");
+                .containsExactlyInAnyOrder("HERO", "SKIN");
     }
 
     private JsonNode create(String body, RequestPostProcessor actor) throws Exception {

@@ -8,8 +8,8 @@ import org.jspecify.annotations.Nullable;
  * One subject a video can be attached to, as listed for authoring screens.
  *
  * @param kind    subject kind
- * @param id      owning record: the hero for skills and skins, the entry itself otherwise
- * @param key     skill or skin key, null for other kinds
+ * @param id      owning record: the hero for skins, the entry itself otherwise
+ * @param key     skin key, null for other kinds
  * @param code    slug of the owning record
  * @param name    display name in the requested locale, falling back to another locale and then to the key or code
  * @param aliases other names and legacy codes, used to match imported data
