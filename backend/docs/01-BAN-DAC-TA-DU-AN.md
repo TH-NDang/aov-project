@@ -2676,6 +2676,9 @@ Một revision bản đồ là ảnh chụp toàn bộ màn tại một thời �
   trong danh mục tướng), vị trí điểm và tuyến đường phía người xem.
 - Khu vực (`areas`, tối đa 40): mã, tên, phe tùy chọn, mô tả ngắn và đa giác 3–16 điểm, ví dụ hang Rồng, sông, rừng
   xanh phía Caesar. Khu vực không có trong game; người biên tập đặt để nội dung khác tham chiếu.
+- Địa hình (`terrain`, tối đa 200 hình): loại `JUNGLE` (nền rừng), `RIVER` (sông), `BUSH` (bụi cỏ) hoặc `WALL`
+  (tường) và đa giác 3–64 điểm. Wiki vẽ lần lượt nền rừng, sông, bụi cỏ rồi tường nổi khối, bo tròn góc, và bỏ qua
+  địa hình khi bản đồ có ảnh nền. Địa hình chỉ để vẽ; nội dung khác tham chiếu khu vực chứ không tham chiếu địa hình.
 - Nhịp điệu (`tempo`, tối đa 20 mốc): giây (tăng dần, không trùng), nhãn giai đoạn bắt đầu tại mốc (“Giữa trận”),
   tối đa 8 điểm chú thích trên bản đồ (có thể trỏ tới vật thể và một vị trí của nó qua `spotKey`) và tối đa 10 đoạn
   chữ theo thứ tự của game.
@@ -2690,18 +2693,19 @@ Tọa độ là phần trăm của bản đồ vuông nhìn từ trên: `x` tăn
 dưới trái. Bản đồ đối xứng tâm nên điểm phía đối thủ là `(100 − x, 100 − y)`; dữ liệu vẫn ghi đủ cả hai phía.
 Thời gian tối đa 7200 giây. Lưu nháp chấp nhận thiếu dữ liệu nhưng không chấp nhận mã trùng, tham chiếu sai hay tọa
 độ ngoài 0–100. Xuất bản cần tên, ít nhất một vật thể, vị trí cho mọi vật thể không thuộc họ khác và đủ ba điểm cho
-đa giác của mỗi khu vực.
+đa giác của mỗi khu vực và mỗi hình địa hình.
 
 Dữ liệu ban đầu (V081) chép từ ảnh chụp và video màn Bách khoa ngày 27/11/2026 của chế độ `5v5`; vị trí đo trên bản
-đồ nhỏ và làm tròn, loài quái nhỏ ở từng bãi là phỏng đoán cần người biên tập rà lại.
+đồ nhỏ và làm tròn, loài quái nhỏ ở từng bãi là phỏng đoán cần người biên tập rà lại. Tường, sông và nền rừng dò từ
+khung hình trung vị của bản đồ nhỏ trong video rồi làm đối xứng tâm (38 khối tường, 2 nhánh sông, 2 vùng rừng).
 
-Admin sửa bản đồ ở trang riêng của chế độ (Chế độ → “Mở bản đồ chiến trường”), theo các tab Chung, Đối tượng, Khu
-vực, Đường, Nhịp điệu và JSON. Vị trí, góc khu vực và tuyến đường đặt bằng cách chạm lên bản đồ nhỏ và kéo để dời; nút
-đối xứng thêm điểm ở phe kia tại `(100 − x, 100 − y)` và đổi phe, `key`, nhãn theo cặp từ xanh↔đỏ, Caesar↔Rồng
-(`xanh-caesar` thành `do-rong`); khu vực cũng tạo được bản đối xứng. Ảnh tải lên thay ký hiệu vẽ; bỏ ảnh thì Wiki dùng
-lại ký hiệu. Đổi mã một vật thể thì các dạng trong họ và nhãn nhịp điệu trỏ tới nó đổi theo; đổi `key` một vị trí thì
-nhãn nhịp điệu trỏ tới vị trí đó đổi theo. Khi lưu, mốc nhịp điệu được xếp theo thời gian. Chế độ chưa có bản đồ thì
-bắt đầu từ nháp trống hoặc nhập tệp JSON (ví dụ bản tải xuống từ tab JSON của chế độ khác).
+Admin sửa bản đồ ở trang riêng của chế độ (Chế độ → “Mở bản đồ chiến trường”), theo các tab Chung, Đối tượng, Khu vực,
+Địa hình, Đường, Nhịp điệu và JSON. Vị trí, góc khu vực và tuyến đường đặt bằng cách chạm lên bản đồ nhỏ và kéo để dời;
+nút đối xứng thêm điểm ở phe kia tại `(100 − x, 100 − y)` và đổi phe, `key`, nhãn theo cặp từ xanh↔đỏ, Caesar↔Rồng
+(`xanh-caesar` thành `do-rong`); khu vực và hình địa hình cũng tạo được bản đối xứng. Ảnh tải lên thay ký hiệu vẽ; bỏ
+ảnh thì Wiki dùng lại ký hiệu. Đổi mã một vật thể thì các dạng trong họ và nhãn nhịp điệu trỏ tới nó đổi theo; đổi `key`
+một vị trí thì nhãn nhịp điệu trỏ tới vị trí đó đổi theo. Khi lưu, mốc nhịp điệu được xếp theo thời gian. Chế độ chưa có
+bản đồ thì bắt đầu từ nháp trống hoặc nhập tệp JSON (ví dụ bản tải xuống từ tab JSON của chế độ khác).
 
 ## Build đề cử theo tướng (ADR-026)
 

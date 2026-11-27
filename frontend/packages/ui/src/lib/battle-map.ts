@@ -73,6 +73,12 @@ export interface MapLane {
   positions: MapPoint[]
   path: MapPoint[]
 }
+/** A shape of the drawn ground: the jungle floor, the river, a bush or a wall. */
+export type TerrainKind = "JUNGLE" | "RIVER" | "BUSH" | "WALL"
+export interface MapTerrain {
+  kind: TerrainKind
+  outline: MapPoint[]
+}
 export interface MapCallout extends MapPoint {
   label: string
   objectCode?: string | null
@@ -94,6 +100,8 @@ export interface MapContent {
   lanes: MapLane[]
   tempo: TempoMoment[]
   sources: { label: string; url?: string | null; observedOn?: string | null }[]
+  /** Only draws the ground; references name areas, never terrain. */
+  terrain: MapTerrain[]
 }
 
 export const CATEGORIES: readonly Category[] = ["STRUCTURE", "MINION", "MONSTER", "EPIC", "MECHANIC"]
@@ -111,6 +119,13 @@ export const SIDE_NAMES: Record<Side, readonly [string, string]> = {
   BLUE: ["Phe xanh", "Blue side"],
   RED: ["Phe đỏ", "Red side"],
 }
+
+/** Terrain kinds from the bottom layer up: walls are drawn last so they stand over the floor and the river. */
+export const TERRAIN_KINDS: readonly TerrainKind[] = ["JUNGLE", "RIVER", "BUSH", "WALL"]
+
+/** The terrain of one kind, in the order of the snapshot; shapes with fewer than three points are left out. */
+export const terrainOf = (content: Pick<MapContent, "terrain">, kind: TerrainKind) =>
+  (content.terrain ?? []).filter((shape) => shape.kind === kind && shape.outline.length >= 3)
 
 /** The tabs of the page, as the address names them. */
 export type MapTab = "map" | "lanes" | "tempo"
@@ -230,6 +245,35 @@ export function centre(outline: readonly MapPoint[]): MapPoint {
 /** The SVG path of a polyline or a closed outline. */
 export const pathOf = (points: readonly MapPoint[], closed = false) =>
   points.length ? `M${points.map((point) => `${point.x} ${point.y}`).join("L")}${closed ? "Z" : ""}` : ""
+
+const at = (point: MapPoint) => `${Math.round(point.x * 100) / 100} ${Math.round(point.y * 100) / 100}`
+
+/** The point `length` along the way from `from` to `to`, at most half way. */
+function toward(from: MapPoint, to: MapPoint, length: number): MapPoint {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const distance = Math.hypot(dx, dy)
+  if (!distance) return from
+  const share = Math.min(length, distance / 2) / distance
+  return { x: from.x + dx * share, y: from.y + dy * share }
+}
+
+/**
+ * The SVG path of a closed outline with every corner rounded by up to `radius`, so a traced wall reads as rock rather
+ * than as a polygon. Short sides round fully, long straight sides stay straight; the curve never leaves the outline's
+ * corners.
+ */
+export function roundedPath(outline: readonly MapPoint[], radius = 2) {
+  if (outline.length < 3) return pathOf(outline, true)
+  const corners = outline.map((point, index) => ({
+    point,
+    enter: toward(point, outline[(index + outline.length - 1) % outline.length]!, radius),
+    leave: toward(point, outline[(index + 1) % outline.length]!, radius),
+  }))
+  const first = corners[0]!
+  const rest = [...corners.slice(1), first]
+  return `M${at(first.leave)}${rest.map((corner) => `L${at(corner.enter)}Q${at(corner.point)} ${at(corner.leave)}`).join("")}Z`
+}
 
 /** The last mark of the timeline reached at `seconds`, or null before the first one. */
 export function momentAt(tempo: readonly TempoMoment[], seconds: number) {

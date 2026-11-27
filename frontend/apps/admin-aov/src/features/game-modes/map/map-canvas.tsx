@@ -1,5 +1,13 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
-import type { MapContent, MapPoint, Side } from "@aov/ui/lib/battle-map"
+import {
+  roundedPath,
+  TERRAIN_KINDS,
+  terrainOf,
+  type MapContent,
+  type MapPoint,
+  type Side,
+  type TerrainKind,
+} from "@aov/ui/lib/battle-map"
 import { percent } from "./map-edit-model"
 
 export interface CanvasPoint extends MapPoint {
@@ -16,12 +24,34 @@ const SIDE_COLOR: Record<Side | "NONE", string> = {
   NONE: "var(--aov-game-gold)",
 }
 
+/** How the editor draws each kind of terrain, a quieter version of the Wiki's ground. */
+export const TERRAIN_STYLE: Record<TerrainKind, { fill: string; opacity: number; round: number }> = {
+  JUNGLE: { fill: "var(--aov-success)", opacity: 0.12, round: 2.5 },
+  RIVER: { fill: "var(--aov-info)", opacity: 0.3, round: 3 },
+  BUSH: { fill: "var(--aov-success)", opacity: 0.35, round: 1.5 },
+  WALL: { fill: "var(--foreground)", opacity: 0.32, round: 1.2 },
+}
+
+/** Every traced shape of the ground, from the floor up, as faint fills. */
+export function TerrainShapes({ content }: { content: MapContent }) {
+  return TERRAIN_KINDS.flatMap((kind) =>
+    terrainOf(content, kind).map((shape, index) => (
+      <path
+        key={`${kind}-${index}`}
+        d={roundedPath(shape.outline, TERRAIN_STYLE[kind].round)}
+        fill={TERRAIN_STYLE[kind].fill}
+        fillOpacity={TERRAIN_STYLE[kind].opacity}
+      />
+    )),
+  )
+}
+
 const pathOf = (points: readonly MapPoint[]) => points.map((point) => `${point.x},${point.y}`).join(" ")
 
 /**
  * The map as a square where the places of one entry are edited: tap the ground to add a place, drag a handle to move
- * it, or select it and nudge it with the arrow keys. Every other object, area and lane is drawn faintly underneath so a
- * place can be set against its neighbours.
+ * it, or select it and nudge it with the arrow keys. The terrain and every other object, area and lane are drawn faintly
+ * underneath so a place can be set against its neighbours.
  */
 export function MapCanvas({
   content,
@@ -102,6 +132,7 @@ export function MapCanvas({
             </radialGradient>
           </defs>
           {background && <image href={background} width="100" height="100" preserveAspectRatio="xMidYMid slice" />}
+          {!background && <TerrainShapes content={content} />}
           <rect width="100" height="100" fill="url(#admin-map-blue)" />
           <rect width="100" height="100" fill="url(#admin-map-red)" />
           {content.areas.map((area) => (

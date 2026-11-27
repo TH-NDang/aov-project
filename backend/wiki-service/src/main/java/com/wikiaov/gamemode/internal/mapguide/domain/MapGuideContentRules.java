@@ -10,6 +10,7 @@ import com.wikiaov.gamemode.internal.domain.MapGuideContent.Point;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Section;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Spot;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.TempoMoment;
+import com.wikiaov.gamemode.internal.domain.MapGuideContent.Terrain;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Timing;
 import com.wikiaov.platform.ApiFieldError;
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ public final class MapGuideContentRules {
 
     public static final Set<String> SIDES = Set.of("BLUE", "RED");
 
+    /** Shapes of the drawn ground, from the bottom layer up: the jungle floor, the river, bushes and walls. */
+    public static final Set<String> TERRAIN_KINDS = Set.of("JUNGLE", "RIVER", "BUSH", "WALL");
+
     public static final int MAX_OBJECTS = 120;
 
     public static final int MAX_POSITIONS = 12;
@@ -40,6 +44,10 @@ public final class MapGuideContentRules {
     public static final int MAX_AREAS = 40;
 
     public static final int MAX_OUTLINE = 16;
+
+    public static final int MAX_TERRAIN = 200;
+
+    public static final int MAX_TERRAIN_OUTLINE = 64;
 
     /** Spawn times and the timeline stop at two hours, well past any real match. */
     public static final int MAX_SECONDS = 7200;
@@ -58,6 +66,7 @@ public final class MapGuideContentRules {
         areas(checks, content.areas(), taken);
         lanes(checks, content.lanes(), taken);
         tempo(checks, content.tempo(), spots);
+        terrain(checks, content.terrain());
         GameModeContentRules.sources(checks, "sources", content.sources());
 
         return checks.errors();
@@ -82,6 +91,12 @@ public final class MapGuideContentRules {
             var area = content.areas().get(i);
             if (area != null && area.outline().size() < 3) {
                 missing.add("areas[" + i + "].outline");
+            }
+        }
+        for (int i = 0; i < content.terrain().size(); i++) {
+            var shape = content.terrain().get(i);
+            if (shape != null && shape.outline().size() < 3) {
+                missing.add("terrain[" + i + "].outline");
             }
         }
         return missing;
@@ -309,6 +324,20 @@ public final class MapGuideContentRules {
             for (int s = 0; s < moment.steps().size(); s++) {
                 checks.text(at + ".steps[" + s + "]", moment.steps().get(s), 1000, true);
             }
+        }
+    }
+
+    private static void terrain(ContentChecks checks, List<Terrain> terrain) {
+        checks.size("terrain", terrain, MAX_TERRAIN);
+        for (int i = 0; i < terrain.size(); i++) {
+            var shape = terrain.get(i);
+            String at = "terrain[" + i + "]";
+            if (shape == null) {
+                checks.fail(at, "REQUIRED", "A terrain entry is required.");
+                continue;
+            }
+            checks.oneOf(at + ".kind", shape.kind(), TERRAIN_KINDS, true);
+            points(checks, at + ".outline", shape.outline(), MAX_TERRAIN_OUTLINE);
         }
     }
 

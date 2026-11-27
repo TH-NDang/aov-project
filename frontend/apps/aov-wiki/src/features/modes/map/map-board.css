@@ -42,6 +42,60 @@
 .wiki-map-earth {
   fill: color-mix(in srgb, var(--aov-wiki-success) 9%, var(--aov-wiki-panel-deep));
 }
+/* With traced terrain the open ground is the lanes' worn stone, warmer and lighter than the jungle. */
+.wiki-map-ground[data-terrain] .wiki-map-earth {
+  fill: color-mix(in srgb, var(--aov-wiki-gold) 15%, var(--aov-wiki-panel));
+}
+
+/* ---------- Terrain: floor, water, bushes, then walls raised off the floor ---------- */
+.wiki-map-jungle {
+  fill: color-mix(in srgb, var(--aov-wiki-success) 15%, var(--aov-wiki-panel-deep));
+  stroke: color-mix(in srgb, var(--aov-wiki-bar) 55%, transparent);
+  stroke-width: 0.5;
+}
+.wiki-map-jungle-grain {
+  fill: url(#wiki-map-grass);
+  pointer-events: none;
+}
+.wiki-map-grass-blade {
+  fill: none;
+  stroke: color-mix(in srgb, var(--aov-wiki-success) 26%, transparent);
+  stroke-width: 0.18;
+  stroke-linecap: round;
+}
+.wiki-map-river {
+  fill: color-mix(
+    in srgb,
+    var(--aov-wiki-info) 34%,
+    color-mix(in srgb, var(--aov-wiki-success) 22%, var(--aov-wiki-panel-deep))
+  );
+  stroke: color-mix(in srgb, var(--aov-wiki-info) 55%, transparent);
+  stroke-width: 0.35;
+}
+.wiki-map-bush {
+  fill: color-mix(in srgb, var(--aov-wiki-success) 32%, var(--aov-wiki-panel-deep));
+  stroke: color-mix(in srgb, var(--aov-wiki-success) 45%, transparent);
+  stroke-width: 0.2;
+  stroke-dasharray: 0.5 0.35;
+}
+.wiki-map-wall-shadow {
+  fill: rgb(0 0 0 / 0.6);
+  filter: url(#wiki-map-soften);
+}
+.wiki-map-wall-rim {
+  fill: color-mix(in srgb, var(--aov-wiki-gold) 40%, var(--aov-wiki-text-muted));
+}
+.wiki-map-wall {
+  fill: url(#wiki-map-rock);
+  stroke: color-mix(in srgb, var(--aov-wiki-bar) 50%, transparent);
+  stroke-width: 0.12;
+}
+.wiki-map-rock-light {
+  stop-color: color-mix(in srgb, var(--aov-wiki-text-muted) 62%, var(--aov-wiki-panel-high));
+}
+.wiki-map-rock-dark {
+  stop-color: color-mix(in srgb, var(--aov-wiki-text-muted) 26%, var(--aov-wiki-panel-high));
+}
 
 /* Areas: always a faint change of ground; outlined when the reader shows them, lit when one is chosen. */
 .wiki-map-area {

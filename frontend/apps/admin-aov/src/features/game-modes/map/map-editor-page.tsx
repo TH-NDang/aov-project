@@ -18,11 +18,13 @@ import { MapAreasSection } from "./map-areas-section"
 import { MapLanesSection } from "./map-lanes-section"
 import { MapObjectsSection } from "./map-objects-section"
 import { MapTempoSection } from "./map-tempo-section"
+import { MapTerrainSection } from "./map-terrain-section"
 
 const TABS = [
   ["general", "Chung"],
   ["objects", "Đối tượng"],
   ["areas", "Khu vực"],
+  ["terrain", "Địa hình"],
   ["lanes", "Đường"],
   ["tempo", "Nhịp điệu"],
   ["json", "JSON"],
@@ -32,6 +34,7 @@ type Tab = (typeof TABS)[number][0]
 const TAB_COUNT: Partial<Record<Tab, (content: MapContent) => number>> = {
   objects: (content) => content.objects.length,
   areas: (content) => content.areas.length,
+  terrain: (content) => content.terrain.length,
   lanes: (content) => content.lanes.length,
   tempo: (content) => content.tempo.length,
 }
@@ -205,6 +208,7 @@ export function MapEditorPage() {
         )}
         {tab === "objects" && <MapObjectsSection {...sectionProps} />}
         {tab === "areas" && <MapAreasSection {...sectionProps} />}
+        {tab === "terrain" && <MapTerrainSection {...sectionProps} />}
         {tab === "lanes" && <MapLanesSection {...sectionProps} />}
         {tab === "tempo" && <MapTempoSection {...sectionProps} />}
         {tab === "json" && <JsonEditor content={content} code={data.modeCode} onApply={setContent} />}

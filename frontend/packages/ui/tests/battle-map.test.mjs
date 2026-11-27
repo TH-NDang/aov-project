@@ -15,7 +15,9 @@ import {
   railTime,
   readMapTab,
   resolveRef,
+  roundedPath,
   spawnClock,
+  terrainOf,
   timingText,
 } from "../src/lib/battle-map.ts"
 
@@ -147,4 +149,36 @@ test("the rail gives the first minutes more room and maps back to the same time"
   assert.equal(railAt(300, 1200), 0.5)
   assert.equal(railAt(5000, 1200), 1)
   assert.equal(railTime(0.5, 1200), 300)
+})
+
+test("terrain is drawn by kind and skips shapes that are not yet an outline", () => {
+  const wall = {
+    kind: "WALL",
+    outline: [
+      { x: 1, y: 1 },
+      { x: 3, y: 1 },
+      { x: 2, y: 3 },
+    ],
+  }
+  const started = { kind: "WALL", outline: [{ x: 5, y: 5 }] }
+  const river = { kind: "RIVER", outline: wall.outline }
+  assert.deepEqual(terrainOf({ terrain: [wall, started, river] }, "WALL"), [wall])
+  assert.deepEqual(terrainOf({}, "WALL"), [])
+})
+
+test("a rounded outline cuts each corner by the radius or half of a short side", () => {
+  const square = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 10, y: 10 },
+    { x: 0, y: 10 },
+  ]
+  assert.equal(roundedPath(square, 2), "M2 0L8 0Q10 0 10 2L10 8Q10 10 8 10L2 10Q0 10 0 8L0 2Q0 0 2 0Z")
+  const small = [
+    { x: 0, y: 0 },
+    { x: 2, y: 0 },
+    { x: 1, y: 2 },
+  ]
+  assert.match(roundedPath(small, 5), /^M1 0L1 0Q2 0 1\.5 1/)
+  assert.equal(roundedPath([{ x: 1, y: 1 }], 2), "M1 1Z")
 })

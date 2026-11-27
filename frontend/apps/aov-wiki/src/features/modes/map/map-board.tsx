@@ -4,12 +4,15 @@ import { LaneMark, MapGlyph } from "@aov/ui/components/battle-map-glyph"
 import {
   centre,
   pathOf,
+  roundedPath,
+  terrainOf,
   type MapArea,
   type MapCallout,
   type MapContent,
   type MapLane,
   type MapObject,
   type Marker,
+  type TerrainKind,
 } from "@aov/ui/lib/battle-map"
 import "./map-board.css"
 
@@ -28,6 +31,50 @@ export function ObjectIcon({
     <img className="wiki-map-icon-picture" src={icon.url} alt="" width={size} height={size} loading="lazy" />
   ) : (
     <MapGlyph glyph={object.glyph} size={size} />
+  )
+}
+
+/** How far each kind of terrain rounds its corners, in percent of the map: rock and water are soft, the floor less. */
+const ROUNDING: Record<TerrainKind, number> = { JUNGLE: 2.5, RIVER: 3, BUSH: 1.5, WALL: 1.2 }
+
+/**
+ * The traced ground of the map: the jungle floor with a faint grass grain, the river, bushes, and walls raised off the
+ * floor by a cast shadow and a lit top edge.
+ */
+function Terrain({ content }: { content: MapContent }) {
+  const paths = (kind: TerrainKind) =>
+    terrainOf(content, kind).map((shape) => roundedPath(shape.outline, ROUNDING[kind]))
+  const walls = paths("WALL")
+  return (
+    <g className="wiki-map-terrain">
+      {paths("JUNGLE").map((d, index) => (
+        <g key={index}>
+          <path className="wiki-map-jungle" d={d} />
+          <path className="wiki-map-jungle-grain" d={d} />
+        </g>
+      ))}
+      {paths("RIVER").map((d, index) => (
+        <path key={index} className="wiki-map-river" d={d} />
+      ))}
+      {paths("BUSH").map((d, index) => (
+        <path key={index} className="wiki-map-bush" d={d} />
+      ))}
+      <g className="wiki-map-wall-shadow" transform="translate(0.45 0.75)">
+        {walls.map((d, index) => (
+          <path key={index} d={d} />
+        ))}
+      </g>
+      <g className="wiki-map-wall-rim" transform="translate(-0.2 -0.3)">
+        {walls.map((d, index) => (
+          <path key={index} d={d} />
+        ))}
+      </g>
+      <g className="wiki-map-wall">
+        {walls.map((d, index) => (
+          <path key={index} d={d} />
+        ))}
+      </g>
+    </g>
   )
 }
 
@@ -69,11 +116,20 @@ export function MapBoard({
 }) {
   const background = content.backgroundAssetId ? images[content.backgroundAssetId] : undefined
   const lanesLit = laneMarks || !!highlightLane
+  // Traced terrain draws the river and the jungle itself, so areas only show when asked for or chosen.
+  const terrain = !background && (content.terrain ?? []).length > 0
+  const areas = terrain ? content.areas.filter((area) => showAreas || highlightArea?.code === area.code) : content.areas
 
   return (
     <div className="wiki-map-board" data-art={background ? "" : undefined}>
       <div className="wiki-map-field">
-        <svg className="wiki-map-ground" viewBox="0 0 100 100" aria-hidden="true" preserveAspectRatio="none">
+        <svg
+          className="wiki-map-ground"
+          data-terrain={terrain || undefined}
+          viewBox="0 0 100 100"
+          aria-hidden="true"
+          preserveAspectRatio="none"
+        >
           <defs>
             <radialGradient id="wiki-map-blue" cx="0" cy="1" r="0.6">
               <stop offset="0" stopColor="var(--aov-wiki-info)" stopOpacity="0.32" />
@@ -83,15 +139,29 @@ export function MapBoard({
               <stop offset="0" stopColor="var(--aov-wiki-danger)" stopOpacity="0.3" />
               <stop offset="1" stopColor="var(--aov-wiki-danger)" stopOpacity="0" />
             </radialGradient>
+            <linearGradient id="wiki-map-rock" x1="0" y1="0" x2="0.4" y2="1">
+              <stop offset="0" className="wiki-map-rock-light" />
+              <stop offset="1" className="wiki-map-rock-dark" />
+            </linearGradient>
+            <pattern id="wiki-map-grass" width="7" height="7" patternUnits="userSpaceOnUse">
+              <path
+                className="wiki-map-grass-blade"
+                d="M0.8 1.6l0.25-0.6M1.3 1.7l-0.15-0.5M4.6 0.9l0.3-0.55M5.9 3.4l-0.2-0.6M2.7 4.2l0.3-0.6M3.1 4.3l-0.1-0.5M6.2 6.1l0.25-0.55M0.9 5.8l-0.2-0.5M4.1 6.6l0.2-0.5"
+              />
+            </pattern>
+            <filter id="wiki-map-soften" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="0.35" />
+            </filter>
           </defs>
           {background ? (
             <image href={background.url} x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice" />
           ) : (
             <rect className="wiki-map-earth" width="100" height="100" />
           )}
+          {terrain && <Terrain content={content} />}
           <rect width="100" height="100" fill="url(#wiki-map-blue)" />
           <rect width="100" height="100" fill="url(#wiki-map-red)" />
-          {content.areas.map((area) => (
+          {areas.map((area) => (
             <path
               key={area.code}
               className="wiki-map-area"

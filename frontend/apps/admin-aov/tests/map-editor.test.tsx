@@ -21,6 +21,16 @@ const content: MapContent = {
     { seconds: 240, phase: "Giữa trận", steps: ["Trụ hết giáp"], callouts: [] },
     { seconds: 0, phase: "Đầu trận", steps: ["Vào trận"], callouts: [] },
   ],
+  terrain: [
+    {
+      kind: "WALL",
+      outline: [
+        { x: 20, y: 70 },
+        { x: 26, y: 70 },
+        { x: 23, y: 78 },
+      ],
+    },
+  ],
 }
 const revision = {
   id: "rev-1",
@@ -54,7 +64,7 @@ withDom({
 })
 before(signIn)
 
-test("a place mirrored to the other side is saved with its own key, and the timeline in time order", async () => {
+async function openEditor() {
   const { MemoryRouter, Route, Routes } = await import("react-router")
   const { MapEditorPage } = await import("../src/features/game-modes/map/map-editor-page")
   await render(
@@ -64,6 +74,12 @@ test("a place mirrored to the other side is saved with its own key, and the time
       </Routes>
     </MemoryRouter>,
   )
+}
+
+const saves = () => backend.requests.filter((request) => request.method === "PUT")
+
+test("a place mirrored to the other side is saved with its own key, and the timeline in time order", async () => {
+  await openEditor()
   await click(await waitFor(() => button("Thêm điểm đối xứng với vị trí 1")))
   await click(button("Lưu nháp"))
 
@@ -82,4 +98,26 @@ test("a place mirrored to the other side is saved with its own key, and the time
     [0, 240],
   )
   await waitFor(() => document.body.textContent?.includes("Đã lưu nháp."))
+})
+
+test("a wall mirrored on the terrain tab is saved right after the original", async () => {
+  const before = saves().length
+  await openEditor()
+  await click(await waitFor(() => button("Địa hình")))
+  await click(await waitFor(() => button("Tạo hình đối xứng ở phe kia")))
+  await click(button("Lưu nháp"))
+
+  const saved = await waitFor(() => saves()[before])
+  const body = saved.body as { content: MapContent }
+  assert.deepEqual(body.content.terrain, [
+    content.terrain[0],
+    {
+      kind: "WALL",
+      outline: [
+        { x: 80, y: 30 },
+        { x: 74, y: 30 },
+        { x: 77, y: 22 },
+      ],
+    },
+  ])
 })

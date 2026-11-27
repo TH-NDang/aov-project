@@ -11,7 +11,9 @@ import {
   type MapObject,
   type MapPoint,
   type MapSpot,
+  type MapTerrain,
   type Side,
+  type TerrainKind,
 } from "@aov/ui/lib/battle-map"
 
 export const CATEGORY_LABEL = Object.fromEntries(
@@ -49,6 +51,13 @@ export const LANE_GLYPH_LABEL: Record<LaneGlyph, string> = {
   SUPPORT: "Trợ thủ",
 }
 export const LANE_GLYPHS = Object.keys(LANE_GLYPH_LABEL) as LaneGlyph[]
+
+export const TERRAIN_LABEL: Record<TerrainKind, string> = {
+  WALL: "Tường",
+  RIVER: "Sông",
+  JUNGLE: "Nền rừng",
+  BUSH: "Bụi cỏ",
+}
 
 /** The symbol a new object of a kind starts with. */
 const CATEGORY_GLYPH: Record<Category, Glyph> = {
@@ -180,7 +189,21 @@ export const emptyMap = (): MapContent => ({
   lanes: [],
   tempo: [],
   sources: [],
+  terrain: [],
 })
+
+export const emptyTerrain = (kind: TerrainKind): MapTerrain => ({ kind, outline: [] })
+
+/** The same shape on the other side of the map. */
+export const mirrorTerrain = (shape: MapTerrain): MapTerrain => ({ ...shape, outline: shape.outline.map(mirrorPoint) })
+
+/** The name of a shape in lists: its kind and its number among the shapes of that kind, from 1. */
+export function terrainName(content: MapContent, index: number) {
+  const shape = content.terrain[index]
+  if (!shape) return ""
+  const number = content.terrain.slice(0, index + 1).filter((other) => other.kind === shape.kind).length
+  return `${TERRAIN_LABEL[shape.kind]} ${number}`
+}
 
 /** The area on the other side: its outline turned half a circle, its code and name swapped to that side. */
 export function mirrorArea(area: MapArea, taken: ReadonlySet<string>): MapArea {
@@ -295,6 +318,8 @@ export function missingMapLabel(path: string, content: MapContent) {
   if (object) return `${content.objects[Number(object[1])]?.name || "Đối tượng"}: chưa đặt vị trí`
   const area = /^areas\[(\d+)]\.outline$/.exec(path)
   if (area) return `${content.areas[Number(area[1])]?.name || "Khu vực"}: khung cần ít nhất 3 điểm`
+  const shape = /^terrain\[(\d+)]\.outline$/.exec(path)
+  if (shape) return `${terrainName(content, Number(shape[1])) || "Địa hình"}: cần ít nhất 3 điểm`
   return path
 }
 
@@ -317,5 +342,6 @@ export function readMapJson(text: string): MapContent {
     lanes: asList(map.lanes, "lanes"),
     tempo: asList(map.tempo, "tempo"),
     sources: asList(map.sources, "sources"),
+    terrain: asList(map.terrain, "terrain"),
   }
 }

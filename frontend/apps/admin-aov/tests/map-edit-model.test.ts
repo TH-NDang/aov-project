@@ -10,11 +10,14 @@ import {
   mirrorKey,
   mirrorName,
   mirrorSpotAt,
+  mirrorTerrain,
+  missingMapLabel,
   placeOptions,
   readClock,
   readMapJson,
   renameObject,
   renameSpot,
+  terrainName,
 } from "../src/features/game-modes/map/map-edit-model"
 
 const tower = (): MapObject => ({
@@ -122,6 +125,32 @@ test("a map read from JSON keeps its lists and fills the missing ones", () => {
   const read = readMapJson('{"name":"5v5","objects":[{"code":"rong"}]}')
   assert.equal(read.objects.length, 1)
   assert.deepEqual(read.tempo, [])
+  assert.deepEqual(read.terrain, [])
   assert.throws(() => readMapJson("[]"), /không phải một bản đồ/)
   assert.throws(() => readMapJson('{"objects":{}}'), /"objects" phải là danh sách/)
+})
+
+test("a terrain shape mirrors across the centre and is named by its kind and number", () => {
+  const wall = {
+    kind: "WALL" as const,
+    outline: [
+      { x: 10, y: 20 },
+      { x: 14, y: 20 },
+      { x: 12, y: 26 },
+    ],
+  }
+  assert.deepEqual(mirrorTerrain(wall), {
+    kind: "WALL",
+    outline: [
+      { x: 90, y: 80 },
+      { x: 86, y: 80 },
+      { x: 88, y: 74 },
+    ],
+  })
+  const content: MapContent = {
+    ...emptyMap(),
+    terrain: [{ kind: "RIVER", outline: [] }, wall, { kind: "WALL", outline: [{ x: 1, y: 1 }] }],
+  }
+  assert.equal(terrainName(content, 2), "Tường 2")
+  assert.equal(missingMapLabel("terrain[2].outline", content), "Tường 2: cần ít nhất 3 điểm")
 })

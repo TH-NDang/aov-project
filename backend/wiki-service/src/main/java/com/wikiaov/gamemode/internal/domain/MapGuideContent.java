@@ -17,6 +17,8 @@ import java.util.UUID;
  * <p>Body texts follow the rule section convention: lines starting with "- " are bullet points.
  *
  * @param backgroundAssetId optional map art shown under the markers instead of the drawn map
+ * @param terrain           shapes of the drawn ground under the markers, such as walls and the river; not shown over
+ *                          map art
  */
 public record MapGuideContent(
         String name,
@@ -27,7 +29,8 @@ public record MapGuideContent(
         List<Area> areas,
         List<Lane> lanes,
         List<TempoMoment> tempo,
-        List<Source> sources
+        List<Source> sources,
+        List<Terrain> terrain
 ) {
 
     public MapGuideContent {
@@ -36,10 +39,11 @@ public record MapGuideContent(
         lanes = copy(lanes);
         tempo = copy(tempo);
         sources = copy(sources);
+        terrain = copy(terrain);
     }
 
     public static MapGuideContent empty() {
-        return new MapGuideContent(null, null, null, null, null, null, null, null, null);
+        return new MapGuideContent(null, null, null, null, null, null, null, null, null, null);
     }
 
     private static <T> List<T> copy(List<T> values) {
@@ -197,5 +201,21 @@ public record MapGuideContent(
             Double x,
             Double y
     ) {
+    }
+
+    /**
+     * A shape of the drawn ground. Terrain only draws the map: other content refers to areas, never to terrain.
+     *
+     * @param kind    {@code WALL}, {@code RIVER}, {@code JUNGLE} (the jungle floor) or {@code BUSH}
+     * @param outline the polygon of the shape, at least three points; the Wiki rounds its corners
+     */
+    public record Terrain(
+            String kind,
+            List<Point> outline
+    ) {
+
+        public Terrain {
+            outline = copy(outline);
+        }
     }
 }

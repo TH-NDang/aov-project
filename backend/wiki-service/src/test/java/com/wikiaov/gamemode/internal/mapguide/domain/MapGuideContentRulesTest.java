@@ -11,6 +11,7 @@ import com.wikiaov.gamemode.internal.domain.MapGuideContent.Point;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Section;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Spot;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.TempoMoment;
+import com.wikiaov.gamemode.internal.domain.MapGuideContent.Terrain;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Timing;
 import com.wikiaov.platform.ApiFieldError;
 import java.io.IOException;
@@ -36,6 +37,21 @@ class MapGuideContentRulesTest {
         assertThat(MapGuideContentRules.missingFields(content)).isEmpty();
         assertThat(MapGuideContentRules.references(content)).contains("rong", "tru-ngoai.xanh-giua",
                 "tru-ngoai.do-caesar", "khong-lo-thuat-si.do", "hang-rong", "rung-xanh-caesar", "duong-giua");
+        assertThat(content.terrain()).extracting(Terrain::kind).contains("WALL", "RIVER", "JUNGLE");
+    }
+
+    @Test
+    void terrainHasAKnownKindAndAnOutlineOnTheMap() {
+        var base = map();
+        var odd = new Terrain("LAVA", List.of(new Point(10.0, 10.0), new Point(12.0, 10.0), new Point(11.0, 12.0)));
+        var off = new Terrain("WALL", List.of(new Point(10.0, 10.0), new Point(120.0, 10.0), new Point(11.0, 12.0)));
+        var open = new Terrain(null, List.of(new Point(10.0, 10.0)));
+        var content = new MapGuideContent(base.name(), null, null, null, base.objects(), null, base.lanes(), null,
+                null, List.of(odd, off, open));
+
+        assertThat(errors(content)).containsExactlyInAnyOrder("terrain[0].kind INVALID_VALUE",
+                "terrain[1].outline[1].x OUT_OF_RANGE", "terrain[2].kind REQUIRED");
+        assertThat(MapGuideContentRules.missingFields(content)).containsExactly("terrain[2].outline");
     }
 
     @Test
@@ -79,7 +95,7 @@ class MapGuideContentRulesTest {
         var pit = new Area("caesar", "Hang Caesar", null, null, List.of(new Point(30.0, 25.0)));
         var lane = new Lane("hang-rong", "Đường Rồng", "LANE", null, List.of(), List.of(), List.of());
         var content = new MapGuideContent(base.name(), null, null, null, base.objects(),
-                List.of(pit, area("hang-rong")), List.of(lane), null, null);
+                List.of(pit, area("hang-rong")), List.of(lane), null, null, null);
 
         assertThat(errors(content)).containsExactlyInAnyOrder("areas[0].code DUPLICATE_CODE",
                 "lanes[0].code DUPLICATE_CODE");
@@ -94,7 +110,7 @@ class MapGuideContentRulesTest {
                         new Callout("Hang", "caesar", "do", 32.9, 28.1)), List.of()),
                 new TempoMoment(120, null, List.of(), List.of()));
         var content = new MapGuideContent(base.name(), null, null, null, base.objects(), null, base.lanes(), tempo,
-                null);
+                null, null);
 
         assertThat(errors(content)).containsExactlyInAnyOrder("tempo[1].seconds OUT_OF_ORDER",
                 "tempo[1].callouts[0].objectCode UNKNOWN_REFERENCE", "tempo[1].callouts[1].spotKey UNKNOWN_REFERENCE",
@@ -108,7 +124,7 @@ class MapGuideContentRulesTest {
                 List.of(), null, List.of(new Spot(null, null, null, 50.0, 50.0)));
         var lane = new Lane("duong-giua", "Đường giữa", "ROAD", null, List.of("Not A Code"), List.of(), List.of());
         var content = new MapGuideContent(base.name(), null, null, null, List.of(odd), null, List.of(lane), null,
-                null);
+                null, null);
 
         assertThat(errors(content)).containsExactlyInAnyOrder("objects[0].category INVALID_VALUE",
                 "objects[0].glyph INVALID_VALUE", "lanes[0].glyph INVALID_VALUE", "lanes[0].heroCodes[0] INVALID_CODE");
@@ -117,7 +133,7 @@ class MapGuideContentRulesTest {
     @Test
     void publicationNeedsANameObjectsAndAPlaceForEveryFamilyHead() {
         var head = object("rong", null, List.of());
-        var content = new MapGuideContent(" ", null, null, null, List.of(head), null, null, null, null);
+        var content = new MapGuideContent(" ", null, null, null, List.of(head), null, null, null, null, null);
 
         assertThat(MapGuideContentRules.missingFields(content)).containsExactly("name", "objects[0].positions");
         assertThat(MapGuideContentRules.missingFields(MapGuideContent.empty())).containsExactly("name", "objects");
@@ -134,7 +150,7 @@ class MapGuideContentRulesTest {
                 null, caesar.tags(), caesar.summary(), caesar.firstSpawn(), caesar.respawn(), caesar.sections(),
                 caesar.change(), caesar.positions());
         var content = new MapGuideContent(base.name(), null, null, background, List.of(drawn), null, null, null,
-                null);
+                null, null);
 
         assertThat(MapGuideContentRules.assets(content)).containsExactly(background, icon, picture);
         assertThat(MapGuideContentRules.icons(content)).containsExactly(icon);
@@ -157,8 +173,9 @@ class MapGuideContentRulesTest {
                         List.of("Tế đàn: Nơi tướng xuất hiện và hồi sinh")),
                 new TempoMoment(120, null, List.of(new Callout("Caesar xuất hiện", "caesar", null, 32.9, 28.1)),
                         List.of("Xuất hiện lần đầu: Phút thứ 2")));
+        var wall = new Terrain("WALL", List.of(new Point(20.0, 20.0), new Point(24.0, 20.0), new Point(22.0, 26.0)));
         return new MapGuideContent("Bách khoa chiến trường", null, null, null, List.of(caesar, darkCaesar),
-                List.of(area("hang-caesar")), List.of(lane), tempo, null);
+                List.of(area("hang-caesar")), List.of(lane), tempo, null, List.of(wall));
     }
 
     private static Area area(String code) {
@@ -180,7 +197,7 @@ class MapGuideContentRulesTest {
         var objects = new ArrayList<>(base.objects());
         objects.addAll(extra);
         return new MapGuideContent(base.name(), base.observedOn(), base.summary(), base.backgroundAssetId(), objects,
-                base.areas(), base.lanes(), base.tempo(), base.sources());
+                base.areas(), base.lanes(), base.tempo(), base.sources(), base.terrain());
     }
 
     private static MapObject object(String code, String family, List<Spot> positions) {
