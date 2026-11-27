@@ -75,6 +75,10 @@ management:
 wiki:
   # Patch watch (ADR-035): reads the publishers' patch-note pages on the schedule set in Admin. The Indonesian list
   # needs the page reader (a headless browser) that only the server stack runs; without its address that source waits.
+  # Editors may rewrite recorded hero patch changes while the data is not official (ADR-016, 2026-11-27). Set
+  # HERO_CHANGE_EDITS=false to lock them again.
+  hero:
+    change-edits: ${HERO_CHANGE_EDITS:true}
   patch-watch:
     enabled: ${PATCH_WATCH_ENABLED:true}
     page-reader-url: ${PATCH_WATCH_PAGE_READER_URL:}

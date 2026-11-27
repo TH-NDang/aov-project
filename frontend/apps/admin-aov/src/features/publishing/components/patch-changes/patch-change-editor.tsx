@@ -48,6 +48,8 @@ export interface PatchChangeEditorProps {
   toRevisionId?: string | null
   initialRows?: ChangeRow[]
   defaultSourceUrl?: string
+  /** A recorded change set to rewrite in place; its hero, patch, source kind and revisions stay as they are. */
+  editing?: { changeSetId: string; summary: string }
   onSaved: (id: string) => void
   onCancel?: () => void
 }
@@ -63,6 +65,7 @@ export function PatchChangeEditor({
   toRevisionId = null,
   initialRows,
   defaultSourceUrl = "",
+  editing,
   onSaved,
   onCancel,
 }: PatchChangeEditorProps) {
@@ -71,7 +74,7 @@ export function PatchChangeEditor({
   const fieldsId = useId()
   const [rows, setRows] = useState<ChangeRow[]>(() => (initialRows?.length ? initialRows : [emptyRow("STAT")]))
   const starter = useRef(notes && !initialRows?.length ? rows[0].id : null)
-  const [summary, setSummary] = useState("")
+  const [summary, setSummary] = useState(editing?.summary ?? "")
   const [sourceUrl, setSourceUrl] = useState(defaultSourceUrl)
   const [introduces, setIntroduces] = useState(false)
   const [checked, setChecked] = useState(false)
@@ -107,16 +110,23 @@ export function PatchChangeEditor({
     setBusy(true)
     setError("")
     try {
-      const result = await api.send<{ id: string }>(`/admin/patch-variants/${variantId}/hero-changes`, "POST", {
-        heroId,
-        sourceKind: source,
+      const content = {
         sourceUrl: sourceUrl.trim() || null,
-        fromHeroRevisionId: fromRevisionId,
-        toHeroRevisionId: toRevisionId,
         summaryTranslations: [{ locale, summary: summary.trim() }],
         changes: rows.map(changePayload),
-        introducesHero: introduces,
-      })
+      }
+      const result = editing
+        ? await api
+            .send<void>(`/admin/hero-changes/${editing.changeSetId}`, "PUT", content)
+            .then(() => ({ id: editing.changeSetId }))
+        : await api.send<{ id: string }>(`/admin/patch-variants/${variantId}/hero-changes`, "POST", {
+            ...content,
+            heroId,
+            sourceKind: source,
+            fromHeroRevisionId: fromRevisionId,
+            toHeroRevisionId: toRevisionId,
+            introducesHero: introduces,
+          })
       await Promise.all([
         cache.invalidateQueries({ queryKey: publishingKeys.allPatchChanges }),
         cache.invalidateQueries({ queryKey: publishingKeys.heroes }),
@@ -158,18 +168,22 @@ export function PatchChangeEditor({
             {checked && urlProblem && <span className="text-xs text-destructive">{urlProblem}</span>}
           </label>
         )}
-        <label className="flex items-start gap-2.5 rounded-md border p-2.5">
-          <input
-            type="checkbox"
-            className="mt-0.5 size-4 shrink-0 accent-primary"
-            checked={introduces}
-            onChange={(event) => setIntroduces(event.target.checked)}
-          />
-          <span className="grid gap-0.5">
-            <span className="type-label">Tướng mới ra mắt ở bản này</span>
-            <span className="type-meta">Wiki không hiện tướng ở các bản trước. Mỗi tướng chỉ đánh dấu ở một bản.</span>
-          </span>
-        </label>
+        {!editing && (
+          <label className="flex items-start gap-2.5 rounded-md border p-2.5">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0 accent-primary"
+              checked={introduces}
+              onChange={(event) => setIntroduces(event.target.checked)}
+            />
+            <span className="grid gap-0.5">
+              <span className="type-label">Tướng mới ra mắt ở bản này</span>
+              <span className="type-meta">
+                Wiki không hiện tướng ở các bản trước. Mỗi tướng chỉ đánh dấu ở một bản.
+              </span>
+            </span>
+          </label>
+        )}
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium">Tóm tắt</span>
           <textarea

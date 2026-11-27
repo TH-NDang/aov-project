@@ -12,6 +12,7 @@ import com.wikiaov.access.ActorType;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository.Header;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment;
+import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangePosition;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTranslation;
 import com.wikiaov.hero.internal.change.persistence.entity.MechanicChangeClassification;
@@ -48,8 +49,10 @@ class HeroPatchHistoryTests {
     private final HeroPatchAssessmentRepository assessments = mock(HeroPatchAssessmentRepository.class);
     private final MechanicChangeRepository mechanics = mock(MechanicChangeRepository.class);
     private final MechanicChangePreviousRepository previous = mock(MechanicChangePreviousRepository.class);
+    private final HeroPatchChangePositionRepository positions = mock(HeroPatchChangePositionRepository.class);
+    private final HeroChangeSetRewriteRepository rewrites = mock(HeroChangeSetRewriteRepository.class);
     private final HeroPatchHistory history = new HeroPatchHistory(sets, translations, changes, assessments, mechanics,
-            previous);
+            previous, positions, rewrites);
 
     @Test
     void batchesHistoryAndKeepsRequestedVietnameseAndAlphabeticalLocaleFallback() {
@@ -161,6 +164,30 @@ class HeroPatchHistoryTests {
                 });
         assertThat(savedFacts.getAllValues().get(5)).isInstanceOfSatisfying(OtherChangeClassification.class,
                 value -> assertThat(value.getDescription()).isEqualTo("Other note"));
+    }
+
+    @Test
+    void placesEachChangeSetAtItsIndexAndCountsOnlyThePlacesThatChanged() {
+        UUID kept = UUID.randomUUID(), moved = UUID.randomUUID(), placed = UUID.randomUUID();
+        var at = Instant.parse("2026-11-27T00:00:00Z");
+        var earlier = Instant.parse("2026-11-20T00:00:00Z");
+        var actor = new Actor("issuer", "editor", ActorType.HUMAN, "Editor", Set.of());
+        var keptPosition = HeroPatchChangePosition.place(kept, 0, earlier, "issuer", "someone");
+        var movedPosition = HeroPatchChangePosition.place(moved, 0, earlier, "issuer", "someone");
+        var order = List.of(kept, moved, placed);
+        when(positions.findAllById(order)).thenReturn(List.of(keptPosition, movedPosition));
+
+        assertThat(history.place(order, at, actor)).isEqualTo(2);
+
+        assertThat(keptPosition.getUpdatedAt()).isEqualTo(earlier);
+        assertThat(movedPosition.getPosition()).isEqualTo(1);
+        assertThat(movedPosition.getUpdatedAt()).isEqualTo(at);
+        assertThat(movedPosition.getUpdatedBySubject()).isEqualTo("editor");
+        var saved = ArgumentCaptor.forClass(HeroPatchChangePosition.class);
+        verify(positions).save(saved.capture());
+        assertThat(saved.getValue().getChangeSetId()).isEqualTo(placed);
+        assertThat(saved.getValue().getPosition()).isEqualTo(2);
+        assertThat(saved.getValue().isNew()).isTrue();
     }
 
     private static Header header() {

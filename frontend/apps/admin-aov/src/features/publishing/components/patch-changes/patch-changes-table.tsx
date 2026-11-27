@@ -3,18 +3,19 @@ import { Tabs, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
 import { ActionStrip } from "@/components/action-strip"
 import { WarehousePatchChanges } from "../../../warehouse/components/history/warehouse-patch-changes"
+import { WarehouseOrderPicker } from "../../../warehouse/components/secondary/warehouse-order-picker"
 import { HeroOverallAssessment, InlineAssessment } from "../assessment/hero-overall-assessment"
 import { createContext, useContext, useMemo, useState } from "react"
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, ChevronRight, FilePlus2 } from "lucide-react"
+import { ArrowUpRight, ChevronRight, FilePlus2, Pencil } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
-import { errorMessage } from "@/lib/api/errors"
+import { errorMessage, isApiError } from "@/lib/api/errors"
 import { MarketBadge } from "../setup/market-badge"
 import { AovNavIcon } from "@/app/aov-nav-icon"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
@@ -27,6 +28,8 @@ import { phaseLabels, type PublicationOverview } from "../../api/publication-ove
 import { dateLabel } from "@/lib/schedule-date"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { HeroChangeSummary } from "./hero-change-badges"
+import { PatchChangeEditor } from "./patch-change-editor"
+import { rowsFromRecorded } from "../../model/patch-changes/patch-change-model"
 import {
   RecordPatchNotesSheet,
   useHeroEntries,
@@ -189,6 +192,46 @@ const heroColumnsWithMarkets = helper.columns([
 
 const empty: ChangeSet[] = []
 const api = createPublishingApi(backendRequest)
+
+/**
+ * Arranges the heroes of a patch: the order is kept for Admin and the public patch page. A hero recorded later goes
+ * first until the next arrangement.
+ */
+function HeroOrderButton({
+  variantId,
+  rows,
+  heroById,
+}: {
+  variantId: string
+  rows: ChangeSet[]
+  heroById: Map<string, HeroEntry>
+}) {
+  const client = useQueryClient()
+  return (
+    <WarehouseOrderPicker
+      label="Sắp xếp tướng"
+      items={rows.map((change) => {
+        const hero = heroById.get(change.heroId)
+        return { id: change.id, name: hero?.name ?? change.heroCode, iconAssetId: hero?.iconAssetId ?? null }
+      })}
+      onSave={async (changeSetIds) => {
+        try {
+          await backendRequest(`/admin/patch-variants/${variantId}/hero-changes/order`, {
+            method: "PUT",
+            body: JSON.stringify({ changeSetIds }),
+          })
+        } catch (cause) {
+          if (!isApiError(cause, "HERO_PATCH_CHANGE_CONFLICT")) throw cause
+          await client.invalidateQueries({ queryKey: publishingKeys.allPatchChanges })
+          throw new Error(
+            "Danh sách tướng của patch vừa thay đổi. Đóng hộp này rồi mở lại để sắp xếp theo danh sách mới.",
+          )
+        }
+        await client.invalidateQueries({ queryKey: publishingKeys.allPatchChanges })
+      }}
+    />
+  )
+}
 function HeroPatchChangesTable({
   variantId,
   overview,
@@ -199,6 +242,7 @@ function HeroPatchChangesTable({
   locale: string
 }) {
   const [selected, setSelected] = useState<ChangeSet | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const canAssess = useSession().actor?.capabilities.includes("patch:write") ?? false
   const wide = useIsWide()
   const query = useQuery(heroChangesOptions(variantId, locale))
@@ -230,6 +274,7 @@ function HeroPatchChangesTable({
   )
   const table = useTable({ features, columns, data: query.data ?? empty, getRowId: (row) => row.id })
   const detailHero = detail ? heroById.get(detail.heroId) : undefined
+  const editing = canAssess && !!detail && editingId === detail.id
   return (
     <div className="space-y-3">
       {query.isPending ? (
@@ -248,43 +293,53 @@ function HeroPatchChangesTable({
           Chưa ghi nhận thay đổi tướng. Bản nhập dữ liệu không tự tạo lịch sử thay đổi.
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <HeroTableCellsContext.Provider value={cells}>
-            <table className="w-full min-w-[520px] text-sm">
-              <thead className="bg-muted/40">
-                <tr>
-                  {table.getHeaderGroups()[0]?.headers.map((h) => (
-                    <th
-                      key={h.id}
-                      className={`type-label px-3 py-2 text-left text-muted-foreground ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
-                    >
-                      <table.FlexRender header={h} />
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border-t border-border/60 align-middle hover:bg-muted/20">
-                    {row.getAllCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className={`px-3 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 bg-card" : ""}`}
+        <>
+          {canAssess && query.data.length > 1 && (
+            <div className="flex justify-end">
+              <HeroOrderButton variantId={variantId} rows={query.data} heroById={heroById} />
+            </div>
+          )}
+          <div className="overflow-x-auto">
+            <HeroTableCellsContext.Provider value={cells}>
+              <table className="w-full min-w-[520px] text-sm">
+                <thead className="bg-muted/40">
+                  <tr>
+                    {table.getHeaderGroups()[0]?.headers.map((h) => (
+                      <th
+                        key={h.id}
+                        className={`type-label px-3 py-2 text-left text-muted-foreground ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
                       >
-                        <table.FlexRender cell={cell} />
-                      </td>
+                        <table.FlexRender header={h} />
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </HeroTableCellsContext.Provider>
-        </div>
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="border-t border-border/60 align-middle hover:bg-muted/20">
+                      {row.getAllCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className={`px-3 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 bg-card" : ""}`}
+                        >
+                          <table.FlexRender cell={cell} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </HeroTableCellsContext.Provider>
+          </div>
+        </>
       )}
       <Sheet
         open={!!selected}
         onOpenChange={(open) => {
-          if (!open) setSelected(null)
+          if (!open) {
+            setSelected(null)
+            setEditingId(null)
+          }
         }}
       >
         <SheetContent
@@ -300,28 +355,61 @@ function HeroPatchChangesTable({
             {detail && <SourceBadge change={detail} />}
           </SheetHeader>
           <div className="space-y-3 overflow-y-auto px-4 pb-6">
-            {detail && <HeroOverallAssessment key={`${detail.id}-${detail.assessmentVersion}`} change={detail} />}
-            {detail && (
-              <ChangeLines
-                changes={detail.changes}
-                content={detailReference.data?.content}
-                heroId={detail.heroId}
-                locale={locale}
-              />
-            )}
-            {detail && (
-              <Button asChild variant="outline">
-                <Link
-                  to={
-                    detail.toHeroRevisionId
-                      ? `/hero/${detail.heroId}?revision=${detail.toHeroRevisionId}`
-                      : `/hero/${detail.heroId}?view=patch&atPatch=${variantId}`
-                  }
-                >
-                  {detail.toHeroRevisionId ? "Mở bản tướng" : "Xem dữ liệu tướng tại patch"}
-                  <ArrowUpRight className="size-4" />
-                </Link>
-              </Button>
+            {detail && editing ? (
+              detailRevisionId && detailReference.isPending ? (
+                <p role="status" className="text-sm text-muted-foreground">
+                  Đang tải dữ liệu tướng…
+                </p>
+              ) : (
+                <PatchChangeEditor
+                  key={detail.id}
+                  source={detail.sourceKind ?? "SNAPSHOT"}
+                  heroId={detail.heroId}
+                  variantId={variantId}
+                  locale={locale}
+                  reference={detailReference.data?.content ?? null}
+                  fromRevisionId={detail.fromHeroRevisionId}
+                  toRevisionId={detail.toHeroRevisionId}
+                  initialRows={rowsFromRecorded(detail.changes)}
+                  defaultSourceUrl={detail.sourceUrl ?? ""}
+                  editing={{ changeSetId: detail.id, summary: detail.summary ?? "" }}
+                  onCancel={() => setEditingId(null)}
+                  onSaved={() => setEditingId(null)}
+                />
+              )
+            ) : (
+              <>
+                {detail && <HeroOverallAssessment key={`${detail.id}-${detail.assessmentVersion}`} change={detail} />}
+                {detail && (
+                  <ChangeLines
+                    changes={detail.changes}
+                    content={detailReference.data?.content}
+                    heroId={detail.heroId}
+                    locale={locale}
+                  />
+                )}
+                {detail && (
+                  <div className="flex flex-wrap gap-2">
+                    {canAssess && (
+                      <Button type="button" onClick={() => setEditingId(detail.id)}>
+                        <Pencil className="size-4" /> Sửa thay đổi
+                      </Button>
+                    )}
+                    <Button asChild variant="outline">
+                      <Link
+                        to={
+                          detail.toHeroRevisionId
+                            ? `/hero/${detail.heroId}?revision=${detail.toHeroRevisionId}`
+                            : `/hero/${detail.heroId}?view=patch&atPatch=${variantId}`
+                        }
+                      >
+                        {detail.toHeroRevisionId ? "Mở bản tướng" : "Xem dữ liệu tướng tại patch"}
+                        <ArrowUpRight className="size-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </SheetContent>

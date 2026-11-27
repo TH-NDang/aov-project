@@ -866,6 +866,138 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void editorsSetTheOrderInWhichAPatchListsItsHeroes() throws Exception {
+        // The first hero seeds the import season, which only happens while no season exists yet.
+        var nakroth = create();
+        UUID season = id(send(post(ROOT + "/admin/seasons"),
+                Map.of("code", "order-season", "displayName", "Order season"), 201));
+        UUID listed = seasonPatch(season, "order-listed");
+        UUID elsewhere = seasonPatch(season, "order-elsewhere");
+        UUID nakrothId = uuid(nakroth, "heroId");
+        nakroth = complete(nakrothId, id(nakroth), nakroth);
+        send(post(path(nakrothId, id(nakroth)) + "/publish"), Map.of("expectedVersion", nakroth.get("version")), 200);
+        UUID violet = publishedHero("violet", listed);
+        UUID airi = publishedHero("airi", listed);
+        List<Map<String, Object>> line = List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description",
+                "Điều chỉnh theo ghi chú"));
+        String changes = ROOT + "/admin/patch-variants/" + listed + "/hero-changes";
+        clock.set(Instant.parse("2026-10-15T01:00:00Z"));
+        UUID nakrothChange = id(send(post(changes), notes(nakrothId, line), 201));
+        clock.set(Instant.parse("2026-10-15T02:00:00Z"));
+        UUID violetChange = id(send(post(changes), notes(violet, line), 201));
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(violetChange.toString(), nakrothChange.toString());
+
+        String order = changes + "/order";
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange)), 204);
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange)), 204);
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(nakrothChange.toString(), violetChange.toString());
+        assertThat(jdbc.sql("SELECT count(*) FROM access.audit_event WHERE aggregate_id=? AND "
+                + "action='HERO_PATCH_CHANGES_REORDERED'").param(listed).query(Long.class).single()).isEqualTo(1L);
+
+        // A change set recorded after the order was set comes first until the next reorder.
+        clock.set(Instant.parse("2026-10-15T03:00:00Z"));
+        UUID airiChange = id(send(post(changes), notes(airi, line), 201));
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(airiChange.toString(), nakrothChange.toString(), violetChange.toString());
+
+        // The list names every change set of the variant once, and only those.
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange)), 409);
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange, airiChange, violetChange)), 422);
+        UUID foreign = id(send(post(ROOT + "/admin/patch-variants/" + elsewhere + "/hero-changes"),
+                notes(nakrothId, line), 201));
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange, foreign)), 409);
+        send(put(ROOT + "/admin/patch-variants/" + UUID.randomUUID() + "/hero-changes/order"),
+                Map.of("changeSetIds", List.of()), 404);
+        mvc.perform(put(order).with(jwt().authorities(new SimpleGrantedAuthority("catalog:read")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("changeSetIds", List.of(violetChange, nakrothChange,
+                        airiChange)))))
+                .andExpect(status().isForbidden());
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(airiChange.toString(), nakrothChange.toString(), violetChange.toString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void editorsRewriteARecordedChangeSetInPlace() throws Exception {
+        // The hero seeds the import season, which only happens while no season exists yet.
+        var draft = create();
+        UUID season = id(send(post(ROOT + "/admin/seasons"),
+                Map.of("code", "edit-season", "displayName", "Edit season"), 201));
+        UUID listed = seasonPatch(season, "edit-listed");
+        UUID hero = uuid(draft, "heroId");
+        draft = complete(hero, id(draft), draft);
+        send(post(path(hero, id(draft)) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
+        Map<String, Object> mechanic = Map.of("type", "MECHANIC", "changeKind", "ADJUSTMENT", "mechanicKey",
+                "fixture", "description", "Synthetic adjustment");
+        UUID changeSet = id(send(post(ROOT + "/admin/patch-variants/" + listed + "/hero-changes"),
+                notes(hero, List.of(Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "HP", "oldValue", 3500,
+                        "newValue", 3600, "unit", "POINT"), mechanic)),
+                201));
+        String mechanicId = changeOfType(heroChanges(listed).getFirst(), "HERO_MECHANIC_CHANGE").get("id").toString();
+        send(post(ROOT + "/admin/hero-changes/" + changeSet + "/mechanics/" + mechanicId + "/previous"),
+                Map.of("description", "Earlier behaviour", "sourceUrl", "https://example.org/old"), 201);
+        send(put(ROOT + "/admin/hero-changes/" + changeSet + "/assessment"),
+                Map.of("kind", "BUFF", "expectedVersion", 0), 200);
+
+        String edit = ROOT + "/admin/hero-changes/" + changeSet;
+        send(put(edit), Map.of("sourceUrl", "https://example.org/fixed-notes",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Sửa lại theo ghi chú")),
+                "changes", List.of(Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "HP", "oldValue", 3500,
+                        "newValue", 3700, "unit", "POINT"),
+                        Map.of("type", "MECHANIC", "changeKind", "REWORK", "mechanicKey", "fixture", "description",
+                                "Reworked again"),
+                        Map.of("type", "OTHER", "changeKind", "OTHER", "description", "Added later"))),
+                204);
+
+        var rewritten = heroChanges(listed).getFirst();
+        assertThat(rewritten).containsEntry("id", changeSet.toString())
+                .containsEntry("sourceUrl", "https://example.org/fixed-notes")
+                .containsEntry("summary", "Sửa lại theo ghi chú").containsEntry("overallKind", "BUFF");
+        assertThat((List<Map<String, Object>>) rewritten.get("changes")).extracting(line -> line.get("type"))
+                .containsExactly("HERO_STAT_CHANGE", "HERO_MECHANIC_CHANGE", "HERO_OTHER_CHANGE");
+        assertThat(((Number) changeOfType(rewritten, "HERO_STAT_CHANGE").get("newValue")).intValue()).isEqualTo(3700);
+        var moved = changeOfType(rewritten, "HERO_MECHANIC_CHANGE");
+        assertThat(moved).containsEntry("description", "Reworked again");
+        assertThat((Map<String, Object>) moved.get("previous")).containsEntry("description", "Earlier behaviour");
+        assertThat(jdbc.sql("SELECT count(*) FROM access.audit_event WHERE aggregate_id=? AND "
+                + "action='HERO_PATCH_CHANGE_EDITED'").param(hero).query(Long.class).single()).isEqualTo(1L);
+
+        // A rewrite follows the rules of recording; outside it the history still refuses changes.
+        send(put(edit), Map.of("sourceUrl", "https://example.org/fixed-notes",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Sai chỉ số")),
+                "changes", List.of(Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "MANA", "oldValue", 1,
+                        "newValue", 2, "unit", "POINT"))),
+                422);
+        send(put(edit), Map.of("sourceUrl", "ftp://example.org/notes",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Sai nguồn")),
+                "changes", List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description", "x"))), 422);
+        assertThat(heroChanges(listed).getFirst()).containsEntry("summary", "Sửa lại theo ghi chú");
+        send(put(ROOT + "/admin/hero-changes/" + UUID.randomUUID()), Map.of("sourceUrl", "https://example.org/n",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "x")),
+                "changes", List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description", "x"))), 404);
+        mvc.perform(put(edit).with(jwt().authorities(new SimpleGrantedAuthority("catalog:read")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("sourceUrl", "https://example.org/n",
+                        "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "x")),
+                        "changes", List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description", "x"))))))
+                .andExpect(status().isForbidden());
+        assertThatThrownBy(() -> jdbc.sql("UPDATE hero.hero_patch_change_set SET source_url = 'https://x.org' "
+                + "WHERE id = ?").param(changeSet).update()).hasMessageContaining("append only");
+    }
+
+    private UUID publishedHero(String code, UUID context) throws Exception {
+        var draft = send(post(ROOT + "/admin/heroes"), Map.of("code", code, "name", code, "initialLocale", "vi-VN",
+                "rulesetId", ruleset, "contextId", context), 201);
+        UUID hero = uuid(draft, "heroId");
+        draft = complete(hero, id(draft), draft);
+        send(post(path(hero, id(draft)) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
+        return hero;
+    }
+
+    @Test
     void anExistingPatchJoinsASeasonThatFitsItsOrderAndReleaseDates() throws Exception {
         UUID earlier = id(send(post(ROOT + "/admin/seasons"), Map.of("code", "joined-a", "displayName", "A"), 201));
         UUID later = id(send(post(ROOT + "/admin/seasons"), Map.of("code", "joined-b", "displayName", "B"), 201));

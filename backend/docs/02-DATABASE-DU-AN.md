@@ -22,7 +22,8 @@ ordinal không mâu thuẫn timeline trong transaction khóa region.
 
 Section root/composition dùng FK ghép `(section_revision_id, hero_id)` để không compose nhầm Hero.
 Published root, section và các row con được bảo vệ bằng trigger; source chỉ được ghi cho DRAFT section.
-Change history append-only, không có normal API update/delete. Một draft cho mỗi hero/ruleset bằng
+Change history append-only, không có normal API update/delete; ngoại lệ duy nhất là sửa tại chỗ một change set
+tướng đã ghi (V078). Một draft cho mỗi hero/ruleset bằng
 partial unique index. Application khóa Hero identity trước mutation/publish và kiểm tra expected version.
 
 `hero.hero_overview_rating_revision` có thêm version/actor như các section khác. `hero.rating_scale`
@@ -1888,6 +1889,16 @@ V027 tạo hero.hero_patch_assessment, PK change_set_id, kind, version và actor
 Đánh giá tổng thể là metadata biên tập có optimistic version và audit, độc lập các typed immutable events.
 Không backfill đánh giá tổng thể bằng hợp các nhãn con.
 V064 thêm `RELEASE` vào `kind` của đánh giá tổng thể, dùng cho change set đánh dấu tướng ra mắt (ADR-016).
+V077 tạo `hero.hero_patch_change_position`: PK `change_set_id` (FK tới change set), `position` ≥ 0, `lock_version`
+và actor/thời điểm cập nhật. Đây là thứ tự biên tập viên chọn cho các tướng của một variant, dùng chung cho Admin và
+trang patch công khai; change set vẫn bất biến. Đọc theo `position` tăng dần; change set chưa có vị trí (ghi sau lần
+sắp xếp gần nhất) đứng đầu, mới trước cũ, như thứ tự mặc định trước đây.
+V078 thay `hero.guard_change_history()`: trigger vẫn chặn UPDATE/DELETE trên các bảng lịch sử change set, trừ khi
+transaction đã bật `set_config('hero.change_history_rewrite', 'on', true)`. Cờ này chỉ sống trong transaction và chỉ
+API sửa change set đã ghi bật nó (03, mục sửa change set). Lần sửa đổi `source_url`, thay bản dịch tóm tắt của các
+locale được gửi và ghi lại toàn bộ dòng thay đổi; hero, variant, nguồn, revision, cờ ra mắt, đánh giá tổng thể và vị trí
+giữ nguyên. Mô tả "trước khi đổi" chuyển sang dòng MECHANIC mới đầu tiên có cùng `mechanic_key`, không còn dòng nào
+cùng khóa thì bị xóa theo dòng cũ.
 
 ### V028 — Rà soát nhập liệu patch
 
