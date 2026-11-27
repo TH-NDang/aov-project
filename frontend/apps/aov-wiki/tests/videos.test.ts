@@ -176,23 +176,22 @@ test("opening on YouTube keeps the start point", () => {
 })
 
 test("hero videos split by where the page shows them", () => {
-  const { general, loreCount, bySkill } = splitHeroVideos([
+  const { general, skills, loreCount } = splitHeroVideos([
     video({ id: "guide" }),
     video({ id: "story", purpose: "LORE" }),
-    video({ id: "s1", subjectKind: "SKILL", subjectKey: "skill-1", purpose: "SKILL_DEMO" }),
-    video({ id: "s2", subjectKind: "SKILL", subjectKey: "skill-1", purpose: "SKILL_DEMO" }),
+    video({ id: "s1", purpose: "SKILL_DEMO" }),
+    video({ id: "s2", purpose: "SKILL_DEMO" }),
     video({ id: "skin", subjectKind: "SKIN", subjectKey: "lan-su", purpose: "SKIN_SHOWCASE" }),
   ])
   assert.deepEqual(
     general.map((row) => row.id),
     ["guide", "story"],
   )
-  assert.equal(loreCount, 1)
   assert.deepEqual(
-    bySkill.get("skill-1")?.map((row) => row.id),
+    skills.map((row) => row.id),
     ["s1", "s2"],
   )
-  assert.equal(bySkill.size, 1)
+  assert.equal(loreCount, 1)
 })
 
 test("filters offer only purposes present, how-to-play first", () => {

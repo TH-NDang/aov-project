@@ -1,93 +1,105 @@
-/* Videos of the ability being read, inside its panel: a row of small pressable entries, no frames of their own. */
+/*
+ * The hero's skill videos: one strip under the abilities for the whole kit. Each picture sits in the chamfered game
+ * frame of the skin thumbnails, so the strip reads as part of the kit rather than as the plain cards of the video
+ * section. A phone swipes it sideways, one card and the edge of the next in view.
+ */
 .wiki-skill-videos {
   display: grid;
   min-width: 0;
-  gap: 8px;
-  margin-block: 12px;
+  gap: 10px;
+  scroll-margin-top: calc(var(--wiki-header-height) + 12px);
 }
-.wiki-skill-video-stage {
-  display: grid;
-  min-width: 0;
-  gap: 8px;
+.wiki-skill-videos:focus {
+  outline: none;
 }
-.wiki-skill-video-bar {
+.wiki-skill-videos h3 {
+  font: var(--wiki-type-category);
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 4px 12px;
-}
-.wiki-skill-video-bar strong {
-  font: var(--wiki-type-meta);
-  flex: 1 1 200px;
-  min-width: 0;
-  color: var(--aov-text);
-  font-weight: 600;
-}
-.wiki-skill-video-bar button {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  gap: 6px;
-  color: var(--aov-muted);
-}
-.wiki-skill-video-bar button:is(:hover, :focus-visible) {
-  color: var(--aov-accent);
-}
-.wiki-skill-video-list {
-  display: flex;
   gap: 8px;
   margin: 0;
-  padding: 2px;
+  color: var(--aov-text);
+}
+.wiki-skill-videos h3 svg {
+  color: var(--aov-accent);
+}
+.wiki-skill-videos h3 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-skill-video-strip {
+  --skill-video-card: 236px;
+  display: grid;
+  grid-auto-columns: var(--skill-video-card);
+  grid-auto-flow: column;
+  gap: 14px;
+  margin: 0;
+  padding: 4px 2px 8px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
   list-style: none;
   scrollbar-width: thin;
 }
-.wiki-skill-video-list li {
-  flex: 0 0 min(280px, 85%);
-  min-width: 0;
-}
-.wiki-skill-video-list li > :is(button, a) {
-  display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  align-items: center;
+.wiki-handbook-compact .wiki-skill-video-strip {
+  --skill-video-card: min(74%, 280px);
   gap: 10px;
+  scrollbar-width: none;
+}
+.wiki-handbook-compact .wiki-skill-video-strip::-webkit-scrollbar {
+  display: none;
+}
+.wiki-skill-video-strip li {
+  min-width: 0;
+  scroll-snap-align: start;
+}
+.wiki-skill-video-strip li > :is(button, a) {
+  display: grid;
+  align-content: start;
+  gap: 6px;
   width: 100%;
   height: 100%;
-  border: 1px solid transparent;
-  border-radius: var(--aov-radius-control);
-  padding: 4px;
-  background: var(--aov-raised);
+  padding: 0;
+  border: 0;
+  background: none;
   color: inherit;
   text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
-.wiki-skill-video-list li > :is(button, a):hover {
-  border-color: var(--aov-line-strong);
-}
-.wiki-skill-video-list li > button[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 12%, var(--aov-raised));
-}
-.wiki-skill-videos :is(button, a):focus-visible {
+.wiki-skill-video-strip li > :is(button, a):focus-visible {
   outline: 2px solid var(--aov-accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
-.wiki-skill-video-text {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
+.wiki-skill-video-frame {
+  --wiki-video-thumb-shape: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  --wiki-video-thumb-radius: 0;
+  display: block;
+  padding: 1.5px;
+  background: var(--wiki-frame-rim);
+  clip-path: var(--wiki-video-thumb-shape);
+  transition:
+    background 140ms ease-out,
+    transform 140ms ease-out;
 }
-.wiki-skill-video-none {
-  font: var(--wiki-type-meta);
-  margin-block: 12px;
-  color: var(--aov-muted);
+@media (hover: hover) {
+  .wiki-skill-video-strip li > :is(button, a):hover .wiki-skill-video-frame {
+    --wiki-video-thumb-zoom: 1.03;
+    background: var(--wiki-frame-rim-lit);
+    transform: translateY(-2px);
+  }
 }
-.wiki-skill-options button > svg.wiki-skill-has-video {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  width: 12px;
-  height: 12px;
-  color: var(--aov-accent);
+.wiki-skill-video-strip li > :is(button, a):focus-visible .wiki-skill-video-frame {
+  background: var(--wiki-frame-rim-lit);
+}
+.wiki-skill-video-shortcut {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+.wiki-handbook-compact .wiki-skill-video-shortcut {
+  min-height: 36px;
 }

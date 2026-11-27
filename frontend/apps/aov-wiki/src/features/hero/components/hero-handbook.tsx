@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
@@ -32,7 +32,7 @@ import { HeroSectionNav } from "./hero-section-nav"
 import { HeroRelated } from "./hero-related"
 import { skillLabel } from "./skill-slot-label"
 import { WikiIcon } from "../../../components/wiki-icon"
-import { SkillVideos } from "../../../components/videos/skill-videos"
+import { SkillVideoShortcut, SkillVideoStrip } from "../../../components/videos/skill-videos"
 import { SkillSummary, hasSkillSummary } from "./skill-summary"
 import { SkillFormSwitch, SkillStateToggle, SkillVariantDots } from "@aov/ui/components/skill-kit"
 import { groupSkillKit, skillCooldownRange, skillFormName } from "@aov/ui/lib/skill-kit"
@@ -92,16 +92,6 @@ function useHandbook(hero: HeroDetail) {
       },
       { replace: true, preventScrollReset: true },
     )
-  const activeKey = active?.skillKey
-  // A shared link can name a video of another skill, which then has to be the skill on screen for the video to open.
-  // Only a newly named video or a new list moves the skill, so a skill picked by hand afterwards stays.
-  const showSkill = useEffectEvent((skillKey: string) => {
-    if (skillKey !== activeKey) selectSkill(skillKey)
-  })
-  useEffect(() => {
-    for (const [skillKey, list] of videos.bySkill)
-      if (list.some((video) => video.id === videoParam.id)) showSkill(skillKey)
-  }, [videoParam.id, videos.bySkill])
   const references = useQuery(wikiReferencesQuery(scope))
   const settings = references.data
   const index = useMemo(
@@ -171,7 +161,7 @@ type Handbook = ReturnType<typeof useHandbook>
 
 /** The ability picker and the chosen ability. */
 function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
-  const { locale, text, skills, active, source, version, videos } = handbook
+  const { locale, text, skills, active, source, version } = handbook
   const { selectSkill, rich, columns, tableLabel, rows, profile } = handbook
   // The forms of a slot share one entry in the kit and switch in place, as in the game.
   const groups = groupSkillKit(skills)
@@ -202,13 +192,12 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
           const chosen = entry.skills.some((skill) => skill.skillKey === active.skillKey)
           const skill = chosen ? active : entry.skills[0]!
           const changed = entry.skills.some((member) => version.changedSkills.has(member.skillKey))
-          const hasVideo = entry.skills.some((member) => videos.bySkill.has(member.skillKey))
           const forms = entry.skills.length > 1 ? ` · ${entry.skills.length} ${text("dạng", "forms")}` : ""
           return (
             <button
               type="button"
               key={entry.key}
-              aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}${forms}${changed ? ` · ${text("có thay đổi", "changed")}` : ""}${hasVideo ? text(" · có video", " · has video") : ""}`}
+              aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}${forms}${changed ? ` · ${text("có thay đổi", "changed")}` : ""}`}
               aria-pressed={chosen}
               onClick={() => selectSkill(skill.skillKey)}
             >
@@ -219,7 +208,6 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
                 <SkillVariantDots count={entry.skills.length} active={entry.skills.indexOf(skill)} />
               </span>
               {changed && <i className="wiki-skill-changed" aria-hidden="true" />}
-              {hasVideo && <WikiIcon name="play" className="wiki-skill-has-video" />}
             </button>
           )
         })}
@@ -292,11 +280,6 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
           normalLabel={text("Thường", "Normal")}
           label={text("Trạng thái của chiêu", "Ability state")}
           unnamed={text("Chưa đặt tên", "Unnamed")}
-        />
-        <SkillVideos
-          skillKey={active.skillKey}
-          videos={videos.bySkill.get(active.skillKey) ?? []}
-          patchName={videos.patchName}
         />
         <SkillSummary
           key={`summary-${active.skillKey}`}
@@ -500,8 +483,10 @@ function AbilitiesSection({ hero, handbook }: { hero: HeroDetail; handbook: Hand
         <h2 id="wiki-kit-title" tabIndex={-1}>
           {handbook.text("Bộ kỹ năng", "Abilities")}
         </h2>
+        <SkillVideoShortcut videos={handbook.videos.skills} />
       </header>
       <AbilityPanel hero={hero} handbook={handbook} />
+      <SkillVideoStrip videos={handbook.videos.skills} patchName={handbook.videos.patchName} />
     </section>
   )
 }

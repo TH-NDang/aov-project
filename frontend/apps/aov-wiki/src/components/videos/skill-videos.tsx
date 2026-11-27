@@ -1,121 +1,119 @@
-import { useMemo, useState, type ReactNode } from "react"
-import { useWikiContext, useWikiText } from "../../context/wiki-context"
+import { useMemo, type ReactNode } from "react"
+import { useWikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../wiki-icon"
 import { useVideoParam } from "./subject-videos"
-import { byPurpose, formatDuration, neighbours, purposeLabel, videoWatchUrl, type PublicVideo } from "./video-model"
-import { canPlayHere, VideoPlayer, VideoThumbnail } from "./video-player"
+import { videoWatchUrl, type PublicVideo } from "./video-model"
+import { canPlayHere, VideoThumbnail } from "./video-player"
 import { VideoTheater } from "./video-theater"
 import "./skill-videos.css"
 
+export const SKILL_VIDEOS_ID = "wiki-skill-videos"
+
 /**
- * Videos of the skill being read, played right beside its text. Once a reader starts watching, choosing another skill
- * plays that skill's video in the same place, so comparing skills takes one tap each and no window to open or close.
+ * The hero's skill videos in one strip under the abilities, whichever skill each shows. A card opens the theater on the
+ * strip's list, so the next skill's video is one press away and the page underneath never moves.
  */
-export function SkillVideos({
-  skillKey,
+export function SkillVideoStrip({
   videos,
   patchName,
 }: {
-  skillKey: string
   videos: readonly PublicVideo[]
   patchName?: (video: PublicVideo) => ReactNode
 }) {
-  const { locale } = useWikiContext()
   const text = useWikiText()
   const videoParam = useVideoParam()
-  const [watching, setWatching] = useState(false)
-  const [chosen, setChosen] = useState<Record<string, string>>({})
-  const ordered = useMemo(() => byPurpose(videos), [videos])
-  const playable = useMemo(() => ordered.filter(canPlayHere), [ordered])
-  const current = playable.find((video) => video.id === chosen[skillKey]) ?? playable[0] ?? null
-  const enlarged = playable.find((video) => video.id === videoParam.id) ?? null
-  const showPlayer = watching && !!current && !enlarged
-
-  if (!ordered.length)
-    return watching ? (
-      <p className="wiki-skill-video-none" role="status">
-        {text("Kỹ năng này chưa có video.", "This ability has no video yet.")}
-      </p>
-    ) : null
-
-  const play = (video: PublicVideo) => {
-    setChosen((previous) => ({ ...previous, [skillKey]: video.id }))
-    setWatching(true)
-  }
-  const playNext = () => {
-    const { next } = neighbours(playable, current?.id)
-    if (next) play(next)
-    else setWatching(false)
-  }
+  const playable = useMemo(() => videos.filter(canPlayHere), [videos])
+  const playing = playable.find((video) => video.id === videoParam.id) ?? null
+  const heading = text("Video kỹ năng", "Ability videos")
+  if (!videos.length) return null
 
   return (
-    <section className="wiki-skill-videos" aria-label={text("Video kỹ năng", "Ability videos")}>
-      {showPlayer && (
-        <div className="wiki-skill-video-stage">
-          <VideoPlayer key={current.id} video={current} onEnded={playNext} />
-          <div className="wiki-skill-video-bar">
-            <strong>{current.title}</strong>
-            <button type="button" onClick={() => videoParam.open(current)}>
-              <WikiIcon name="expand" size={14} />
-              {text("Xem lớn", "Enlarge")}
-            </button>
-            <button type="button" onClick={() => setWatching(false)}>
-              <WikiIcon name="close" size={14} />
-              {text("Ẩn video", "Hide video")}
-            </button>
-          </div>
-        </div>
-      )}
-      {(!showPlayer || ordered.length > 1) && (
-        <ul className="wiki-skill-video-list">
-          {ordered.map((video) => {
-            const active = showPlayer && video.id === current.id
-            const content = (
-              <>
-                <VideoThumbnail video={video} compact />
-                <span className="wiki-skill-video-text">
-                  <span className="wiki-video-title">{video.title}</span>
-                  <span className="wiki-video-meta" data-tone={active ? "tint" : undefined}>
-                    <span>{active ? text("Đang phát", "Playing") : purposeLabel(video.purpose, locale)}</span>
-                    {video.durationSeconds && <span>{formatDuration(video.durationSeconds)}</span>}
-                  </span>
+    <section className="wiki-skill-videos" id={SKILL_VIDEOS_ID} tabIndex={-1} aria-label={heading}>
+      <h3>
+        <WikiIcon name="play" size={14} />
+        {heading}
+        <small>{videos.length}</small>
+      </h3>
+      <ul className="wiki-skill-video-strip">
+        {videos.map((video) => {
+          const patch = patchName?.(video)
+          const content = (
+            <>
+              <span className="wiki-skill-video-frame">
+                <VideoThumbnail video={video} />
+              </span>
+              <span className="wiki-video-title">{video.title}</span>
+              {(patch || video.channelName) && (
+                <span className="wiki-video-meta">
+                  {patch && (
+                    <span className="wiki-video-patch">
+                      {text("Từ bản", "From")} {patch}
+                    </span>
+                  )}
+                  {video.channelName && <span>{video.channelName}</span>}
                 </span>
-              </>
-            )
-            return (
-              <li key={video.id}>
-                {canPlayHere(video) ? (
-                  <button
-                    type="button"
-                    aria-pressed={active}
-                    aria-label={`${text("Phát", "Play")}: ${video.title}`}
-                    onClick={() => play(video)}
-                  >
-                    {content}
-                  </button>
-                ) : (
-                  <a
-                    href={videoWatchUrl(video)}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${text("Mở", "Open")}: ${video.title}`}
-                  >
-                    {content}
-                  </a>
-                )}
-              </li>
-            )
-          })}
-        </ul>
-      )}
+              )}
+            </>
+          )
+          return (
+            <li key={video.id}>
+              {canPlayHere(video) ? (
+                <button
+                  type="button"
+                  data-video-card={video.id}
+                  aria-label={`${text("Phát", "Play")}: ${video.title}`}
+                  onClick={() => videoParam.open(video)}
+                >
+                  {content}
+                </button>
+              ) : (
+                <a
+                  href={videoWatchUrl(video)}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${text("Mở", "Open")}: ${video.title}`}
+                >
+                  {content}
+                </a>
+              )}
+            </li>
+          )
+        })}
+      </ul>
       <VideoTheater
-        video={enlarged}
+        video={playing}
         playlist={playable}
-        heading={text("Video kỹ năng", "Ability videos")}
+        heading={heading}
         patchName={patchName}
         onSelect={videoParam.select}
         onClose={videoParam.close}
       />
     </section>
+  )
+}
+
+/**
+ * The way to the skill videos from the head of the abilities, where a long ability text would otherwise keep the strip
+ * out of sight. It plays the first one; when none plays here, it goes to the strip.
+ */
+export function SkillVideoShortcut({ videos }: { videos: readonly PublicVideo[] }) {
+  const text = useWikiText()
+  const videoParam = useVideoParam()
+  if (!videos.length) return null
+  const first = videos.find(canPlayHere)
+  return (
+    <button
+      type="button"
+      className="wiki-hero-section-more wiki-skill-video-shortcut"
+      onClick={() => {
+        if (first) return videoParam.open(first)
+        const strip = document.getElementById(SKILL_VIDEOS_ID)
+        strip?.scrollIntoView({ block: "start" })
+        strip?.focus({ preventScroll: true })
+      }}
+    >
+      <WikiIcon name="play" size={14} />
+      {text("Video", "Videos")} · {videos.length}
+    </button>
   )
 }
