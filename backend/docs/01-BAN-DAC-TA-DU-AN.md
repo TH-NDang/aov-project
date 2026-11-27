@@ -2695,6 +2695,14 @@ Thời gian tối đa 7200 giây. Lưu nháp chấp nhận thiếu dữ liệu n
 Dữ liệu ban đầu (V080) chép từ ảnh chụp và video màn Bách khoa ngày 27/11/2026 của chế độ `5v5`; vị trí đo trên bản
 đồ nhỏ và làm tròn, loài quái nhỏ ở từng bãi là phỏng đoán cần người biên tập rà lại.
 
+Admin sửa bản đồ ở trang riêng của chế độ (Chế độ → “Mở bản đồ chiến trường”), theo các tab Chung, Đối tượng, Khu
+vực, Đường, Nhịp điệu và JSON. Vị trí, góc khu vực và tuyến đường đặt bằng cách chạm lên bản đồ nhỏ và kéo để dời; nút
+đối xứng thêm điểm ở phe kia tại `(100 − x, 100 − y)` và đổi phe, `key`, nhãn theo cặp từ xanh↔đỏ, Caesar↔Rồng
+(`xanh-caesar` thành `do-rong`); khu vực cũng tạo được bản đối xứng. Ảnh tải lên thay ký hiệu vẽ; bỏ ảnh thì Wiki dùng
+lại ký hiệu. Đổi mã một vật thể thì các dạng trong họ và nhãn nhịp điệu trỏ tới nó đổi theo; đổi `key` một vị trí thì
+nhãn nhịp điệu trỏ tới vị trí đó đổi theo. Khi lưu, mốc nhịp điệu được xếp theo thời gian. Chế độ chưa có bản đồ thì
+bắt đầu từ nháp trống hoặc nhập tệp JSON (ví dụ bản tải xuống từ tab JSON của chế độ khác).
+
 ## Build đề cử theo tướng (ADR-026)
 
 Phạm vi theo yêu cầu ngày 12/11/2026: lưu các bộ đồ mà game đề cử cho từng tướng (hộp thoại “Hệ thống đề xuất” ở màn
