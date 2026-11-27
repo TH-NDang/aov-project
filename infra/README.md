@@ -307,8 +307,8 @@ Trên máy chủ, `scripts/deploy.sh` đưa stack lên một commit mới mà si
   thêm một lần để tab đang mở không lỗi. Caddy không phải khởi động lại.
 - **Caddyfile**: áp bằng `caddy reload`. Container Caddy chỉ thay khi `proxy/Dockerfile` đổi (dừng vài giây).
 - **Keycloak**: chỉ khởi động lại khi `keycloak/` hoặc theme đổi. Khoảng một phút không đăng nhập mới được; phiên đang có được giữ.
-- **`page-reader`**: thay thẳng khi `page-reader/` hoặc `compose.yaml` đổi. Không lên được thì lần cập nhật vẫn đi tiếp, chỉ trang
-  tin Indonesia chưa được đọc.
+- **`page-reader`**: thay thẳng khi `page-reader/` hoặc `compose.yaml` đổi, và được dựng ở bất kỳ lần cập nhật nào khi máy chưa có
+  container của nó. Không lên được thì lần cập nhật vẫn đi tiếp, chỉ trang tin Indonesia chưa được đọc.
 - Trước khi container backend mới chạy migration, `db-backup` dump database như với `up`.
 
 Migration phải để bản cũ vẫn chạy được, vì hai bản cùng chạy một lúc trên schema mới. Xóa hay đổi tên cột, bảng thì làm qua hai lần

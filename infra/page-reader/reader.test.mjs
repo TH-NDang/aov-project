@@ -47,6 +47,14 @@ function fakeLaunch(behaviour, seen = {}) {
   };
 }
 
+/** Waits for `condition`, failing after a second. */
+async function until(condition) {
+  for (const deadline = Date.now() + 1000; !condition(); ) {
+    assert.ok(Date.now() < deadline, "condition not met in time");
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+}
+
 async function start(launch, options = {}) {
   const server = createReaderServer({ launch, pages: { news: PAGE }, log: () => {}, ...options });
   server.listen(0, "127.0.0.1");
@@ -106,6 +114,21 @@ test("a list that never shows is a timeout, a broken page a failure; both close 
   assert.equal(slow.closed, 1);
   assert.equal(failing.closed, 1);
   assert.equal(hanging.closed, 1);
+});
+
+test("a browser that never finishes starting still ends the read in time and is closed once it starts", async (t) => {
+  let started;
+  const seen = {};
+  const launch = () =>
+    new Promise((resolve) => {
+      started = () => resolve(fakeLaunch("list", seen)());
+    });
+  const { server, get } = await start(launch, { deadlineMs: 50 });
+  t.after(() => server.close());
+
+  assert.equal((await get("/render?page=news")).status, 504);
+  started();
+  await until(() => seen.closed === 1);
 });
 
 test("runs one read at a time", async (t) => {
