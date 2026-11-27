@@ -40,6 +40,9 @@ export function useContentScrollMemory(ref: RefObject<HTMLElement | null>) {
     currentKey.current = location.key
     if (!element) return
 
+    // A replaced entry is the same visit with a changed address (a filter, an open row): it keeps its place.
+    if (navigation === "REPLACE" && sameFamily(from, location.pathname))
+      positions.current.set(location.key, element.scrollTop)
     const target = navigation === "POP" ? positions.current.get(location.key) : undefined
     if (target === undefined) {
       if (!sameFamily(from, location.pathname)) element.scrollTop = 0

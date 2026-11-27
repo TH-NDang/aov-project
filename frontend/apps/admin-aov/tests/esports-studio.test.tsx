@@ -4,7 +4,7 @@ import { act } from "react"
 import type { DocumentView, GameContent } from "@aov/community-contracts"
 import { button, choose, click, type, waitFor } from "./fixtures/dom"
 import { game, game2, series, SERIES_ID } from "./fixtures/esports-data"
-import { isGameWrite, press, said, studioPage } from "./fixtures/esports-studio"
+import { elsewhere, isGameWrite, press, said, studioPage } from "./fixtures/esports-studio"
 import { json } from "./fixtures/network"
 import { holdPoll } from "./fixtures/esports-ui"
 
@@ -50,10 +50,19 @@ test("a compact screen puts the next step above what is recorded", async (t) => 
   assert.deepEqual(parts, ["esp-games", "esp-tools", "esp-notice", "esp-foot", "esp-body"])
 })
 
-test("the head names both teams with the score, and the tournament the match belongs to", async () => {
+test("the head names both teams with the score, and leads to this match in its tournament's schedule", async () => {
   await open("")
   assert.match(document.querySelector("h1")?.textContent ?? "", /AZT.*3 – 1.*EMW/)
-  assert.equal(document.querySelector(".esp-head a")?.getAttribute("href"), "/tournaments/fx-tournament")
+  assert.match(
+    document.querySelector(".esp-head-trail a")?.getAttribute("href") ?? "",
+    /^\/tournaments\/fx-tournament\?step=schedule&match=[\w-]+$/,
+  )
+})
+
+test("a match opened from the schedule goes back to it, at the place it was left", async () => {
+  await open("", { fromSchedule: "/tournaments/fx-tournament?step=schedule&stage=GROUPS&key=m4" })
+  await click(document.querySelector<HTMLElement>(".esp-head-back")!)
+  assert.equal(elsewhere(), "/tournaments/fx-tournament?step=schedule&stage=GROUPS&key=m4")
 })
 
 test("viewing has nothing to move on the timeline and no foot", async () => {

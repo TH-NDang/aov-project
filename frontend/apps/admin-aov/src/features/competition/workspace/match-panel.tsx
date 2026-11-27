@@ -51,11 +51,14 @@ export function MatchPanel({
   ws,
   match,
   initialMode = "view",
+  sheet = false,
 }: {
   ws: Workspace
   match: PlannedMatch
   /** The form a quick action or a link asked for. */
   initialMode?: MatchPanelMode
+  /** Shown in a phone's sheet, whose head already names the teams and the time: the actions stay at its bottom. */
+  sheet?: boolean
 }) {
   const [mode, setMode] = useState<MatchPanelMode>(initialMode)
   const resolved = ws.resolved.get(match.key)
@@ -77,15 +80,51 @@ export function MatchPanel({
   if (mode === "video" && record) return <VideoForm ws={ws} match={match} onDone={() => setMode("view")} />
   if (mode === "plan") return <PlanForm ws={ws} match={match} onDone={() => setMode("view")} />
 
+  const actions = (
+    <>
+      {record && ws.canEdit && (
+        <Button type="button" variant="outline" onClick={() => setMode("result")}>
+          <Pencil aria-hidden /> {hasScore(resolved) ? "Sửa tỷ số" : "Nhập tỷ số"}
+        </Button>
+      )}
+      {!record && ready && ws.canEdit && (
+        <Button type="button" variant="outline" onClick={() => ws.run("materialize")}>
+          Mở nhập kết quả
+        </Button>
+      )}
+      {record && ws.canEdit && (
+        <Button type="button" variant={sheet ? "outline" : "ghost"} onClick={() => setMode("video")}>
+          <PlayCircle aria-hidden /> {video ? "Đổi video" : "Gắn video"}
+        </Button>
+      )}
+      {ws.canEdit && (
+        <Button type="button" variant={sheet ? "outline" : "ghost"} onClick={() => setMode("plan")}>
+          <CalendarClock aria-hidden /> Sửa lịch
+        </Button>
+      )}
+    </>
+  )
+  const recordButton = record && (
+    <Button asChild size={sheet ? "lg" : "default"} className={sheet ? "w-full" : "ml-auto"}>
+      <Link to={`${matchPath(ws.entry.id, record.id)}?edit=1`} state={{ fromSchedule: true }}>
+        <Swords aria-hidden /> Ghi ván đấu
+      </Link>
+    </Button>
+  )
+
   return (
-    <div className="space-y-4 bg-muted/40 px-4 py-4">
-      <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Fact label="Hai đội" className="sm:col-span-2">
-          {sideOf("a")} <span className="text-muted-foreground">gặp</span> {sideOf("b")}
-        </Fact>
-        <Fact label="Giờ đấu">
-          <LocalTime value={match.scheduledAt} sourceTimeZone={ws.plan.timezone} fallback="Chưa có giờ" />
-        </Fact>
+    <div className={cn("space-y-4 px-4", sheet ? "pt-4" : "bg-muted/40 py-4")}>
+      <dl className={cn("grid gap-x-6 gap-y-3", sheet ? "grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-4")}>
+        {!sheet && (
+          <>
+            <Fact label="Hai đội" className="sm:col-span-2">
+              {sideOf("a")} <span className="text-muted-foreground">gặp</span> {sideOf("b")}
+            </Fact>
+            <Fact label="Giờ đấu">
+              <LocalTime value={match.scheduledAt} sourceTimeZone={ws.plan.timezone} fallback="Chưa có giờ" />
+            </Fact>
+          </>
+        )}
         <Fact label="Nguồn kết quả">
           {result?.sourceUrl ? (
             <a className="underline" href={result.sourceUrl} target="_blank" rel="noreferrer">
@@ -128,35 +167,17 @@ export function MatchPanel({
             : "Trận chờ đội từ các trận trước nên chưa nhập được kết quả."}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-2">
-        {record && ws.canEdit && (
-          <Button type="button" variant="outline" onClick={() => setMode("result")}>
-            <Pencil aria-hidden /> {hasScore(resolved) ? "Sửa tỷ số" : "Nhập tỷ số"}
-          </Button>
-        )}
-        {!record && ready && ws.canEdit && (
-          <Button type="button" variant="outline" onClick={() => ws.run("materialize")}>
-            Mở nhập kết quả
-          </Button>
-        )}
-        {record && ws.canEdit && (
-          <Button type="button" variant="ghost" onClick={() => setMode("video")}>
-            <PlayCircle aria-hidden /> {video ? "Đổi video" : "Gắn video"}
-          </Button>
-        )}
-        {ws.canEdit && (
-          <Button type="button" variant="ghost" onClick={() => setMode("plan")}>
-            <CalendarClock aria-hidden /> Sửa lịch
-          </Button>
-        )}
-        {record && (
-          <Button asChild className="ml-auto">
-            <Link to={`${matchPath(ws.entry.id, record.id)}?edit=1`}>
-              <Swords aria-hidden /> Ghi ván đấu
-            </Link>
-          </Button>
-        )}
-      </div>
+      {sheet ? (
+        <div className="sticky bottom-0 -mx-4 space-y-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          {recordButton}
+          <div className="flex gap-2 *:min-w-0 *:flex-1 *:px-2">{actions}</div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          {actions}
+          {recordButton}
+        </div>
+      )}
     </div>
   )
 }

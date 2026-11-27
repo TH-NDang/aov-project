@@ -4,7 +4,7 @@
  */
 import { before, type TestContext } from "node:test"
 import { act, type ReactNode } from "react"
-import { MemoryRouter, Route, Routes } from "react-router"
+import { MemoryRouter, Route, Routes, useLocation } from "react-router"
 import { flush, QuietResizeObserver, render, waitFor, withDom } from "./dom"
 import { EDITOR, matchBackend } from "./esports-backend"
 import { game, SERIES_ID, TOURNAMENT_ID } from "./esports-data"
@@ -61,12 +61,15 @@ export function studioPage() {
       around = (node: ReactNode) => node,
       video = true,
       stored = {},
+      fromSchedule,
       ...records
     }: Parameters<typeof matchBackend>[0] & {
       around?: (node: ReactNode) => ReactNode
       video?: boolean
       /** What this browser kept from before, such as turns typed and not saved yet. */
       stored?: Record<string, string>
+      /** The schedule address the match was opened from, one step back in the history. */
+      fromSchedule?: string
     } = {},
   ) {
     backend = matchBackend(records)
@@ -78,9 +81,15 @@ export function studioPage() {
     const { MatchPage } = await import("../../src/features/esports/pages/match-page")
     const { client } = await render(around(<MatchPage />), {
       wrap: (node) => (
-        <MemoryRouter initialEntries={[MATCH + search]}>
+        <MemoryRouter
+          initialEntries={
+            fromSchedule ? [fromSchedule, { pathname: MATCH, search, state: { fromSchedule: true } }] : [MATCH + search]
+          }
+          initialIndex={fromSchedule ? 1 : 0}
+        >
           <Routes>
             <Route path="/tournaments/:tournamentId/matches/:seriesId" element={node} />
+            <Route path="*" element={<Elsewhere />} />
           </Routes>
         </MemoryRouter>
       ),
@@ -94,6 +103,15 @@ export function studioPage() {
     return { players, saves: backend.saves, games: backend.games, service, client }
   }
 }
+
+/** Any other screen, which only says where it is. */
+function Elsewhere() {
+  const { pathname, search } = useLocation()
+  return <p data-elsewhere={pathname + search} />
+}
+
+/** The address of the screen the router left the match for, if it did. */
+export const elsewhere = () => document.querySelector("[data-elsewhere]")?.getAttribute("data-elsewhere") ?? null
 
 /** Presses a key on an element, or on the page when none is named; true when the page took it for itself. */
 export async function press(key: string, target: EventTarget = document.body, init: KeyboardEventInit = {}) {

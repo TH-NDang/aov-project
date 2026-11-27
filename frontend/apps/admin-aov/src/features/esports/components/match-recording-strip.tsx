@@ -59,15 +59,15 @@ export function MatchRecordingStrip({
           <ProgressBadge progress={game.progress} />
         </button>
       ))}
-      {nextNumbers.map((number) => (
+      {absentRuns(nextNumbers).map(([first, last]) => (
         <button
-          key={`absent-${number}`}
+          key={`absent-${first}`}
           type="button"
           onClick={() => onOpen()}
           className="rounded-full border border-dashed px-1.5 py-0.5 text-muted-foreground hover:bg-muted"
-          title={`Ván ${number} chưa được ghi`}
+          title={first === last ? `Ván ${first} chưa được ghi` : `Ván ${first} đến ${last} chưa được ghi`}
         >
-          V{number} chưa ghi
+          {first === last ? `V${first}` : `V${first}–V${last}`} chưa ghi
         </button>
       ))}
       {recording.gaps.length > 0 && (
@@ -93,4 +93,15 @@ export function MatchRecordingStrip({
       )}
     </div>
   )
+}
+
+/** Game numbers in runs that follow each other, so six games nobody recorded read as one "V1–V6". */
+function absentRuns(numbers: number[]) {
+  const runs: [number, number][] = []
+  for (const number of numbers) {
+    const last = runs.at(-1)
+    if (last && last[1] === number - 1) last[1] = number
+    else runs.push([number, number])
+  }
+  return runs
 }
