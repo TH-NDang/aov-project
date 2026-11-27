@@ -28,8 +28,9 @@
   color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
 }
+/* Three cards share the width of a wide column, so a short list needs no scrolling; a fourth scrolls into view. */
 .wiki-skill-video-strip {
-  --skill-video-card: 236px;
+  --skill-video-card: calc((100% - 2 * 14px) / 3);
   display: grid;
   grid-auto-columns: var(--skill-video-card);
   grid-auto-flow: column;
@@ -43,9 +44,13 @@
   list-style: none;
   scrollbar-width: thin;
 }
+/* A phone swipes the strip out to the screen's edges, with the page margin kept where it starts and stops. */
 .wiki-handbook-compact .wiki-skill-video-strip {
-  --skill-video-card: min(74%, 280px);
+  --skill-video-card: min(70vw, 280px);
   gap: 10px;
+  margin-inline: calc(-1 * var(--aov-gutter));
+  padding-inline: var(--aov-gutter);
+  scroll-padding-inline: var(--aov-gutter);
   scrollbar-width: none;
 }
 .wiki-handbook-compact .wiki-skill-video-strip::-webkit-scrollbar {
