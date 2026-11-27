@@ -2555,8 +2555,10 @@ Không thay cơ chế snapshot ván của ADR-015; không tự nhận quyền đ
 
 ## Video theo đối tượng (ADR-019)
 
-Người biên tập gắn được nhiều video cho một tướng, một kỹ năng, một trang phục, một trang bị, phù hiệu,
-bảng ngọc hoặc phụ trợ. Mỗi video có loại (cách chơi cơ bản, combo và nâng cao, minh họa kỹ năng, hiệu
+Người biên tập gắn được nhiều video cho một tướng, một trang phục, một trang bị, phù hiệu, bảng ngọc hoặc
+phụ trợ. Kỹ năng không có video riêng: video về kỹ năng là video của tướng với loại "minh họa kỹ năng", thêm ở
+mục Video của tướng như mọi video khác. Trang tướng hiện các video đó thành một dải chung dưới bộ kỹ năng, phần
+còn lại ở mục Video. Mỗi video có loại (cách chơi cơ bản, combo và nâng cao, minh họa kỹ năng, hiệu
 ứng hoặc trailer trang phục, cốt truyện, thay đổi theo bản, giới thiệu, khác) và có thể ghi "áp dụng từ
 bản". Video chỉ là liên kết: YouTube, Facebook, TikTok, Twitch và tệp video được phát ngay trong trang, player chỉ tải
 khi người đọc bấm phát; liên kết không nhúng được thì mở ở tab mới. Thêm, sửa, ẩn video có hiệu lực ngay, không tạo revision và không cần xuất bản lại mục.
