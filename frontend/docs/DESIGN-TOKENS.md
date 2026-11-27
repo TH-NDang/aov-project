@@ -56,7 +56,18 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 
 ## Chữ
 
-- Phông Be Vietnam Pro (`@fontsource/be-vietnam-pro`, trọng số 400–700), được thiết kế cho dấu tiếng Việt.
+- Phông Be Vietnam Pro (`@fontsource/be-vietnam-pro`), được thiết kế cho dấu tiếng Việt. Giữ đủ bốn trọng số 400, 500,
+  600, 700 (27/11/2026): bỏ 500 chỉ bớt khoảng 34 KB ở lần mở đầu mà đổi nét chữ ở hơn 80 chỗ.
+- Mỗi trọng số gồm ba tệp theo bộ chữ (latin, latin-ext, vietnamese); trình duyệt chỉ tải tệp có chữ đang hiện, nên
+  đang đọc tiếng Việt mà đổi sang tiếng Anh thì không tải thêm phông. Wiki và Stream tải trước bản 400 latin và vietnamese
+  (`tooling/font-preload.mts`).
+- Trong lúc phông đang tải, chữ hiện bằng Arial (Windows, macOS, iOS) hoặc Roboto (Android) đã chỉnh cỡ theo Be Vietnam
+  Pro (`packages/ui/src/styles/font-fallback.css`), để dòng xuống hàng như cũ và chữ không nhảy khi phông về. Đổi phông
+  chính thì đo lại các số trong tệp đó.
+- Chữ ngoài bộ Latin đi theo phông của máy, đứng sau trong `--aov-font-sans`. Khi có bản tiếng Thái, thêm Noto Sans Thai
+  ngay sau Be Vietnam Pro; tiếng Trung, Nhật, Hàn dùng phông của máy, không tải phông. Không dùng tệp phông nặng hàng
+  MB; phông tiêu đề riêng, nếu có, phải có giấy phép dùng tự do và chỉ giữ các chữ cần dùng. `lang` của trang đổi theo
+  ngôn ngữ đang chọn, để máy vẽ đúng nét chữ Trung, Nhật, Hàn.
 - Wiki dùng các vai trò trong `apps/aov-wiki/src/styles/typography.css` thay vì tự chọn cỡ: `--wiki-type-page` (28/36
   đậm, 22/28 trên compact), `--wiki-type-section` (18/24), `--wiki-type-entry` (15/22 đậm vừa), `--wiki-type-category`
   (14/20 đậm vừa), `--wiki-type-body` (15/24), `--wiki-type-prose` (16px, dòng 1.7, cho phần đọc dài),

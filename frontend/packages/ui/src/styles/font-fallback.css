@@ -1,0 +1,65 @@
+/*
+ * Stand-ins for Be Vietnam Pro while its files load. Each is a font the device already has, scaled to the width and
+ * line metrics of Be Vietnam Pro, so lines wrap the same and text does not move when the real font arrives.
+ * Arial is on Windows, macOS and iOS; Roboto on Android. Regular covers 100–549 and is matched to weight 400; bold
+ * covers 550–900 and is matched to 600, the most used heavy weight, so no weight is drawn as a synthetic bold.
+ * The ranges are those of the latin, latin-ext and vietnamese files, so other scripts keep the system fonts unscaled.
+ * size-adjust is the measured width of Be Vietnam Pro over the stand-in's on the same text, three parts Vietnamese
+ * prose to one part English (within 1.5% for either); ascent and descent are Be Vietnam Pro's 1000 and 265 per 1000,
+ * divided by size-adjust.
+ */
+@font-face {
+  font-family: "Be Vietnam Pro Fallback";
+  font-style: normal;
+  font-weight: 100 549;
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 108.38%;
+  ascent-override: 92.27%;
+  descent-override: 24.45%;
+  line-gap-override: 0%;
+  unicode-range:
+    U+0000-02FF, U+1D00-1DBF, U+1E00-1EFF, U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro Fallback";
+  font-style: normal;
+  font-weight: 550 900;
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  size-adjust: 103.11%;
+  ascent-override: 96.98%;
+  descent-override: 25.7%;
+  line-gap-override: 0%;
+  unicode-range:
+    U+0000-02FF, U+1D00-1DBF, U+1E00-1EFF, U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro Fallback Android";
+  font-style: normal;
+  font-weight: 100 549;
+  src: local("Roboto"), local("Roboto-Regular");
+  size-adjust: 109.48%;
+  ascent-override: 91.34%;
+  descent-override: 24.21%;
+  line-gap-override: 0%;
+  unicode-range:
+    U+0000-02FF, U+1D00-1DBF, U+1E00-1EFF, U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro Fallback Android";
+  font-style: normal;
+  font-weight: 550 900;
+  src: local("Roboto Bold"), local("Roboto-Bold");
+  size-adjust: 110.46%;
+  ascent-override: 90.53%;
+  descent-override: 23.99%;
+  line-gap-override: 0%;
+  unicode-range:
+    U+0000-02FF, U+1D00-1DBF, U+1E00-1EFF, U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
