@@ -129,6 +129,45 @@ class PatchRepositoriesIntegrationTest {
     }
 
     @Test
+    void replacesTheSourceLinksOfAPatchAsOneOrderedList() throws Exception {
+        var reader = jwt().authorities(new SimpleGrantedAuthority("catalog:read"));
+        var writer = jwt().authorities(new SimpleGrantedAuthority("catalog:read"),
+                new SimpleGrantedAuthority("patch:write"));
+        String path = "/api/wiki/v1/admin/patch-variants/" + variant + "/sources";
+        String two = """
+                {"sources":[
+                  {"url":"https://lienquan.garena.vn/notes","label":" Tiếng Việt ","locale":"vi-VN"},
+                  {"url":"https://www.rov.in.th/patch-notes/x","label":"Thái Lan","locale":""}
+                ]}""";
+
+        mvc.perform(get(path).with(reader)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(put(path).with(reader).contentType("application/json").content(two))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(path).with(writer).contentType("application/json").content(two))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].label").value("Tiếng Việt"))
+                .andExpect(jsonPath("$[1].locale").doesNotExist());
+        mvc.perform(put(path).with(writer).contentType("application/json")
+                .content("{\"sources\":[{\"url\":\"https://www.rov.in.th/patch-notes/x\",\"label\":\"TH\"},"
+                        + "{\"url\":\"https://lienquan.garena.vn/notes\",\"label\":\"VN\"}]}"))
+                .andExpect(status().isOk());
+        mvc.perform(get(path).with(reader)).andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].label").value("TH")).andExpect(jsonPath("$[1].label").value("VN"));
+
+        for (String bad : List.of("{\"sources\":[{\"url\":\"ftp://x.org/a\",\"label\":\"A\"}]}",
+                "{\"sources\":[{\"url\":\"https://x.org/a\",\"label\":\" \"}]}",
+                "{\"sources\":[{\"url\":\"https://x.org/a\",\"label\":\"A\",\"locale\":\"vi_vn\"}]}",
+                "{\"sources\":[{\"url\":\"https://x.org/a\",\"label\":\"A\"},"
+                        + "{\"url\":\"https://x.org/a\",\"label\":\"B\"}]}")) {
+            mvc.perform(put(path).with(writer).contentType("application/json").content(bad))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+        mvc.perform(put("/api/wiki/v1/admin/patch-variants/" + UUID.randomUUID() + "/sources").with(writer)
+                .contentType("application/json").content(two)).andExpect(status().isNotFound());
+        assertThat(jdbc.sql("select count(*) from access.audit_event where aggregate_id=? and "
+                + "action='PATCH_SOURCES_UPDATED'").param(variant).query(Long.class).single()).isEqualTo(2L);
+    }
+
+    @Test
     void preservesAssignmentAndReleaseTimelineBoundaries() {
         assertThat(assignments.appliesAt(region, ruleset, start)).isTrue();
         assertThat(assignments.appliesAt(region, ruleset, start.minusNanos(1000))).isFalse();
