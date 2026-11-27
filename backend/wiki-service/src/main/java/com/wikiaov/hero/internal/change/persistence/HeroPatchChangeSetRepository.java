@@ -18,9 +18,13 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
                 c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId,
                 c.sourceKind as sourceKind, c.sourceUrl as sourceUrl, c.introducesHero as introducesHero
             from HeroPatchChangeSet c join HeroIdentity h on h.id = c.heroId
-            where c.patchVariantId = :variantId order by c.createdAt desc, c.id
+                left join HeroPatchChangePosition p on p.changeSetId = c.id
+            where c.patchVariantId = :variantId order by p.position asc nulls first, c.createdAt desc, c.id
             """)
     List<Header> historyForVariant(@Param("variantId") UUID variantId);
+
+    @Query("select c.id as id, c.heroId as heroId from HeroPatchChangeSet c where c.patchVariantId = :variantId")
+    List<Member> membersOfVariant(@Param("variantId") UUID variantId);
 
     @Query("""
             select c.id as id, c.heroId as heroId, h.code as heroCode, c.patchVariantId as patchVariantId,
@@ -60,6 +64,13 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
         String getSourceUrl();
 
         boolean getIntroducesHero();
+    }
+
+    /** A change set of a patch variant and the hero it belongs to. */
+    interface Member {
+        UUID getId();
+
+        UUID getHeroId();
     }
 
     interface Introduction {

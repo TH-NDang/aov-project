@@ -2,8 +2,10 @@ package com.wikiaov.hero.internal.change.persistence;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository.Header;
+import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository.Member;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment;
+import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangePosition;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTranslation;
 import com.wikiaov.hero.internal.change.persistence.entity.MechanicChangeClassification;
@@ -41,16 +43,19 @@ public class HeroPatchHistory {
     private final HeroPatchAssessmentRepository assessments;
     private final MechanicChangeRepository mechanics;
     private final MechanicChangePreviousRepository previous;
+    private final HeroPatchChangePositionRepository positions;
 
     public HeroPatchHistory(HeroPatchChangeSetRepository changeSets, HeroPatchChangeTranslationRepository translations,
             HeroChangeClassificationRepository changes, HeroPatchAssessmentRepository assessments,
-            MechanicChangeRepository mechanics, MechanicChangePreviousRepository previous) {
+            MechanicChangeRepository mechanics, MechanicChangePreviousRepository previous,
+            HeroPatchChangePositionRepository positions) {
         this.changeSets = changeSets;
         this.translations = translations;
         this.changes = changes;
         this.assessments = assessments;
         this.mechanics = mechanics;
         this.previous = previous;
+        this.positions = positions;
     }
 
     public void create(UUID id, UUID variantId, HeroChanges.Record input,
@@ -145,6 +150,32 @@ public class HeroPatchHistory {
 
     public void saveAssessment(HeroPatchAssessment assessment) {
         assessments.saveAndFlush(assessment);
+    }
+
+    public List<Member> members(UUID variantId) {
+        return changeSets.membersOfVariant(variantId);
+    }
+
+    /** Gives each change set its index in the list and returns how many places changed. */
+    public int place(List<UUID> changeSetIds, Instant at, Actor actor) {
+        var current = positions.findAllById(changeSetIds).stream()
+                .collect(Collectors.toMap(HeroPatchChangePosition::getChangeSetId, Function.identity()));
+
+        int moved = 0;
+        for (int index = 0; index < changeSetIds.size(); index++) {
+            var id = changeSetIds.get(index);
+            var position = current.get(id);
+            if (position == null) {
+                positions.save(HeroPatchChangePosition.place(id, index, at, actor.issuer(), actor.subject()));
+                moved++;
+            } else if (position.getPosition() != index) {
+                position.move(index, at, actor.issuer(), actor.subject());
+                moved++;
+            }
+        }
+        positions.flush();
+
+        return moved;
     }
 
     public List<Entry> forVariant(UUID variantId, String locale) {

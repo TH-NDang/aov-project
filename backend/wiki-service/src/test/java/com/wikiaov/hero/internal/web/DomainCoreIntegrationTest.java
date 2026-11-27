@@ -866,6 +866,68 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void editorsSetTheOrderInWhichAPatchListsItsHeroes() throws Exception {
+        UUID season = id(send(post(ROOT + "/admin/seasons"),
+                Map.of("code", "order-season", "displayName", "Order season"), 201));
+        UUID listed = seasonPatch(season, "order-listed");
+        UUID elsewhere = seasonPatch(season, "order-elsewhere");
+        var nakroth = create();
+        UUID nakrothId = uuid(nakroth, "heroId");
+        nakroth = complete(nakrothId, id(nakroth), nakroth);
+        send(post(path(nakrothId, id(nakroth)) + "/publish"), Map.of("expectedVersion", nakroth.get("version")), 200);
+        UUID violet = publishedHero("violet", listed);
+        UUID airi = publishedHero("airi", listed);
+        List<Map<String, Object>> line = List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description",
+                "Điều chỉnh theo ghi chú"));
+        String changes = ROOT + "/admin/patch-variants/" + listed + "/hero-changes";
+        clock.set(Instant.parse("2026-10-15T01:00:00Z"));
+        UUID nakrothChange = id(send(post(changes), notes(nakrothId, line), 201));
+        clock.set(Instant.parse("2026-10-15T02:00:00Z"));
+        UUID violetChange = id(send(post(changes), notes(violet, line), 201));
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(violetChange.toString(), nakrothChange.toString());
+
+        String order = changes + "/order";
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange)), 204);
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange)), 204);
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(nakrothChange.toString(), violetChange.toString());
+        assertThat(jdbc.sql("SELECT count(*) FROM access.audit_event WHERE aggregate_id=? AND "
+                + "action='HERO_PATCH_CHANGES_REORDERED'").param(listed).query(Long.class).single()).isEqualTo(1L);
+
+        // A change set recorded after the order was set comes first until the next reorder.
+        clock.set(Instant.parse("2026-10-15T03:00:00Z"));
+        UUID airiChange = id(send(post(changes), notes(airi, line), 201));
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(airiChange.toString(), nakrothChange.toString(), violetChange.toString());
+
+        // The list names every change set of the variant once, and only those.
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange)), 409);
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange, airiChange, violetChange)), 422);
+        UUID foreign = id(send(post(ROOT + "/admin/patch-variants/" + elsewhere + "/hero-changes"),
+                notes(nakrothId, line), 201));
+        send(put(order), Map.of("changeSetIds", List.of(nakrothChange, violetChange, foreign)), 409);
+        send(put(ROOT + "/admin/patch-variants/" + UUID.randomUUID() + "/hero-changes/order"),
+                Map.of("changeSetIds", List.of()), 404);
+        mvc.perform(put(order).with(jwt().authorities(new SimpleGrantedAuthority("catalog:read")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("changeSetIds", List.of(violetChange, nakrothChange,
+                        airiChange)))))
+                .andExpect(status().isForbidden());
+        assertThat(heroChanges(listed)).extracting(change -> change.get("id"))
+                .containsExactly(airiChange.toString(), nakrothChange.toString(), violetChange.toString());
+    }
+
+    private UUID publishedHero(String code, UUID context) throws Exception {
+        var draft = send(post(ROOT + "/admin/heroes"), Map.of("code", code, "name", code, "initialLocale", "vi-VN",
+                "rulesetId", ruleset, "contextId", context), 201);
+        UUID hero = uuid(draft, "heroId");
+        draft = complete(hero, id(draft), draft);
+        send(post(path(hero, id(draft)) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
+        return hero;
+    }
+
+    @Test
     void anExistingPatchJoinsASeasonThatFitsItsOrderAndReleaseDates() throws Exception {
         UUID earlier = id(send(post(ROOT + "/admin/seasons"), Map.of("code", "joined-a", "displayName", "A"), 201));
         UUID later = id(send(post(ROOT + "/admin/seasons"), Map.of("code", "joined-b", "displayName", "B"), 201));

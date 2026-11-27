@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.HeroChangeEntry;
 import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
+import com.wikiaov.hero.internal.change.application.HeroChangeOrderCommand;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.platform.CreatedId;
@@ -37,6 +38,12 @@ public interface HeroChangesApi {
     })
     HeroAssessmentView assess(@Parameter(description = "Id identifier.") UUID id,
             @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroPatchChanges.AssessmentInput input);
+
+    @Operation(operationId = "heroChangesApi_reorder", summary = "Reorder - hero changes", description = "Sets the order in which a patch variant lists its hero change sets, in Admin and on the public patch page. The body names every change set of the variant exactly once; a list that misses or adds one is a conflict, a repeated id is invalid content. A change set recorded later has no place and is listed first. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "204", description = "Successful operation.")
+    })
+    void reorder(@Parameter(description = "Patch variant identifier.") UUID id,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid HeroChangeOrderCommand body);
 
     @Operation(operationId = "heroChangesApi_recordPrevious", summary = "Record previous - hero changes", description = "Adds what a mechanic did before its change, written by an editor from a cited http(s) source; at most once per mechanic change and never edited. The recorded change and the derived patch view stay unchanged. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)

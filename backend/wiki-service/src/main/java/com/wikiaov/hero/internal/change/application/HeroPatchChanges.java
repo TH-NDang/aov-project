@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
+import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository.Member;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment;
 import com.wikiaov.hero.internal.domain.HeroChanges;
@@ -407,6 +408,35 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
 
         return new HeroAssessmentView(value.getKind(), value.getVersion());
+    }
+
+    /**
+     * Sets the order in which a patch lists its heroes, in Admin and on the public patch page. The list names every
+     * change set of the variant once; one recorded later has no place yet and comes first until the next reorder.
+     */
+    @Transactional
+    @PreAuthorize("hasAuthority('patch:write')")
+    public void reorder(UUID variantId, HeroChangeOrderCommand input) {
+        var ids = input.changeSetIds();
+        if (new HashSet<>(ids).size() != ids.size()) {
+            throw HeroValidation.invalid("A change set may appear only once in the order.");
+        }
+        contexts.variant(variantId);
+
+        var members = history.members(variantId);
+        members.stream().map(Member::getHeroId).sorted().forEach(store::lockHero);
+        if (!new HashSet<>(ids).equals(members.stream().map(Member::getId).collect(Collectors.toSet()))) {
+            throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT,
+                    "The changes of this patch have changed. Reload before reordering.");
+        }
+
+        var actor = actors.require();
+        int moved = history.place(ids, clock.instant(), actor);
+
+        if (moved > 0) {
+            audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGES_REORDERED", CatalogAggregates.PATCH, variantId,
+                    null, null, null, null, Map.of("changeSets", ids.size(), "moved", moved)));
+        }
     }
 
     @Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.PreviousInput")
