@@ -2072,8 +2072,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
     }
   ]
 }$json$::jsonb,
-    'Initial map from the battlefield encyclopedia', now(), now(), 'urn:wikiaov:migration', 'V080__seed_5v5_map_guide',
-    now(), 'urn:wikiaov:migration', 'V080__seed_5v5_map_guide'
+    'Initial map from the battlefield encyclopedia', now(), now(), 'urn:wikiaov:migration', 'V081__seed_5v5_map_guide',
+    now(), 'urn:wikiaov:migration', 'V081__seed_5v5_map_guide'
 FROM gamemode.game_mode mode
 WHERE mode.code = '5v5'
   AND NOT EXISTS (SELECT 1 FROM gamemode.map_guide_revision existing WHERE existing.mode_id = mode.id);

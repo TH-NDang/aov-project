@@ -2692,7 +2692,7 @@ Thời gian tối đa 7200 giây. Lưu nháp chấp nhận thiếu dữ liệu n
 độ ngoài 0–100. Xuất bản cần tên, ít nhất một vật thể, vị trí cho mọi vật thể không thuộc họ khác và đủ ba điểm cho
 đa giác của mỗi khu vực.
 
-Dữ liệu ban đầu (V080) chép từ ảnh chụp và video màn Bách khoa ngày 27/11/2026 của chế độ `5v5`; vị trí đo trên bản
+Dữ liệu ban đầu (V081) chép từ ảnh chụp và video màn Bách khoa ngày 27/11/2026 của chế độ `5v5`; vị trí đo trên bản
 đồ nhỏ và làm tròn, loài quái nhỏ ở từng bãi là phỏng đoán cần người biên tập rà lại.
 
 Admin sửa bản đồ ở trang riêng của chế độ (Chế độ → “Mở bản đồ chiến trường”), theo các tab Chung, Đối tượng, Khu

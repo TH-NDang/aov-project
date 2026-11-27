@@ -168,7 +168,7 @@ class MapGuideContentRulesTest {
 
     private static MapGuideContent seededMap() throws IOException {
         try (var stream = MapGuideContentRulesTest.class
-                .getResourceAsStream("/db/migration/V080__seed_5v5_map_guide.sql")) {
+                .getResourceAsStream("/db/migration/V081__seed_5v5_map_guide.sql")) {
             assertThat(stream).isNotNull();
             String sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             String json = sql.substring(sql.indexOf("$json$") + 6, sql.lastIndexOf("$json$"));

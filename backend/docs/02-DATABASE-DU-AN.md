@@ -2072,7 +2072,7 @@ ngoại sang schema khác; asset và tướng được xác nhận qua contract 
 `created_by_subject`.
 
 `gamemode.game_mode_revision`, `gamemode.auto_chess_revision` và `gamemode.map_guide_revision` (bản đồ chiến
-trường, V079) — cùng cấu trúc revision:
+trường, V080) — cùng cấu trúc revision:
 
 | Cột | Ý nghĩa |
 |---|---|
@@ -2091,7 +2091,7 @@ Chỉ mục duy nhất một phần `(mode_id) WHERE state = 'DRAFT'` (mỗi b�
 `(mode_id, state, published_at DESC)` phục vụ đọc bản xuất bản gần nhất. Khóa ghi bằng `SELECT ... FOR UPDATE`
 trên `game_mode` trước khi tạo/sửa/xuất bản revision của chế độ đó.
 
-V080 thêm bản đồ xuất bản đầu tiên cho chế độ `5v5` (UUID cố định, người tạo `urn:wikiaov:migration`); bỏ qua khi
+V081 thêm bản đồ xuất bản đầu tiên cho chế độ `5v5` (UUID cố định, người tạo `urn:wikiaov:migration`); bỏ qua khi
 chưa có chế độ `5v5` hoặc chế độ đã có bản đồ.
 
 `gamemode.community_lineup` — đội hình cộng đồng:
