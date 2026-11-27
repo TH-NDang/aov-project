@@ -22,6 +22,8 @@ import { activeSection } from "../../lib/hero-section-position"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "../../components/change-list"
 import { ReleaseDate } from "./release-date"
 import { PatchFixes, type FixEntry } from "./patch-fixes"
+import { PatchSourceList } from "./patch-sources"
+import { patchSourceLinks } from "../../lib/patch-sources"
 import { FIX_KIND, isCatalogFix, splitHeroFixes } from "../../lib/patch-fixes"
 import {
   patchChangesQuery,
@@ -567,11 +569,21 @@ function PatchContent({ release }: { release: PatchRelease }) {
       {variant?.isCurrent && <span className="wiki-updates-current">{text("Đang áp dụng", "Current")}</span>}
     </span>
   )
-  const sourceLink = source && (
-    <a className="wiki-patch-source" href={source} target="_blank" rel="noopener noreferrer">
+  // One page is a link beside the title; several are named by language in a row of their own under it.
+  const links = patchSourceLinks(release.sources, source)
+  const sourceLink = links.length === 1 && (
+    <a
+      className="wiki-patch-source"
+      href={links[0].url}
+      target="_blank"
+      rel="noopener noreferrer"
+      hrefLang={links[0].locale ?? undefined}
+      title={links[0].label || undefined}
+    >
       {text("Nguồn công bố", "Publication source")} <WikiIcon name="open" size={16} />
     </a>
   )
+  const sourceList = links.length > 1 && <PatchSourceList links={links} />
 
   return (
     <>
@@ -587,14 +599,18 @@ function PatchContent({ release }: { release: PatchRelease }) {
           </div>
           <h1 className="wiki-patch-title">{title}</h1>
           <p>{meta}</p>
+          {sourceList}
         </header>
       ) : (
-        <CatalogHeading
-          title={title}
-          back={{ to: href("/updates"), label: t("Ghi chú cập nhật", "Patch notes") }}
-          lead={meta}
-          action={sourceLink}
-        />
+        <>
+          <CatalogHeading
+            title={title}
+            back={{ to: href("/updates"), label: t("Ghi chú cập nhật", "Patch notes") }}
+            lead={meta}
+            action={sourceLink}
+          />
+          {sourceList}
+        </>
       )}
 
       <div className="wiki-patch-layout" data-rail={layout === "wide" && indexed ? "" : undefined}>
