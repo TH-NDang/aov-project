@@ -1299,7 +1299,7 @@ class DomainCoreIntegrationTest {
                 List.of("id", "changeKind", "sortOrder", "type", "description"));
         var patchFields = List.of("id", "code", "sequence", "locale", "title", "summary", "description",
                 "actualLocale", "fallbackApplied", "region", "requestedLocale", "variantId", "rulesetId",
-                "effectiveAt");
+                "effectiveAt", "sources");
         assertThat(names(entry.path("patch"))).containsExactlyElementsOf(patchFields);
         assertThat(names(read(ROOT + "/patches/" + patch2))).containsExactlyElementsOf(patchFields);
         assertThat(names(read(ROOT + "/patches").path("items").get(0))).containsExactlyElementsOf(patchFields);
