@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Check, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -30,13 +31,22 @@ export function usePlayerName(id: string | null | undefined, known?: string) {
 }
 
 /** A linked player shown read-only: from what the screen already has, else from their record. */
-export function LinkedPlayer({ id, known }: { id: string; known?: KnownPlayer }) {
+export function LinkedPlayer({
+  id,
+  known,
+  renderName,
+}: {
+  id: string
+  known?: KnownPlayer
+  /** Wraps the loaded name, for a screen where the name opens more about the player. */
+  renderName?: (name: string) => ReactNode
+}) {
   const player = useRecordedPlayer(id, known)
   const name = player.name ?? (player.missing ? "Hồ sơ không còn khả dụng" : "Đang tải…")
   return (
     <span className="flex min-w-0 items-center gap-2">
       <PlayerPhoto name={name} url={player.photoUrl} size={28} />
-      <span className="type-body truncate">{name}</span>
+      <span className="type-body truncate">{player.name && renderName ? renderName(player.name) : name}</span>
     </span>
   )
 }

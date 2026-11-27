@@ -79,6 +79,9 @@ export const tournamentKeys = {
     [...all, "games", actorKey, "patches", tournamentId] as const,
   teamRosters: (actorKey: string, teamId: string, tournamentId: string) =>
     [...all, "roster-memberships", actorKey, teamId, tournamentId] as const,
+  /** Every roster line of one team or one player, across tournaments. */
+  rostersOf: (actorKey: string, kind: "TEAM" | "PLAYER", id: string) =>
+    [...all, "roster-memberships", actorKey, "of", kind, id] as const,
   stats: (actorKey: string) => [...all, "tournament-stats", actorKey] as const,
   catalog: (actorKey: string, scope?: CatalogScope) =>
     [

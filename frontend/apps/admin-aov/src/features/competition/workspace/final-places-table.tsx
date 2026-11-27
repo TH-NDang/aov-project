@@ -4,6 +4,7 @@ import { Check } from "lucide-react"
 import { LocalMoney } from "@aov/ui/components/local-money"
 import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
 import { cn } from "@aov/ui/lib/utils"
+import { TeamName } from "../peek/competitor-peek"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import type { TeamView } from "@/features/esports/model/game-view"
 import type { FinalRow } from "./final-state"
@@ -106,7 +107,13 @@ function Row({
                 size={medalOf(place) === "gold" ? 32 : 24}
               />
             </span>
-            <span className={cn("min-w-0 break-words", medalOf(place) && "font-semibold")}>{row.teamName}</span>
+            {row.teamId ? (
+              <TeamName id={row.teamId} className={cn("min-w-0", medalOf(place) && "font-semibold")}>
+                {row.teamName}
+              </TeamName>
+            ) : (
+              <span className={cn("min-w-0 break-words", medalOf(place) && "font-semibold")}>{row.teamName}</span>
+            )}
           </span>
         )}
         <span className="type-meta block space-y-0.5 pb-1 pl-10.5 @3xl:hidden">

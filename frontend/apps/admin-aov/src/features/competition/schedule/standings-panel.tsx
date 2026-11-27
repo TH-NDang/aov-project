@@ -2,6 +2,7 @@ import type { CompetitionStage } from "@aov/community-contracts"
 import { ListOrdered } from "lucide-react"
 import { RankBadge, medalOf } from "@aov/ui/components/rank-badge"
 import { cn } from "@aov/ui/lib/utils"
+import { TeamName } from "../peek/competitor-peek"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { stageProgress } from "../workspace/model"
 import { Chip, Panel, type Workspace } from "../workspace/parts"
@@ -61,7 +62,7 @@ export function StandingsPanel({ ws, stage }: { ws: Workspace; stage: Competitio
                 <td className="w-full max-w-0 py-1.5">
                   <span className="flex min-w-0 items-center gap-2.5">
                     <TeamLogo team={ws.team(row.teamId)} size={medal === "gold" ? 32 : 24} />
-                    <span className={cn("truncate", !out && "font-semibold")}>{ws.team(row.teamId).name}</span>
+                    <TeamName id={row.teamId} className={cn("min-w-0", !out && "font-semibold")} />
                     {row.tied && row.played > 0 && <span className="type-meta shrink-0">Đồng hạng</span>}
                   </span>
                 </td>

@@ -9,6 +9,7 @@ import { CrewEditor, CrewList } from "@/features/tournaments/components/crew-peo
 import { LinkedPlayer, MvpChooser, usePlayerName } from "@/features/tournaments/components/mvp-chooser"
 import { MAX_SERIES_CREW } from "@/features/tournaments/model/crew-model"
 import { candidateName, mvpGroups } from "@/features/tournaments/model/mvp-model"
+import { PlayerName } from "../peek/competitor-peek"
 import { rosterOrder } from "./model"
 import type { Workspace } from "./parts"
 
@@ -28,7 +29,11 @@ export function MatchPeople({ ws, record }: { ws: Workspace; record: DocumentVie
           <dt className="type-label text-muted-foreground">MVP trận</dt>
           <dd className="mt-1">
             {mvpPlayerId ? (
-              <LinkedPlayer id={mvpPlayerId} known={ws.entry.content.players[mvpPlayerId]} />
+              <LinkedPlayer
+                id={mvpPlayerId}
+                known={ws.entry.content.players[mvpPlayerId]}
+                renderName={(name) => <PlayerName id={mvpPlayerId}>{name}</PlayerName>}
+              />
             ) : (
               <span className="type-body">Chưa có</span>
             )}

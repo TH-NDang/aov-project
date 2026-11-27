@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react"
-import { Link, useBeforeUnload, useNavigate, useParams, useSearchParams } from "react-router"
+import { Link, useBeforeUnload, useLocation, useNavigate, useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft,
@@ -54,6 +54,8 @@ import { ProfileFields } from "./profile-fields"
 import { Section } from "@/features/community/components/profile-form-primitives"
 import { profileDirectoryPath } from "./page-directory"
 import { OrganizationCompetitions } from "./organization-competitions"
+import { RecordTournaments } from "./record-tournaments"
+import { backFromState } from "@/features/competition/peek/peek-model"
 import { PlatformIcon, popularSocialPlatforms, platformOf } from "./platform-icon"
 import { ProfileQuickEditSheet, type ProfileQuickEditTarget } from "./profile-quick-edit-sheet"
 import { ProfileCountry } from "./profile-country"
@@ -96,7 +98,9 @@ function EditorLoader({ access }: { access: Access }) {
           ? section.tab
           : searchParams.get("tab") === "roster" && query.data.kind === "TEAM"
             ? "roster"
-            : "overview"
+            : searchParams.get("tab") === "tournaments" && tournamentKind(query.data)
+              ? "tournaments"
+              : "overview"
       }
       setTab={(tab) => setSection({ pageId, tab })}
     />
@@ -104,6 +108,9 @@ function EditorLoader({ access }: { access: Access }) {
 }
 type Icon = ComponentType<{ className?: string }>
 type Tab = [string, string, Icon, number | null]
+/** The kind of a profile that plays in tournaments through its record: a team or a player. */
+const tournamentKind = (entry: CommunityProfile) =>
+  entry.entityId && (entry.kind === "TEAM" || entry.kind === "PLAYER") ? entry.kind : null
 const httpUrl = (value?: string | null) => !!value && /^https?:\/\//i.test(value)
 
 function Editor({
@@ -119,6 +126,9 @@ function Editor({
 }) {
   const client = useQueryClient()
   const navigate = useNavigate()
+  // A profile opened from a tournament keeps the way back to it.
+  const back = backFromState(useLocation().state)
+  const playsIn = tournamentKind(entry)
   const [content, setContent] = useState(entry.content!)
   const [uploading, setUploading] = useState(false)
   const [quickEdit, setQuickEdit] = useState<ProfileQuickEditTarget | null>(null)
@@ -202,6 +212,7 @@ function Editor({
       : entry.kind === "PERSON"
         ? []
         : [["achievements", "Thành tích", Trophy, content.achievements.length] as Tab]),
+    ...(playsIn ? [["tournaments", "Giải đấu", CalendarDays, null] as Tab] : []),
     ["sources", "Nguồn thông tin", BookOpenText, content.sources.length],
     ...(access.canPublish && community ? [["access", "Quyền đại diện", ShieldCheck, null] as Tab] : []),
   ]
@@ -218,13 +229,17 @@ function Editor({
     <Page className="@container/profile-editor mx-auto w-full max-w-[1400px] gap-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link
-          className="type-body flex w-fit items-center gap-2 text-muted-foreground hover:text-foreground"
-          to={profileDirectoryPath(entry.kind, content.personRoles)}
+          className="type-body flex w-fit min-w-0 items-center gap-2 text-muted-foreground hover:text-foreground"
+          to={back?.to ?? profileDirectoryPath(entry.kind, content.personRoles)}
         >
-          <ArrowLeft className="size-4" />
-          {entry.kind === "PERSON"
-            ? content.personRoles?.map((role) => personRoleLabels[role]).join(" · ") || "Nhân sự"
-            : profileKindLabels[entry.kind]}
+          <ArrowLeft className="size-4 shrink-0" />
+          <span className="truncate">
+            {back
+              ? back.label
+              : entry.kind === "PERSON"
+                ? content.personRoles?.map((role) => personRoleLabels[role]).join(" · ") || "Nhân sự"
+                : profileKindLabels[entry.kind]}
+          </span>
         </Link>
         <span className="type-meta">{community ? "Chỉnh sửa hồ sơ" : "Biên tập hệ thống giải"}</span>
       </div>
@@ -555,6 +570,13 @@ function Editor({
             <Representatives entry={entry} />
           ) : tab === "competitions" && (entry.kind === "ORGANIZATION" || entry.kind === "CIRCUIT") ? (
             <OrganizationCompetitions organizationId={entry.id} actorKey={access.actorKey} kind={entry.kind} />
+          ) : tab === "tournaments" && playsIn ? (
+            <RecordTournaments
+              kind={playsIn}
+              entityId={entry.entityId!}
+              actorKey={access.actorKey}
+              profileName={content.name || entry.content?.name || "Hồ sơ"}
+            />
           ) : (
             <>
               <ProfileFields
