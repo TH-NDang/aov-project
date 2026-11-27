@@ -21,6 +21,8 @@ import { heroDetailQuery, type HeroDetail } from "../../lib/hero-api"
 import { activeSection } from "../../lib/hero-section-position"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "../../components/change-list"
 import { ReleaseDate } from "./release-date"
+import { PatchFixes, type FixEntry } from "./patch-fixes"
+import { FIX_KIND, isCatalogFix, splitHeroFixes } from "../../lib/patch-fixes"
 import {
   patchChangesQuery,
   patchReleasesQuery,
@@ -377,11 +379,15 @@ function PatchContent({ release }: { release: PatchRelease }) {
   })
   const variant = scope.options?.patches.find((patch) => patch.id === release.variantId)
   const season = scope.options?.seasons.find((item) => item.id === variant?.seasonId)
-  const sections = DOMAINS.map((domain, index) => ({
-    ...domain,
-    id: `patch-${domain.domain.toLowerCase()}`,
-    rows: results[index].data ?? [],
-  }))
+  // Fixes are read apart from the balance changes: `rows` holds what the section shows, `fixes` what moves to the end.
+  const sections = DOMAINS.map((domain, index) => {
+    const all = results[index].data ?? []
+    const split =
+      domain.domain === "HERO"
+        ? splitHeroFixes(all)
+        : { main: all.filter((row) => !isCatalogFix(row)), fixes: all.filter(isCatalogFix) }
+    return { ...domain, id: `patch-${domain.domain.toLowerCase()}`, all, rows: split.main, fixes: split.fixes }
+  })
   const filled = sections.filter((section) => section.rows.length)
   const pending = results.some((result) => result.isPending)
   const failed = results.some((result) => result.isError)
@@ -398,7 +404,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
       ...warehouseCatalogQuery(section.tab ?? "items", catalogScope),
       // The browser keeps one copy of each armory: the version the reader picked, not this one.
       meta: undefined,
-      enabled: !!section.tab && !!variant && section.rows.length > 0,
+      enabled: !!section.tab && !!variant && section.all.length > 0,
     })),
   })
   const pictureOf = (index: number, row: PatchChangeRow) => {
@@ -407,7 +413,8 @@ function PatchContent({ release }: { release: PatchRelease }) {
     return entry && warehouseImage(entry)
   }
 
-  const heroRows = sections.find((section) => section.domain === "HERO")?.rows ?? []
+  const heroSection = sections.find((section) => section.domain === "HERO")
+  const heroRows = heroSection?.all ?? []
   // The hero as of this update gives its name and picture, names its skills and tells how many levels each has.
   // Each is read straight from the row's hero, without waiting for the whole hero list.
   const details = useQueries({
@@ -430,19 +437,23 @@ function PatchContent({ release }: { release: PatchRelease }) {
     taken.add(id)
     return id
   }
-  const heroes: HeroEntry[] = heroRows.map((row, index) => {
-    const hero = details[index]?.data
+  const detailOf = new Map(heroRows.map((row, index) => [row.heroId, details[index]?.data]))
+  const heroLook = (row: PatchChangeRow) => {
+    const hero = row.heroId ? detailOf.get(row.heroId) : undefined
     return {
-      key: String(row.id ?? index),
-      id: place(`patch-hero-${row.heroCode ?? index}`),
-      row,
       hero,
       name: hero?.content.profile?.name ?? titleCase(row.heroCode ?? ""),
-      kind: changeSetKind(row),
       image: hero?.media.HEAD?.currentVersion?.url ?? hero?.media.PORTRAIT?.currentVersion?.url,
-      summary: parseChangeSummary(row.summary).text,
     }
-  })
+  }
+  const heroes: HeroEntry[] = (heroSection?.rows ?? []).map((row, index) => ({
+    ...heroLook(row),
+    key: String(row.id ?? index),
+    id: place(`patch-hero-${row.heroCode ?? index}`),
+    row,
+    kind: changeSetKind(row),
+    summary: parseChangeSummary(row.summary).text,
+  }))
   // Imported notes can carry one sentence for every hero; said once, it does not have to be read eight times.
   const sharedSummary =
     heroes.length > 1 && heroes.every((entry) => entry.summary === heroes[0].summary) ? heroes[0].summary : ""
@@ -460,6 +471,31 @@ function PatchContent({ release }: { release: PatchRelease }) {
         })),
       ]),
   )
+  const fixes = sections.flatMap((section, at) =>
+    section.fixes.map((row, index): FixEntry => {
+      if (section.domain === "HERO") {
+        const look = heroLook(row)
+        return {
+          ...look,
+          id: place(`patch-fix-${row.heroCode ?? index}`),
+          kind: FIX_KIND,
+          page: look.hero ? href(`/hero/${look.hero.code}`) : null,
+          row,
+        }
+      }
+      const target = row.subject?.id ?? row.spellId
+      return {
+        id: place(`patch-fix-${row.subject?.code ?? row.code ?? index}`),
+        name: row.subject?.displayName ?? row.name ?? row.subject?.code ?? row.code ?? "",
+        kind: FIX_KIND,
+        image: pictureOf(at, row),
+        page: target && section.tab ? href(warehousePath(section.tab, target)) : null,
+        domainLabel: text(...section.title),
+        row,
+      }
+    }),
+  )
+  const fixesTitle = text("Sửa lỗi và tối ưu", "Fixes and optimisations")
   const groups: IndexGroup[] = filled.map((section) => {
     const entries = section.domain === "HERO" ? heroes : (catalogEntries.get(section.domain) ?? [])
     return {
@@ -469,6 +505,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
       entries,
     }
   })
+  if (fixes.length) groups.push({ id: "patch-fixes", title: fixesTitle, pictured: true, entries: fixes })
   const indexed = groups.reduce((total, group) => total + group.entries.length, 0) > 1
   const indexTitle = text("Trong bản cập nhật này", "In this update")
 
@@ -502,15 +539,13 @@ function PatchContent({ release }: { release: PatchRelease }) {
 
   const summary = releaseSummary(release.summary)
   const source = [
-    ...sections
-      .flatMap((section) => section.rows)
-      .map((row) => row.sourceUrl ?? parseChangeSummary(row.summary).source),
+    ...sections.flatMap((section) => section.all).map((row) => row.sourceUrl ?? parseChangeSummary(row.summary).source),
     summary.source,
   ].find((url) => url && /^https:\/\//i.test(url))
 
   // An address that names a place on the page is followed once the notes that hold the place have arrived.
   const arrived = useRef(false)
-  const ready = !pending && filled.length > 0
+  const ready = !pending && groups.length > 0
   useEffect(() => {
     if (arrived.current || !ready || hash.length < 2) return
     // After the app's own return to the top of a new address, which runs once this effect has.
@@ -652,9 +687,10 @@ function PatchContent({ release }: { release: PatchRelease }) {
               </div>
             </section>
           ))}
+          {fixes.length > 0 && <PatchFixes id="patch-fixes" title={fixesTitle} entries={fixes} />}
 
           {pending &&
-            (filled.length ? (
+            (groups.length ? (
               <p role="status" className="wiki-updates-state">
                 {t("Đang tải…", "Loading…")}
               </p>
@@ -677,7 +713,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
               </button>
             </div>
           )}
-          {!pending && !failed && !filled.length && (
+          {!pending && !failed && !groups.length && (
             <p role="status" className="wiki-updates-state wiki-mascot-state">
               {text(
                 "Bản cập nhật này chưa có ghi chú gameplay được công bố.",
