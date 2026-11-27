@@ -66,6 +66,18 @@ class GameModeIntegrationTest {
               {"code": "dau-si", "name": "Đấu sĩ", "units": [{"unitCode": "arduin", "carry": true, "itemCodes": []}]}]}
             """.replace("%s", LINEUP_ID);
 
+    private static final String MAP = """
+            {"name": "Bách khoa chiến trường", "objects": [
+              {"code": "caesar", "name": "Caesar", "category": "EPIC", "glyph": "CAESAR", "tags": ["Quái to"],
+               "firstSpawn": {"seconds": 120, "note": "Phút thứ 2"}, "respawn": {"seconds": 180, "note": "3 phút"},
+               "sections": [{"title": "Lợi ích hạ", "body": "- Caesar tiên phong có năng lực đẩy đường rất mạnh."}],
+               "positions": [{"x": 32.9, "y": 28.1}]},
+              {"code": "caesar-hac-am", "name": "Caesar hắc ám", "category": "EPIC", "family": "caesar"}],
+             "lanes": [{"code": "duong-rong", "name": "Đường Rồng", "glyph": "LANE", "positions": [{"x": 60, "y": 97}]}],
+             "tempo": [{"seconds": 120, "callouts": [{"label": "Caesar xuất hiện", "objectCode": "caesar",
+               "x": 32.9, "y": 28.1}], "steps": ["Xuất hiện lần đầu: Phút thứ 2"]}]}
+            """;
+
     @Autowired
     MockMvc mvc;
 
@@ -80,7 +92,7 @@ class GameModeIntegrationTest {
     @BeforeEach
     void cleanUp() {
         jdbc.sql("TRUNCATE gamemode.lineup_like, gamemode.community_lineup, gamemode.auto_chess_revision, "
-                + "gamemode.game_mode_revision, gamemode.game_mode").update();
+                + "gamemode.map_guide_revision, gamemode.game_mode_revision, gamemode.game_mode").update();
         code = "co-lien-quan";
     }
 
@@ -153,6 +165,38 @@ class GameModeIntegrationTest {
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
         assertThat(next.at("/content/lineups/1/id").asText()).isEqualTo(assigned);
         assertThat(next.at("/revision/sourceRevisionId").asText()).isEqualTo(draft.at("/revision/id").asText());
+    }
+
+    @Test
+    void theMapOfAModeIsPublishedWithConsistentReferences() throws Exception {
+        String id = publishedMode("NONE");
+        mvc.perform(get(PUBLIC + "/" + code + "/map")).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("GAME_MODE_MAP_NOT_FOUND"));
+
+        String broken = MAP.replace("\"family\": \"caesar\"", "\"family\": \"rong\"");
+        send(post(ADMIN + "/" + id + "/map/drafts"), "{\"content\": " + broken + "}", editor())
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errors[0].code").value("UNKNOWN_REFERENCE"));
+        JsonNode draft = json.readTree(send(post(ADMIN + "/" + id + "/map/drafts"), "{\"content\": " + MAP + "}",
+                editor()).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        String draftId = draft.at("/revision/id").asText();
+        assertThat(draft.get("missingFields")).isEmpty();
+        mvc.perform(get(PUBLIC + "/" + code + "/map")).andExpect(status().isNotFound());
+
+        send(post(ADMIN + "/" + id + "/map/drafts/" + draftId + "/publish"), "{\"expectedVersion\": 1}", editor())
+                .andExpect(status().isForbidden());
+        send(post(ADMIN + "/" + id + "/map/drafts/" + draftId + "/publish"), "{\"expectedVersion\": 1}", publisher())
+                .andExpect(status().isOk()).andExpect(jsonPath("$.revision.state").value("PUBLISHED"));
+
+        mvc.perform(get(PUBLIC)).andExpect(jsonPath("$.items[0].hasMap").value(true));
+        mvc.perform(get(PUBLIC + "/" + code)).andExpect(jsonPath("$.hasMap").value(true));
+        mvc.perform(get(PUBLIC + "/" + code + "/map")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.modeName").value("Cờ Liên quân"))
+                .andExpect(jsonPath("$.content.objects[1].family").value("caesar"))
+                .andExpect(jsonPath("$.content.tempo[0].callouts[0].objectCode").value("caesar"));
+        mvc.perform(get(ADMIN).with(editor())).andExpect(jsonPath("$[0].map.published.revisionNo").value(1));
+        send(post(ADMIN + "/" + id + "/map/drafts"), "{\"content\": " + MAP + "}", editor())
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -275,7 +319,7 @@ class GameModeIntegrationTest {
 
     private String publishedMode(String guideKind) throws Exception {
         jdbc.sql("TRUNCATE gamemode.lineup_like, gamemode.community_lineup, gamemode.auto_chess_revision, "
-                + "gamemode.game_mode_revision, gamemode.game_mode").update();
+                + "gamemode.map_guide_revision, gamemode.game_mode_revision, gamemode.game_mode").update();
         JsonNode mode = createMode(code, "Cờ Liên quân");
         String id = mode.get("id").asText();
         String draft = mode.at("/revision/id").asText();

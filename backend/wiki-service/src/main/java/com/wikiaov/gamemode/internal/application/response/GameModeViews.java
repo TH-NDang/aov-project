@@ -3,6 +3,7 @@ package com.wikiaov.gamemode.internal.application.response;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
+import com.wikiaov.gamemode.internal.domain.MapGuideContent;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
 import com.wikiaov.gamemode.internal.lineup.domain.LineupInsights;
 import com.wikiaov.gamemode.internal.lineup.domain.LineupStatus;
@@ -71,7 +72,8 @@ public final class GameModeViews {
             Image art,
             Revision published,
             Revision draft,
-            GuideState guide
+            GuideState guide,
+            GuideState map
     ) {
     }
 
@@ -97,6 +99,7 @@ public final class GameModeViews {
             GameModeContent.Availability availability,
             String guideKind,
             boolean hasGuide,
+            boolean hasMap,
             Image art,
             Instant publishedAt
     ) {
@@ -112,6 +115,7 @@ public final class GameModeViews {
             String contentLocale,
             Instant publishedAt,
             boolean hasGuide,
+            boolean hasMap,
             GameModeContent content,
             Map<UUID, Image> images
     ) {
@@ -124,6 +128,28 @@ public final class GameModeViews {
             boolean hasPublished,
             AutoChessContent content,
             List<String> missingFields,
+            Map<UUID, Image> images
+    ) {
+    }
+
+    public record AdminMap(
+            UUID modeId,
+            String modeCode,
+            Revision revision,
+            boolean hasPublished,
+            MapGuideContent content,
+            List<String> missingFields,
+            Map<UUID, Image> images
+    ) {
+    }
+
+    public record PublicMap(
+            String modeCode,
+            String modeName,
+            String contentLocale,
+            UUID revisionId,
+            Instant publishedAt,
+            MapGuideContent content,
             Map<UUID, Image> images
     ) {
     }
