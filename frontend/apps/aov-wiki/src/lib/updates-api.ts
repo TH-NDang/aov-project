@@ -4,6 +4,7 @@ import type { PublishedChange } from "./published-change-subjects"
 import type { HeroChangeItem } from "./wiki-change-format"
 import type { ChangeDomain } from "./wiki-patch-changes"
 import { wikiGetAll } from "./wiki-api"
+import type { PatchSourceLink } from "./patch-sources"
 
 /** Every query key of patch notes; reads and invalidation both use these. */
 export const updateKeys = {
@@ -24,6 +25,8 @@ export interface PatchRelease {
   actualLocale: string | null
   variantId: string
   effectiveAt: string | null
+  /** The pages of the official notes, each named by its language or market; older answers leave it out. */
+  sources?: PatchSourceLink[]
 }
 
 export type PatchChangeRow = PublishedChange & {

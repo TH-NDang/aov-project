@@ -57,7 +57,7 @@ export function PatchStatDefaults({ variant }: { variant: Variant }) {
     meta: { silent: true },
   })
   return (
-    <div className="m-3 space-y-3 rounded-lg border p-3">
+    <div className="space-y-3">
       <p className="type-body">
         Giá trị chung từ patch {variant.patchCode} cho các tướng cùng bộ luật. Từng tướng có thể có ngoại lệ.
       </p>

@@ -1101,6 +1101,12 @@ Ghi chú biên tập bổ sung nằm trong `patch.variant_note` (V045), mỗi c�
 Trường `body` giữ nội dung nhiều dòng; `version` dùng để phát hiện ghi đè, kể cả sau khi xóa nội dung.
 Ghi chú độc lập với các lần phát hành theo thị trường và với lịch sử gameplay trong từng danh mục.
 
+`patch.variant_source` (V079) giữ link tới ghi chú cập nhật chính thức của một variant, dùng chung cho mọi thay đổi ghi
+từ các trang đó: `variant_id`, `position` (thứ tự biên tập viên chọn), `url` HTTP(S) tối đa 2.048 ký tự, `label` (ngôn
+ngữ, thị trường hoặc mô tả ngắn, tối đa 80 ký tự) và `locale` tùy chọn. Mỗi variant tối đa 10 link, không trùng vị trí
+hay URL; danh sách được thay cả cụm. V079 cũng bỏ ràng buộc `hero_patch_change_set_notes_source_check`: change set
+`PATCH_NOTES` có thể không có link riêng khi patch đã có link chung (ứng dụng kiểm tra một trong hai).
+
 ## 27. `patch.patch_release`
 
 Region rollout.

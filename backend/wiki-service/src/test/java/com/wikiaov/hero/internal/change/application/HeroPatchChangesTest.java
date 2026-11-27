@@ -20,6 +20,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PatchDataReviews;
+import com.wikiaov.patch.PatchSources;
 import com.wikiaov.platform.ApiException;
 import java.time.Clock;
 import java.util.List;
@@ -33,7 +34,7 @@ class HeroPatchChangesTest {
     private final AuditLog audit = mock(AuditLog.class);
     private final HeroPatchChanges changes = new HeroPatchChanges(mock(PatchDataReviews.class), history, store,
             mock(GameplayContexts.class), audit, mock(CurrentActor.class), Clock.systemUTC(),
-            mock(PatchCatalog.class), mock(HeroSections.class), mock(HeroForms.class), true);
+            mock(PatchCatalog.class), mock(HeroSections.class), mock(HeroForms.class), mock(PatchSources.class), true);
 
     @Test
     void assessingAChangeSetThatDoesNotExistIsNotFound() {
@@ -50,7 +51,7 @@ class HeroPatchChangesTest {
     void rewritingARecordedChangeSetIsRefusedOnceEditsAreLocked() {
         var locked = new HeroPatchChanges(mock(PatchDataReviews.class), history, store, mock(GameplayContexts.class),
                 audit, mock(CurrentActor.class), Clock.systemUTC(), mock(PatchCatalog.class), mock(HeroSections.class),
-                mock(HeroForms.class), false);
+                mock(HeroForms.class), mock(PatchSources.class), false);
         var input = new HeroChangeEditCommand("https://example.org/notes",
                 List.of(new Summary("vi-VN", "Sửa lại")), List.of(new OtherChange(Kind.OTHER, "Ghi chú")));
 

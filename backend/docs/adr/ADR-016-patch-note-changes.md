@@ -106,6 +106,17 @@ không phải ghi lại từ đầu. Chủ dự án chọn cách dễ thao tác 
   thức, đặt `false` để khóa lại: lần sửa trả 409 `HERO_PATCH_CHANGE_LOCKED`, change set trở lại bất biến như quyết
   định gốc. Nếu sau này cần sửa có lịch sử, thêm phiên bản change set thay cho công tắc này.
 
+### Bổ sung ngày 2026-11-27: link nguồn dùng chung của patch
+
+Trang ghi chú cập nhật chính thức liệt kê mọi thay đổi của patch trên một trang, nên dán cùng một link cho từng tướng
+là thừa. Một patch cũng thường có nhiều trang nguồn: bản tiếng Việt, bản của thị trường khác, bản máy chủ thử nghiệm.
+
+- Mỗi variant có tối đa 10 link nguồn chung, mỗi link có nhãn (ngôn ngữ, thị trường hoặc mô tả ngắn) và ngôn ngữ tùy
+  chọn, theo thứ tự biên tập viên chọn. Danh sách được thay cả cụm.
+- Change set `PATCH_NOTES` vẫn cần nguồn, nhưng là link riêng hoặc link chung của patch. Link riêng chỉ dùng khi một
+  thay đổi đến từ trang khác các trang chung.
+- Trang patch công khai hiện các link chung thay cho một link suy ra từ change set.
+
 ## Hệ quả
 
 - Ghi được thay đổi của các patch đã qua mà không cần thu thập lại toàn bộ dữ liệu tướng.
