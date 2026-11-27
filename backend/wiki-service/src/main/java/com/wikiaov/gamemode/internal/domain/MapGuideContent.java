@@ -6,9 +6,13 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * One consistent snapshot of the in-game battlefield encyclopedia of a mode: the objects on the map, the lanes and the
- * match tempo. Positions are top-down percentages of the square map: {@code x} grows to the right, {@code y} grows
- * downwards, and the reader's own base is at the bottom left.
+ * One consistent snapshot of the in-game battlefield encyclopedia of a mode: the objects on the map, named areas, the
+ * lanes and the match tempo. Positions are top-down percentages of the square map: {@code x} grows to the right,
+ * {@code y} grows downwards, the blue side's base is at the bottom left and the red side's at the top right.
+ *
+ * <p>Other content refers to a place by a stable reference: an object, lane or area {@code code}, or
+ * {@code code.key} for one position of an object (see {@code MapGuideContentRules.references}). Codes and keys are
+ * never renamed once published.
  *
  * <p>Body texts follow the rule section convention: lines starting with "- " are bullet points.
  *
@@ -20,6 +24,7 @@ public record MapGuideContent(
         String summary,
         UUID backgroundAssetId,
         List<MapObject> objects,
+        List<Area> areas,
         List<Lane> lanes,
         List<TempoMoment> tempo,
         List<Source> sources
@@ -27,13 +32,14 @@ public record MapGuideContent(
 
     public MapGuideContent {
         objects = copy(objects);
+        areas = copy(areas);
         lanes = copy(lanes);
         tempo = copy(tempo);
         sources = copy(sources);
     }
 
     public static MapGuideContent empty() {
-        return new MapGuideContent(null, null, null, null, null, null, null, null);
+        return new MapGuideContent(null, null, null, null, null, null, null, null, null);
     }
 
     private static <T> List<T> copy(List<T> values) {
@@ -45,6 +51,8 @@ public record MapGuideContent(
      *
      * @param category  {@code STRUCTURE}, {@code MINION}, {@code MONSTER}, {@code EPIC} or {@code MECHANIC}
      * @param glyph     the drawn symbol of the object, see the content rules
+     * @param iconAssetId    optional uploaded icon shown instead of the drawn symbol
+     * @param pictureAssetId optional picture of the place, shown in the object's details
      * @param family    code of the object this one is a form of (the dark Caesar of Caesar); forms have no marker of
      *                  their own and are shown with their family head
      * @param tags      the game's labels, such as the big monster or vision tags
@@ -56,6 +64,8 @@ public record MapGuideContent(
             String name,
             String category,
             String glyph,
+            UUID iconAssetId,
+            UUID pictureAssetId,
             String family,
             List<String> tags,
             String summary,
@@ -63,7 +73,7 @@ public record MapGuideContent(
             Timing respawn,
             List<Section> sections,
             Section change,
-            List<Point> positions
+            List<Spot> positions
     ) {
 
         public MapObject {
@@ -93,6 +103,42 @@ public record MapGuideContent(
             Double x,
             Double y
     ) {
+    }
+
+    /**
+     * One place where an object stands.
+     *
+     * @param key   stable name of the place within its object, such as {@code xanh-giua}; required when the object
+     *              stands in more than one place
+     * @param side  {@code BLUE} or {@code RED} for a place that belongs to one side, null for a neutral one
+     * @param label optional short name of the place, such as the lane it guards
+     */
+    public record Spot(
+            String key,
+            String side,
+            String label,
+            Double x,
+            Double y
+    ) {
+    }
+
+    /**
+     * A named region of the map, such as a pit, the river or one side's jungle, for references from other content.
+     *
+     * @param side    {@code BLUE}, {@code RED} or null for a neutral area
+     * @param outline the polygon of the area, at least three points
+     */
+    public record Area(
+            String code,
+            String name,
+            String side,
+            String summary,
+            List<Point> outline
+    ) {
+
+        public Area {
+            outline = copy(outline);
+        }
     }
 
     /**
@@ -140,10 +186,14 @@ public record MapGuideContent(
         }
     }
 
-    /** A labelled point; {@code objectCode} opens that object's details when set. */
+    /**
+     * A labelled point; {@code objectCode} opens that object's details when set, and {@code spotKey} names which of
+     * its places the label marks.
+     */
     public record Callout(
             String label,
             String objectCode,
+            String spotKey,
             Double x,
             Double y
     ) {

@@ -3,10 +3,12 @@ package com.wikiaov.gamemode.internal.mapguide.domain;
 import com.wikiaov.gamemode.internal.catalog.domain.GameModeContentRules;
 import com.wikiaov.gamemode.internal.domain.ContentChecks;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent;
+import com.wikiaov.gamemode.internal.domain.MapGuideContent.Area;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Lane;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.MapObject;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Point;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Section;
+import com.wikiaov.gamemode.internal.domain.MapGuideContent.Spot;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.TempoMoment;
 import com.wikiaov.gamemode.internal.domain.MapGuideContent.Timing;
 import com.wikiaov.platform.ApiFieldError;
@@ -15,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,9 +31,15 @@ public final class MapGuideContentRules {
 
     public static final Set<String> LANE_GLYPHS = Set.of("LANE", "JUNGLE", "MID", "SUPPORT");
 
+    public static final Set<String> SIDES = Set.of("BLUE", "RED");
+
     public static final int MAX_OBJECTS = 120;
 
     public static final int MAX_POSITIONS = 12;
+
+    public static final int MAX_AREAS = 40;
+
+    public static final int MAX_OUTLINE = 16;
 
     /** Spawn times and the timeline stop at two hours, well past any real match. */
     public static final int MAX_SECONDS = 7200;
@@ -44,9 +53,11 @@ public final class MapGuideContentRules {
 
         checks.text("name", content.name(), 120, false);
         checks.text("summary", content.summary(), 2000, false);
-        var codes = objects(checks, content.objects());
-        lanes(checks, content.lanes());
-        tempo(checks, content.tempo(), codes);
+        var spots = objects(checks, content.objects());
+        var taken = new HashSet<>(spots.keySet());
+        areas(checks, content.areas(), taken);
+        lanes(checks, content.lanes(), taken);
+        tempo(checks, content.tempo(), spots);
         GameModeContentRules.sources(checks, "sources", content.sources());
 
         return checks.errors();
@@ -67,6 +78,12 @@ public final class MapGuideContentRules {
                 missing.add("objects[" + i + "].positions");
             }
         }
+        for (int i = 0; i < content.areas().size(); i++) {
+            var area = content.areas().get(i);
+            if (area != null && area.outline().size() < 3) {
+                missing.add("areas[" + i + "].outline");
+            }
+        }
         return missing;
     }
 
@@ -76,12 +93,53 @@ public final class MapGuideContentRules {
         if (content.backgroundAssetId() != null) {
             ids.add(content.backgroundAssetId());
         }
+        ids.addAll(icons(content));
+        ids.addAll(pictures(content));
         return ids;
     }
 
-    private static Set<String> objects(ContentChecks checks, List<MapObject> objects) {
+    /** Assets shown instead of the drawn symbol of an object. */
+    public static Set<UUID> icons(MapGuideContent content) {
+        var ids = new LinkedHashSet<UUID>();
+        content.objects().stream().filter(o -> o != null && o.iconAssetId() != null)
+                .forEach(o -> ids.add(o.iconAssetId()));
+        return ids;
+    }
+
+    /** Pictures of the places of objects. */
+    public static Set<UUID> pictures(MapGuideContent content) {
+        var ids = new LinkedHashSet<UUID>();
+        content.objects().stream().filter(o -> o != null && o.pictureAssetId() != null)
+                .forEach(o -> ids.add(o.pictureAssetId()));
+        return ids;
+    }
+
+    /**
+     * Every reference other content may use for a place of this map: each object, area and lane code, and
+     * {@code code.key} for each keyed position of an object.
+     */
+    public static Set<String> references(MapGuideContent content) {
+        var references = new LinkedHashSet<String>();
+        for (var object : content.objects()) {
+            if (object == null || object.code() == null) {
+                continue;
+            }
+            references.add(object.code());
+            object.positions().stream().filter(spot -> spot != null && spot.key() != null)
+                    .forEach(spot -> references.add(object.code() + "." + spot.key()));
+        }
+        content.areas().stream().filter(area -> area != null && area.code() != null)
+                .forEach(area -> references.add(area.code()));
+        content.lanes().stream().filter(lane -> lane != null && lane.code() != null)
+                .forEach(lane -> references.add(lane.code()));
+        return references;
+    }
+
+    /** Checks the objects and returns the keys of the places of each object by its code. */
+    private static Map<String, Set<String>> objects(ContentChecks checks, List<MapObject> objects) {
         checks.size("objects", objects, MAX_OBJECTS);
         var codes = new HashSet<String>();
+        var spots = new HashMap<String, Set<String>>();
         var families = new HashMap<String, String>();
         for (int i = 0; i < objects.size(); i++) {
             var object = objects.get(i);
@@ -105,7 +163,10 @@ public final class MapGuideContentRules {
             if (object.change() != null) {
                 section(checks, at + ".change", object.change());
             }
-            points(checks, at + ".positions", object.positions(), MAX_POSITIONS);
+            var keys = spots(checks, at + ".positions", object.positions());
+            if (object.code() != null) {
+                spots.putIfAbsent(object.code(), keys);
+            }
             if (object.family() != null && object.code() != null) {
                 families.put(object.code(), object.family());
             }
@@ -125,10 +186,53 @@ public final class MapGuideContentRules {
             }
         }
 
-        return codes;
+        return spots;
     }
 
-    private static void lanes(ContentChecks checks, List<Lane> lanes) {
+    /** Places of one object: a stable key for each when there are several, so references can name one of them. */
+    private static Set<String> spots(ContentChecks checks, String path, List<Spot> spots) {
+        checks.size(path, spots, MAX_POSITIONS);
+        var keys = new HashSet<String>();
+        for (int i = 0; i < spots.size(); i++) {
+            var spot = spots.get(i);
+            String at = path + "[" + i + "]";
+            if (spot == null) {
+                checks.fail(at, "REQUIRED", "A position is required.");
+                continue;
+            }
+            if (spot.key() != null) {
+                checks.code(at + ".key", spot.key(), keys);
+            } else if (spots.size() > 1) {
+                checks.fail(at + ".key", "REQUIRED", "Name each place when the object stands in several.");
+            }
+            checks.oneOf(at + ".side", spot.side(), SIDES, false);
+            checks.text(at + ".label", spot.label(), 80, false);
+            point(checks, at, new Point(spot.x(), spot.y()));
+        }
+        return keys;
+    }
+
+    /** Areas share one set of codes with objects and lanes, so a reference names exactly one place. */
+    private static void areas(ContentChecks checks, List<Area> areas, Set<String> taken) {
+        checks.size("areas", areas, MAX_AREAS);
+        var codes = new HashSet<String>();
+        for (int i = 0; i < areas.size(); i++) {
+            var area = areas.get(i);
+            String at = "areas[" + i + "]";
+            if (area == null) {
+                checks.fail(at, "REQUIRED", "An area entry is required.");
+                continue;
+            }
+            sharedCode(checks, at + ".code", area.code(), codes, taken);
+            checks.text(at + ".name", area.name(), 120, true);
+            checks.oneOf(at + ".side", area.side(), SIDES, false);
+            checks.text(at + ".summary", area.summary(), 500, false);
+            points(checks, at + ".outline", area.outline(), MAX_OUTLINE);
+        }
+        taken.addAll(codes);
+    }
+
+    private static void lanes(ContentChecks checks, List<Lane> lanes, Set<String> taken) {
         checks.size("lanes", lanes, 10);
         var codes = new HashSet<String>();
         for (int i = 0; i < lanes.size(); i++) {
@@ -138,7 +242,7 @@ public final class MapGuideContentRules {
                 checks.fail(at, "REQUIRED", "A lane entry is required.");
                 continue;
             }
-            checks.code(at + ".code", lane.code(), codes);
+            sharedCode(checks, at + ".code", lane.code(), codes, taken);
             checks.text(at + ".name", lane.name(), 120, true);
             checks.oneOf(at + ".glyph", lane.glyph(), LANE_GLYPHS, false);
             checks.text(at + ".body", lane.body(), 4000, false);
@@ -150,9 +254,19 @@ public final class MapGuideContentRules {
             points(checks, at + ".positions", lane.positions(), 4);
             points(checks, at + ".path", lane.path(), 12);
         }
+        taken.addAll(codes);
     }
 
-    private static void tempo(ContentChecks checks, List<TempoMoment> tempo, Set<String> objectCodes) {
+    private static void sharedCode(ContentChecks checks, String path, String code, Set<String> own,
+            Set<String> taken) {
+        int before = checks.errors().size();
+        checks.code(path, code, own);
+        if (checks.errors().size() == before && taken.contains(code)) {
+            checks.fail(path, "DUPLICATE_CODE", "An object, area or lane already uses this code.");
+        }
+    }
+
+    private static void tempo(ContentChecks checks, List<TempoMoment> tempo, Map<String, Set<String>> spots) {
         checks.size("tempo", tempo, 20);
         var seen = new HashSet<Integer>();
         Integer previous = null;
@@ -182,8 +296,12 @@ public final class MapGuideContentRules {
                     continue;
                 }
                 checks.text(calloutAt + ".label", callout.label(), 80, true);
-                if (callout.objectCode() != null && !objectCodes.contains(callout.objectCode())) {
+                var keys = callout.objectCode() == null ? null : spots.get(callout.objectCode());
+                if (callout.objectCode() != null && keys == null) {
                     checks.fail(calloutAt + ".objectCode", "UNKNOWN_REFERENCE", "No object has this code.");
+                }
+                if (callout.spotKey() != null && (keys == null || !keys.contains(callout.spotKey()))) {
+                    checks.fail(calloutAt + ".spotKey", "UNKNOWN_REFERENCE", "The object has no place with this key.");
                 }
                 point(checks, calloutAt, new Point(callout.x(), callout.y()));
             }

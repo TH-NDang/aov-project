@@ -24,6 +24,10 @@ public class GameModeImages {
     public static final Set<MediaSemanticType> ICONS = Set.of(MediaSemanticType.AUTO_CHESS_ICON,
             MediaSemanticType.OTHER);
 
+    /** Icons of battlefield map objects. */
+    public static final Set<MediaSemanticType> MAP_ICONS = Set.of(MediaSemanticType.MAP_ICON,
+            MediaSemanticType.OTHER);
+
     private final MediaAssets media;
 
     public GameModeImages(MediaAssets media) {

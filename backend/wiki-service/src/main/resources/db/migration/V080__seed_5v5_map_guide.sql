@@ -15,6 +15,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Tế đàn",
       "category": "STRUCTURE",
       "glyph": "ALTAR",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Công trình"
@@ -31,10 +33,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 3.5,
           "y": 96.5
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 96.5,
           "y": 3.5
         }
@@ -45,6 +53,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Nhà chính",
       "category": "STRUCTURE",
       "glyph": "BASE",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Công trình"
@@ -65,10 +75,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 8.5,
           "y": 91.4
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 91.5,
           "y": 8.6
         }
@@ -79,6 +95,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Trụ trong",
       "category": "STRUCTURE",
       "glyph": "TOWER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Công trình"
@@ -99,26 +117,44 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh-caesar",
+          "side": "BLUE",
+          "label": "Đường Caesar",
           "x": 3.8,
           "y": 75.7
         },
         {
+          "key": "xanh-giua",
+          "side": "BLUE",
+          "label": "Đường giữa",
           "x": 17.9,
           "y": 82.9
         },
         {
+          "key": "xanh-rong",
+          "side": "BLUE",
+          "label": "Đường Rồng",
           "x": 24.6,
           "y": 96.4
         },
         {
+          "key": "do-rong",
+          "side": "RED",
+          "label": "Đường Rồng",
           "x": 96.2,
           "y": 24.3
         },
         {
+          "key": "do-giua",
+          "side": "RED",
+          "label": "Đường giữa",
           "x": 82.1,
           "y": 17.1
         },
         {
+          "key": "do-caesar",
+          "side": "RED",
+          "label": "Đường Caesar",
           "x": 75.4,
           "y": 3.6
         }
@@ -129,6 +165,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Trụ giữa",
       "category": "STRUCTURE",
       "glyph": "TOWER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Công trình"
@@ -149,26 +187,44 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh-caesar",
+          "side": "BLUE",
+          "label": "Đường Caesar",
           "x": 3.0,
           "y": 56.7
         },
         {
+          "key": "xanh-giua",
+          "side": "BLUE",
+          "label": "Đường giữa",
           "x": 31.8,
           "y": 70.5
         },
         {
+          "key": "xanh-rong",
+          "side": "BLUE",
+          "label": "Đường Rồng",
           "x": 47.5,
           "y": 96.5
         },
         {
+          "key": "do-rong",
+          "side": "RED",
+          "label": "Đường Rồng",
           "x": 97.0,
           "y": 43.3
         },
         {
+          "key": "do-giua",
+          "side": "RED",
+          "label": "Đường giữa",
           "x": 68.2,
           "y": 29.5
         },
         {
+          "key": "do-caesar",
+          "side": "RED",
+          "label": "Đường Caesar",
           "x": 52.5,
           "y": 3.5
         }
@@ -179,6 +235,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Trụ ngoài",
       "category": "STRUCTURE",
       "glyph": "TOWER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Công trình"
@@ -199,26 +257,44 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh-caesar",
+          "side": "BLUE",
+          "label": "Đường Caesar",
           "x": 2.7,
           "y": 27.9
         },
         {
+          "key": "xanh-giua",
+          "side": "BLUE",
+          "label": "Đường giữa",
           "x": 39.1,
           "y": 58.3
         },
         {
+          "key": "xanh-rong",
+          "side": "BLUE",
+          "label": "Đường Rồng",
           "x": 72.1,
           "y": 96.8
         },
         {
+          "key": "do-rong",
+          "side": "RED",
+          "label": "Đường Rồng",
           "x": 97.3,
           "y": 72.1
         },
         {
+          "key": "do-giua",
+          "side": "RED",
+          "label": "Đường giữa",
           "x": 60.9,
           "y": 41.7
         },
         {
+          "key": "do-caesar",
+          "side": "RED",
+          "label": "Đường Caesar",
           "x": 27.9,
           "y": 3.2
         }
@@ -229,6 +305,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Lính cận chiến",
       "category": "MINION",
       "glyph": "MINION",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Lính"
@@ -259,6 +337,9 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": null,
+          "side": null,
+          "label": null,
           "x": 50,
           "y": 50
         }
@@ -269,6 +350,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Lính đánh xa",
       "category": "MINION",
       "glyph": "RANGED",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "linh-can-chien",
       "tags": [
         "Lính"
@@ -304,6 +387,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Nỏ công thành",
       "category": "MINION",
       "glyph": "SIEGE",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "linh-can-chien",
       "tags": [
         "Lính"
@@ -339,6 +424,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Pháo công thành",
       "category": "MINION",
       "glyph": "SIEGE",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "linh-can-chien",
       "tags": [
         "Lính"
@@ -374,6 +461,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Lính siêu cấp",
       "category": "MINION",
       "glyph": "SUPER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "linh-can-chien",
       "tags": [
         "Lính"
@@ -409,6 +498,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Lính siêu cấp cường hóa",
       "category": "MINION",
       "glyph": "SUPER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "linh-can-chien",
       "tags": [
         "Lính"
@@ -444,6 +535,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Caesar tiên phong",
       "category": "MINION",
       "glyph": "VANGUARD",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "linh-can-chien",
       "tags": [
         "Lính",
@@ -479,6 +572,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Khỉ ba tiêu",
       "category": "MONSTER",
       "glyph": "MONSTER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng"
@@ -505,10 +600,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 17.5,
           "y": 30.1
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 82.5,
           "y": 69.9
         }
@@ -519,6 +620,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Thỏ nhảy nhót",
       "category": "MONSTER",
       "glyph": "MONSTER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng"
@@ -545,10 +648,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 13.4,
           "y": 45.0
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 86.6,
           "y": 55.0
         }
@@ -559,6 +668,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Ếch xanh",
       "category": "MONSTER",
       "glyph": "MONSTER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng"
@@ -585,10 +696,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 21.1,
           "y": 59.7
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 78.9,
           "y": 40.3
         }
@@ -599,6 +716,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Thằn lằn dạ quang",
       "category": "MONSTER",
       "glyph": "MONSTER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng"
@@ -625,10 +744,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 47.0,
           "y": 67.7
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 53.0,
           "y": 32.3
         }
@@ -639,6 +764,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Cua kỳ cục",
       "category": "MONSTER",
       "glyph": "MONSTER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng"
@@ -665,10 +792,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 36.8,
           "y": 80.2
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 63.2,
           "y": 19.8
         }
@@ -679,6 +812,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Linh quy",
       "category": "MONSTER",
       "glyph": "MONSTER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng"
@@ -705,10 +840,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 66.8,
           "y": 86.8
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 33.2,
           "y": 13.2
         }
@@ -719,6 +860,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Bọ ánh sáng",
       "category": "MONSTER",
       "glyph": "MONSTER",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng",
@@ -742,10 +885,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "caesar",
+          "side": null,
+          "label": "Phía Caesar",
           "x": 19.6,
           "y": 19.9
         },
         {
+          "key": "rong",
+          "side": null,
+          "label": "Phía Rồng",
           "x": 80.4,
           "y": 80.1
         }
@@ -756,6 +905,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Rồng tiểu lam",
       "category": "MONSTER",
       "glyph": "DRAGON",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng"
@@ -782,6 +933,9 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": null,
+          "side": null,
+          "label": null,
           "x": 97.0,
           "y": 97.5
         }
@@ -792,6 +946,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Cổng dịch chuyển & Linh vũ thú",
       "category": "MONSTER",
       "glyph": "PORTAL",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái rừng",
@@ -822,6 +978,9 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       },
       "positions": [
         {
+          "key": null,
+          "side": null,
+          "label": null,
           "x": 2.5,
           "y": 2.5
         }
@@ -832,6 +991,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Khổng lồ Thuật sĩ",
       "category": "EPIC",
       "glyph": "GIANT",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái to",
@@ -863,10 +1024,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 27.4,
           "y": 47.5
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 72.6,
           "y": 52.5
         }
@@ -877,6 +1044,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Khổng lồ Lực sĩ",
       "category": "EPIC",
       "glyph": "GIANT",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái to",
@@ -908,10 +1077,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh",
+          "side": "BLUE",
+          "label": null,
           "x": 53.6,
           "y": 79.0
         },
         {
+          "key": "do",
+          "side": "RED",
+          "label": null,
           "x": 46.4,
           "y": 21.0
         }
@@ -922,6 +1097,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Rồng",
       "category": "EPIC",
       "glyph": "DRAGON",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái to",
@@ -952,6 +1129,9 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       },
       "positions": [
         {
+          "key": null,
+          "side": null,
+          "label": null,
           "x": 67.1,
           "y": 71.9
         }
@@ -962,6 +1142,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Rồng ánh sáng",
       "category": "EPIC",
       "glyph": "DRAGON",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "rong",
       "tags": [
         "Quái to",
@@ -997,6 +1179,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Caesar",
       "category": "EPIC",
       "glyph": "CAESAR",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái to",
@@ -1027,6 +1211,9 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       },
       "positions": [
         {
+          "key": null,
+          "side": null,
+          "label": null,
           "x": 32.9,
           "y": 28.1
         }
@@ -1037,6 +1224,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Caesar hắc ám",
       "category": "EPIC",
       "glyph": "CAESAR",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "caesar",
       "tags": [
         "Quái to",
@@ -1076,6 +1265,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Caesar bạo chúa",
       "category": "EPIC",
       "glyph": "BOSS",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Quái boss",
@@ -1107,10 +1298,16 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "caesar",
+          "side": null,
+          "label": "Hang Caesar",
           "x": 32.9,
           "y": 28.1
         },
         {
+          "key": "rong",
+          "side": null,
+          "label": "Hang Rồng",
           "x": 67.1,
           "y": 71.9
         }
@@ -1121,6 +1318,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Rồng bạo chúa",
       "category": "EPIC",
       "glyph": "BOSS",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "caesar-bao-chua",
       "tags": [
         "Quái boss",
@@ -1161,6 +1360,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "King Kong",
       "category": "EPIC",
       "glyph": "KONG",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": "caesar-bao-chua",
       "tags": [
         "Quái boss",
@@ -1201,6 +1402,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Mắt tinh linh",
       "category": "MECHANIC",
       "glyph": "EYE",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Cơ chế",
@@ -1224,18 +1427,30 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh-caesar",
+          "side": "BLUE",
+          "label": "Đường Caesar",
           "x": 9.0,
           "y": 70.0
         },
         {
+          "key": "xanh-rong",
+          "side": "BLUE",
+          "label": "Đường Rồng",
           "x": 30.0,
           "y": 91.0
         },
         {
+          "key": "do-rong",
+          "side": "RED",
+          "label": "Đường Rồng",
           "x": 91.0,
           "y": 30.0
         },
         {
+          "key": "do-caesar",
+          "side": "RED",
+          "label": "Đường Caesar",
           "x": 70.0,
           "y": 9.0
         }
@@ -1246,6 +1461,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Gói máu",
       "category": "MECHANIC",
       "glyph": "HEAL",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Vật phẩm",
@@ -1269,26 +1486,44 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "xanh-caesar",
+          "side": "BLUE",
+          "label": "Đường Caesar",
           "x": 2.2,
           "y": 38.7
         },
         {
+          "key": "xanh-giua",
+          "side": "BLUE",
+          "label": "Đường giữa",
           "x": 36.5,
           "y": 65.6
         },
         {
+          "key": "xanh-rong",
+          "side": "BLUE",
+          "label": "Đường Rồng",
           "x": 68.8,
           "y": 96.6
         },
         {
+          "key": "do-rong",
+          "side": "RED",
+          "label": "Đường Rồng",
           "x": 97.8,
           "y": 61.3
         },
         {
+          "key": "do-giua",
+          "side": "RED",
+          "label": "Đường giữa",
           "x": 63.5,
           "y": 34.4
         },
         {
+          "key": "do-caesar",
+          "side": "RED",
+          "label": "Đường Caesar",
           "x": 31.2,
           "y": 3.4
         }
@@ -1299,6 +1534,8 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "name": "Bụi cỏ",
       "category": "MECHANIC",
       "glyph": "BUSH",
+      "iconAssetId": null,
+      "pictureAssetId": null,
       "family": null,
       "tags": [
         "Cây cối",
@@ -1316,12 +1553,268 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
       "change": null,
       "positions": [
         {
+          "key": "caesar",
+          "side": null,
+          "label": "Phía Caesar",
           "x": 42.0,
           "y": 47.0
         },
         {
+          "key": "rong",
+          "side": null,
+          "label": "Phía Rồng",
           "x": 58.0,
           "y": 53.0
+        }
+      ]
+    }
+  ],
+  "areas": [
+    {
+      "code": "nha-xanh",
+      "name": "Nhà xanh",
+      "side": "BLUE",
+      "summary": null,
+      "outline": [
+        {
+          "x": 0,
+          "y": 68
+        },
+        {
+          "x": 12,
+          "y": 70
+        },
+        {
+          "x": 22,
+          "y": 80
+        },
+        {
+          "x": 30,
+          "y": 88
+        },
+        {
+          "x": 32,
+          "y": 100
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ]
+    },
+    {
+      "code": "nha-do",
+      "name": "Nhà đỏ",
+      "side": "RED",
+      "summary": null,
+      "outline": [
+        {
+          "x": 100,
+          "y": 32
+        },
+        {
+          "x": 88,
+          "y": 30
+        },
+        {
+          "x": 78,
+          "y": 20
+        },
+        {
+          "x": 70,
+          "y": 12
+        },
+        {
+          "x": 68,
+          "y": 0
+        },
+        {
+          "x": 100,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "code": "rung-xanh-caesar",
+      "name": "Rừng xanh phía Caesar",
+      "side": "BLUE",
+      "summary": null,
+      "outline": [
+        {
+          "x": 7,
+          "y": 15
+        },
+        {
+          "x": 43,
+          "y": 51
+        },
+        {
+          "x": 27,
+          "y": 67
+        },
+        {
+          "x": 7,
+          "y": 67
+        }
+      ]
+    },
+    {
+      "code": "rung-xanh-rong",
+      "name": "Rừng xanh phía Rồng",
+      "side": "BLUE",
+      "summary": null,
+      "outline": [
+        {
+          "x": 33,
+          "y": 73
+        },
+        {
+          "x": 49,
+          "y": 57
+        },
+        {
+          "x": 85,
+          "y": 93
+        },
+        {
+          "x": 33,
+          "y": 93
+        }
+      ]
+    },
+    {
+      "code": "rung-do-caesar",
+      "name": "Rừng đỏ phía Caesar",
+      "side": "RED",
+      "summary": null,
+      "outline": [
+        {
+          "x": 67,
+          "y": 27
+        },
+        {
+          "x": 51,
+          "y": 43
+        },
+        {
+          "x": 15,
+          "y": 7
+        },
+        {
+          "x": 67,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "code": "rung-do-rong",
+      "name": "Rừng đỏ phía Rồng",
+      "side": "RED",
+      "summary": null,
+      "outline": [
+        {
+          "x": 93,
+          "y": 85
+        },
+        {
+          "x": 57,
+          "y": 49
+        },
+        {
+          "x": 73,
+          "y": 33
+        },
+        {
+          "x": 93,
+          "y": 33
+        }
+      ]
+    },
+    {
+      "code": "song",
+      "name": "Sông",
+      "side": null,
+      "summary": null,
+      "outline": [
+        {
+          "x": 4,
+          "y": 12
+        },
+        {
+          "x": 12,
+          "y": 4
+        },
+        {
+          "x": 96,
+          "y": 88
+        },
+        {
+          "x": 88,
+          "y": 96
+        }
+      ]
+    },
+    {
+      "code": "hang-caesar",
+      "name": "Hang Caesar",
+      "side": null,
+      "summary": null,
+      "outline": [
+        {
+          "x": 39.9,
+          "y": 28.1
+        },
+        {
+          "x": 36.4,
+          "y": 34.2
+        },
+        {
+          "x": 29.4,
+          "y": 34.2
+        },
+        {
+          "x": 25.9,
+          "y": 28.1
+        },
+        {
+          "x": 29.4,
+          "y": 22.0
+        },
+        {
+          "x": 36.4,
+          "y": 22.0
+        }
+      ]
+    },
+    {
+      "code": "hang-rong",
+      "name": "Hang Rồng",
+      "side": null,
+      "summary": null,
+      "outline": [
+        {
+          "x": 74.1,
+          "y": 71.9
+        },
+        {
+          "x": 70.6,
+          "y": 78.0
+        },
+        {
+          "x": 63.6,
+          "y": 78.0
+        },
+        {
+          "x": 60.1,
+          "y": 71.9
+        },
+        {
+          "x": 63.6,
+          "y": 65.8
+        },
+        {
+          "x": 70.6,
+          "y": 65.8
         }
       ]
     }
@@ -1441,18 +1934,21 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
         {
           "label": "Bạn sẽ xuất hiện ở đây",
           "objectCode": "te-dan",
+          "spotKey": "xanh",
           "x": 3.5,
           "y": 96.5
         },
         {
           "label": "Kích hoạt phòng thủ trụ",
           "objectCode": "tru-ngoai",
+          "spotKey": "do-giua",
           "x": 60.9,
           "y": 41.7
         },
         {
           "label": "Phá hủy nhà chính địch",
           "objectCode": "nha-chinh",
+          "spotKey": "do",
           "x": 91.5,
           "y": 8.6
         }
@@ -1470,12 +1966,14 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
         {
           "label": "Caesar xuất hiện",
           "objectCode": "caesar",
+          "spotKey": null,
           "x": 32.9,
           "y": 28.1
         },
         {
           "label": "Rồng tiến hóa",
           "objectCode": "rong",
+          "spotKey": null,
           "x": 67.1,
           "y": 71.9
         }
@@ -1492,18 +1990,21 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
         {
           "label": "Kết thúc bảo hộ rừng",
           "objectCode": null,
+          "spotKey": null,
           "x": 20.5,
           "y": 27.6
         },
         {
           "label": "Xóa phòng thủ trụ",
           "objectCode": "tru-ngoai",
+          "spotKey": "do-giua",
           "x": 60.9,
           "y": 41.7
         },
         {
           "label": "Nỏ công thành xuất kích",
           "objectCode": "no-cong-thanh",
+          "spotKey": null,
           "x": 15.5,
           "y": 81.6
         }
@@ -1521,18 +2022,21 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
         {
           "label": "Caesar tiến hóa",
           "objectCode": "caesar-hac-am",
+          "spotKey": null,
           "x": 32.9,
           "y": 28.1
         },
         {
           "label": "Pháo công thành xuất kích",
           "objectCode": "phao-cong-thanh",
+          "spotKey": null,
           "x": 15.5,
           "y": 81.6
         },
         {
           "label": "Rồng tiến hóa",
           "objectCode": "rong-anh-sang",
+          "spotKey": null,
           "x": 67.1,
           "y": 71.9
         }
@@ -1550,6 +2054,7 @@ SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json
         {
           "label": "Caesar bạo chúa xuất hiện",
           "objectCode": "caesar-bao-chua",
+          "spotKey": "caesar",
           "x": 32.9,
           "y": 28.1
         }

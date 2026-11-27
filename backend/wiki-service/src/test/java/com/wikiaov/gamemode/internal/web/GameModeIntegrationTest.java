@@ -72,7 +72,12 @@ class GameModeIntegrationTest {
                "firstSpawn": {"seconds": 120, "note": "Phút thứ 2"}, "respawn": {"seconds": 180, "note": "3 phút"},
                "sections": [{"title": "Lợi ích hạ", "body": "- Caesar tiên phong có năng lực đẩy đường rất mạnh."}],
                "positions": [{"x": 32.9, "y": 28.1}]},
-              {"code": "caesar-hac-am", "name": "Caesar hắc ám", "category": "EPIC", "family": "caesar"}],
+              {"code": "caesar-hac-am", "name": "Caesar hắc ám", "category": "EPIC", "family": "caesar"},
+              {"code": "tru-ngoai", "name": "Trụ ngoài", "category": "STRUCTURE", "glyph": "TOWER",
+               "positions": [{"key": "xanh-giua", "side": "BLUE", "x": 39.1, "y": 58.3},
+                             {"key": "do-giua", "side": "RED", "x": 60.9, "y": 41.7}]}],
+             "areas": [{"code": "hang-caesar", "name": "Hang Caesar",
+               "outline": [{"x": 30, "y": 25}, {"x": 36, "y": 25}, {"x": 33, "y": 31}]}],
              "lanes": [{"code": "duong-rong", "name": "Đường Rồng", "glyph": "LANE", "positions": [{"x": 60, "y": 97}]}],
              "tempo": [{"seconds": 120, "callouts": [{"label": "Caesar xuất hiện", "objectCode": "caesar",
                "x": 32.9, "y": 28.1}], "steps": ["Xuất hiện lần đầu: Phút thứ 2"]}]}
@@ -193,6 +198,8 @@ class GameModeIntegrationTest {
         mvc.perform(get(PUBLIC + "/" + code + "/map")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.modeName").value("Cờ Liên quân"))
                 .andExpect(jsonPath("$.content.objects[1].family").value("caesar"))
+                .andExpect(jsonPath("$.content.objects[2].positions[1].key").value("do-giua"))
+                .andExpect(jsonPath("$.content.areas[0].code").value("hang-caesar"))
                 .andExpect(jsonPath("$.content.tempo[0].callouts[0].objectCode").value("caesar"));
         mvc.perform(get(ADMIN).with(editor())).andExpect(jsonPath("$[0].map.published.revisionNo").value(1));
         send(post(ADMIN + "/" + id + "/map/drafts"), "{\"content\": " + MAP + "}", editor())

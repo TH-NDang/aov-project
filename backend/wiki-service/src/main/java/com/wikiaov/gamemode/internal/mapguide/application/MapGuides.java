@@ -21,6 +21,7 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -177,21 +178,35 @@ public class MapGuides {
 
         var usages = new HashMap<UUID, List<MediaUsage>>();
         for (var revision : all) {
-            var background = revision.getContent().backgroundAssetId();
-            if (background == null) {
-                continue;
-            }
+            var content = revision.getContent();
             var scope = revision.getState() == RevisionState.DRAFT
                     ? MediaUsageScope.DRAFT
                     : newest.get(revision.getModeId()) == revision.getRevisionNo()
                             ? MediaUsageScope.CURRENT
                             : MediaUsageScope.HISTORICAL;
-            usages.computeIfAbsent(background, key -> new ArrayList<>()).add(new MediaUsage("GAMEMODE", AGGREGATE,
-                    revision.getModeId(), revision.getId(), "MAP_BACKGROUND", scope)
-                    .named(revision.getContent().name(), null));
+            if (content.backgroundAssetId() != null) {
+                use(usages, content.backgroundAssetId(), revision, "MAP_BACKGROUND", scope, content.name());
+            }
+            for (var object : content.objects()) {
+                if (object == null) {
+                    continue;
+                }
+                if (object.iconAssetId() != null) {
+                    use(usages, object.iconAssetId(), revision, "MAP_OBJECT_ICON", scope, object.name());
+                }
+                if (object.pictureAssetId() != null) {
+                    use(usages, object.pictureAssetId(), revision, "MAP_OBJECT_PICTURE", scope, object.name());
+                }
+            }
         }
 
         return usages;
+    }
+
+    private static void use(Map<UUID, List<MediaUsage>> usages, UUID assetId, MapGuideRevision revision, String role,
+            MediaUsageScope scope, String name) {
+        usages.computeIfAbsent(assetId, key -> new ArrayList<>()).add(new MediaUsage("GAMEMODE", AGGREGATE,
+                revision.getModeId(), revision.getId(), role, scope).named(name, null));
     }
 
     private Optional<MapGuideRevision> latestPublished(UUID modeId) {
@@ -200,7 +215,18 @@ public class MapGuides {
 
     private static Map<UUID, Set<MediaSemanticType>> expectedImages(MapGuideContent content) {
         var expected = new HashMap<UUID, Set<MediaSemanticType>>();
-        MapGuideContentRules.assets(content).forEach(id -> expected.put(id, GameModeImages.MODE_ART));
+        var art = new HashSet<>(MapGuideContentRules.pictures(content));
+        if (content.backgroundAssetId() != null) {
+            art.add(content.backgroundAssetId());
+        }
+        art.forEach(id -> expected.put(id, GameModeImages.MODE_ART));
+        // An asset used both as art and as an icon may be of either kind.
+        MapGuideContentRules.icons(content).forEach(id -> expected.merge(id, GameModeImages.MAP_ICONS,
+                (first, second) -> {
+                    var both = new HashSet<>(first);
+                    both.addAll(second);
+                    return both;
+                }));
         return expected;
     }
 

@@ -2656,8 +2656,9 @@ thể hiện gì, tệp gốc trong bộ thu thập, màn hình Bách khoa đã 
 ### Bản đồ chiến trường
 
 Phạm vi theo yêu cầu ngày 27/11/2026: chép màn “Bách khoa chiến trường” trong game (tab Bản đồ, Đường, Nhịp điệu)
-thành dữ liệu để Wiki vẽ bản đồ tương tác. Không dùng ảnh bản đồ của game; Wiki tự vẽ bản đồ sơ đồ, Admin có thể gắn
-ảnh nền riêng (`backgroundAssetId`, asset `GAME_MODE_ART` hoặc `OTHER`). Mỗi chế độ có tối đa một bản đồ, theo luồng
+thành dữ liệu để Wiki vẽ bản đồ tương tác. Wiki tự vẽ bản đồ sơ đồ và ký hiệu cho từng vật thể; Admin có thể gắn ảnh
+nền (`backgroundAssetId`), icon thay ký hiệu (`iconAssetId`, asset `MAP_ICON` hoặc `OTHER`) và ảnh nơi đặt vật thể
+(`pictureAssetId`, asset `GAME_MODE_ART` hoặc `OTHER`). Mỗi chế độ có tối đa một bản đồ, theo luồng
 nháp/xuất bản như cẩm nang (revision riêng, không phụ thuộc `guideKind`).
 
 Một revision bản đồ là ảnh chụp toàn bộ màn tại một thời điểm, gồm:
@@ -2666,18 +2667,30 @@ Một revision bản đồ là ảnh chụp toàn bộ màn tại một thời �
 - Vật thể (`objects`, tối đa 120): mã, tên, loại `STRUCTURE` (công trình), `MINION` (lính), `MONSTER` (quái rừng),
   `EPIC` (quái lớn), `MECHANIC` (cơ chế), ký hiệu vẽ (`glyph`), tối đa 6 nhãn của game (“Quái to”, “Tầm nhìn”…),
   tóm tắt, thời điểm xuất hiện lần đầu và hồi sinh, các mục giới thiệu, mục “Thay đổi” mới nhất và tối đa 12 vị
-  trí. Thời điểm có `seconds` khi cố định, `note` giữ cách game ghi hoặc điều kiện; cần ít nhất một trong hai.
+  trí. Thời điểm có `seconds` khi cố định, `note` giữ cách game ghi hoặc điều kiện; cần ít nhất một trong hai. Mỗi vị
+  trí có `key` (bắt buộc khi vật thể có từ hai vị trí, duy nhất trong vật thể, ví dụ `xanh-giua`), phe `BLUE`/`RED`
+  hoặc null khi trung lập, và nhãn ngắn tùy chọn (đường mà trụ canh).
 - Họ vật thể: `family` trỏ tới mã vật thể đầu họ (Caesar hắc ám thuộc họ Caesar). Dạng trong họ không có điểm riêng,
   Wiki hiện chúng trong bảng của đầu họ để chuyển qua lại. Đầu họ không được là dạng của họ khác (`NESTED_FAMILY`).
 - Đường (`lanes`, tối đa 10): mã, tên, ký hiệu `LANE`, `JUNGLE`, `MID`, `SUPPORT`, nội dung, tướng gợi ý (mã
   trong danh mục tướng), vị trí điểm và tuyến đường phía người xem.
+- Khu vực (`areas`, tối đa 40): mã, tên, phe tùy chọn, mô tả ngắn và đa giác 3–16 điểm, ví dụ hang Rồng, sông, rừng
+  xanh phía Caesar. Khu vực không có trong game; người biên tập đặt để nội dung khác tham chiếu.
 - Nhịp điệu (`tempo`, tối đa 20 mốc): giây (tăng dần, không trùng), nhãn giai đoạn bắt đầu tại mốc (“Giữa trận”),
-  tối đa 8 điểm chú thích trên bản đồ (có thể trỏ tới vật thể) và tối đa 10 đoạn chữ theo thứ tự của game.
+  tối đa 8 điểm chú thích trên bản đồ (có thể trỏ tới vật thể và một vị trí của nó qua `spotKey`) và tối đa 10 đoạn
+  chữ theo thứ tự của game.
+
+Tham chiếu ổn định: nội dung khác (ghi chú giải đấu, bài viết) trỏ tới một chỗ trên bản đồ bằng mã vật thể, khu vực
+hoặc đường (`rong`, `hang-rong`, `duong-giua`), hoặc `mã.key` cho một vị trí (`tru-ngoai.xanh-giua`). Vật thể, khu vực
+và đường dùng chung một không gian mã nên một tham chiếu chỉ trỏ tới một chỗ. Không đổi mã hay `key` sau khi đã xuất
+bản. Phe xanh là phe có nhà ở góc dưới trái, phe đỏ ở góc trên phải. Một vị trí trên đường mang tên đường theo phe của
+nó: trụ đường Caesar của phe xanh nằm ở cạnh trái, của phe đỏ ở cạnh trên.
 
 Tọa độ là phần trăm của bản đồ vuông nhìn từ trên: `x` tăng sang phải, `y` tăng xuống dưới, nhà người xem ở góc
 dưới trái. Bản đồ đối xứng tâm nên điểm phía đối thủ là `(100 − x, 100 − y)`; dữ liệu vẫn ghi đủ cả hai phía.
 Thời gian tối đa 7200 giây. Lưu nháp chấp nhận thiếu dữ liệu nhưng không chấp nhận mã trùng, tham chiếu sai hay tọa
-độ ngoài 0–100. Xuất bản cần tên, ít nhất một vật thể và vị trí cho mọi vật thể không thuộc họ khác.
+độ ngoài 0–100. Xuất bản cần tên, ít nhất một vật thể, vị trí cho mọi vật thể không thuộc họ khác và đủ ba điểm cho
+đa giác của mỗi khu vực.
 
 Dữ liệu ban đầu (V080) chép từ ảnh chụp và video màn Bách khoa ngày 27/11/2026 của chế độ `5v5`; vị trí đo trên bản
 đồ nhỏ và làm tròn, loài quái nhỏ ở từng bãi là phỏng đoán cần người biên tập rà lại.
