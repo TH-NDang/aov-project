@@ -1,0 +1,154 @@
+/*
+ * The wall of modes: six columns on a full page, four on a narrower one, two on phones. A wide tile takes two columns
+ * and holds the mode's art; a small one takes one and holds a mark. The grid fills its gaps with the small tiles.
+ */
+.wiki-modes-wall {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  gap: 10px;
+}
+@media (min-width: 1180px) {
+  .wiki-modes-wall {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+.wiki-modes-wall > li {
+  display: grid;
+  min-width: 0;
+}
+.wiki-modes-wall > li[data-size="wide"] {
+  grid-column: span 2;
+}
+.wiki-modes-tile {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.wiki-modes-tile[data-size="wide"] {
+  align-content: end;
+  aspect-ratio: 2 / 1;
+}
+/* Two classes, so the art lies under the tile whatever order the mode sheets load in. */
+.wiki-modes-tile > .wiki-modes-tile-art {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+}
+.wiki-modes-tile-art > img {
+  transition: transform 0.45s ease;
+}
+.wiki-modes-tile:hover .wiki-modes-tile-art > img {
+  transform: scale(1.05);
+}
+.wiki-modes-tile[data-size="wide"] .wiki-modes-tile-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-wiki-bar) 88%, transparent), transparent 70%);
+}
+.wiki-modes-tile-text {
+  display: grid;
+  min-width: 0;
+  align-content: end;
+  gap: 2px;
+  padding: 12px 14px;
+}
+.wiki-modes-tile[data-size="wide"] .wiki-modes-tile-text {
+  max-width: 70%;
+  text-shadow: 0 1px 8px var(--aov-wiki-bar);
+}
+.wiki-modes-tile strong {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+  overflow-wrap: anywhere;
+}
+.wiki-modes-tile[data-size="wide"] strong {
+  font: 700 1.0625rem/1.375rem var(--wiki-font-display);
+}
+.wiki-modes-tile:hover strong {
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-modes-tile small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text-soft);
+}
+.wiki-modes-tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+.wiki-modes-tile-tags:empty {
+  display: none;
+}
+
+/* A small tile: the mark on top, the name under it; a closed mode keeps a faint, drained trace of its art. */
+.wiki-modes-tile[data-size="small"] {
+  grid-template-rows: auto 1fr;
+  min-height: 120px;
+}
+.wiki-modes-tile[data-size="small"]:hover {
+  background: var(--aov-raised);
+}
+.wiki-modes-tile[data-size="small"] .wiki-modes-tile-art {
+  opacity: 0.22;
+  filter: grayscale(1);
+}
+.wiki-modes-tile-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin: 14px 14px 0;
+  place-items: center;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: 50%;
+  color: var(--aov-muted);
+}
+.wiki-modes-tile[data-size="small"] .wiki-modes-tile-text {
+  padding-top: 8px;
+}
+
+@media (max-width: 899.98px) {
+  /*
+   * Phones: a gallery two tiles wide. Every tile takes one column, so a screen shows eight modes; the art darkens from
+   * the foot, where the name stands, instead of from the side.
+   */
+  .wiki-modes-wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .wiki-modes-wall > li[data-size="wide"] {
+    grid-column: auto;
+  }
+  .wiki-modes-tile[data-size="wide"] {
+    aspect-ratio: auto;
+    min-height: 120px;
+  }
+  .wiki-modes-tile[data-size="wide"] .wiki-modes-tile-art::after {
+    background: linear-gradient(180deg, transparent 20%, color-mix(in srgb, var(--aov-wiki-bar) 92%, transparent));
+  }
+  .wiki-modes-tile[data-size="wide"] .wiki-modes-tile-text {
+    max-width: none;
+    padding: 10px;
+  }
+  .wiki-modes-tile[data-size="wide"] strong {
+    font-size: 0.9375rem;
+    line-height: 1.25rem;
+  }
+  .wiki-modes-tile[data-size="small"] {
+    min-height: 108px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-modes-tile,
+  .wiki-modes-tile-art > img {
+    transition: none;
+  }
+}

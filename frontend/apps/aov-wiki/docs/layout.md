@@ -392,21 +392,24 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 - Dữ liệu lấy từ `/api/wiki/v1/game-modes`; đội hình riêng của người đọc đã đăng nhập lấy từ
   `/api/wiki/v1/users/me/game-modes`. Thứ tự từng phần trên hai bố cục nằm ở `frontend/docs/RESPONSIVE.md`.
-- Khung kiểu game (`GameFrame`) chỉ dùng cho cẩm nang nổi bật, để nó nổi lên; các thẻ khác có kiểu riêng, không lặp
-  một khung ở mọi chỗ. Tiêu đề từng phần có viên đá vàng, chữ vàng sáng và đường kẻ vàng mờ dần sang phải.
-- `/modes` mở bằng phần trưng bày (`ModesShowcase`, `modes-showcase.tsx`) như các trang danh sách khác: tiêu đề, số chế
-  độ, viên "N đang mở" màu xanh; cảnh là sảnh chọn chế độ, các tấm ảnh cao nghiêng viền vàng (cẩm nang trước, rồi chế độ
-  đang mở; chế độ đóng không lên sảnh), 6 tấm bên phải trên wide, 4 tấm phủ cả banner trên điện thoại. Chân banner wide ghi
-  số chế độ chưa rõ lịch mở và lịch mở là lịch ghi nhận từ sảnh game; điện thoại ghi câu này ở cuối danh sách. Ô tìm (`q`)
-  và chip lọc (`loc`: Đang mở, PVP, Giải trí, Có cẩm nang) nằm trên một hàng; chip đang chọn được cuộn vào tầm nhìn.
-- Cẩm nang nổi bật đứng đầu trong một khung sáng: wide là ảnh bên trái, bên phải là tấm biển "Cẩm nang", tên vàng, thời
-  lượng, tình trạng, giới thiệu, nút vàng vát góc "Mở cẩm nang" và chip các phần; điện thoại là ảnh trên cùng, tấm biển đè
-  lên mép ảnh, nút trải hết bề ngang, chip cuộn ngang, không có đoạn giới thiệu. Bấm đâu trên khung cũng mở cẩm nang.
-- Sau đó là các nhóm PVP và Chế độ giải trí. Wide là lưới thẻ poster tỉ lệ 4:3: ảnh phủ cả thẻ, tối dần ở chân, tên và
-  thời lượng nằm trên phần tối, tình trạng là viên nhỏ phía trên; rê chuột thì ảnh phóng nhẹ, tên chuyển vàng và một vạch
-  vàng chạy dọc chân thẻ; số cột chọn để hàng cuối không còn một thẻ lẻ. Điện thoại là danh sách dải ngang: tên, thời
-  lượng và tình trạng bên trái, ảnh hiện dần từ bên phải như danh sách chế độ trong game, chế độ đang mở có mép trái màu
-  xanh. Chế độ tạm đóng hoặc chưa mở khóa có ảnh nhạt màu.
+- Tiêu đề từng phần có viên đá vàng, chữ vàng sáng và đường kẻ vàng mờ dần sang phải. Mỗi khối có kiểu thẻ riêng, không
+  lặp một khung ở mọi chỗ.
+- `/modes` mở bằng sân khấu (`ModesStage`, `modes-stage.tsx`): một chế độ được chiếu lớn (chế độ có cẩm nang trước,
+  không có thì chế độ đang mở có ảnh), ảnh phủ cả khung, tối dần bên trái và ở chân. Trên wide góc trên trái là tiêu đề
+  trang và số chế độ; dưới cùng là dòng nhỏ vàng (Có cẩm nang hoặc tên nhóm), tên lớn màu vàng, thời lượng · số người ·
+  tình trạng, giới thiệu, nút vàng bo tròn (Mở cẩm nang hoặc Xem chế độ) và liên kết chữ tới các phần hay dùng của cẩm
+  nang. Trên điện thoại sân khấu trải sát hai mép dưới thanh đầu trang trong suốt (thanh đã ghi tên trang), không có đoạn
+  giới thiệu, nút trải hết bề ngang, liên kết cuộn ngang.
+- Rồi hàng "Đang mở" (`ModesRail`, `modes-rail.tsx`): các chế độ chơi được lúc này trừ chế độ trên sân khấu, thẻ ngang
+  16:9 có ảnh, viên ghi thời hạn mở theo lời game ở góc trên, tên và thời lượng ở chân. Hàng cuộn ngang, dừng từng thẻ;
+  wide có hai nút tròn cạnh tiêu đề để lùi, tiến; điện thoại vuốt, mỗi thẻ gần hết bề ngang, thẻ sau ló ra ở mép. Hàng
+  chỉ hiện khi không tìm và không lọc.
+- Cuối là "Tất cả chế độ": ô tìm (`q`) và chip lọc (`loc`: Đang mở, PVP, Giải trí, Có cẩm nang) trên một hàng, rồi các
+  nhóm PVP và Chế độ giải trí (tên nhóm chữ hoa nhỏ màu vàng) dạng tường ghép (`ModesWall`, `modes-wall.tsx`). Chế độ có
+  ảnh và không tạm đóng là ô rộng hai cột, ảnh tối dần từ bên trái, tên, thời lượng, tình trạng; chế độ tạm đóng, chưa mở
+  khóa hoặc chưa có ảnh là ô vuông nhỏ một cột với dấu tròn (ổ khóa khi chưa mở khóa), bóng ảnh nhạt màu nếu có. Lưới 6
+  cột (4 dưới 1180px) tự lấp chỗ trống bằng ô nhỏ. Trên điện thoại tường là bộ sưu tập hai cột, mọi ô một cột, ảnh tối
+  dần từ chân. Cuối trang ghi số chế độ chưa rõ lịch mở và lịch mở là lịch ghi nhận từ sảnh game.
 - `/modes/:code` trên wide mở bằng breadcrumb Trang chủ › Chế độ chơi › tên chế độ, rồi banner (`ModeBanner`,
   `mode-banner.tsx`): cao 300px, viền mảnh bo góc như banner các trang danh sách, ảnh chế độ làm nền, góc dưới trái là tấm biển nhóm,
   tên lớn màu vàng và thời lượng · số người · tình trạng; nút nguồn ảnh ở góc dưới phải. Trên điện thoại banner trải sát

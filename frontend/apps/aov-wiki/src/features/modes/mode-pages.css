@@ -100,115 +100,6 @@
   filter: grayscale(1);
 }
 
-/*
- * A mode with a guide: a lit game frame, the art inside its inner line on the left, that opens the guide wherever it
- * is pressed.
- */
-.wiki-mode-feature {
-  --wiki-frame-cut: 14px;
-  --mode-chip-bg: var(--aov-raised);
-  --mode-chip-hover: var(--aov-wiki-panel-high);
-  display: grid;
-  grid-template-columns: minmax(0, 44%) minmax(0, 1fr);
-  gap: 4px 24px;
-  padding: 7px;
-}
-.wiki-mode-feature-art {
-  align-self: stretch;
-  min-height: 200px;
-  clip-path: polygon(
-    9px 0,
-    calc(100% - 9px) 0,
-    100% 9px,
-    100% calc(100% - 9px),
-    calc(100% - 9px) 100%,
-    9px 100%,
-    0 calc(100% - 9px),
-    0 9px
-  );
-}
-.wiki-mode-feature-art > img {
-  transition: transform 0.4s ease;
-}
-.wiki-mode-feature:has(.wiki-mode-cta:hover) .wiki-mode-feature-art > img {
-  transform: scale(1.04);
-}
-.wiki-mode-feature-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  justify-items: start;
-  gap: 8px;
-  padding: 18px 20px 18px 0;
-}
-.wiki-mode-feature-kicker {
-  --plate-cut: 9px;
-  font: 700 0.75rem/1rem var(--wiki-font-reading);
-  min-height: 24px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.wiki-mode-feature h2 {
-  font: 700 1.625rem/2rem var(--wiki-font-display);
-  color: var(--aov-wiki-gold-bright);
-  letter-spacing: -0.01em;
-  text-shadow: 0 0 18px color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
-}
-.wiki-mode-feature-meta {
-  font: var(--wiki-type-meta);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 12px;
-  color: var(--aov-muted);
-}
-.wiki-mode-feature .wiki-mode-prose {
-  max-width: 72ch;
-}
-.wiki-mode-feature-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-  min-width: 0;
-  max-width: 100%;
-  margin-top: 6px;
-}
-.wiki-mode-feature-links > .wiki-mode-chip-row {
-  flex: 0 1 auto;
-}
-/* The link that opens the guide: a gold plate with cut corners. Its hit area covers the whole feature. */
-.wiki-mode-cta {
-  font: var(--wiki-type-category);
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 20px;
-  background: linear-gradient(180deg, var(--aov-wiki-gold-bright), var(--aov-wiki-gold) 55%, var(--aov-wiki-bronze));
-  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
-  color: var(--aov-wiki-bar);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.wiki-mode-cta::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-.wiki-mode-cta:hover {
-  filter: brightness(1.08);
-}
-.wiki-mode-cta:focus-visible {
-  outline: none;
-  filter: brightness(1.15) drop-shadow(0 0 6px var(--aov-wiki-gold));
-}
-.wiki-mode-feature .wiki-mode-chip {
-  position: relative;
-  z-index: 1;
-}
-
 /* Wide: a grid of poster cards. Each group sets its own column count, so its rows fill. */
 .wiki-mode-grid {
   display: grid;
@@ -410,21 +301,34 @@ a.wiki-mode-row:active {
   }
 }
 
-/* The list of modes: the page head with its filters, the guide, then the game's groups. */
+/* The list of modes: the stage, the row of open modes, then the wall by the game's groups. */
 .wiki-mode-page.wiki-mode-index {
-  gap: 32px;
+  gap: 36px;
 }
-.wiki-mode-index-head,
-.wiki-mode-index-loading {
+/* A group of the wall: its name in gold small capitals over a rule that fades out, then its tiles. */
+.wiki-modes-wall-group {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
   min-width: 0;
 }
-.wiki-mode-index-loading {
-  gap: 32px;
+.wiki-modes-wall-group > h3 {
+  font: 700 0.8125rem/1.25rem var(--wiki-font-reading);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0 6px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--aov-wiki-gold) 40%, transparent), transparent) left
+    bottom / 100% 1px no-repeat;
+  color: var(--aov-wiki-gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.wiki-mode-feature[data-skeleton] {
-  min-height: 202px;
+.wiki-modes-wall-group > h3 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
 }
 .wiki-mode-footnote {
   font: var(--wiki-type-meta);
@@ -742,7 +646,7 @@ a.wiki-mode-row:active {
 @media (max-width: 899.98px) {
   /* The list's own search takes a row; its chips scroll on the next one, out to the screen's edges. */
   .wiki-mode-page.wiki-mode-index {
-    gap: 24px;
+    gap: 28px;
   }
   .wiki-mode-find {
     flex: 1 1 100%;
@@ -752,60 +656,12 @@ a.wiki-mode-row:active {
     margin-inline: calc(-1 * var(--wiki-gutter));
     padding-inline: var(--wiki-gutter);
   }
-  /*
-   * The guide on a phone: its art across the frame's top, then the plate, the name and its length, the gold button
-   * across the frame, and the guide's parts on a row that scrolls.
-   */
-  .wiki-mode-feature {
-    --wiki-frame-cut: 12px;
-    grid-template-columns: minmax(0, 1fr);
-    padding: 6px;
-  }
-  .wiki-mode-feature-art {
-    min-height: 0;
-    aspect-ratio: 21 / 9;
-  }
-  .wiki-mode-feature-body {
-    gap: 6px;
-    padding: 4px 8px 10px;
-  }
-  .wiki-mode-feature-kicker {
-    margin-top: -18px;
-  }
-  .wiki-mode-feature h2 {
-    font: 700 1.375rem/1.75rem var(--wiki-font-display);
-  }
-  .wiki-mode-feature .wiki-mode-prose {
-    display: none;
-  }
-  .wiki-mode-feature-links {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    justify-self: stretch;
-    gap: 10px;
-  }
-  .wiki-mode-cta {
-    min-height: 44px;
-  }
-  .wiki-mode-feature-links > .wiki-mode-chip-row {
-    margin-inline: -14px;
-    padding-inline: 14px;
-  }
-  .wiki-mode-feature[data-skeleton] {
-    min-height: 300px;
-  }
   /* Rows of a group sit closer than the cards of the wide grid. */
   .wiki-mode-group {
     gap: 12px;
   }
   .wiki-mode-overview {
     gap: 28px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wiki-mode-card,
-  .wiki-mode-feature {
-    transition: none;
   }
 }
 
