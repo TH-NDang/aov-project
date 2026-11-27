@@ -8,7 +8,7 @@ import { HeroOverallAssessment, InlineAssessment } from "../assessment/hero-over
 import { createContext, useContext, useMemo, useState } from "react"
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, ChevronRight, FilePlus2 } from "lucide-react"
+import { ArrowUpRight, ChevronRight, FilePlus2, Pencil } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -28,6 +28,8 @@ import { phaseLabels, type PublicationOverview } from "../../api/publication-ove
 import { dateLabel } from "@/lib/schedule-date"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { HeroChangeSummary } from "./hero-change-badges"
+import { PatchChangeEditor } from "./patch-change-editor"
+import { rowsFromRecorded } from "../../model/patch-changes/patch-change-model"
 import {
   RecordPatchNotesSheet,
   useHeroEntries,
@@ -240,6 +242,7 @@ function HeroPatchChangesTable({
   locale: string
 }) {
   const [selected, setSelected] = useState<ChangeSet | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const canAssess = useSession().actor?.capabilities.includes("patch:write") ?? false
   const wide = useIsWide()
   const query = useQuery(heroChangesOptions(variantId, locale))
@@ -271,6 +274,7 @@ function HeroPatchChangesTable({
   )
   const table = useTable({ features, columns, data: query.data ?? empty, getRowId: (row) => row.id })
   const detailHero = detail ? heroById.get(detail.heroId) : undefined
+  const editing = canAssess && !!detail && editingId === detail.id
   return (
     <div className="space-y-3">
       {query.isPending ? (
@@ -332,7 +336,10 @@ function HeroPatchChangesTable({
       <Sheet
         open={!!selected}
         onOpenChange={(open) => {
-          if (!open) setSelected(null)
+          if (!open) {
+            setSelected(null)
+            setEditingId(null)
+          }
         }}
       >
         <SheetContent
@@ -348,28 +355,61 @@ function HeroPatchChangesTable({
             {detail && <SourceBadge change={detail} />}
           </SheetHeader>
           <div className="space-y-3 overflow-y-auto px-4 pb-6">
-            {detail && <HeroOverallAssessment key={`${detail.id}-${detail.assessmentVersion}`} change={detail} />}
-            {detail && (
-              <ChangeLines
-                changes={detail.changes}
-                content={detailReference.data?.content}
-                heroId={detail.heroId}
-                locale={locale}
-              />
-            )}
-            {detail && (
-              <Button asChild variant="outline">
-                <Link
-                  to={
-                    detail.toHeroRevisionId
-                      ? `/hero/${detail.heroId}?revision=${detail.toHeroRevisionId}`
-                      : `/hero/${detail.heroId}?view=patch&atPatch=${variantId}`
-                  }
-                >
-                  {detail.toHeroRevisionId ? "Mở bản tướng" : "Xem dữ liệu tướng tại patch"}
-                  <ArrowUpRight className="size-4" />
-                </Link>
-              </Button>
+            {detail && editing ? (
+              detailRevisionId && detailReference.isPending ? (
+                <p role="status" className="text-sm text-muted-foreground">
+                  Đang tải dữ liệu tướng…
+                </p>
+              ) : (
+                <PatchChangeEditor
+                  key={detail.id}
+                  source={detail.sourceKind ?? "SNAPSHOT"}
+                  heroId={detail.heroId}
+                  variantId={variantId}
+                  locale={locale}
+                  reference={detailReference.data?.content ?? null}
+                  fromRevisionId={detail.fromHeroRevisionId}
+                  toRevisionId={detail.toHeroRevisionId}
+                  initialRows={rowsFromRecorded(detail.changes)}
+                  defaultSourceUrl={detail.sourceUrl ?? ""}
+                  editing={{ changeSetId: detail.id, summary: detail.summary ?? "" }}
+                  onCancel={() => setEditingId(null)}
+                  onSaved={() => setEditingId(null)}
+                />
+              )
+            ) : (
+              <>
+                {detail && <HeroOverallAssessment key={`${detail.id}-${detail.assessmentVersion}`} change={detail} />}
+                {detail && (
+                  <ChangeLines
+                    changes={detail.changes}
+                    content={detailReference.data?.content}
+                    heroId={detail.heroId}
+                    locale={locale}
+                  />
+                )}
+                {detail && (
+                  <div className="flex flex-wrap gap-2">
+                    {canAssess && (
+                      <Button type="button" onClick={() => setEditingId(detail.id)}>
+                        <Pencil className="size-4" /> Sửa thay đổi
+                      </Button>
+                    )}
+                    <Button asChild variant="outline">
+                      <Link
+                        to={
+                          detail.toHeroRevisionId
+                            ? `/hero/${detail.heroId}?revision=${detail.toHeroRevisionId}`
+                            : `/hero/${detail.heroId}?view=patch&atPatch=${variantId}`
+                        }
+                      >
+                        {detail.toHeroRevisionId ? "Mở bản tướng" : "Xem dữ liệu tướng tại patch"}
+                        <ArrowUpRight className="size-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </SheetContent>
