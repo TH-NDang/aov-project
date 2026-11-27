@@ -459,8 +459,8 @@ Quản lý phù hiệu/enchantment và các nhánh/quy tắc liên quan.
 ### 4.8 GameMode domain
 
 Quản lý danh mục chế độ chơi (nhóm PVP/giải trí, ảnh, thời lượng, tình trạng mở, luật ngắn, tướng/vật phẩm
-riêng), cẩm nang chi tiết theo loại chế độ (hiện có Cờ Liên quân) và tương tác đội hình của người dùng.
-Chi tiết ở mục “Chế độ chơi và Cờ Liên quân” cuối tài liệu và ADR-023.
+riêng), cẩm nang chi tiết theo loại chế độ (hiện có Cờ Liên quân), bản đồ chiến trường và tương tác đội hình
+của người dùng. Chi tiết ở mục “Chế độ chơi và Cờ Liên quân” cuối tài liệu và ADR-023.
 
 ### 4.9 Access domain
 
@@ -2652,6 +2652,35 @@ thể hiện gì, tệp gốc trong bộ thu thập, màn hình Bách khoa đã 
 - Phân tích công khai: tần suất quân cờ, tỷ lệ Phe/Nghề đạt mốc, phân bố giá quân trong đội hình đề xuất và
   đội hình cộng đồng đang hiển thị; lượt thích được dùng làm trọng số. Không thu thập trận đấu thật nên không
   đưa ra tỷ lệ thắng.
+
+### Bản đồ chiến trường
+
+Phạm vi theo yêu cầu ngày 27/11/2026: chép màn “Bách khoa chiến trường” trong game (tab Bản đồ, Đường, Nhịp điệu)
+thành dữ liệu để Wiki vẽ bản đồ tương tác. Không dùng ảnh bản đồ của game; Wiki tự vẽ bản đồ sơ đồ, Admin có thể gắn
+ảnh nền riêng (`backgroundAssetId`, asset `GAME_MODE_ART` hoặc `OTHER`). Mỗi chế độ có tối đa một bản đồ, theo luồng
+nháp/xuất bản như cẩm nang (revision riêng, không phụ thuộc `guideKind`).
+
+Một revision bản đồ là ảnh chụp toàn bộ màn tại một thời điểm, gồm:
+
+- Thông tin chung: tên (ví dụ “Bách khoa chiến trường”), ngày quan sát, mô tả, nguồn.
+- Vật thể (`objects`, tối đa 120): mã, tên, loại `STRUCTURE` (công trình), `MINION` (lính), `MONSTER` (quái rừng),
+  `EPIC` (quái lớn), `MECHANIC` (cơ chế), ký hiệu vẽ (`glyph`), tối đa 6 nhãn của game (“Quái to”, “Tầm nhìn”…),
+  tóm tắt, thời điểm xuất hiện lần đầu và hồi sinh, các mục giới thiệu, mục “Thay đổi” mới nhất và tối đa 12 vị
+  trí. Thời điểm có `seconds` khi cố định, `note` giữ cách game ghi hoặc điều kiện; cần ít nhất một trong hai.
+- Họ vật thể: `family` trỏ tới mã vật thể đầu họ (Caesar hắc ám thuộc họ Caesar). Dạng trong họ không có điểm riêng,
+  Wiki hiện chúng trong bảng của đầu họ để chuyển qua lại. Đầu họ không được là dạng của họ khác (`NESTED_FAMILY`).
+- Đường (`lanes`, tối đa 10): mã, tên, ký hiệu `LANE`, `JUNGLE`, `MID`, `SUPPORT`, nội dung, tướng gợi ý (mã
+  trong danh mục tướng), vị trí điểm và tuyến đường phía người xem.
+- Nhịp điệu (`tempo`, tối đa 20 mốc): giây (tăng dần, không trùng), nhãn giai đoạn bắt đầu tại mốc (“Giữa trận”),
+  tối đa 8 điểm chú thích trên bản đồ (có thể trỏ tới vật thể) và tối đa 10 đoạn chữ theo thứ tự của game.
+
+Tọa độ là phần trăm của bản đồ vuông nhìn từ trên: `x` tăng sang phải, `y` tăng xuống dưới, nhà người xem ở góc
+dưới trái. Bản đồ đối xứng tâm nên điểm phía đối thủ là `(100 − x, 100 − y)`; dữ liệu vẫn ghi đủ cả hai phía.
+Thời gian tối đa 7200 giây. Lưu nháp chấp nhận thiếu dữ liệu nhưng không chấp nhận mã trùng, tham chiếu sai hay tọa
+độ ngoài 0–100. Xuất bản cần tên, ít nhất một vật thể và vị trí cho mọi vật thể không thuộc họ khác.
+
+Dữ liệu ban đầu (V080) chép từ ảnh chụp và video màn Bách khoa ngày 27/11/2026 của chế độ `5v5`; vị trí đo trên bản
+đồ nhỏ và làm tròn, loài quái nhỏ ở từng bãi là phỏng đoán cần người biên tập rà lại.
 
 ## Build đề cử theo tướng (ADR-026)
 
