@@ -28,7 +28,7 @@ export function PatchDataReview({ variant }: { variant: Variant }) {
     meta: { silent: true },
   })
   return (
-    <div className="m-3 space-y-2 rounded-lg bg-muted/30 p-3 text-sm">
+    <div className="space-y-2 rounded-lg bg-muted/30 p-3 text-sm">
       <div className="flex flex-wrap items-center gap-2">
         <CheckCircle2 className="size-4" />
         <span className="font-medium">{complete ? "Đã hoàn tất nhập liệu" : "Đang nhập và rà soát dữ liệu"}</span>

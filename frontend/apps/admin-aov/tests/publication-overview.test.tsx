@@ -170,16 +170,17 @@ test("publication overview shows flags and hero heads, and only tabs with change
       ),
     )
     const document = dom.window.document
-    const openView = async (name: string) => {
-      const tab = [
-        ...document.querySelectorAll<HTMLButtonElement>('[aria-label="Quản lý phiên bản và thị trường"] [role="tab"]'),
-      ].find((tab) => tab.textContent?.trim() === name)!
-      await act(async () => {
-        tab.dispatchEvent(new dom.window.MouseEvent("mousedown", { bubbles: true, button: 0 }))
-        tab.click()
-      })
+    const pressButton = async (name: string) => {
+      const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+        (button) => button.textContent?.trim() === name,
+      )
+      assert.ok(button, `Missing button ${name}`)
+      await act(async () => button.click())
+      await flush()
     }
-    await openView("Thị trường")
+    // The markets open on a sheet over the patch instead of a tab of their own.
+    await pressButton("Thị trường")
+    assert.ok(document.querySelector('[role="dialog"] [aria-label="Thị trường"]'))
     // With a single default ruleset the market overview does not repeat the ruleset name.
     assert.doesNotMatch(document.body.textContent ?? "", /Shared gameplay/)
     assert.match(document.querySelector('[aria-label="Thị trường"]')?.textContent ?? "", /S4 2026.*patch-october/)
@@ -188,7 +189,13 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.match(document.querySelector('[aria-label="Phiên bản cho Thái Lan"]')?.textContent ?? "", /Chưa ghi lịch/)
     assert.ok(document.querySelector('[aria-label="Xem patch cho Việt Nam"]'))
     assert.ok(document.querySelector(`[aria-label="Thị trường"] img[src="${countryReferenceFlag("VN")}"]`))
-    await openView("Phiên bản")
+    await pressButton("Close")
+    assert.equal(document.querySelector('[role="dialog"]'), null)
+    // The patch's schedule, defaults and data check are buttons beside its changes, each opening a sheet.
+    assert.equal(document.querySelector('[aria-label="Lịch phát hành theo thị trường"]'), null)
+    await pressButton("Lịch phát hành")
+    assert.ok(document.querySelector('[role="dialog"] [aria-label="Lịch phát hành theo thị trường"]'))
+    await pressButton("Close")
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
     assert.equal(document.querySelector('[aria-label="Phạm vi hiển thị"]'), null)
     assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
@@ -313,7 +320,19 @@ test("publication overview shows flags and hero heads, and only tabs with change
         },
       ],
     )
-    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Thêm ghi chú · Trang bị"]')!.click())
+    const addNote = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent?.trim() === "Thêm ghi chú",
+    )!
+    await act(async () =>
+      addNote.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
+    )
+    await flush()
+    const itemNote = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+      (item) => item.textContent?.trim() === "Trang bị",
+    )
+    assert.ok(itemNote, "The note menu offers items")
+    await act(async () => itemNote.click())
+    await flush()
     assert.ok(document.querySelector('[aria-label="Chọn trang bị"] img[src="/item-icon.png"]'))
     await press("Item A")
     await press("Thêm mới")

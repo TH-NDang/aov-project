@@ -1,16 +1,22 @@
 import { HeroCatalog } from "../catalog/hero-catalog"
 import { Tabs, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
-import { ActionStrip } from "@/components/action-strip"
 import { WarehousePatchChanges } from "../../../warehouse/components/history/warehouse-patch-changes"
 import { WarehouseOrderPicker } from "../../../warehouse/components/secondary/warehouse-order-picker"
 import { HeroOverallAssessment, InlineAssessment } from "../assessment/hero-overall-assessment"
-import { createContext, useContext, useMemo, useState } from "react"
+import { Fragment, createContext, useContext, useMemo, useState } from "react"
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { ArrowUpRight, ChevronRight, FilePlus2, Pencil } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@aov/ui/components/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
@@ -540,36 +546,38 @@ export function PatchChangesTable({
   return (
     <section className="min-w-0 border-t" aria-label="Thay đổi trong patch">
       <div className="space-y-2 py-3">
-        <h3 className="type-section-title">Thay đổi trong patch</h3>
-        <PatchSourceStrip variantId={variantId} canEdit={canRecord} />
-        {canRecord && variant && (
-          <ActionStrip aria-label="Thêm ghi chú cập nhật">
-            <span className="type-label mr-1 inline-flex items-center gap-1.5 text-muted-foreground">
-              <FilePlus2 aria-hidden className="size-4" /> Thêm ghi chú
-            </span>
-            {noteDomainKeys
-              .filter(
-                (key) =>
-                  key === "general" ||
-                  key === "heroes" ||
-                  (variant.status === "PUBLISHED" &&
-                    capabilities.includes(`${changeDomain[key].toLowerCase()}:publish`)),
-              )
-              .map((key) => (
-                <Button
-                  key={key}
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  aria-haspopup="dialog"
-                  aria-label={`Thêm ghi chú · ${patchNoteDomains[key]}`}
-                  onClick={() => setRecording(key)}
-                >
-                  <PatchNoteIcon domain={key} /> {patchNoteDomains[key]}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="type-section-title">Thay đổi trong patch</h3>
+          {canRecord && variant && (
+            // One button instead of a row of them: the kind of note is picked from its menu.
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" size="sm">
+                  <FilePlus2 aria-hidden /> Thêm ghi chú
                 </Button>
-              ))}
-          </ActionStrip>
-        )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                {noteDomainKeys
+                  .filter(
+                    (key) =>
+                      key === "general" ||
+                      key === "heroes" ||
+                      (variant.status === "PUBLISHED" &&
+                        capabilities.includes(`${changeDomain[key].toLowerCase()}:publish`)),
+                  )
+                  .map((key) => (
+                    <Fragment key={key}>
+                      {key === "general" && <DropdownMenuSeparator />}
+                      <DropdownMenuItem onSelect={() => setRecording(key)}>
+                        <PatchNoteIcon domain={key} /> {patchNoteDomains[key]}
+                      </DropdownMenuItem>
+                    </Fragment>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+        <PatchSourceStrip variantId={variantId} canEdit={canRecord} />
       </div>
       {body}
       <PatchAdditionalNotes
