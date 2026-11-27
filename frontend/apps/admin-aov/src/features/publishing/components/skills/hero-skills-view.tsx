@@ -13,7 +13,6 @@ import { HeroTranslationNotice } from "../workspace/hero-translation-notice"
 import { PatchCaptureLink } from "../captures/patch-capture-panel"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
 import { translatedText, sectionTextFields, type TranslationTarget } from "../../model/hero-translation-model"
-import { SkillVideosSection } from "../../../videos/skill-videos-section"
 import { SkillStateSwitch, skillInState, stateIconsOf } from "./skill-state-icons"
 import { SkillSummaryText } from "./skill-summary-field"
 import { SkillFormSwitch, SkillVariantDots } from "@aov/ui/components/skill-kit"
@@ -448,15 +447,11 @@ function SkillDetail({
   const text = translatedText(skill.translations, locale, sectionTextFields.SKILLS)
   // A state only swaps the picture; the text below stays the skill's own.
   const [state, setState] = useState<number | null>(null)
-  const videos = heroId && (
-    <SkillVideosSection heroId={heroId} skillKey={skill.skillKey} skillName={text?.name || skillLabel(skill)} />
-  )
   if (editor)
     return (
       <>
         {states}
         {editor}
-        {videos}
       </>
     )
   return (
@@ -503,9 +498,7 @@ function SkillDetail({
           Chưa có mô tả kỹ năng{text ? ` bằng ${text.locale}` : ` bằng ${locale}`}.
         </p>
       )}
-      <SkillSourceDetails skill={skill} collapseSources showBadges={false}>
-        {videos}
-      </SkillSourceDetails>
+      <SkillSourceDetails skill={skill} collapseSources showBadges={false} />
     </>
   )
 }

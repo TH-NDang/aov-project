@@ -7,7 +7,7 @@ import {
 } from "@aov/ui/lib/video-playback"
 import { matchesQuery } from "@/lib/text"
 
-export type VideoSubjectKind = "HERO" | "SKILL" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL"
+export type VideoSubjectKind = "HERO" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL"
 export type VideoPurpose =
   | "INTRO"
   | "GUIDE_BASIC"
@@ -96,7 +96,6 @@ export const STATUS_LABELS: Record<VideoStatus, string> = {
 
 export const KIND_LABELS: Record<VideoSubjectKind, string> = {
   HERO: "Tướng",
-  SKILL: "Kỹ năng",
   SKIN: "Trang phục",
   ITEM: "Trang bị",
   ENCHANTMENT: "Phù hiệu",
@@ -106,8 +105,7 @@ export const KIND_LABELS: Record<VideoSubjectKind, string> = {
 
 /** The purposes an editor is most likely to want, in the order they are offered for each kind of subject. */
 const PURPOSES_BY_KIND: Record<VideoSubjectKind, readonly VideoPurpose[]> = {
-  HERO: ["GUIDE_BASIC", "GUIDE_ADVANCED", "INTRO", "LORE", "PATCH_CHANGE", "OTHER"],
-  SKILL: ["SKILL_DEMO", "GUIDE_ADVANCED", "PATCH_CHANGE", "OTHER"],
+  HERO: ["GUIDE_BASIC", "GUIDE_ADVANCED", "SKILL_DEMO", "INTRO", "LORE", "PATCH_CHANGE", "OTHER"],
   SKIN: ["SKIN_SHOWCASE", "SKIN_TRAILER", "OTHER"],
   ITEM: ["GUIDE_BASIC", "GUIDE_ADVANCED", "PATCH_CHANGE", "OTHER"],
   ENCHANTMENT: ["GUIDE_BASIC", "GUIDE_ADVANCED", "PATCH_CHANGE", "OTHER"],
@@ -123,7 +121,7 @@ export function purposesFor(kind: VideoSubjectKind, current?: VideoPurpose): Vid
 
 export function capabilityFor(kind: VideoSubjectKind, action: "write" | "publish"): string {
   const domain =
-    kind === "HERO" || kind === "SKILL" || kind === "SKIN"
+    kind === "HERO" || kind === "SKIN"
       ? "hero"
       : kind === "ITEM"
         ? "item"
@@ -211,11 +209,11 @@ export function reorder(videos: readonly AdminVideo[], id: string, direction: -1
     .filter(({ video, displayOrder }) => video.displayOrder !== displayOrder)
 }
 
-/** Names a subject as readers know it: the hero first for skills and skins, then the entry. */
+/** Names a subject as readers know it: the hero first for skins, then the entry. */
 export function subjectLabel(subjects: readonly VideoSubject[] | undefined, video: AdminVideo) {
   const wanted = videoSubjectId(video)
   const own = subjects?.find((subject) => subjectId(subject) === wanted)
-  if (video.subjectKind !== "SKILL" && video.subjectKind !== "SKIN") return own?.name ?? video.subjectId
+  if (video.subjectKind !== "SKIN") return own?.name ?? video.subjectId
   const hero = subjects?.find((subject) => subject.kind === "HERO" && subject.id === video.subjectId)
   return `${hero?.name ?? "Tướng chưa rõ"} · ${own?.name ?? video.subjectKey}`
 }

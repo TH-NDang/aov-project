@@ -6,11 +6,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { cn } from "@aov/ui/lib/utils"
 import { KIND_LABELS, subjectId, subjectMatches, type VideoSubject, type VideoSubjectKind } from "./video-model"
 
-const KIND_ORDER: VideoSubjectKind[] = ["HERO", "SKILL", "SKIN", "ITEM", "ENCHANTMENT", "ARCANA", "SPELL"]
+const KIND_ORDER: VideoSubjectKind[] = ["HERO", "SKIN", "ITEM", "ENCHANTMENT", "ARCANA", "SPELL"]
 /** Rendering the whole catalog at once makes the list sluggish, and nobody scrolls past this many rows. */
 const MAX_ROWS_PER_GROUP = 60
 
-/** Names a skill or skin with its hero when the picker spans several heroes. */
+/** Names a skin with its hero when the picker spans several heroes. */
 function rowLabel(subject: VideoSubject, heroNames: Map<string, string>, showHero: boolean) {
   if (subject.kind === "HERO") return showHero ? subject.name : `Cả tướng · ${subject.name}`
   if (!subject.key || !showHero) return subject.name
@@ -67,12 +67,7 @@ export function SubjectPicker({
         </PopoverTrigger>
         <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-72 p-0">
           <Command shouldFilter={false}>
-            <CommandInput
-              aria-label="Tìm mục"
-              placeholder="Tìm tướng, kỹ năng, trang phục, trang bị…"
-              value={search}
-              onValueChange={setSearch}
-            />
+            <CommandInput aria-label="Tìm mục" placeholder="Tìm mục…" value={search} onValueChange={setSearch} />
             <CommandList className="max-h-72 overscroll-contain">
               <CommandEmpty>Không tìm thấy mục nào.</CommandEmpty>
               {groups.map((group) => (
