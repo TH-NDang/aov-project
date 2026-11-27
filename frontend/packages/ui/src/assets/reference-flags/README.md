@@ -2,7 +2,7 @@
 
 Các biểu tượng được đóng gói trong frontend; trình duyệt không tải cờ từ dịch vụ bên ngoài khi hiển thị tham chiếu.
 
-- `vn`, `th`, `tw`, `id`, `us`, `gb`, `cn`, `jp`, `kr`: dùng lại các SVG sẵn có tại `apps/admin-aov/public/images/flags/`.
+- `vn`, `th`, `tw`, `id`, `us`, `gb`, `cn`, `jp`, `kr`: các SVG trước đây nằm ở `apps/admin-aov/public/images/flags/`; Admin nay chỉ dùng bản đóng gói ở đây qua `countryReferenceFlag`, vì Admin chạy dưới `/admin/` nên đường dẫn `/images/flags/...` không tới được tệp.
 - `hk`, `mo`, `sg`, `my`, `ph`: lấy nguyên bản định dạng 4:3 từ bộ [flag-icons](https://github.com/lipis/flag-icons), phiên bản **7.3.2**, ngày 27/10/2026.
 
 Nguồn tải cho năm biểu tượng bổ sung:

@@ -291,3 +291,31 @@ test("the schedule strip shows each game's progress, games nobody recorded and o
     assert.deepEqual(opened, ["g3", "g1"])
   })
 })
+
+test("games nobody recorded that follow each other read as one run", async () => {
+  await inPage(async (document, render) => {
+    const { MatchRecordingStrip } = await import("../src/features/esports/components/match-recording-strip")
+    await render(
+      <MatchRecordingStrip
+        recording={{
+          state: "missing",
+          expected: 6,
+          confirmed: 0,
+          games: [
+            {
+              id: "g3",
+              number: 3,
+              progress: { steps: [], done: 6, total: 6, state: "confirmed", publishable: true, missing: [] },
+            },
+          ],
+          gaps: [],
+        }}
+        onOpen={() => {}}
+      />,
+    )
+    const absent = [...document.querySelectorAll("button")]
+      .map((entry) => entry.textContent ?? "")
+      .filter((text) => text.endsWith("chưa ghi"))
+    assert.deepEqual(absent, ["V1–V2 chưa ghi", "V4–V6 chưa ghi"])
+  })
+})

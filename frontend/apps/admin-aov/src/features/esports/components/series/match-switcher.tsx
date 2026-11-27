@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Link, useNavigate } from "react-router"
+import { Link, useLocation, useNavigate } from "react-router"
 import type { DocumentView, GameContent } from "@aov/community-contracts"
 import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -39,6 +39,8 @@ export function MatchSwitcher({
   keysEnabled?: boolean
 }) {
   const navigate = useNavigate()
+  // Moving between matches replaces the screen, so Back returns to where the recording began (the schedule).
+  const moving = { replace: true, state: useLocation().state }
   const [open, setOpen] = useState(false)
   const { position, total, previous, next } = matchNeighbours(records, seriesId)
   const path = (record: SeriesRecord) =>
@@ -48,8 +50,8 @@ export function MatchSwitcher({
 
   const go = useRef({ P: () => {}, N: () => {} })
   go.current = {
-    P: () => previous && void navigate(path(previous)),
-    N: () => next && void navigate(path(next)),
+    P: () => previous && void navigate(path(previous), moving),
+    N: () => next && void navigate(path(next), moving),
   }
   useEffect(() => {
     if (!keysEnabled) return
@@ -72,7 +74,7 @@ export function MatchSwitcher({
     const name = record ? `${label}: ${pairName(record)} (Shift + ${key})` : `Không có ${label.toLowerCase()}`
     return record ? (
       <Button asChild size="icon-sm" variant="ghost">
-        <Link to={path(record)} aria-label={name} title={name}>
+        <Link to={path(record)} replace state={moving.state} aria-label={name} title={name}>
           <Icon aria-hidden />
         </Link>
       </Button>
@@ -120,6 +122,7 @@ function MatchList({
   path: (record: SeriesRecord) => string
   onPicked: () => void
 }) {
+  const backState = useLocation().state
   const [search, setSearch] = useState("")
   const games = useTournamentGames(records[0]?.content.tournamentId ?? "")
   const byMatch = useMemo(() => {
@@ -187,6 +190,8 @@ function MatchList({
                   key={record.id}
                   ref={here ? current : undefined}
                   to={path(record)}
+                  replace
+                  state={backState}
                   aria-current={here ? "page" : undefined}
                   onClick={onPicked}
                   className={cn(

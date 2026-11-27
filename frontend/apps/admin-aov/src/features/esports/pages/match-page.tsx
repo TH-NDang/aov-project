@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react"
-import { Link, useParams, useSearchParams } from "react-router"
+import { Link, useLocation, useParams, useSearchParams } from "react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { DocumentView, SeriesContent } from "@aov/community-contracts"
 import { Swords } from "lucide-react"
@@ -60,6 +60,7 @@ function StudioSkeleton() {
 function MatchView({ access }: { access: Access }) {
   const { tournamentId = "", seriesId = "" } = useParams()
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
   const client = useQueryClient()
   // The desk of the next match keeps the whole screen, so full screen belongs to the page.
   const { fullscreen, toggle } = useFullscreen()
@@ -83,9 +84,10 @@ function MatchView({ access }: { access: Access }) {
           }
           return next
         },
-        { replace: true },
+        // The way back the screen was opened with stays when its own address changes.
+        { replace: true, state: location.state },
       ),
-    [setParams],
+    [setParams, location.state],
   )
   const onConsumeLink = useCallback(() => setParam({ game: null, t: null, view: null }), [setParam])
   const create = useMutation({

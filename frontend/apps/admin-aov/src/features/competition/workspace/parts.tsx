@@ -28,8 +28,12 @@ export type WorkspaceFocus = {
   show?: string
   /** What opens for writing at once: the roster of the team, the fields of the stage, the result of the match. */
   open?: string
+  /** How a stage is shown when not as usual: "list" or "bracket" for a bracket, "table" for a league's standings. */
+  view?: string
+  /** How a league's matches are grouped: "round" or "day". */
+  group?: string
 }
-export const FOCUS_KEYS = ["team", "stage", "match", "key", "show", "open"] as const
+export const FOCUS_KEYS = ["team", "stage", "match", "key", "show", "open", "view", "group"] as const
 
 export type WorkspaceAction = "save" | "publish" | "withdraw" | "materialize"
 
@@ -62,6 +66,11 @@ export type Workspace = {
   /** Opens a step, at the place the focus names. */
   go: (step: WorkspaceStep, focus?: WorkspaceFocus) => void
   focus: WorkspaceFocus
+  /**
+   * Changes the place inside the open step without a new history entry: an empty value removes it. Back and a reload
+   * then return to the same screen, with the same stage, filters and open match.
+   */
+  keep: (patch: WorkspaceFocus) => void
   openCopy: (parts?: CopyPart[]) => void
   run: (action: WorkspaceAction) => void
 }
