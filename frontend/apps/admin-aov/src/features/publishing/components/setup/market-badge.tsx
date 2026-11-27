@@ -4,11 +4,7 @@ import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 export function MarketFlag({ code }: { code: string }) {
   const flag = countryReferenceFlag(code.trim().toUpperCase())
   return flag ? (
-    <img
-      src={flag}
-      alt=""
-      className="h-3.5 w-5 shrink-0 rounded-sm object-cover"
-    />
+    <img src={flag} alt="" className="h-3.5 w-5 shrink-0 rounded-sm object-cover" />
   ) : (
     <Globe aria-hidden className="size-3.5 shrink-0" />
   )

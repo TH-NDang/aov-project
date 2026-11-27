@@ -198,12 +198,7 @@ export function RegionFlag({ code, withName = true }: { code?: string; withName?
   return (
     <span className="inline-flex items-center gap-1.5" title={regionName(code)}>
       {flag ? (
-        <img
-          src={flag}
-          alt=""
-          className="h-3 w-[18px] object-cover"
-          loading="lazy"
-        />
+        <img src={flag} alt="" className="h-3 w-[18px] object-cover" loading="lazy" />
       ) : (
         <span className="rounded bg-muted px-1 text-xs font-semibold">{code || "?"}</span>
       )}

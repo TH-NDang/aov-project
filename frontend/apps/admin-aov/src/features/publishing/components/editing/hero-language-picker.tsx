@@ -26,12 +26,7 @@ const languageFlags: Record<string, string> = {
 export function HeroLanguageIcon({ locale }: { locale: string }) {
   const flag = Object.hasOwn(languageFlags, locale) ? countryReferenceFlag(languageFlags[locale]) : undefined
   return flag ? (
-    <img
-      src={flag}
-      alt=""
-      aria-hidden
-      className="h-4 w-6 shrink-0 rounded-sm object-cover ring-1 ring-foreground/10"
-    />
+    <img src={flag} alt="" aria-hidden className="h-4 w-6 shrink-0 rounded-sm object-cover ring-1 ring-foreground/10" />
   ) : (
     <Languages className="size-4 shrink-0 text-muted-foreground" aria-hidden />
   )
