@@ -74,10 +74,16 @@ const page = { url: "http://localhost/game-configuration" }
 /** A request the table sends that the test answers itself, with what it sent. */
 type Answer = (url: string, init: RequestInit | undefined) => Response | undefined
 
-async function openTable(dom: Dom, answer: Answer, capabilities = ["catalog:read", "patch:write"]) {
+const balanceRows = [change("change-airi", "airi", "airi"), change("change-violet", "violet", "violet")]
+
+async function openTable(
+  dom: Dom,
+  answer: Answer,
+  capabilities = ["catalog:read", "patch:write"],
+  rows: unknown[] = balanceRows,
+) {
   const fixture = createHeroFixture()
   const sent: { url: string; method?: string; body: unknown }[] = []
-  const rows = [change("change-airi", "airi", "airi"), change("change-violet", "violet", "violet")]
   setFetch(async (input, init) => {
     const url = String(input)
     if (url.endsWith("/admin/me"))
@@ -97,7 +103,10 @@ async function openTable(dom: Dom, answer: Answer, capabilities = ["catalog:read
   const client = testQueryClient()
   client.setDefaultOptions({ queries: { retry: false, gcTime: Infinity, staleTime: Infinity } })
   client.setQueryData(["patch-changes", "variant", "vi-VN"], rows)
-  client.setQueryData(["reference-catalog", "fixture", "editor", ""], [hero("airi", "Airi"), hero("violet", "Violet")])
+  client.setQueryData(
+    ["reference-catalog", "fixture", "editor", ""],
+    [hero("airi", "Airi"), hero("violet", "Violet"), hero("lorion", "Lorion")],
+  )
   client.setQueryData(["patch-additional-notes", "variant", "vi-VN"], { body: "", version: 0 })
   for (const kind of ["items", "enchantments", "arcana", "spells"])
     client.setQueryData(["warehouse", "changes", kind, "rules", "vi-VN"], [])
@@ -204,5 +213,26 @@ test("a change set that is locked keeps the editor open and says why", async () 
 
     await waitFor(() => document.body.textContent?.includes("đang bị khóa"), "The lock is explained")
     assert.ok(button("Lưu thay đổi"), "The editor stays open")
+  })
+})
+
+test("heroes whose changes only fix bugs are listed apart from the balance changes", async () => {
+  await inDom(page, async (dom) => {
+    const fix = {
+      ...change("change-lorion", "lorion", "lorion"),
+      overallKind: "FIX",
+      summary: "Sửa lỗi chiêu 1 bị kẹt.",
+      changes: [{ id: "stuck", type: "HERO_OTHER_CHANGE", changeKind: "FIX", description: "Chiêu 1 bị kẹt." }],
+    }
+    await openTable(dom, noContent, ["catalog:read", "patch:write"], [...balanceRows, fix])
+
+    const fixes = await waitFor(() => document.querySelector('section[aria-labelledby="hero-fix-list-title"]'))
+    assert.match(fixes.textContent ?? "", /Sửa lỗi và tối ưu/)
+    assert.match(fixes.textContent ?? "", /Sửa lỗi chiêu 1 bị kẹt\./)
+    assert.equal(document.querySelector('table button[aria-label="Xem thay đổi Lorion"]'), null)
+    assert.ok(document.querySelector('table button[aria-label="Xem thay đổi Airi"]'))
+
+    await click(button("Xem sửa lỗi Lorion", fixes), "fix row")
+    await waitFor(() => button("Sửa thay đổi"), "The fix opens in the same detail")
   })
 })

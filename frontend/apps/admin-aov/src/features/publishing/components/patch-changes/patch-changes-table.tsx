@@ -29,7 +29,8 @@ import { dateLabel } from "@/lib/schedule-date"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { HeroChangeSummary } from "./hero-change-badges"
 import { PatchChangeEditor } from "./patch-change-editor"
-import { rowsFromRecorded } from "../../model/patch-changes/patch-change-model"
+import { isFixOnly, rowsFromRecorded } from "../../model/patch-changes/patch-change-model"
+import { HeroFixList } from "./hero-fix-list"
 import {
   RecordPatchNotesSheet,
   useHeroEntries,
@@ -272,7 +273,10 @@ function HeroPatchChangesTable({
     () => ({ heroById, overview, markets, variantId, locale, canAssess, open: setSelected }),
     [heroById, overview, markets, variantId, locale, canAssess],
   )
-  const table = useTable({ features, columns, data: query.data ?? empty, getRowId: (row) => row.id })
+  const rows = query.data ?? empty
+  const balance = useMemo(() => rows.filter((row) => !isFixOnly(row)), [rows])
+  const fixes = useMemo(() => rows.filter(isFixOnly), [rows])
+  const table = useTable({ features, columns, data: balance, getRowId: (row) => row.id })
   const detailHero = detail ? heroById.get(detail.heroId) : undefined
   const editing = canAssess && !!detail && editingId === detail.id
   return (
@@ -299,38 +303,41 @@ function HeroPatchChangesTable({
               <HeroOrderButton variantId={variantId} rows={query.data} heroById={heroById} />
             </div>
           )}
-          <div className="overflow-x-auto">
-            <HeroTableCellsContext.Provider value={cells}>
-              <table className="w-full min-w-[520px] text-sm">
-                <thead className="bg-muted/40">
-                  <tr>
-                    {table.getHeaderGroups()[0]?.headers.map((h) => (
-                      <th
-                        key={h.id}
-                        className={`type-label px-3 py-2 text-left text-muted-foreground ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
-                      >
-                        <table.FlexRender header={h} />
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr key={row.id} className="border-t border-border/60 align-middle hover:bg-muted/20">
-                      {row.getAllCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className={`px-3 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 bg-card" : ""}`}
+          {balance.length > 0 && (
+            <div className="overflow-x-auto">
+              <HeroTableCellsContext.Provider value={cells}>
+                <table className="w-full min-w-[520px] text-sm">
+                  <thead className="bg-muted/40">
+                    <tr>
+                      {table.getHeaderGroups()[0]?.headers.map((h) => (
+                        <th
+                          key={h.id}
+                          className={`type-label px-3 py-2 text-left text-muted-foreground ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
                         >
-                          <table.FlexRender cell={cell} />
-                        </td>
+                          <table.FlexRender header={h} />
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </HeroTableCellsContext.Provider>
-          </div>
+                  </thead>
+                  <tbody>
+                    {table.getRowModel().rows.map((row) => (
+                      <tr key={row.id} className="border-t border-border/60 align-middle hover:bg-muted/20">
+                        {row.getAllCells().map((cell) => (
+                          <td
+                            key={cell.id}
+                            className={`px-3 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 bg-card" : ""}`}
+                          >
+                            <table.FlexRender cell={cell} />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </HeroTableCellsContext.Provider>
+            </div>
+          )}
+          {fixes.length > 0 && <HeroFixList rows={fixes} heroById={heroById} onOpen={setSelected} />}
         </>
       )}
       <Sheet

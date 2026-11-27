@@ -361,3 +361,13 @@ export function provenanceText(
     ? `Trước thay đổi ở ${changePatch ?? "patch sau"}`
     : `Theo thay đổi ở ${changePatch ?? "patch trước"}`
 }
+
+/**
+ * A change set that only fixes bugs or smooths play. Admin lists these apart from the balance changes, as the official
+ * notes print them; a set with any other line stays with the balance changes so it is edited in one place.
+ */
+export function isFixOnly(change: { overallKind?: string | null; changes: { changeKind: string }[] }) {
+  return change.changes.length
+    ? change.changes.every((line) => line.changeKind === "FIX")
+    : change.overallKind === "FIX"
+}

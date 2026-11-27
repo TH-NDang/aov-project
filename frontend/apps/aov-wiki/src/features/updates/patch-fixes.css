@@ -1,0 +1,79 @@
+/* ---------- The fixes of an update: one quiet panel after the balance changes, a short row for each thing fixed ---------- */
+.wiki-patch-fix-list {
+  display: grid;
+  margin-top: 14px;
+  padding: 2px 16px;
+  border: 1px dashed var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: color-mix(in srgb, var(--aov-surface) 60%, transparent);
+  list-style: none;
+}
+.wiki-patch-fix {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding-block: 12px;
+  scroll-margin-top: calc(var(--wiki-header-height) + 12px);
+}
+.wiki-patch-fix + .wiki-patch-fix {
+  border-top: 1px solid var(--aov-line);
+}
+.wiki-patch-fix:focus {
+  outline: none;
+}
+.wiki-patch-fix-art {
+  font: var(--wiki-type-category);
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  color: var(--aov-muted);
+  text-decoration: none;
+}
+.wiki-patch-fix-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wiki-patch-fix-body {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding-top: 5px;
+}
+.wiki-patch-fix-body h3 {
+  font: var(--wiki-type-entry);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  color: var(--aov-text);
+}
+.wiki-patch-fix-body h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+.wiki-patch-fix-body h3 a:hover {
+  color: var(--aov-accent-strong);
+}
+.wiki-patch-fix-body h3 span {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-patch-fix-body > p {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+@media (max-width: 899.98px) {
+  .wiki-patch-fix-list {
+    padding-inline: 12px;
+  }
+  .wiki-patch-fix {
+    padding-block: 10px;
+  }
+}
