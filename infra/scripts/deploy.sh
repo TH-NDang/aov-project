@@ -124,6 +124,14 @@ log "Updating to $short: stack=$stack wiki=$wiki community=$community web=$web k
     "proxy-image=$proxy_image caddyfile=$caddyfile page-reader=$page_reader"
 git -C "$repo" checkout --quiet --detach "$target"
 
+# A service that a commit adds is first deployed by the script of an older commit, which does not know it, and later
+# updates skip it while its files stay the same. So the page reader is also started whenever the target has it and no
+# container of it exists yet.
+if ! $page_reader && grep -q '^  page-reader:$' compose.yaml && [ -z "$(docker compose ps --all --quiet page-reader || true)" ]; then
+    page_reader=true
+    log "page-reader: no container yet, so it is started too."
+fi
+
 # Images: those CI pushed for this commit (.github/workflows/images.yml), otherwise built here while the old containers
 # keep serving. Both end up under the local names Compose uses, so `docker compose` alone keeps working.
 tag=$(env_value IMAGE_TAG)

@@ -22,19 +22,32 @@ export class ReadTimeout extends Error {
 
 /**
  * Opens `page` in a browser started for this read and closed after it, so no cookie or cache outlives one read and
- * the memory goes back once it ends. Answers the page's HTML without its scripts and styles.
+ * the memory goes back once it ends. Answers the page's HTML without its scripts and styles. The deadline covers
+ * starting the browser too, so a read always ends well before wiki-service stops waiting for it.
  */
 export async function readPage(launch, page, deadlineMs = DEFAULT_DEADLINE_MS) {
-  const browser = await launch();
   let timer;
+  let finished = false;
+  let browser;
+  const expired = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new ReadTimeout(`no list after ${deadlineMs} ms`)), deadlineMs);
+  });
+  const read = (async () => {
+    const started = await launch();
+    if (finished) {
+      // The deadline passed while the browser was starting: nobody waits for this one any more.
+      await close(started);
+      throw new ReadTimeout("the browser started after the deadline");
+    }
+    browser = started;
+    return open(browser, page, deadlineMs);
+  })();
   try {
-    const expired = new Promise((_, reject) => {
-      timer = setTimeout(() => reject(new ReadTimeout(`no list after ${deadlineMs} ms`)), deadlineMs);
-    });
-    return await Promise.race([open(browser, page, deadlineMs), expired]);
+    return await Promise.race([read, expired]);
   } finally {
+    finished = true;
     clearTimeout(timer);
-    await close(browser);
+    if (browser) await close(browser);
   }
 }
 
@@ -111,7 +124,8 @@ export function createReaderServer({ launch, pages = PAGES, deadlineMs = DEFAULT
       answer(response, 200, html, { "Content-Type": "text/html; charset=utf-8" });
     } catch (error) {
       const timedOut = error instanceof ReadTimeout;
-      log(`${name}: ${timedOut ? "timed out" : "failed"} after ${Date.now() - started} ms (${error?.name ?? "Error"})`);
+      const reason = `${error?.name ?? "Error"}: ${String(error?.message ?? "").split("\n")[0].slice(0, 200)}`;
+      log(`${name}: ${timedOut ? "timed out" : "failed"} after ${Date.now() - started} ms (${reason})`);
       answer(response, timedOut ? 504 : 502, timedOut ? "the page did not show its list in time" : "the page could not be read");
     } finally {
       busy = false;
