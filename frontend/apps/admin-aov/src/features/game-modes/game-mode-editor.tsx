@@ -140,13 +140,16 @@ export function GameModeEditorPage() {
           Cần bổ sung trước khi xuất bản: {data.missingFields.map((path) => missingLabel(path)).join(", ")}
         </p>
       )}
-      {content.guideKind === "AUTO_CHESS" && (
-        <p className="type-body">
+      <p className="type-body flex flex-wrap gap-x-6 gap-y-1">
+        {content.guideKind === "AUTO_CHESS" && (
           <Link to={`/game-modes/${modeId}/auto-chess`} className="underline">
             Mở cẩm nang Cờ Liên Quân →
           </Link>
-        </p>
-      )}
+        )}
+        <Link to={`/game-modes/${modeId}/map`} className="underline">
+          Mở bản đồ chiến trường →
+        </Link>
+      </p>
 
       <fieldset disabled={!editable} className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid content-start gap-4">
