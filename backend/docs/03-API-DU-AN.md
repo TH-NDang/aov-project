@@ -791,7 +791,9 @@ page=0
 size=20
 ```
 
-Trả patch families cùng release/effective metadata của region yêu cầu.
+Trả patch families cùng release/effective metadata của region yêu cầu. Mỗi patch có thêm `sources`: danh sách
+`{url, label, locale}` là link tới ghi chú cập nhật chính thức của variant, theo thứ tự biên tập viên chọn (rỗng khi
+chưa có). Chi tiết patch (mục 10) trả cùng trường này.
 
 ---
 
@@ -1823,7 +1825,8 @@ Request:
 Auto diff có thể gợi ý payload nhưng không tự public mà không review.
 
 `sourceKind` mặc định `SNAPSHOT`: bắt buộc `toHeroRevisionId` là revision GAME_PATCH đã xuất bản đúng
-variant. `PATCH_NOTES` ghi từ ghi chú cập nhật chính thức: bắt buộc `sourceUrl` HTTP(S), không bắt buộc
+variant. `PATCH_NOTES` ghi từ ghi chú cập nhật chính thức: cần nguồn, là `sourceUrl` HTTP(S) riêng hoặc link chung
+của patch (`admin/patch-variants/{id}/sources`); bỏ `sourceUrl` khi patch chưa có link chung trả 422. Không bắt buộc
 revision nguồn/đích, dòng STAT/SKILL bắt buộc `oldValue` và `newValue`, không nhận dòng VISUAL; khóa chỉ
 số và kỹ năng phải thuộc snapshot đã xuất bản mới nhất của tướng khi có. Lỗi kiểm tra trả
 `HERO_INVALID_CONTENT`.
@@ -2999,6 +3002,12 @@ change set, sai trả 422 `HERO_INVALID_CONTENT`; change set không tồn tại 
 - `GET /admin/patch-variants/{id}/notes/{locale}` cần `catalog:read`, trả `{body, version}` của đúng patch và ngôn ngữ (chưa ghi: chuỗi rỗng, phiên bản 0).
   `PUT` cùng đường dẫn cần `patch:write`, nhận `{body, expectedVersion}`; tối đa 20.000 ký tự, để trống để bỏ ghi chú, xung đột trả 409.
   Ghi chú bổ sung không tạo sự kiện gameplay cho tướng hoặc kho trang bị.
+- `GET /admin/patch-variants/{id}/sources` cần `catalog:read`, trả danh sách `{url, label, locale}` theo thứ tự.
+  `PUT` cùng đường dẫn cần `patch:write`, nhận `{sources: [{url, label, locale}]}` và thay cả danh sách: tối đa 10 link,
+  `url` HTTP(S) tối đa 2.048 ký tự và không trùng, `label` không rỗng tối đa 80 ký tự (cắt khoảng trắng hai đầu),
+  `locale` bỏ trống hoặc là thẻ BCP 47 chuẩn. Sai trả 422 `PATCH_INVALID`, variant không tồn tại trả 404. Lưu khi danh
+  sách đổi thì ghi audit `PATCH_SOURCES_UPDATED` (aggregate PATCH, id variant). Link chung là nguồn của mọi change set
+  `PATCH_NOTES` không có `sourceUrl` riêng và hiện trên trang patch công khai.
 
 - `GET /admin/patch-variants/{id}/hero-stat-samples` cần quyền `catalog:read`. Mỗi tướng có tối đa một mẫu,
   lấy revision mới nhất còn hiệu lực gắn trực tiếp với variant và bộ luật. Mẫu có trạng thái nháp, vai trò,
