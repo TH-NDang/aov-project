@@ -281,8 +281,35 @@ export function momentAt(tempo: readonly TempoMoment[], seconds: number) {
 }
 
 /** Marks passed when the clock moves from `from` (excluded) to `to` (included); none when it goes back. */
-export const crossed = (tempo: readonly TempoMoment[], from: number, to: number) =>
-  to <= from ? [] : tempo.filter((moment) => moment.seconds > from && moment.seconds <= to)
+export const crossed = <Mark extends { seconds: number }>(marks: readonly Mark[], from: number, to: number) =>
+  to <= from ? [] : marks.filter((mark) => mark.seconds > from && mark.seconds <= to)
+
+/** A time of the match when big monsters appear or change: the game's own words for them, and the first one's symbol. */
+export interface EpicCall {
+  seconds: number
+  labels: string[]
+  glyph: Glyph | null
+}
+
+/**
+ * The marks of the timeline that name a big monster, each with only the callouts that do, for reminders while a match
+ * plays. The opening mark is left out: nothing is called at 0:00.
+ */
+export function epicCalls(content: MapContent): EpicCall[] {
+  const epics = new Map(
+    content.objects.filter((object) => object.category === "EPIC").map((object) => [object.code, object]),
+  )
+  return content.tempo.flatMap((moment) => {
+    const named = moment.callouts.flatMap((callout) => {
+      const object = callout.objectCode ? epics.get(callout.objectCode) : undefined
+      return object ? [{ label: callout.label, object }] : []
+    })
+    if (moment.seconds <= 0 || !named.length) return []
+    return [
+      { seconds: moment.seconds, labels: named.map((entry) => entry.label), glyph: named[0]!.object.glyph ?? null },
+    ]
+  })
+}
 
 /** The timeline's phases: each mark with a phase starts one that runs to the next such mark. */
 export function phases(tempo: readonly TempoMoment[], end: number) {
