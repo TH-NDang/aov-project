@@ -3,6 +3,7 @@ import { Check, ChevronsUpDown, Languages, type LucideIcon } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@aov/ui/components/command"
+import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 import { COMMON_CURRENCIES, currencyLabel } from "@aov/ui/lib/currency"
 import { COMMON_TIME_ZONES, timeZoneLabel } from "@aov/ui/lib/time-zone"
 
@@ -32,7 +33,6 @@ export const currencyOptions: Option[] = COMMON_CURRENCIES.map(({ code }) => ({
   label: currencyLabel(code),
 }))
 
-const flagRegions = new Set(["VN", "US", "GB", "TH", "TW", "CN", "ID", "JP", "KR"])
 const timeFormatters = new Map<string, Intl.DateTimeFormat>()
 
 function localTime(timeZone: string, now: number) {
@@ -55,9 +55,10 @@ function localTime(timeZone: string, now: number) {
 
 function LanguageImage({ code }: { code: string }) {
   const region = new Intl.Locale(code).region
-  return region && flagRegions.has(region) ? (
+  const flag = region ? countryReferenceFlag(region) : undefined
+  return flag ? (
     <img
-      src={`/images/flags/${region.toLowerCase()}.svg`}
+      src={flag}
       alt=""
       aria-hidden="true"
       className="h-4 w-6 shrink-0 rounded-sm object-cover ring-1 ring-foreground/10"

@@ -4,6 +4,7 @@ import "fake-indexeddb/auto"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { draftKey, draftRepository } from "../src/app/drafts/draft-store"
 import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
@@ -263,7 +264,7 @@ test("season forms restore invalid input and saving one market preserves another
     )
     const button = (label: string) =>
       [...dom.window.document.querySelectorAll("button")].find((node) => node.textContent?.trim() === label)
-    assert.ok(dom.window.document.querySelector('[role="dialog"] img[src="/images/flags/th.svg"]'))
+    assert.ok(dom.window.document.querySelector(`[role="dialog"] img[src="${countryReferenceFlag("TH")}"]`))
     assert.ok(dom.window.document.querySelector('[aria-label="Bắt đầu mùa"]'))
     await act(async () => button("Patch áp dụng")!.click())
     assert.equal(scheduleWrites.length, 2, "Selecting a market alone must not apply a patch")

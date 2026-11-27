@@ -1,14 +1,10 @@
 import { ArrowUpRight, Globe } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-const flags = new Set(["VN", "US", "GB", "TH", "TW", "CN", "ID", "JP", "KR"])
+import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 export function MarketFlag({ code }: { code: string }) {
-  const flag = code.trim().toUpperCase()
-  return flags.has(flag) ? (
-    <img
-      src={`/images/flags/${flag.toLowerCase()}.svg`}
-      alt=""
-      className="h-3.5 w-5 shrink-0 rounded-sm object-cover"
-    />
+  const flag = countryReferenceFlag(code.trim().toUpperCase())
+  return flag ? (
+    <img src={flag} alt="" className="h-3.5 w-5 shrink-0 rounded-sm object-cover" />
   ) : (
     <Globe aria-hidden className="size-3.5 shrink-0" />
   )
