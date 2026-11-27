@@ -126,6 +126,25 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       ),
     [setParams, backTo, backLabel],
   )
+  const keep = useCallback(
+    (patch: WorkspaceFocus) =>
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current)
+          for (const [key, value] of Object.entries(patch)) {
+            if (value) next.set(key, value)
+            else next.delete(key)
+          }
+          return next
+        },
+        {
+          replace: true,
+          preventScrollReset: true,
+          state: backTo && backLabel ? { back: { label: backLabel, to: backTo } } : undefined,
+        },
+      ),
+    [setParams, backTo, backLabel],
+  )
   const focus = useMemo(
     () => Object.fromEntries(FOCUS_KEYS.map((key) => [key, params.get(key) ?? undefined])) as WorkspaceFocus,
     [params],
@@ -304,6 +323,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     games: games.data,
     go,
     focus,
+    keep,
     openCopy: (parts) => setCopying({ parts }),
     run: (action) => mutate.mutate(action),
   }
@@ -519,9 +539,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
           )}
           {step === "teams" && <TeamsStep key={`${focus.team}-${focus.open}`} ws={ws} tournament={tournament.data} />}
           {step === "format" && <FormatStep key={`${focus.stage}-${focus.open}`} ws={ws} />}
-          {step === "schedule" && (
-            <ScheduleStep key={`${focus.match}-${focus.key}-${focus.open}-${focus.team}`} ws={ws} />
-          )}
+          {step === "schedule" && <ScheduleStep ws={ws} />}
           {step === "final" && <FinalStep ws={ws} tournament={tournament.data} outcome={final} />}
           {step === "publish" && (
             <PublishStep

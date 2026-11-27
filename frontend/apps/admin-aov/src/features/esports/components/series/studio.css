@@ -170,6 +170,11 @@
     min-width: 88px;
     color: var(--muted-foreground);
   }
+  .esp-head-back {
+    display: none;
+    flex: none;
+    margin-left: -6px;
+  }
   .esp-head-teams {
     display: flex;
     flex: none;
@@ -223,6 +228,9 @@
     .esp-head-trail,
     .esp-head-round {
       display: none;
+    }
+    .esp-head-back {
+      display: inline-flex;
     }
   }
   /* A phone keeps the teams, the mode and the menu in the head; the rest is in the panel of the match. */

@@ -1,7 +1,7 @@
-import type { ReactNode } from "react"
+import type { MouseEvent, ReactNode } from "react"
 import { Link } from "react-router"
 import type { SeriesContent } from "@aov/community-contracts"
-import { ChevronRight, Ellipsis } from "lucide-react"
+import { ChevronLeft, ChevronRight, Ellipsis } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { Segmented } from "@/components/segmented"
@@ -57,7 +57,8 @@ export function StudioHead({
   onMenu,
   switcher,
 }: {
-  tournament: { name: string; path: string }
+  /** Where the trail leads: the match in the tournament's schedule; `back` when Back itself returns there. */
+  tournament: { name: string; path: string; back?: () => void }
   content: SeriesContent
   team: (id: string) => TeamView
   mode: Mode
@@ -73,10 +74,22 @@ export function StudioHead({
   const winner = seriesWinner(content)
   const score = content.result ? ([content.result.scoreA, content.result.scoreB] as const) : null
   const menuName = publish?.waiting ? `Trận này, ${publish.waiting} ván chờ xuất bản` : "Trận này"
+  const toSchedule = (event: MouseEvent) => {
+    if (!tournament.back || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+    event.preventDefault()
+    tournament.back()
+  }
+  const scheduleName = `Lịch & kết quả · ${tournament.name}`
   return (
     <header className="esp-head type-body">
+      {/* A narrow head has no room for the tournament's name: an arrow leads to the same place. */}
+      <Button asChild size="icon-sm" variant="ghost" className="esp-head-back">
+        <Link to={tournament.path} aria-label={`Về ${scheduleName}`} title={scheduleName} onClick={toSchedule}>
+          <ChevronLeft aria-hidden />
+        </Link>
+      </Button>
       <span className="esp-head-trail">
-        <Link to={tournament.path} title={tournament.name} className="truncate hover:text-foreground">
+        <Link to={tournament.path} title={scheduleName} className="truncate hover:text-foreground" onClick={toSchedule}>
           {tournament.name}
         </Link>
         <ChevronRight size={14} className="shrink-0" aria-hidden />

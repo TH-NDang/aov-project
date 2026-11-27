@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import type { DocumentView, GameContent, SeriesContent, TournamentContent } from "@aov/community-contracts"
+import { useLocation, useNavigate } from "react-router"
 import { PopoverBoundary } from "@aov/ui/components/popover"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useHotkeys } from "@/app/hotkeys"
@@ -224,6 +225,9 @@ export type Studio = ReturnType<typeof useStudio>
 export function MatchStudio(props: MatchStudioProps) {
   const studio = useStudio(props)
   useStudioKeys(studio)
+  const navigate = useNavigate()
+  // Opened from the schedule, the trail returns by Back, so the schedule comes back with its place and open match.
+  const fromSchedule = !!(useLocation().state as { fromSchedule?: boolean } | null)?.fromSchedule
   const hotkeys = useHotkeys().enabled
   const [dock, setDock] = useState<HTMLElement | null>(null)
   const [room, setRoom] = useState<HTMLElement | null>(null)
@@ -238,7 +242,8 @@ export function MatchStudio(props: MatchStudioProps) {
             <StudioHead
               tournament={{
                 name: tournament.content.name,
-                path: tournamentPath(tournament.id),
+                path: `${tournamentPath(tournament.id)}?step=schedule&match=${series.id}`,
+                back: fromSchedule ? () => void navigate(-1) : undefined,
               }}
               content={series.content}
               team={team}
