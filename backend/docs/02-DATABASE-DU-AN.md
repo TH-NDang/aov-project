@@ -1888,6 +1888,10 @@ V027 tạo hero.hero_patch_assessment, PK change_set_id, kind, version và actor
 Đánh giá tổng thể là metadata biên tập có optimistic version và audit, độc lập các typed immutable events.
 Không backfill đánh giá tổng thể bằng hợp các nhãn con.
 V064 thêm `RELEASE` vào `kind` của đánh giá tổng thể, dùng cho change set đánh dấu tướng ra mắt (ADR-016).
+V077 tạo `hero.hero_patch_change_position`: PK `change_set_id` (FK tới change set), `position` ≥ 0, `lock_version`
+và actor/thời điểm cập nhật. Đây là thứ tự biên tập viên chọn cho các tướng của một variant, dùng chung cho Admin và
+trang patch công khai; change set vẫn bất biến. Đọc theo `position` tăng dần; change set chưa có vị trí (ghi sau lần
+sắp xếp gần nhất) đứng đầu, mới trước cũ, như thứ tự mặc định trước đây.
 
 ### V028 — Rà soát nhập liệu patch
 

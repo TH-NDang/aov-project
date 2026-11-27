@@ -2497,7 +2497,7 @@ POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trư�
 ## Tổng quan phát hành cho admin
 
 - GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Variant có `patchTitle` nullable: tên vi-VN, không có thì tên en-US, rồi tên của locale đầu tiên theo thứ tự chữ cái. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
-- GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Change set của một dạng có thêm `holderId`, `holderCode`, `formKey` (ADR-024); trang patch công khai nhận cùng các trường. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
+- GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set theo thứ tự biên tập viên đã sắp (xem PUT .../hero-changes/order), có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Change set của một dạng có thêm `holderId`, `holderCode`, `formKey` (ADR-024); trang patch công khai nhận cùng các trường. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
 
 Frontend dùng TanStack Query cho tổng quan (làm mới 60 giây), danh mục và snapshot tướng, bảng thay đổi theo variant/locale (chỉ tải khi mở). Sau mutation thiết lập mùa/patch hoặc ghi thay đổi, invalidate các cache liên quan. Đổi trang giữ cache theo cơ chế workspace hiện có.
 
@@ -2976,6 +2976,12 @@ Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng) và thêm `RELEASE`
 version=0, lưu tăng version, xung đột 409. Change set không tồn tại trả 404 `HERO_PATCH_CHANGE_NOT_FOUND`.
 API hero changes thêm overallKind,assessmentVersion; gameplayChanges của /admin/heroes thêm overallKind nullable,
 giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay sự kiện kỹ năng/chỉ số.
+
+PUT /admin/patch-variants/{variantId}/hero-changes/order cần patch:write, nhận {changeSetIds} (tối đa 500) và trả 204.
+Danh sách phải nêu mỗi change set của variant đúng một lần: thiếu, thừa hoặc có change set của variant khác trả 409
+`HERO_PATCH_CHANGE_CONFLICT`; trùng id trả 422; variant không tồn tại trả 404. Thứ tự này áp cho
+GET admin/patch-variants/{id}/hero-changes và trang patch công khai; change set ghi sau lần sắp xếp đứng đầu cho tới
+lần sắp xếp kế tiếp. Lưu khi có vị trí đổi thì ghi audit `HERO_PATCH_CHANGES_REORDERED` (aggregate PATCH, id variant).
 
 ### Xem toàn bộ dữ liệu tại mốc và rà soát patch
 
