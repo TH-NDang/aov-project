@@ -4,7 +4,8 @@
 -- A database without the 5v5 mode, or one whose 5v5 mode already has a map, is left unchanged.
 INSERT INTO gamemode.map_guide_revision (id, mode_id, revision_no, state, version, content, change_note, published_at,
     created_at, created_by_issuer, created_by_subject, updated_at, updated_by_issuer, updated_by_subject)
-SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json${
+SELECT '5c0b7f3e-2f8d-4c7a-9d43-1f6a2b8e7c51', mode.id, 1, 'PUBLISHED', 1, $json$
+{
   "name": "Bách khoa chiến trường",
   "observedOn": "2026-11-27",
   "summary": null,
