@@ -3,6 +3,7 @@ import { test } from "node:test"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
+import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { createWindow, flush, installWindow } from "./fixtures/dom"
 
@@ -186,7 +187,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.ok(document.querySelector('[aria-label="Ghi lịch mùa cho Thái Lan"]'))
     assert.match(document.querySelector('[aria-label="Phiên bản cho Thái Lan"]')?.textContent ?? "", /Chưa ghi lịch/)
     assert.ok(document.querySelector('[aria-label="Xem patch cho Việt Nam"]'))
-    assert.ok(document.querySelector('[aria-label="Thị trường"] img[src="/images/flags/vn.svg"]'))
+    assert.ok(document.querySelector(`[aria-label="Thị trường"] img[src="${countryReferenceFlag("VN")}"]`))
     await openView("Phiên bản")
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
     assert.equal(document.querySelector('[aria-label="Phạm vi hiển thị"]'), null)
@@ -203,7 +204,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.equal(tabs()[0].getAttribute("aria-selected"), "true", "A stale empty domain falls back to a populated tab")
     assert.ok(tabs()[0].querySelector("svg"))
     assert.ok(document.querySelector('img[src="/fixture-head.png"]'))
-    assert.ok(document.querySelector('td img[src="/images/flags/vn.svg"]'))
+    assert.ok(document.querySelector(`td img[src="${countryReferenceFlag("VN")}"]`))
     const overview = cache.getQueryData<
       import("../src/features/publishing/api/publication-overview").PublicationOverview
     >(["publication-overview"])!
@@ -230,7 +231,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
       ],
     })
     const heroPanel = document.querySelector('[role="tabpanel"][data-state="active"]')!
-    assert.ok(heroPanel.querySelector('img[src="/images/flags/vn.svg"]'))
+    assert.ok(heroPanel.querySelector(`img[src="${countryReferenceFlag("VN")}"]`))
     assert.match(heroPanel.querySelector('[title^="Việt Nam"]')?.getAttribute("title") ?? "", /Chờ xác nhận áp dụng/)
     await updateCache(warehouseKey("enchantments"), [
       {

@@ -1,5 +1,6 @@
 import { CheckCircle2, ChevronDown, Languages, Pencil } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,18 +16,18 @@ import { translationStatus, translationStatusLabel } from "../../model/hero-tran
 import type { Content } from "@/lib/hero-types"
 
 const languageFlags: Record<string, string> = {
-  "vi-VN": "vn",
-  "en-US": "us",
-  "th-TH": "th",
-  "zh-TW": "tw",
-  "id-ID": "id",
+  "vi-VN": "VN",
+  "en-US": "US",
+  "th-TH": "TH",
+  "zh-TW": "TW",
+  "id-ID": "ID",
 }
 
 export function HeroLanguageIcon({ locale }: { locale: string }) {
-  const flag = languageFlags[locale]
+  const flag = Object.hasOwn(languageFlags, locale) ? countryReferenceFlag(languageFlags[locale]) : undefined
   return flag ? (
     <img
-      src={`/images/flags/${flag}.svg`}
+      src={flag}
       alt=""
       aria-hidden
       className="h-4 w-6 shrink-0 rounded-sm object-cover ring-1 ring-foreground/10"

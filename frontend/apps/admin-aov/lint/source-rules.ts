@@ -276,6 +276,13 @@ const rules: Rule[] = [
       text.split("\n").flatMap((line, index) => (line.includes("new JSDOM(") ? [`:${index + 1}`] : [])),
   },
   {
+    name: "admin never names a public file from the site root",
+    hint: "Admin is served under /admin/, so /images/... reaches the Wiki and finds nothing. Import the asset (flags: countryReferenceFlag) or prefix import.meta.env.BASE_URL.",
+    files: files(source, /\.tsx?$/),
+    offenders: (text) =>
+      text.split("\n").flatMap((line, index) => (/["'`]\/images\//.test(line) ? [`:${index + 1}`] : [])),
+  },
+  {
     name: "esports viewer components and models stay free of admin-only modules",
     hint: "The public site reuses these folders; keep the admin API and session out of them.",
     files: ["components", "model"].flatMap((folder) => files(join(source, "features", "esports", folder), /\.tsx?$/)),

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react"
 import type { Lane, TournamentContent } from "@aov/community-contracts"
 import { cn } from "@aov/ui/lib/utils"
+import { countryReferenceFlag } from "@aov/ui/lib/country-references"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { TierEmblem } from "@aov/ui/components/tier-emblem"
 import { CalendarClock, CircleHelp, Flag, Megaphone, Radio } from "lucide-react"
@@ -192,13 +193,13 @@ export function StatusPill({ status, onDark }: { status?: TournamentContent["sta
   )
 }
 
-const FLAGS = new Set(["VN", "TH", "TW", "ID", "CN"])
 export function RegionFlag({ code, withName = true }: { code?: string; withName?: boolean }) {
+  const flag = code ? countryReferenceFlag(code) : undefined
   return (
     <span className="inline-flex items-center gap-1.5" title={regionName(code)}>
-      {code && FLAGS.has(code) ? (
+      {flag ? (
         <img
-          src={`/images/flags/${code.toLowerCase()}.svg`}
+          src={flag}
           alt=""
           className="h-3 w-[18px] object-cover"
           loading="lazy"
