@@ -5,6 +5,7 @@ import {
   centre,
   clock,
   crossed,
+  epicCalls,
   familyOf,
   inside,
   markers,
@@ -181,4 +182,30 @@ test("a rounded outline cuts each corner by the radius or half of a short side",
   ]
   assert.match(roundedPath(small, 5), /^M1 0L1 0Q2 0 1\.5 1/)
   assert.equal(roundedPath([{ x: 1, y: 1 }], 2), "M1 1Z")
+})
+
+test("big monster calls keep the marks and callouts that name one, never the opening", () => {
+  const content = {
+    objects: [
+      object("caesar", { glyph: "CAESAR" }),
+      object("rong", { glyph: "DRAGON" }),
+      object("tru", { category: "STRUCTURE" }),
+    ],
+    tempo: [
+      { seconds: 0, callouts: [{ label: "Caesar", objectCode: "caesar", x: 1, y: 1 }], steps: [] },
+      {
+        seconds: 120,
+        callouts: [
+          { label: "Trụ", objectCode: "tru", x: 1, y: 1 },
+          { label: "Caesar xuất hiện", objectCode: "caesar", x: 1, y: 1 },
+          { label: "Rồng tiến hóa", objectCode: "rong", x: 1, y: 1 },
+        ],
+        steps: [],
+      },
+      { seconds: 240, callouts: [{ label: "Trụ", objectCode: "tru", x: 1, y: 1 }], steps: [] },
+    ],
+  }
+  assert.deepEqual(epicCalls(content), [
+    { seconds: 120, labels: ["Caesar xuất hiện", "Rồng tiến hóa"], glyph: "CAESAR" },
+  ])
 })
