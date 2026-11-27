@@ -179,10 +179,13 @@
   --aov-gutter: clamp(16px, 3vw, 32px);
   --aov-topbar: 56px;
 
-  /* Be Vietnam Pro is drawn for Vietnamese diacritics; the stack keeps metrics close before it loads. */
+  /*
+   * Be Vietnam Pro is drawn for Vietnamese diacritics. Until it loads, a local font scaled to its metrics stands in
+   * (font-fallback.css); scripts it lacks (Thai, Chinese, Japanese, Korean) fall through to the system fonts.
+   */
   --aov-font-sans:
-    "Be Vietnam Pro", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial,
-    sans-serif;
+    "Be Vietnam Pro", "Be Vietnam Pro Fallback", "Be Vietnam Pro Fallback Android", "Segoe UI Variable Text",
+    "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 /* End of the shared tokens. */
 

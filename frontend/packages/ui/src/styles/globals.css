@@ -4,6 +4,7 @@
 @import "@fontsource/be-vietnam-pro/500.css";
 @import "@fontsource/be-vietnam-pro/600.css";
 @import "@fontsource/be-vietnam-pro/700.css";
+@import "./font-fallback.css";
 @import "./tokens.css";
 @import "./scrollbar.css";
 @import "./typography.css";
