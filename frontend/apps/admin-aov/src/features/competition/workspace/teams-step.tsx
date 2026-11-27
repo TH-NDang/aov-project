@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   personRoleLabels,
   type DocumentView,
@@ -34,18 +34,13 @@ import { PersonChip, type KnownPeople } from "@/features/tournaments/components/
 import { staffOfTeam } from "@/features/tournaments/model/crew-model"
 import { tournamentApi } from "@/features/tournaments/api/tournament-api"
 import { FillMissingRosters } from "./missing-rosters"
+import { PlayerName, TeamName } from "../peek/competitor-peek"
+import { ENTRY_STATUS_LABELS } from "../peek/peek-model"
 import { rosterBoard, rosterOrder } from "./model"
 import { Chip, Panel, type Workspace } from "./parts"
 import { useRosterPlayers } from "./use-roster-players"
 import { NativeSelect } from "@/components/native-select"
 import { LANE_LABELS } from "@/lib/lanes"
-
-const ENTRY_STATUS: Record<string, string> = {
-  REGISTERED: "Đã đăng ký",
-  INVITED: "Khách mời",
-  QUALIFIED: "Vượt vòng loại",
-  WITHDRAWN: "Rút lui",
-}
 
 type Names = { players?: Map<string, PlayerContent>; loading: boolean }
 
@@ -78,7 +73,7 @@ function Starter({ lane, rows, names }: { lane: Lane; rows: RosterMembershipCont
             <PlayerPhoto name={nickname} url={names.players?.get(row.playerId)?.photoUrl} size={32} />
             <span className="min-w-0">
               <span className="type-body flex min-w-0 items-center gap-1">
-                <span className="truncate">{nickname}</span>
+                <PlayerName id={row.playerId}>{nickname}</PlayerName>
                 <CaptainMark row={row} />
               </span>
               <span className="type-meta flex items-center gap-1">
@@ -121,7 +116,7 @@ function Others({
             )}
           >
             <PlayerPhoto name={nickname} url={names.players?.get(row.playerId)?.photoUrl} size={20} />
-            {nickname}
+            <PlayerName id={row.playerId}>{nickname}</PlayerName>
             <CaptainMark row={row} />
             {row.lane && <LaneIcon lane={row.lane} size={14} className="shrink-0" />}
           </span>
@@ -164,6 +159,11 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
   const [rosterTeam, setRosterTeam] = useState<string | null>(focusTeam && focusOpen === "roster" ? focusTeam : null)
   const [recordTeam, setRecordTeam] = useState<string | null>(focusTeam && focusOpen === "record" ? focusTeam : null)
   const [adding, setAdding] = useState<"paste" | "create" | null>(null)
+  // A link to one team, from its profile or a card, lands on that team.
+  const landing = focusTeam && !focusOpen ? focusTeam : null
+  useEffect(() => {
+    if (landing) document.getElementById(`entrant-${landing}`)?.scrollIntoView({ block: "center" })
+  }, [landing])
   const rosterPlayers = useRosterPlayers(ws.entry.id, ws.access.actorKey, ws.rosters.length > 0)
   const names: Names = { players: rosterPlayers.data, loading: rosterPlayers.isPending }
   const rostersOf = (teamId: string) =>
@@ -280,11 +280,19 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
             (match) => match.a.teamId === entry.teamId || match.b.teamId === entry.teamId,
           )
           return (
-            <section key={entry.teamId} aria-label={view.name} className="border-b px-4 py-3 last:border-b-0">
+            <section
+              key={entry.teamId}
+              id={`entrant-${entry.teamId}`}
+              aria-label={view.name}
+              className={cn(
+                "scroll-mt-24 border-b px-4 py-3 last:border-b-0",
+                landing === entry.teamId && "bg-(--aov-accent-soft)",
+              )}
+            >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="type-meta w-4 text-right">{ws.plan.entrants.indexOf(entry) + 1}</span>
                 <TeamLogo team={view} size={32} />
-                <span className="type-body min-w-0 truncate">{view.name}</span>
+                <TeamName id={entry.teamId} className="type-section-title min-w-0" />
                 <Button
                   type="button"
                   variant="ghost"
@@ -308,7 +316,7 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                       )
                     }
                   >
-                    {Object.entries(ENTRY_STATUS).map(([key, label]) => (
+                    {Object.entries(ENTRY_STATUS_LABELS).map(([key, label]) => (
                       <option key={key} value={key}>
                         {label}
                       </option>
@@ -316,7 +324,7 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                   </NativeSelect>
                 ) : (
                   <Chip tone={entry.status === "WITHDRAWN" ? "danger" : "neutral"}>
-                    {ENTRY_STATUS[entry.status] ?? ENTRY_STATUS.REGISTERED}
+                    {ENTRY_STATUS_LABELS[entry.status] ?? ENTRY_STATUS_LABELS.REGISTERED}
                   </Chip>
                 )}
                 {rows.length ? (

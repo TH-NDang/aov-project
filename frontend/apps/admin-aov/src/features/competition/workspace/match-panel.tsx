@@ -7,6 +7,7 @@ import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { timeZoneLabel } from "@aov/ui/lib/time-zone"
+import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
 import { Field } from "@/features/community/components/profile-form-primitives"
 import { youtubeVideoId } from "@/features/esports/model/vod"
@@ -24,6 +25,7 @@ import {
   zonedInputInstant,
   zonedInputTime,
 } from "./model"
+import { TeamName } from "../peek/competitor-peek"
 import { MatchPeople } from "./match-people"
 import { BestOfField, SlotEditor } from "./plan-fields"
 import type { Workspace } from "./parts"
@@ -32,9 +34,9 @@ import { NativeSelect } from "@/components/native-select"
 /** What the panel shows: the facts, or one of its forms. */
 export type MatchPanelMode = "view" | "result" | "video" | "plan"
 
-function Fact({ label, children }: { label: string; children: ReactNode }) {
+function Fact({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
   return (
-    <div className="min-w-0">
+    <div className={cn("min-w-0", className)}>
       <dt className="type-label text-muted-foreground">{label}</dt>
       <dd className="type-body mt-1 truncate">{children}</dd>
     </div>
@@ -63,6 +65,10 @@ export function MatchPanel({
     const id = which === "a" ? resolved?.teamAId : resolved?.teamBId
     return id ? ws.team(id).name : slotText(match[which], ws.plan, ws.teams)
   }
+  const sideOf = (which: "a" | "b") => {
+    const id = which === "a" ? resolved?.teamAId : resolved?.teamBId
+    return id ? <TeamName id={id} /> : nameOf(which)
+  }
   const video = youtubeVideoId(record?.content.sourceUrl)
   const ready = !!resolved?.teamAId && !!resolved?.teamBId
 
@@ -74,6 +80,9 @@ export function MatchPanel({
   return (
     <div className="space-y-4 bg-muted/40 px-4 py-4">
       <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Fact label="Hai đội" className="sm:col-span-2">
+          {sideOf("a")} <span className="text-muted-foreground">gặp</span> {sideOf("b")}
+        </Fact>
         <Fact label="Giờ đấu">
           <LocalTime value={match.scheduledAt} sourceTimeZone={ws.plan.timezone} fallback="Chưa có giờ" />
         </Fact>

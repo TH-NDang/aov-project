@@ -45,6 +45,9 @@ function SummaryDetail({ icon: Icon, label, value }: { icon: LucideIcon; label: 
   )
 }
 
+/** Notes copied from a wiki may break lines with HTML tags; they read as plain line breaks. */
+const noteText = (notes: string) => notes.replace(/<\/?br\s*\/?>/gi, "\n")
+
 export function CompetitionInformationFields({
   plan,
   savedPlan,
@@ -131,7 +134,7 @@ export function CompetitionInformationFields({
           </div>
         </div>
         {plan.notes && (
-          <p className="type-body whitespace-pre-wrap border-t pt-4 text-muted-foreground">{plan.notes}</p>
+          <p className="type-body whitespace-pre-wrap border-t pt-4 text-muted-foreground">{noteText(plan.notes)}</p>
         )}
       </Section>
       <Section

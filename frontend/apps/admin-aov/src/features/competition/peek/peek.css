@@ -1,0 +1,272 @@
+/* Peek cards of a tournament's teams and players (competitor-peek.tsx). In the components layer so utilities win. */
+@layer components {
+  /* A name that opens a card: it reads as the name until pointed at, then as something to press. */
+  .esp-peek-name {
+    display: inline;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+    text-underline-offset: 4px;
+    cursor: pointer;
+    transition:
+      color 120ms ease,
+      text-decoration-color 120ms ease;
+  }
+  .esp-peek-name:hover,
+  .esp-peek-name[data-open] {
+    color: var(--primary);
+    text-decoration-style: solid;
+    text-decoration-color: currentColor;
+  }
+  .esp-peek-name:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--aov-radius-control);
+  }
+
+  .esp-peek-popover {
+    border-radius: var(--aov-radius-card);
+  }
+  .esp-peek-sheet {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .esp-peek-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The team's card opens on a wash of its own logo, the player's on the mark of their lane. */
+  .esp-peek-team-head,
+  .esp-peek-player-head {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 88px;
+    padding: 14px 16px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .esp-peek-wash {
+    position: absolute;
+    inset: -40%;
+    z-index: -1;
+    width: 180%;
+    height: 180%;
+    object-fit: cover;
+    filter: blur(36px) saturate(1.4);
+    opacity: 0.32;
+  }
+  .esp-peek-team-head::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, transparent 30%, var(--popover) 100%);
+  }
+  .esp-peek-player-head {
+    background: linear-gradient(135deg, var(--esp-gold-soft), transparent 65%);
+  }
+  .esp-peek-watermark {
+    position: absolute;
+    right: -10px;
+    bottom: -18px;
+    z-index: -1;
+    color: var(--primary);
+    opacity: 0.12;
+  }
+  .esp-peek-socket {
+    display: grid;
+    flex: none;
+    place-items: center;
+    padding: 4px;
+    border: 1px solid color-mix(in oklch, var(--primary) 45%, var(--border));
+    border-radius: var(--aov-radius-media);
+    background: color-mix(in oklch, var(--background) 70%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--background) 60%, transparent);
+  }
+  .esp-peek-socket[data-round] {
+    border-radius: var(--aov-radius-pill);
+  }
+  .esp-peek-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    margin-top: 6px;
+    padding: 0 8px;
+    border-radius: var(--aov-radius-control);
+    background: var(--muted);
+    color: var(--muted-foreground);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+  }
+  .esp-peek-player-head .esp-peek-tag {
+    margin-top: 0;
+  }
+  .esp-peek-back {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 0;
+    border-radius: var(--aov-radius-control);
+    background: color-mix(in oklch, var(--background) 70%, transparent);
+    color: var(--foreground);
+    cursor: pointer;
+  }
+  .esp-peek-back:hover {
+    background: var(--muted);
+  }
+  .esp-peek-back ~ .esp-peek-socket {
+    margin-left: 22px;
+  }
+
+  .esp-peek-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .esp-peek-stats > div {
+    padding: 10px 16px;
+  }
+  .esp-peek-stats > div + div {
+    border-left: 1px solid var(--border);
+  }
+  .esp-peek-stats dt {
+    color: var(--muted-foreground);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .esp-peek-stats dd {
+    margin: 2px 0 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .esp-peek-section {
+    display: grid;
+    gap: 6px;
+    padding: 10px 16px 12px;
+  }
+  .esp-peek-section + .esp-peek-section {
+    border-top: 1px solid var(--border);
+  }
+  .esp-peek-lineup {
+    display: grid;
+    gap: 2px;
+    margin: 0 -8px;
+    padding: 0;
+    list-style: none;
+  }
+  .esp-peek-lineup button,
+  .esp-peek-empty {
+    display: flex;
+    width: 100%;
+    min-height: 32px;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 8px;
+    border: 0;
+    border-radius: var(--aov-radius-control);
+    background: none;
+    color: inherit;
+    text-align: left;
+  }
+  .esp-peek-lineup button {
+    cursor: pointer;
+  }
+  .esp-peek-lineup button:hover,
+  .esp-peek-lineup button:focus-visible {
+    background: var(--muted);
+    outline: none;
+  }
+  .esp-peek-others,
+  .esp-peek-heroes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+  }
+  .esp-peek-others button,
+  .esp-peek-heroes span {
+    padding: 2px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--aov-radius-pill);
+    background: none;
+    color: inherit;
+    font-size: 12px;
+    line-height: 18px;
+    text-transform: capitalize;
+  }
+  .esp-peek-others button {
+    cursor: pointer;
+    text-transform: none;
+  }
+  .esp-peek-others button:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .esp-peek-others button[data-left] {
+    color: var(--muted-foreground);
+    text-decoration: line-through;
+  }
+
+  .esp-peek-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    background: color-mix(in oklch, var(--muted) 45%, transparent);
+  }
+
+  /* From the bottom of a phone the card fills the width and its rows grow to a thumb's size. */
+  @media (max-width: 899.98px) {
+    .esp-peek-sheet .esp-peek-team-head,
+    .esp-peek-sheet .esp-peek-player-head {
+      border-top: 0;
+    }
+    .esp-peek-sheet .esp-peek-lineup button,
+    .esp-peek-sheet .esp-peek-empty {
+      min-height: 44px;
+    }
+    /* The sheet is at least half the screen: the card scrolls inside it and keeps its actions at the bottom. */
+    .esp-peek-sheet .esp-peek-card {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .esp-peek-sheet .esp-peek-actions {
+      position: sticky;
+      bottom: 0;
+      margin-top: auto;
+      background: var(--background);
+    }
+    .esp-peek-sheet .esp-peek-actions > * {
+      min-height: 40px;
+    }
+  }
+}

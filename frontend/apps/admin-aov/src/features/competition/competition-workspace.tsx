@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ComponentType } from "react"
-import { useParams, useSearchParams } from "react-router"
+import { Link, useLocation, useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { CalendarDays, Check, CircleAlert, GitBranch, LayoutDashboard, Send, Trophy, Users } from "lucide-react"
+import {
+  ArrowLeft,
+  CalendarDays,
+  Check,
+  CircleAlert,
+  GitBranch,
+  LayoutDashboard,
+  Send,
+  Trophy,
+  Users,
+} from "lucide-react"
 import type { CompetitionView, TeamContent } from "@aov/community-contracts"
 import { cn } from "@aov/ui/lib/utils"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
@@ -50,6 +60,10 @@ import { PublishStep } from "./workspace/publish-step"
 import { ScheduleStep } from "./workspace/schedule-step"
 import { TeamsStep } from "./workspace/teams-step"
 import { usePlanDraft } from "./workspace/use-plan-draft"
+import { useRosterPlayers } from "./workspace/use-roster-players"
+import { ENTRY_STATUS_LABELS } from "./peek/peek-model"
+import { backFromState } from "./peek/peek-model"
+import { PeekWorldProvider, type PeekWorld } from "./peek/peek-world"
 import { useWorkspaceKeys } from "./workspace/use-workspace-keys"
 import { WorkspaceHeader } from "./workspace/workspace-header"
 import { draftChanges } from "./model/plan-draft"
@@ -95,14 +109,22 @@ function Loader({ access }: { access: Access }) {
 function Workspace({ entry, access }: { entry: CompetitionView; access: Access }) {
   const client = useQueryClient()
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
   const step = stepFromParam(params.get("step"))
+  // A tournament opened from a profile keeps the way back to it while its steps change.
+  const cameFrom = backFromState(location.state)
+  const backTo = cameFrom?.to
+  const backLabel = cameFrom?.label
   const go = useCallback(
     (value: WorkspaceStep, focus: WorkspaceFocus = {}) =>
-      setParams({
-        step: value,
-        ...Object.fromEntries(FOCUS_KEYS.flatMap((key) => (focus[key] ? [[key, focus[key]]] : []))),
-      }),
-    [setParams],
+      setParams(
+        {
+          step: value,
+          ...Object.fromEntries(FOCUS_KEYS.flatMap((key) => (focus[key] ? [[key, focus[key]]] : []))),
+        },
+        { state: backTo && backLabel ? { back: { label: backLabel, to: backTo } } : undefined },
+      ),
+    [setParams, backTo, backLabel],
   )
   const focus = useMemo(
     () => Object.fromEntries(FOCUS_KEYS.map((key) => [key, params.get(key) ?? undefined])) as WorkspaceFocus,
@@ -285,6 +307,31 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     openCopy: (parts) => setCopying({ parts }),
     run: (action) => mutate.mutate(action),
   }
+  const rosterPlayers = useRosterPlayers(entry.id, access.actorKey, !!rosters.data?.length)
+  const world: PeekWorld = {
+    actorKey: access.actorKey,
+    tournamentId: entry.id,
+    tournamentName: entry.content.tournament.name,
+    team: ws.team,
+    entry: (teamId) => {
+      const row = plan.entrants.find((entrant) => entrant.teamId === teamId)
+      return row && (ENTRY_STATUS_LABELS[row.status] ?? ENTRY_STATUS_LABELS.REGISTERED)
+    },
+    rosters: ws.rosters.map((row) => row.content),
+    players: rosterPlayers.data,
+    known: entry.content.players,
+    resolved: entry.content.resolved,
+    standings: entry.content.standings,
+    stageName: (code) => plan.stages.find((stage) => stage.code === code)?.name,
+    finalPlace: (teamId) => {
+      const row = final.rows.find((line) => line.teamId === teamId)
+      return row?.recorded?.place ?? row?.suggested?.place
+    },
+    back: { label: entry.content.tournament.name, to: location.pathname + location.search },
+    openRoster: (teamId) => go("teams", { team: teamId, open: "roster" }),
+    openRecord: (teamId) => go("teams", { team: teamId, open: "record" }),
+    showMatches: (teamId) => go("schedule", { team: teamId }),
+  }
   const changes = useMemo(
     () => (dirty ? draftChanges(baseline, plan, (id) => teams[id]?.name ?? "đội mới") : []),
     [dirty, baseline, plan, teams],
@@ -372,6 +419,15 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
             : [{ label: "Giải đấu", to: "/tournaments" }, { label: info.name }]
         }
       />
+      {cameFrom && (
+        <Link
+          to={cameFrom.to}
+          className="type-body -mt-2 flex w-fit min-w-0 items-center gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4 shrink-0" aria-hidden />
+          <span className="truncate">Về hồ sơ {cameFrom.label}</span>
+        </Link>
+      )}
       <WorkspaceHeader
         ws={ws}
         entry={entry}
@@ -448,32 +504,36 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         })}
       </nav>
       {mutate.error && <LoadError error={mutate.error} onRetry={() => mutate.reset()} />}
-      <div className="min-w-0">
-        {step === "overview" && (
-          <OverviewStep
-            ws={ws}
-            record={tournament.data}
-            checks={checks}
-            totals={totals}
-            family={family}
-            onEditTournament={() => setEditing(true)}
-            onAddPart={() => setAddingPart(true)}
-          />
-        )}
-        {step === "teams" && <TeamsStep key={`${focus.team}-${focus.open}`} ws={ws} tournament={tournament.data} />}
-        {step === "format" && <FormatStep key={`${focus.stage}-${focus.open}`} ws={ws} />}
-        {step === "schedule" && <ScheduleStep key={`${focus.match}-${focus.key}-${focus.open}`} ws={ws} />}
-        {step === "final" && <FinalStep ws={ws} tournament={tournament.data} outcome={final} />}
-        {step === "publish" && (
-          <PublishStep
-            ws={ws}
-            checks={checks}
-            pending={pending}
-            onPublish={() => void publish()}
-            onWithdraw={() => void withdraw()}
-          />
-        )}
-      </div>
+      <PeekWorldProvider value={world}>
+        <div className="min-w-0">
+          {step === "overview" && (
+            <OverviewStep
+              ws={ws}
+              record={tournament.data}
+              checks={checks}
+              totals={totals}
+              family={family}
+              onEditTournament={() => setEditing(true)}
+              onAddPart={() => setAddingPart(true)}
+            />
+          )}
+          {step === "teams" && <TeamsStep key={`${focus.team}-${focus.open}`} ws={ws} tournament={tournament.data} />}
+          {step === "format" && <FormatStep key={`${focus.stage}-${focus.open}`} ws={ws} />}
+          {step === "schedule" && (
+            <ScheduleStep key={`${focus.match}-${focus.key}-${focus.open}-${focus.team}`} ws={ws} />
+          )}
+          {step === "final" && <FinalStep ws={ws} tournament={tournament.data} outcome={final} />}
+          {step === "publish" && (
+            <PublishStep
+              ws={ws}
+              checks={checks}
+              pending={pending}
+              onPublish={() => void publish()}
+              onWithdraw={() => void withdraw()}
+            />
+          )}
+        </div>
+      </PeekWorldProvider>
       {editing && tournament.data && (
         <RegistryEditor open kind="tournaments" entry={tournament.data} onClose={() => setEditing(false)} />
       )}

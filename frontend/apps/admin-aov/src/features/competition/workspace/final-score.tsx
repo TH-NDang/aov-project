@@ -4,6 +4,7 @@ import { Check, CircleAlert, Clock3 } from "lucide-react"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import type { PodiumTeam } from "@aov/ui/lib/tournament-podium"
 import { cn } from "@aov/ui/lib/utils"
+import { TeamName } from "../peek/competitor-peek"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { RESULT_VERIFICATIONS } from "@/features/tournaments/components/tournament-metadata"
 import { placeLabel } from "./final-places-table"
@@ -52,7 +53,9 @@ function Finalist({
       />
       <div className="min-w-0 flex-1">
         <p className={cn("type-label", champion ? "text-primary" : "text-muted-foreground")}>{label}</p>
-        <p className={cn("truncate", champion ? "type-section-title" : "type-body")}>{team.name}</p>
+        <p className={cn("truncate", champion ? "type-section-title" : "type-body")}>
+          {team.teamId ? <TeamName id={team.teamId}>{team.name}</TeamName> : team.name}
+        </p>
       </div>
       {games && <span className="type-section-title tabular-nums @2xl:hidden">{games}</span>}
     </div>
