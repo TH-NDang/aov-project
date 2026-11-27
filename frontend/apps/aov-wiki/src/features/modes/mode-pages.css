@@ -1290,3 +1290,34 @@ a.wiki-mode-row:active {
     animation: none;
   }
 }
+
+/* The way from a mode to its battlefield map: a wide plate with the compass, two short lines and an arrow. */
+.wiki-mode-map-link {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent);
+  border-radius: 4px;
+  background:
+    radial-gradient(80% 140% at 0% 50%, color-mix(in srgb, var(--aov-wiki-gold) 16%, transparent), transparent 70%),
+    var(--aov-wiki-panel-deep);
+  color: var(--aov-wiki-gold-bright);
+  text-decoration: none;
+  transition: border-color 160ms ease-out;
+}
+.wiki-mode-map-link:hover {
+  border-color: var(--aov-wiki-gold-bright);
+}
+.wiki-mode-map-link span {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+.wiki-mode-map-link strong {
+  font: var(--wiki-type-entry);
+}
+.wiki-mode-map-link small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-wiki-text-muted);
+}

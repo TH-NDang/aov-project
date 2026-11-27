@@ -1,0 +1,131 @@
+/*
+ * The battlefield map page (map-page.tsx). Wide screens put the board beside a framed panel that lists the places or
+ * shows the chosen one; phones stack the title, the tabs, the board and swipeable lists, and open a place in a sheet.
+ */
+.wiki-map-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  padding-bottom: 32px;
+}
+.wiki-map-page[data-layout="compact"] {
+  padding-top: 4px;
+}
+
+.wiki-map-heading h1 {
+  font: var(--wiki-type-page);
+  margin: 0;
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-heading p {
+  font: var(--wiki-type-meta);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 4px 0 0;
+  color: var(--aov-wiki-text-muted);
+}
+.wiki-map-heading a {
+  color: var(--aov-wiki-text-soft);
+}
+.wiki-map-heading-clock {
+  font: 700 0.8125rem/1.25rem var(--wiki-font-reading);
+  padding: 0 8px;
+  border: 1px solid var(--aov-wiki-gold);
+  border-radius: 999px;
+  background: none;
+  color: var(--aov-wiki-gold-bright);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.wiki-map-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  gap: 20px;
+  align-items: start;
+}
+.wiki-map-stage-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  max-width: min(760px, calc(100vh - 200px));
+}
+.wiki-map-panel {
+  position: sticky;
+  top: calc(var(--wiki-header-height, 64px) + 12px);
+  max-height: calc(100vh - var(--wiki-header-height, 64px) - 24px);
+  overflow-y: auto;
+  padding: 18px;
+  scrollbar-width: thin;
+}
+.wiki-map-panel > * + * {
+  margin-top: 16px;
+}
+.wiki-map-back {
+  font: var(--wiki-type-category);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--aov-wiki-gold);
+  cursor: pointer;
+}
+
+/* The board runs edge to edge on phones, so it is as large as the screen allows. */
+.wiki-map-compact-board {
+  margin-inline: calc(-1 * var(--wiki-gutter));
+}
+.wiki-map-compact-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.wiki-map-notice {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 48px 16px;
+  text-align: center;
+}
+.wiki-map-notice h1 {
+  font: var(--wiki-type-section);
+  margin: 0;
+}
+.wiki-map-retry {
+  font: var(--wiki-type-category);
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--aov-wiki-gold);
+  border-radius: 3px;
+  background: none;
+  color: var(--aov-wiki-gold-bright);
+  cursor: pointer;
+}
+
+.wiki-map-skeleton-title,
+.wiki-map-skeleton-board {
+  border-radius: 4px;
+  background: var(--aov-wiki-panel);
+  animation: wiki-map-pulse 1.4s ease-in-out infinite;
+}
+.wiki-map-skeleton-title {
+  width: 240px;
+  height: 28px;
+}
+.wiki-map-skeleton-board {
+  width: min(100%, 640px);
+  aspect-ratio: 1;
+}
+@keyframes wiki-map-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-map-skeleton-title,
+  .wiki-map-skeleton-board {
+    animation: none;
+  }
+}

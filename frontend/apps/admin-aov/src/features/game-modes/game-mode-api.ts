@@ -2,6 +2,7 @@ import { backendRequest } from "@/app/auth/session"
 import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
 import { uploadHeroImage, type Request } from "@/lib/api/publishing-api"
 import type { PageSlice } from "@/lib/hero-types"
+import type { MapContent } from "@aov/ui/lib/battle-map"
 
 export type ModeGroup = "PVP" | "ENTERTAINMENT"
 export type AvailabilityStatus = "ALWAYS_OPEN" | "LIMITED" | "SPECIAL" | "CLOSED" | "LOCKED" | "UNKNOWN"
@@ -66,6 +67,7 @@ export interface AdminSummary {
   published?: Revision | null
   draft?: Revision | null
   guide?: { published?: Revision | null; draft?: Revision | null } | null
+  map?: { published?: Revision | null; draft?: Revision | null } | null
 }
 
 export interface AdminMode {
@@ -170,6 +172,17 @@ export interface AdminGuide {
   images: Record<string, AdminImage>
 }
 
+/** The battlefield map of a mode, saved and published as a whole like the auto-chess guide. */
+export interface AdminMap {
+  modeId: string
+  modeCode: string
+  revision: Revision
+  hasPublished: boolean
+  content: MapContent
+  missingFields: string[]
+  images: Record<string, AdminImage>
+}
+
 export interface AdminLineup {
   id: string
   name: string
@@ -191,6 +204,7 @@ export const gameModeKeys = {
   mode: (id: string) => ["admin-game-modes", "mode", id] as const,
   history: (id: string) => ["admin-game-modes", "history", id] as const,
   guide: (id: string) => ["admin-game-modes", "guide", id] as const,
+  map: (id: string) => ["admin-game-modes", "map", id] as const,
   community: (id: string, status: string) => ["admin-game-modes", "community", id, status] as const,
   communities: (id: string) => ["admin-game-modes", "community", id] as const,
 }
@@ -234,6 +248,15 @@ export function createGameModeApi(request: Request = backendRequest) {
       }),
     discardGuide: (id: string, revisionId: string, expectedVersion: number) =>
       send<AdminGuide>(`${base}/${id}/auto-chess/drafts/${revisionId}/discard`, "POST", { expectedVersion }),
+    map: (id: string, signal?: AbortSignal) => request<AdminMap>(`${base}/${id}/map`, { signal }),
+    createMapDraft: (id: string, content?: MapContent, changeNote?: string) =>
+      send<AdminMap>(`${base}/${id}/map/drafts`, "POST", { content, changeNote }),
+    updateMap: (id: string, revisionId: string, expectedVersion: number, content: MapContent, changeNote?: string) =>
+      send<AdminMap>(`${base}/${id}/map/drafts/${revisionId}`, "PUT", { expectedVersion, content, changeNote }),
+    publishMap: (id: string, revisionId: string, expectedVersion: number, changeNote?: string) =>
+      send<AdminMap>(`${base}/${id}/map/drafts/${revisionId}/publish`, "POST", { expectedVersion, changeNote }),
+    discardMap: (id: string, revisionId: string, expectedVersion: number) =>
+      send<AdminMap>(`${base}/${id}/map/drafts/${revisionId}/discard`, "POST", { expectedVersion }),
     community: (id: string, status: string | null, page: number, signal?: AbortSignal) => {
       const params = new URLSearchParams({ page: String(page), size: "30" })
       if (status) params.set("status", status)
@@ -255,7 +278,7 @@ export const GAME_CREDIT = "Garena / Liên Quân Mobile"
 
 export function uploadModeImage(
   file: File,
-  semanticType: "GAME_MODE_ART" | "AUTO_CHESS_ICON",
+  semanticType: "GAME_MODE_ART" | "AUTO_CHESS_ICON" | "MAP_ICON",
   source: MediaSourceInput,
   request: Request = backendRequest,
 ) {

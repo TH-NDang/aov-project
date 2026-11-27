@@ -18,6 +18,7 @@ export const IMAGE_TYPE_LABELS: Record<string, string> = {
   CHIBI_STICKER: "Sticker chibi",
   GAME_MODE_ART: "Ảnh chế độ chơi",
   AUTO_CHESS_ICON: "Biểu tượng Cờ Liên Quân",
+  MAP_ICON: "Biểu tượng bản đồ",
   OTHER: "Ảnh khác",
 }
 

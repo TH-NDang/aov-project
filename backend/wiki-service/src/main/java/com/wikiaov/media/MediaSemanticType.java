@@ -20,5 +20,7 @@ public enum MediaSemanticType {
     GAME_MODE_ART,
     /** Icon from the auto-chess encyclopedia: unit, skill, trait, item or blessing. */
     AUTO_CHESS_ICON,
+    /** Icon of an object of a battlefield map: a structure, minion, monster or mechanic. */
+    MAP_ICON,
     OTHER
 }

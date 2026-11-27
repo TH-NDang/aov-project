@@ -1,0 +1,237 @@
+/*
+ * The match timeline (map-tempo.tsx): a clock plate, the phases above a gold rail whose marks are small gems with
+ * their time, a range under the rail to drag the clock, and the card of the chosen mark.
+ */
+.wiki-map-tempo {
+  display: grid;
+  gap: 12px;
+}
+
+.wiki-map-clock {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.wiki-map-clock-play {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: linear-gradient(160deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze));
+  color: var(--aov-wiki-bar);
+  cursor: pointer;
+}
+.wiki-map-clock-time {
+  font: 700 1.5rem/1 var(--wiki-font-display);
+  min-width: 4.2ch;
+  color: var(--aov-wiki-text);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-map-clock-speeds {
+  display: flex;
+  margin-left: auto;
+  padding: 2px;
+  border-radius: 4px;
+  background: var(--aov-wiki-bar);
+}
+.wiki-map-clock-speeds button {
+  font: var(--wiki-type-category);
+  min-width: 40px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--aov-wiki-text-muted);
+  cursor: pointer;
+}
+.wiki-map-clock-speeds button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--aov-wiki-gold) 22%, transparent);
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-clock-reset {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--aov-wiki-line-strong);
+  border-radius: 50%;
+  background: none;
+  color: var(--aov-wiki-text-soft);
+  cursor: pointer;
+}
+
+.wiki-map-rail {
+  display: grid;
+  gap: 4px;
+}
+.wiki-map-rail-phases {
+  position: relative;
+  height: 20px;
+}
+.wiki-map-rail-phases span {
+  font: 600 0.75rem/1.25rem var(--wiki-font-reading);
+  position: absolute;
+  top: 0;
+  overflow: hidden;
+  padding-left: 6px;
+  border-left: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 40%, transparent);
+  color: var(--aov-wiki-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-map-rail-phases span[data-active] {
+  color: var(--aov-wiki-gold-bright);
+}
+
+.wiki-map-rail-track {
+  position: relative;
+  height: 58px;
+}
+/* The rail: a thin line with the clock's progress lit gold. */
+.wiki-map-rail-track::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--aov-wiki-line-strong);
+}
+.wiki-map-rail-done {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--aov-wiki-bronze), var(--aov-wiki-gold-bright));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
+}
+.wiki-map-rail-mark {
+  position: absolute;
+  top: 0;
+  left: var(--at);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--aov-wiki-text-muted);
+  cursor: pointer;
+  translate: -50% 0;
+}
+.wiki-map-rail-mark::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin-top: 1px;
+  rotate: 45deg;
+  border: 1.5px solid var(--aov-wiki-gold);
+  background: var(--aov-wiki-bar);
+}
+.wiki-map-rail-mark[data-passed]::before {
+  background: var(--aov-wiki-gold);
+}
+.wiki-map-rail-mark[aria-pressed="true"]::before {
+  background: var(--aov-wiki-gold-bright);
+  box-shadow: 0 0 10px var(--aov-wiki-gold);
+}
+.wiki-map-rail-mark span {
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-map-rail-mark[aria-pressed="true"] span {
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-rail-mark:first-of-type {
+  translate: 0 0;
+  justify-items: start;
+}
+.wiki-map-rail-scrub {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--aov-wiki-gold);
+  cursor: pointer;
+}
+
+.wiki-map-auto {
+  font: var(--wiki-type-body);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  color: var(--aov-wiki-text-soft);
+  cursor: pointer;
+}
+.wiki-map-auto input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--aov-wiki-gold);
+}
+
+.wiki-map-moment {
+  display: grid;
+  gap: 8px;
+}
+.wiki-map-moment header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.wiki-map-moment header strong {
+  font: 700 1.25rem/1.5rem var(--wiki-font-display);
+  color: var(--aov-wiki-gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-map-moment header span {
+  font: var(--wiki-type-category);
+  color: var(--aov-wiki-text-muted);
+}
+.wiki-map-moment ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.wiki-map-moment li {
+  position: relative;
+  padding: 8px 10px 8px 38px;
+  border-radius: 3px;
+  background: var(--aov-wiki-panel-deep);
+  counter-increment: step;
+}
+.wiki-map-moment li::before {
+  content: counter(step);
+  font: 700 0.8125rem/22px var(--wiki-font-reading);
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 22px;
+  height: 22px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: var(--aov-wiki-gold);
+  color: var(--aov-wiki-bar);
+  text-align: center;
+}
+.wiki-map-moment li p {
+  font: var(--wiki-type-body);
+  margin: 0;
+  color: var(--aov-wiki-text-soft);
+}
+.wiki-map-moment li p + p {
+  margin-top: 4px;
+}
+.wiki-map-moment-empty {
+  font: var(--wiki-type-meta);
+  margin: 0;
+  color: var(--aov-wiki-text-muted);
+}

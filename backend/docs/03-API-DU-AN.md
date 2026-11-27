@@ -3332,7 +3332,7 @@ POST `/api/wiki/v1/admin/videos/import`
 Nội dung trả `contentLocale: "vi-VN"`. Ảnh trả dạng `{assetId, url, width, height, credits}` chỉ khi asset dùng
 được; asset thiếu hoặc chưa sẵn sàng bị bỏ qua thay vì lỗi. Mã lỗi thuộc `GameModeErrorCode`:
 404 `GAME_MODE_NOT_FOUND`, 404 `GAME_MODE_REVISION_NOT_FOUND`, 404 `GAME_MODE_GUIDE_NOT_FOUND`,
-404 `GAME_MODE_LINEUP_NOT_FOUND`, 409 `GAME_MODE_CONFLICT`, 409 `GAME_MODE_CODE_TAKEN`,
+404 `GAME_MODE_MAP_NOT_FOUND`, 404 `GAME_MODE_LINEUP_NOT_FOUND`, 409 `GAME_MODE_CONFLICT`, 409 `GAME_MODE_CODE_TAKEN`,
 422 `GAME_MODE_INVALID_CONTENT` (kèm `missingFields` khi xuất bản thiếu dữ liệu), 403 `GAME_MODE_FORBIDDEN`,
 429 `GAME_MODE_RATE_LIMITED`.
 
@@ -3341,11 +3341,16 @@ Nội dung trả `contentLocale: "vi-VN"`. Ảnh trả dạng `{assetId, url, wi
 GET `/api/wiki/v1/game-modes`
 - Không có query. Trả `{items: [GameModeCard]}` của các chế độ đã xuất bản, sắp theo nhóm (`PVP` trước) rồi
   thứ tự hiển thị. Card gồm `code`, `name`, `group`, `summary`, `playersLabel`, `duration`, `availability`,
-  `art`, `hasGuide`.
+  `art`, `hasGuide`, `hasMap`.
 
 GET `/api/wiki/v1/game-modes/{code}`
 - Trả chế độ đã xuất bản: card + `rules`, `heroes`, `specialItems`, `sources`, `publishedAt`. 404 khi chưa
   xuất bản.
+
+GET `/api/wiki/v1/game-modes/{code}/map`
+- Trả bản đồ chiến trường đã xuất bản: `{modeCode, modeName, contentLocale, revisionId, publishedAt, content,
+  images}`; `content` theo mục “Bản đồ chiến trường” ở 01, `images` là ảnh nền đã hydrate theo `assetId`.
+  404 `GAME_MODE_MAP_NOT_FOUND` khi chế độ chưa xuất bản hoặc chưa có bản đồ xuất bản.
 
 GET `/api/wiki/v1/game-modes/{code}/auto-chess`
 - Trả cẩm nang đã xuất bản: nội dung ở 01, ảnh đã hydrate, mỗi đội hình đề xuất có `likes`, `recentLikes`.
@@ -3389,11 +3394,11 @@ DELETE `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups/{lineupId}?ex
 ### Admin
 
 Cần `catalog:read`; ghi cần `gamemode:write`; xuất bản, ẩn/hiện đội hình cần `gamemode:publish`.
-Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`, `AUTO_CHESS_*`, `LINEUP_*`.
+Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`, `AUTO_CHESS_*`, `MAP_GUIDE_*`, `LINEUP_*`.
 
 - GET `/api/wiki/v1/admin/game-modes` — danh sách mọi chế độ: `id`, `code`, `name`, `group`, `order`,
   `guideKind`, `published` (revision xuất bản gần nhất hoặc null), `draft` (nháp mở hoặc null), `guide`
-  (trạng thái cẩm nang).
+  (trạng thái cẩm nang), `map` (trạng thái bản đồ, cùng dạng `{published, draft}`).
 - POST `/api/wiki/v1/admin/game-modes` — body `{code, name, group, content?}`; tạo identity và nháp đầu; 201.
   409 `GAME_MODE_CODE_TAKEN` khi trùng mã.
 - GET `/api/wiki/v1/admin/game-modes/{id}` — nháp mở nếu có, không thì bản xuất bản gần nhất; kèm
@@ -3408,6 +3413,12 @@ Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`
   (GET hiện hành, GET `revisions`, GET `revisions/{revisionId}`, POST `drafts` với `{changeNote, content?}` —
   `content` chỉ dùng cho nháp đầu tiên khi chưa có bản xuất bản, PUT `drafts/{revisionId}`, POST
   `drafts/{revisionId}/publish`, `drafts/{revisionId}/discard`). 422 khi chế độ không có `guideKind = AUTO_CHESS`.
+- Bản đồ chiến trường dùng cùng bộ endpoint dưới `/api/wiki/v1/admin/game-modes/{id}/map`; POST `drafts` nhận
+  `content` chỉ khi chưa có bản xuất bản (409 `GAME_MODE_CONFLICT` nếu đã có), không có `content` thì sao bản xuất
+  bản gần nhất hoặc revision gần nhất. Mọi chế độ đều có thể có bản đồ. Phản hồi admin gồm `modeId`, `modeCode`,
+  `revision`, `hasPublished`, `content`, `missingFields`, `images`. 422 `GAME_MODE_INVALID_CONTENT` với lỗi theo
+  đường dẫn (`objects[2].family UNKNOWN_REFERENCE`, `tempo[1].seconds OUT_OF_ORDER`…). Audit
+  `MAP_GUIDE_DRAFT_CREATED`, `MAP_GUIDE_DRAFT_UPDATED`, `MAP_GUIDE_PUBLISHED`, `MAP_GUIDE_DRAFT_DISCARDED`.
 - GET `/api/wiki/v1/admin/game-modes/{id}/auto-chess/community-lineups` — query `status`, `page`, `size`;
   `PageSlice` đội hình cộng đồng kèm `likes`, `status`, `hiddenReason`, `version`, `updatedAt`.
 - POST `/api/wiki/v1/admin/game-modes/{id}/auto-chess/community-lineups/{lineupId}/visibility` — body

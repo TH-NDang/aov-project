@@ -4,6 +4,7 @@ import com.wikiaov.gamemode.internal.application.response.GameModeViews.CardList
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.Insights;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicGuide;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicLineup;
+import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicMap;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicMode;
 import com.wikiaov.gamemode.internal.lineup.application.LineupInteractions;
 import com.wikiaov.platform.CatalogCodes;
@@ -36,6 +37,12 @@ public interface GameModePublicApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     PublicGuide guide(@Parameter(description = "Game mode code.") String code,
+            @Parameter(hidden = true) HttpServletRequest request);
+
+    @Operation(operationId = "gameModePublicApi_map", summary = "Map - game mode public", description = "Map for game mode public. Public read endpoint. Unrecognized query parameters are rejected.", responses = {
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
+    })
+    PublicMap map(@Parameter(description = "Game mode code.") String code,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "gameModePublicApi_lineups", summary = "Lineups - game mode public", description = "Lineups for game mode public. Public read endpoint. Unrecognized query parameters are rejected.", responses = {
