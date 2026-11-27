@@ -18,7 +18,7 @@ Các mục bên dưới vẫn mô tả đích toàn backend; bảng này xác đ
 | Hero admin | GET/POST admin/heroes; GET admin/heroes/publish-readiness; GET admin/heroes/{id}; GET admin/heroes/{id}/revisions; GET revision/draft detail; POST drafts; PUT sáu section; POST publish/discard |
 | Hero public | GET heroes; heroes/{id}; heroes/{id}/manifest; heroes/{id}/changes |
 | Immutable section | hero-profile-revisions, hero-overview-rating-revisions, hero-stats-revisions, hero-skills-revisions, hero-skins-revisions, hero-media-binding-revisions |
-| Patch history | POST admin/patch-variants/{id}/hero-changes; POST admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous; GET patches, patches/{id}, patches/{id}/changes |
+| Patch history | POST admin/patch-variants/{id}/hero-changes; PUT admin/hero-changes/{changeSetId}; POST admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous; GET patches, patches/{id}, patches/{id}/changes |
 
 Tất cả path trong bảng nối sau `/api/wiki/v1/`. POST tạo trả 201; publish variant trả 204;
 Hero mutation/publish/discard trả 200 với composition revision mới nhất. Create Hero trả
@@ -2968,7 +2968,8 @@ Ngoại trừ REMOVED, target nằm đúng patch. From là snapshot đã xuất 
 UPDATED/BUFF/NERF/BALANCE/REWORK/FIX cần GAME_PATCH và from; ADDED và DATA_BASELINE là nhãn độc lập.
 REMOVED chỉ một kind, cho phép target ở patch trước để bổ sung lịch sử khi đã có nguồn.
 Tóm tắt theo locale và nguồn HTTP bắt buộc. Trả 201 {id}; trùng owner/patch 409, sai nội dung 422.
-Không cung cấp API kéo đổi/xóa lịch sử đã xác nhận.
+Không có API xóa lịch sử đã ghi. Change set tướng sửa tại chỗ được bằng PUT admin/hero-changes/{changeSetId} khi công
+tắc sửa còn mở.
 
 PUT /admin/hero-changes/{changeSetId}/assessment cần patch:write, nhận {kind,expectedVersion}.
 Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng) và thêm `RELEASE` (Ra mắt) chỉ cho change set có
@@ -2982,6 +2983,16 @@ Danh sách phải nêu mỗi change set của variant đúng một lần: thiế
 `HERO_PATCH_CHANGE_CONFLICT`; trùng id trả 422; variant không tồn tại trả 404. Thứ tự này áp cho
 GET admin/patch-variants/{id}/hero-changes và trang patch công khai; change set ghi sau lần sắp xếp đứng đầu cho tới
 lần sắp xếp kế tiếp. Lưu khi có vị trí đổi thì ghi audit `HERO_PATCH_CHANGES_REORDERED` (aggregate PATCH, id variant).
+
+PUT /admin/hero-changes/{changeSetId} cần patch:write, nhận `{sourceUrl, summaryTranslations, changes}` cùng dạng và
+cùng giới hạn với lúc ghi (mục 39), trả 204. Lần sửa ghi đè change set tại chỗ, không tạo phiên bản mới
+([ADR-016](adr/ADR-016-patch-note-changes.md), bổ sung 2026-11-27): thay toàn bộ dòng thay đổi, thay tóm tắt của các
+locale được gửi (locale khác giữ nguyên) và thay `sourceUrl`. Tướng, patch, `sourceKind`, revision nguồn/đích,
+`introducesHero`, đánh giá tổng thể và vị trí trong patch không đổi. Nội dung được kiểm tra như lúc ghi theo nguồn của
+change set, sai trả 422 `HERO_INVALID_CONTENT`; change set không tồn tại trả 404 `HERO_PATCH_CHANGE_NOT_FOUND`. Mô tả
+"trước khi đổi" (mục 39b) đi theo dòng MECHANIC mới đầu tiên có cùng `mechanicKey`. Ghi audit `HERO_PATCH_CHANGE_EDITED`
+(aggregate HERO). Khi wiki-service chạy với `HERO_CHANGE_EDITS=false` (`wiki.hero.change-edits`), mọi lần sửa trả 409
+`HERO_PATCH_CHANGE_LOCKED`.
 
 ### Xem toàn bộ dữ liệu tại mốc và rà soát patch
 
