@@ -1,7 +1,7 @@
 import { useWikiText } from "../../../context/wiki-context"
 import type { ModeImage } from "../auto-chess-model"
 import { ObjectIcon } from "./map-board"
-import { LaneMark } from "./map-glyph"
+import { LaneMark } from "@aov/ui/components/battle-map-glyph"
 import {
   CATEGORIES,
   CATEGORY_NAMES,
@@ -14,7 +14,7 @@ import {
   type MapLane,
   type MapTab,
   type TempoMoment,
-} from "./map-model"
+} from "@aov/ui/lib/battle-map"
 import "./map-parts.css"
 
 const TAB_NAMES: Record<MapTab, readonly [string, string]> = {

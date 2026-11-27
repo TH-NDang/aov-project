@@ -25,7 +25,7 @@ import {
   type Category,
   type MapTab,
   type TempoMoment,
-} from "./map-model"
+} from "@aov/ui/lib/battle-map"
 import { TempoMomentCard, TempoRail } from "./map-tempo"
 import { readAutoShow, useMatchClock, writeAutoShow } from "./use-match-clock"
 import "./map-page.css"

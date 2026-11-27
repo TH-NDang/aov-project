@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 import { useWikiText } from "../../../context/wiki-context"
-import { clock, phases, railAt, railTime, type TempoMoment } from "./map-model"
+import { clock, phases, railAt, railTime, type TempoMoment } from "@aov/ui/lib/battle-map"
 import { CLOCK_SPEEDS, type ClockSpeed } from "./use-match-clock"
 import "./map-tempo.css"
 

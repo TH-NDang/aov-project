@@ -6,7 +6,7 @@ import { useWikiContext, useWikiText } from "../../../context/wiki-context"
 import { heroCatalogQuery } from "../../../lib/hero-api"
 import { ruleBlocks, type ModeImage } from "../auto-chess-model"
 import { ObjectIcon } from "./map-board"
-import { LaneMark } from "./map-glyph"
+import { LaneMark } from "@aov/ui/components/battle-map-glyph"
 import {
   CATEGORY_NAMES,
   familyOf,
@@ -20,7 +20,7 @@ import {
   type MapObject,
   type MapSpot,
   type Resolved,
-} from "./map-model"
+} from "@aov/ui/lib/battle-map"
 import "./map-details.css"
 
 /** What the panel or the sheet shows about the chosen place. */

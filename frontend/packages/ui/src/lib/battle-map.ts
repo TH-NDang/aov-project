@@ -1,4 +1,5 @@
-// The battlefield map of a mode as the Wiki reads it: no React and no DOM, so it runs under `node --test`.
+// The battlefield map of a game mode as the Wiki and Admin read it: no React and no DOM, so it runs under
+// `node --test`.
 
 export type Side = "BLUE" | "RED"
 export type Category = "STRUCTURE" | "MINION" | "MONSTER" | "EPIC" | "MECHANIC"

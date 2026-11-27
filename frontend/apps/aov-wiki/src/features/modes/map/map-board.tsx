@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { ModeImage } from "../auto-chess-model"
-import { LaneMark, MapGlyph } from "./map-glyph"
+import { LaneMark, MapGlyph } from "@aov/ui/components/battle-map-glyph"
 import {
   centre,
   pathOf,
@@ -10,7 +10,7 @@ import {
   type MapLane,
   type MapObject,
   type Marker,
-} from "./map-model"
+} from "@aov/ui/lib/battle-map"
 import "./map-board.css"
 
 /** A marker's icon: the uploaded one when Admin set it, otherwise the Wiki's drawing. */

@@ -3,7 +3,7 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { wikiAccessToken } from "../../lib/wiki-auth"
 import type { GuideContent, LineupUnit, ModeImage, RuleSection } from "./auto-chess-model"
-import type { MapContent } from "./map/map-model"
+import type { MapContent } from "@aov/ui/lib/battle-map"
 import { WikiApiError, wikiGet, wikiRequest, type WikiRequest } from "../../lib/wiki-api"
 
 export interface ModeAvailability {

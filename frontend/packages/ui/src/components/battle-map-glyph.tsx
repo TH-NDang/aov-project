@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
-import type { Glyph, LaneGlyph } from "./map-model"
+import type { Glyph, LaneGlyph } from "../lib/battle-map"
 
 /**
- * The Wiki's own line drawings of map objects, on a 24-unit grid. They stand in for the game's icons until Admin
+ * The project's own line drawings of map objects, on a 24-unit grid. They stand in for the game's icons until Admin
  * uploads one for the object; each keeps to a few strokes so it still reads inside a 20px marker.
  */
 const GLYPHS: Record<Glyph, ReactNode> = {

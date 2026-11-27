@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { crossed, type TempoMoment } from "./map-model"
+import { crossed, type TempoMoment } from "@aov/ui/lib/battle-map"
 
 export const CLOCK_SPEEDS = [1, 10, 60] as const
 export type ClockSpeed = (typeof CLOCK_SPEEDS)[number]

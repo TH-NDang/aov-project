@@ -17,11 +17,9 @@ import {
   resolveRef,
   spawnClock,
   timingText,
-  type MapContent,
-  type MapObject,
-} from "../src/features/modes/map/map-model.ts"
+} from "../src/lib/battle-map.ts"
 
-const object = (code: string, extra: Partial<MapObject> = {}): MapObject => ({
+const object = (code, extra = {}) => ({
   code,
   name: code,
   category: "EPIC",
@@ -31,7 +29,8 @@ const object = (code: string, extra: Partial<MapObject> = {}): MapObject => ({
   ...extra,
 })
 
-const map: MapContent = {
+/** @type {import("../src/lib/battle-map.ts").MapContent} */
+const map = {
   name: "Bách khoa chiến trường",
   objects: [
     object("caesar", { positions: [{ x: 32.9, y: 28.1 }] }),
@@ -85,7 +84,7 @@ test("a form resolves to itself with its family head", () => {
   const form = resolveRef(map, "caesar-hac-am")
   assert.equal(form?.kind === "object" && form.head.code, "caesar")
   assert.deepEqual(
-    familyOf(map, map.objects[1]!).map((member) => member.code),
+    familyOf(map, map.objects[1]).map((member) => member.code),
     ["caesar", "caesar-hac-am"],
   )
 })
@@ -106,11 +105,11 @@ test("markers on one place are grouped so they can be fanned out", () => {
 
 test("an area holds the objects standing inside it", () => {
   assert.deepEqual(
-    objectsIn(map, map.areas[0]!).map((found) => found.code),
+    objectsIn(map, map.areas[0]).map((found) => found.code),
     ["caesar", "caesar-bao-chua"],
   )
-  assert.equal(inside({ x: 50, y: 50 }, map.areas[0]!.outline), false)
-  assert.deepEqual(centre(map.areas[0]!.outline), { x: 33, y: 28 })
+  assert.equal(inside({ x: 50, y: 50 }, map.areas[0].outline), false)
+  assert.deepEqual(centre(map.areas[0].outline), { x: 33, y: 28 })
 })
 
 test("times read as the game writes them", () => {
