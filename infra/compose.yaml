@@ -404,6 +404,8 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
       # Patch watch (ADR-035): the page reader above; empty leaves the Indonesian news page unread.
       PATCH_WATCH_PAGE_READER_URL: http://page-reader:8095
+      # Recorded hero patch changes can be rewritten in place (ADR-016); set false in .env once the data is official.
+      HERO_CHANGE_EDITS: ${HERO_CHANGE_EDITS:-true}
     mem_limit: ${WIKI_MEM_LIMIT:-1536m}
     # Spring finishes the requests in flight within 30 s once stopped; deploy.sh stops the old container this way.
     stop_grace_period: 40s
