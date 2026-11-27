@@ -20,7 +20,7 @@ export type PeekWorld = {
   tournamentId: string
   tournamentName: string
   team: (id: string) => TeamView
-  /** How the team entered, such as "Đã đăng ký"; absent for a team that is not an entrant. */
+  /** The label of how the team entered the tournament; absent for a team that is not an entrant. */
   entry: (teamId: string) => string | undefined
   rosters: RosterMembershipContent[]
   /** Admin records of the roster's players, with what only editors see. */
