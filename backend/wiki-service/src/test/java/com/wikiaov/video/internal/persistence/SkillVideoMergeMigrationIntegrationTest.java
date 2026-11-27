@@ -25,7 +25,7 @@ class SkillVideoMergeMigrationIntegrationTest {
     void skillVideosJoinTheHerosListAfterItsOwnAndKeepOneRowPerVideo() throws Exception {
         try (var database = TestcontainersConfiguration.postgres()) {
             database.start();
-            migrate(database, "77");
+            migrate(database, "76");
             UUID hero = UUID.randomUUID();
             UUID other = UUID.randomUUID();
             try (var c = connect(database)) {
