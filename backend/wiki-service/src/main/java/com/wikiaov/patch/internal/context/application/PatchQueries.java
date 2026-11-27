@@ -3,6 +3,7 @@ package com.wikiaov.patch.internal.context.application;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PatchReleaseReference;
+import com.wikiaov.patch.PatchSources;
 import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
@@ -30,15 +31,18 @@ public class PatchQueries implements PatchCatalog {
     private final GameplayContextRepository contexts;
     private final Regions regions;
     private final GameplayContexts gameplay;
+    private final PatchSources sources;
     private final Clock clock;
 
     public PatchQueries(GamePatchRepository patches, GamePatchTranslationRepository translations,
-            GameplayContextRepository contexts, Regions regions, GameplayContexts gameplay, Clock clock) {
+            GameplayContextRepository contexts, Regions regions, GameplayContexts gameplay, PatchSources sources,
+            Clock clock) {
         this.patches = patches;
         this.translations = translations;
         this.contexts = contexts;
         this.regions = regions;
         this.gameplay = gameplay;
+        this.sources = sources;
         this.clock = clock;
     }
 
@@ -74,7 +78,7 @@ public class PatchQueries implements PatchCatalog {
                         ? null
                         : new PublishedPatch.Text(text.getLocale(), text.getTitle(), text.getSummary(),
                                 text.getDescription(), text.getLocale(), !locale.equals(text.getLocale())),
-                region, locale, variantId, rulesetId, effectiveAt);
+                region, locale, variantId, rulesetId, effectiveAt, sources.of(variantId));
     }
 
     @Override

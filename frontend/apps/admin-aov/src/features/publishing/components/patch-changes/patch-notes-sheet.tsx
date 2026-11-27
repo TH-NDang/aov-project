@@ -19,6 +19,8 @@ import { errorMessage } from "@/lib/api/errors"
 import { useReferenceCatalog } from "../../../terminology/catalog"
 import { HeroAsset } from "../editing/hero-asset"
 import { PatchChangeEditor, compactControl } from "./patch-change-editor"
+import { usePatchSources } from "./patch-sources"
+import { preferredSourceUrl } from "../../model/patch-changes/patch-source-model"
 import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import type { Revision } from "@/lib/hero-types"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
@@ -155,6 +157,9 @@ function WarehouseNoteChoice({
   const catalog = useWarehouseCatalog(kind, rulesetId, locale)
   const changes = useCatalogChanges(kind, rulesetId, locale)
   const [owner, setOwner] = useState("")
+  // Item records still keep a link each; they start from the patch's shared link when it has one.
+  const shared = usePatchSources(variantId).data ?? []
+  const sourceUrl = preferredSourceUrl(shared, locale) ?? defaultSourceUrl
   const options = useMemo(() => {
     const entries = new Map(
       (catalog.data ?? []).map((row) => [
@@ -208,7 +213,7 @@ function WarehouseNoteChoice({
         entryId={selected.id}
         rulesetId={rulesetId}
         locale={locale}
-        patchContext={{ variantId, sourceUrl: defaultSourceUrl, onSaved: onRecorded }}
+        patchContext={{ variantId, sourceUrl, onSaved: onRecorded }}
       />
     </>
   )

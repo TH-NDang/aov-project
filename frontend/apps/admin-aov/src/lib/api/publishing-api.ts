@@ -154,6 +154,7 @@ export const publishingKeys = {
   captureSets: ["patch-capture-sets"] as const,
   shop: (heroId: string, region: string) => ["hero-shop", heroId, region] as const,
   additionalNotes: (variantId: string, locale: string) => ["patch-additional-notes", variantId, locale] as const,
+  patchSources: (variantId: string) => ["patch-sources", variantId] as const,
   sourceCoverage: ["source-coverage"] as const,
   sourceCoverageSets: ["source-coverage", "sets"] as const,
   sourceCoveragePatch: (patchCode: string) => ["source-coverage", "patch", patchCode] as const,
@@ -238,6 +239,14 @@ const assetDetail = (detail: AssetResponse): AssetDetail => ({
   currentUrl: detail.versions.find((version) => version.id === detail.currentVersionId)?.url ?? null,
 })
 
+/** A link to the official notes of a patch, shared by every change recorded from them. */
+export interface PatchSource {
+  url: string
+  label: string
+  /** BCP 47 tag of the page's language, when the editor gave one. */
+  locale: string | null
+}
+
 export function createPublishingApi(request: Request) {
   const send = <T>(path: string, method: string, value?: unknown) =>
     request<T>(path, { method, body: value === undefined ? undefined : JSON.stringify(value) })
@@ -250,6 +259,10 @@ export function createPublishingApi(request: Request) {
     publishReadiness: (signal?: AbortSignal) =>
       request<HeroPublishReadiness[]>("/admin/heroes/publish-readiness", signal ? { signal } : undefined),
     forms: (heroId: string) => request<HeroForms>(`/admin/heroes/${heroId}/forms`),
+    patchSources: (variantId: string, signal?: AbortSignal) =>
+      request<PatchSource[]>(`/admin/patch-variants/${variantId}/sources`, signal ? { signal } : undefined),
+    savePatchSources: (variantId: string, sources: PatchSource[]) =>
+      send<PatchSource[]>(`/admin/patch-variants/${variantId}/sources`, "PUT", { sources }),
     replaceForms: (heroId: string, value: ReplaceHeroForms) =>
       send<HeroForms>(`/admin/heroes/${heroId}/forms`, "PUT", value),
     shop: (heroId: string, region: string) => request<HeroShop>(`/admin/heroes/${heroId}/shop?region=${region}`),

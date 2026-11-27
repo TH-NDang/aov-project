@@ -81,6 +81,7 @@ async function openTable(
   answer: Answer,
   capabilities = ["catalog:read", "patch:write"],
   rows: unknown[] = balanceRows,
+  sources: unknown[] = [],
 ) {
   const fixture = createHeroFixture()
   const sent: { url: string; method?: string; body: unknown }[] = []
@@ -108,6 +109,7 @@ async function openTable(
     [hero("airi", "Airi"), hero("violet", "Violet"), hero("lorion", "Lorion")],
   )
   client.setQueryData(["patch-additional-notes", "variant", "vi-VN"], { body: "", version: 0 })
+  client.setQueryData(["patch-sources", "variant"], sources)
   for (const kind of ["items", "enchantments", "arcana", "spells"])
     client.setQueryData(["warehouse", "changes", kind, "rules", "vi-VN"], [])
   await render(<PatchChangesTable variantId="variant" overview={overview as never} locale="vi-VN" />, {
@@ -234,5 +236,24 @@ test("heroes whose changes only fix bugs are listed apart from the balance chang
 
     await click(button("Xem sửa lỗi Lorion", fixes), "fix row")
     await waitFor(() => button("Sửa thay đổi"), "The fix opens in the same detail")
+  })
+})
+
+test("with links shared by the patch, a rewritten change set can drop its own link for them", async () => {
+  await inDom(page, async (dom) => {
+    const shared = [{ url: "https://lienquan.garena.vn/patch", label: "Tiếng Việt", locale: "vi-VN" }]
+    const { sent } = await openTable(dom, noContent, ["catalog:read", "patch:write"], balanceRows, shared)
+
+    const strip = await waitFor(() => document.querySelector('[aria-label="Nguồn ghi chú cập nhật"]'))
+    assert.equal(strip.querySelector("a")?.getAttribute("href"), "https://lienquan.garena.vn/patch")
+    await click(await waitFor(() => button("Xem thay đổi Airi")), "hero detail")
+    await click(await waitFor(() => button("Sửa thay đổi")), "edit button")
+    await waitFor(() => document.body.textContent?.includes("Link riêng của tướng"), "The own link is shown")
+    await click(button("Dùng link chung"), "use shared links")
+    assert.match(document.body.textContent ?? "", /Nguồn: 1 link chung của patch\./)
+    await click(button("Lưu thay đổi"), "save")
+
+    await waitFor(() => sent.length === 1, "The edit is sent")
+    assert.equal((sent[0].body as { sourceUrl: unknown }).sourceUrl, null)
   })
 })

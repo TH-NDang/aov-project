@@ -2,6 +2,7 @@ package com.wikiaov.patch;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -11,6 +12,7 @@ import org.jspecify.annotations.Nullable;
  * @param text the translation picked for the requested locale; its fields sit beside the others on the wire and are
  *             left out together when the patch has no translation
  * @param effectiveAt when the release starts in this market, or {@code null} for a variant read before it is dated
+ * @param sources the links to the official notes of the variant, in the order editors gave them
  */
 public record PublishedPatch(
         UUID id,
@@ -21,7 +23,8 @@ public record PublishedPatch(
         String requestedLocale,
         UUID variantId,
         UUID rulesetId,
-        @Nullable Instant effectiveAt
+        @Nullable Instant effectiveAt,
+        List<PatchSource> sources
 ) {
 
     /** The title and notes of a patch in the picked locale, and whether that locale replaced the requested one. */

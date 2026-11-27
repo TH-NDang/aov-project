@@ -35,6 +35,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.patch.PatchReleaseReference;
+import com.wikiaov.patch.PatchSources;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
@@ -72,12 +73,13 @@ public class HeroPatchChanges implements HeroChangeQueries {
     private final CurrentActor actors;
     private final Clock clock;
     private final HeroForms forms;
+    private final PatchSources sources;
     private final boolean editsOpen;
 
     public HeroPatchChanges(PatchDataReviews dataReviews,
             HeroPatchHistory history,
             HeroStore store, GameplayContexts contexts, AuditLog audit, CurrentActor actors,
-            Clock clock, PatchCatalog patches, HeroSections sections, HeroForms forms,
+            Clock clock, PatchCatalog patches, HeroSections sections, HeroForms forms, PatchSources sources,
             @Value("${wiki.hero.change-edits:true}") boolean editsOpen) {
         this.dataReviews = dataReviews;
         this.history = history;
@@ -89,6 +91,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         this.actors = actors;
         this.clock = clock;
         this.forms = forms;
+        this.sources = sources;
         this.editsOpen = editsOpen;
     }
 
@@ -162,8 +165,11 @@ public class HeroPatchChanges implements HeroChangeQueries {
         if (!notes && input.toHeroRevisionId() == null) {
             throw HeroValidation.invalid("A snapshot change set requires a target revision.");
         }
-        if (notes || input.sourceUrl() != null) {
+        if (input.sourceUrl() != null) {
             requireSourceUrl(input.sourceUrl());
+        } else if (notes && sources.of(variantId).isEmpty()) {
+            throw HeroValidation
+                    .invalid("Patch notes need a source: add a source link to the patch or to this change set.");
         }
 
         var to = input.toHeroRevisionId() == null ? null : store.revision(input.heroId(), input.toHeroRevisionId());

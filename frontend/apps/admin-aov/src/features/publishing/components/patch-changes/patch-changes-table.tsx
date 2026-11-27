@@ -31,6 +31,7 @@ import { HeroChangeSummary } from "./hero-change-badges"
 import { PatchChangeEditor } from "./patch-change-editor"
 import { isFixOnly, rowsFromRecorded } from "../../model/patch-changes/patch-change-model"
 import { HeroFixList } from "./hero-fix-list"
+import { PatchSourceStrip } from "./patch-sources"
 import {
   RecordPatchNotesSheet,
   useHeroEntries,
@@ -540,6 +541,7 @@ export function PatchChangesTable({
     <section className="min-w-0 border-t" aria-label="Thay đổi trong patch">
       <div className="space-y-2 py-3">
         <h3 className="type-section-title">Thay đổi trong patch</h3>
+        <PatchSourceStrip variantId={variantId} canEdit={canRecord} />
         {canRecord && variant && (
           <ActionStrip aria-label="Thêm ghi chú cập nhật">
             <span className="type-label mr-1 inline-flex items-center gap-1.5 text-muted-foreground">

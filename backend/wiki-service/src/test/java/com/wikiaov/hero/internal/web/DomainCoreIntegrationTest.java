@@ -863,6 +863,19 @@ class DomainCoreIntegrationTest {
         var observedBefore = new HashMap<>(notes(hero, release));
         observedBefore.put("introducesHero", true);
         send(post(ROOT + "/admin/patch-variants/" + next + "/hero-changes"), observedBefore, 422);
+
+        // Without a link of its own, a change set from patch notes leans on the links of its patch.
+        var unsourced = new HashMap<>(notes(hero, List.of(stat)));
+        unsourced.remove("sourceUrl");
+        send(post(ROOT + "/admin/patch-variants/" + next + "/hero-changes"), unsourced, 422);
+        mvc.perform(put(ROOT + "/admin/patch-variants/" + next + "/sources")
+                .with(jwt().jwt(t -> t.issuer("https://test.example/issuer").subject("editor"))
+                        .authorities(new SimpleGrantedAuthority("catalog:read"),
+                                new SimpleGrantedAuthority("patch:write")))
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("sources",
+                        List.of(Map.of("url", "https://example.org/official", "label", "Tiếng Việt"))))))
+                .andExpect(status().isOk());
+        send(post(ROOT + "/admin/patch-variants/" + next + "/hero-changes"), unsourced, 201);
     }
 
     @Test
@@ -1286,7 +1299,7 @@ class DomainCoreIntegrationTest {
                 List.of("id", "changeKind", "sortOrder", "type", "description"));
         var patchFields = List.of("id", "code", "sequence", "locale", "title", "summary", "description",
                 "actualLocale", "fallbackApplied", "region", "requestedLocale", "variantId", "rulesetId",
-                "effectiveAt");
+                "effectiveAt", "sources");
         assertThat(names(entry.path("patch"))).containsExactlyElementsOf(patchFields);
         assertThat(names(read(ROOT + "/patches/" + patch2))).containsExactlyElementsOf(patchFields);
         assertThat(names(read(ROOT + "/patches").path("items").get(0))).containsExactlyElementsOf(patchFields);
