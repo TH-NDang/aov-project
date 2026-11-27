@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.HeroChangeEntry;
 import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
+import com.wikiaov.hero.internal.change.application.HeroChangeEditCommand;
 import com.wikiaov.hero.internal.change.application.HeroChangeOrderCommand;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges;
@@ -38,6 +39,12 @@ public interface HeroChangesApi {
     })
     HeroAssessmentView assess(@Parameter(description = "Id identifier.") UUID id,
             @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroPatchChanges.AssessmentInput input);
+
+    @Operation(operationId = "heroChangesApi_edit", summary = "Edit - hero changes", description = "Rewrites a recorded hero change set in place: its source link, the summaries of the listed locales (other locales stay) and every line, checked as when recording. Hero, patch, source kind, revisions, assessment and position stay. What a mechanic did before follows the first new line of the same mechanic. Answers 409 HERO_PATCH_CHANGE_LOCKED once edits are closed by configuration. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "204", description = "Successful operation.")
+    })
+    void edit(@Parameter(description = "Change set identifier.") UUID changeSetId,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid HeroChangeEditCommand body);
 
     @Operation(operationId = "heroChangesApi_reorder", summary = "Reorder - hero changes", description = "Sets the order in which a patch variant lists its hero change sets, in Admin and on the public patch page. The body names every change set of the variant exactly once; a list that misses or adds one is a conflict, a repeated id is invalid content. A change set recorded later has no place and is listed first. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "204", description = "Successful operation.")

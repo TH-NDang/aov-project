@@ -35,6 +35,15 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
             """)
     List<Header> historyForHero(@Param("heroId") UUID heroId);
 
+    @Query("""
+            select c.id as id, c.heroId as heroId, h.code as heroCode, c.patchVariantId as patchVariantId,
+                c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId,
+                c.sourceKind as sourceKind, c.sourceUrl as sourceUrl, c.introducesHero as introducesHero
+            from HeroPatchChangeSet c join HeroIdentity h on h.id = c.heroId
+            where c.id = :id
+            """)
+    Optional<Header> header(@Param("id") UUID id);
+
     @Query("select c.heroId from HeroPatchChangeSet c where c.id = :id")
     Optional<UUID> findHeroId(@Param("id") UUID id);
 

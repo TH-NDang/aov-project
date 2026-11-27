@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.HeroChangeEntry;
 import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
+import com.wikiaov.hero.internal.change.application.HeroChangeEditCommand;
 import com.wikiaov.hero.internal.change.application.HeroChangeOrderCommand;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.change.application.HeroPatchDerivation;
@@ -50,6 +51,13 @@ public class HeroChangesController implements HeroChangesApi {
     @PutMapping(path = ApiPaths.ADMIN + "/hero-changes/{id}/assessment", version = "1")
     public HeroAssessmentView assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
         return changes.assess(id, input);
+    }
+
+    @Override
+    @PutMapping(path = ApiPaths.ADMIN + "/hero-changes/{changeSetId}", version = "1")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void edit(@PathVariable UUID changeSetId, @RequestBody HeroChangeEditCommand body) {
+        changes.edit(changeSetId, body);
     }
 
     @Override

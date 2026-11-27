@@ -918,6 +918,74 @@ class DomainCoreIntegrationTest {
                 .containsExactly(airiChange.toString(), nakrothChange.toString(), violetChange.toString());
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void editorsRewriteARecordedChangeSetInPlace() throws Exception {
+        UUID season = id(send(post(ROOT + "/admin/seasons"),
+                Map.of("code", "edit-season", "displayName", "Edit season"), 201));
+        UUID listed = seasonPatch(season, "edit-listed");
+        var draft = create();
+        UUID hero = uuid(draft, "heroId");
+        draft = complete(hero, id(draft), draft);
+        send(post(path(hero, id(draft)) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
+        Map<String, Object> mechanic = Map.of("type", "MECHANIC", "changeKind", "ADJUSTMENT", "mechanicKey",
+                "fixture", "description", "Synthetic adjustment");
+        UUID changeSet = id(send(post(ROOT + "/admin/patch-variants/" + listed + "/hero-changes"),
+                notes(hero, List.of(Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "HP", "oldValue", 3500,
+                        "newValue", 3600, "unit", "POINT"), mechanic)),
+                201));
+        String mechanicId = changeOfType(heroChanges(listed).getFirst(), "HERO_MECHANIC_CHANGE").get("id").toString();
+        send(post(ROOT + "/admin/hero-changes/" + changeSet + "/mechanics/" + mechanicId + "/previous"),
+                Map.of("description", "Earlier behaviour", "sourceUrl", "https://example.org/old"), 201);
+        send(put(ROOT + "/admin/hero-changes/" + changeSet + "/assessment"),
+                Map.of("kind", "BUFF", "expectedVersion", 0), 200);
+
+        String edit = ROOT + "/admin/hero-changes/" + changeSet;
+        send(put(edit), Map.of("sourceUrl", "https://example.org/fixed-notes",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Sửa lại theo ghi chú")),
+                "changes", List.of(Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "HP", "oldValue", 3500,
+                        "newValue", 3700, "unit", "POINT"),
+                        Map.of("type", "MECHANIC", "changeKind", "REWORK", "mechanicKey", "fixture", "description",
+                                "Reworked again"),
+                        Map.of("type", "OTHER", "changeKind", "OTHER", "description", "Added later"))),
+                204);
+
+        var rewritten = heroChanges(listed).getFirst();
+        assertThat(rewritten).containsEntry("id", changeSet.toString())
+                .containsEntry("sourceUrl", "https://example.org/fixed-notes")
+                .containsEntry("summary", "Sửa lại theo ghi chú").containsEntry("overallKind", "BUFF");
+        assertThat((List<Map<String, Object>>) rewritten.get("changes")).extracting(line -> line.get("type"))
+                .containsExactly("HERO_STAT_CHANGE", "HERO_MECHANIC_CHANGE", "HERO_OTHER_CHANGE");
+        assertThat(((Number) changeOfType(rewritten, "HERO_STAT_CHANGE").get("newValue")).intValue()).isEqualTo(3700);
+        var moved = changeOfType(rewritten, "HERO_MECHANIC_CHANGE");
+        assertThat(moved).containsEntry("description", "Reworked again");
+        assertThat((Map<String, Object>) moved.get("previous")).containsEntry("description", "Earlier behaviour");
+        assertThat(jdbc.sql("SELECT count(*) FROM access.audit_event WHERE aggregate_id=? AND "
+                + "action='HERO_PATCH_CHANGE_EDITED'").param(hero).query(Long.class).single()).isEqualTo(1L);
+
+        // A rewrite follows the rules of recording; outside it the history still refuses changes.
+        send(put(edit), Map.of("sourceUrl", "https://example.org/fixed-notes",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Sai chỉ số")),
+                "changes", List.of(Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "MANA", "oldValue", 1,
+                        "newValue", 2, "unit", "POINT"))),
+                422);
+        send(put(edit), Map.of("sourceUrl", "ftp://example.org/notes",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Sai nguồn")),
+                "changes", List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description", "x"))), 422);
+        assertThat(heroChanges(listed).getFirst()).containsEntry("summary", "Sửa lại theo ghi chú");
+        send(put(ROOT + "/admin/hero-changes/" + UUID.randomUUID()), Map.of("sourceUrl", "https://example.org/n",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "x")),
+                "changes", List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description", "x"))), 404);
+        mvc.perform(put(edit).with(jwt().authorities(new SimpleGrantedAuthority("catalog:read")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("sourceUrl", "https://example.org/n",
+                        "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "x")),
+                        "changes", List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description", "x"))))))
+                .andExpect(status().isForbidden());
+        assertThatThrownBy(() -> jdbc.sql("UPDATE hero.hero_patch_change_set SET source_url = 'https://x.org' "
+                + "WHERE id = ?").param(changeSet).update()).hasMessageContaining("append only");
+    }
+
     private UUID publishedHero(String code, UUID context) throws Exception {
         var draft = send(post(ROOT + "/admin/heroes"), Map.of("code", code, "name", code, "initialLocale", "vi-VN",
                 "rulesetId", ruleset, "contextId", context), 201);

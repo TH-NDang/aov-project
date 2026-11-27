@@ -26,6 +26,7 @@ import com.wikiaov.hero.internal.domain.HeroChanges.Summary;
 import com.wikiaov.hero.internal.domain.HeroChanges.VisualChange;
 import com.wikiaov.platform.CatalogLocales;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,11 +45,12 @@ public class HeroPatchHistory {
     private final MechanicChangeRepository mechanics;
     private final MechanicChangePreviousRepository previous;
     private final HeroPatchChangePositionRepository positions;
+    private final HeroChangeSetRewriteRepository rewrites;
 
     public HeroPatchHistory(HeroPatchChangeSetRepository changeSets, HeroPatchChangeTranslationRepository translations,
             HeroChangeClassificationRepository changes, HeroPatchAssessmentRepository assessments,
             MechanicChangeRepository mechanics, MechanicChangePreviousRepository previous,
-            HeroPatchChangePositionRepository positions) {
+            HeroPatchChangePositionRepository positions, HeroChangeSetRewriteRepository rewrites) {
         this.changeSets = changeSets;
         this.translations = translations;
         this.changes = changes;
@@ -56,6 +58,7 @@ public class HeroPatchHistory {
         this.mechanics = mechanics;
         this.previous = previous;
         this.positions = positions;
+        this.rewrites = rewrites;
     }
 
     public void create(UUID id, UUID variantId, HeroChanges.Record input,
@@ -85,7 +88,8 @@ public class HeroPatchHistory {
         translations.save(value);
     }
 
-    public void appendChange(UUID changeSetId, int order, Change change) {
+    /** Appends one line and returns its id. */
+    public UUID appendChange(UUID changeSetId, int order, Change change) {
         HeroChangeClassification value = switch (change) {
             case StatChange input -> stat(input);
             case SkillChange input -> skill(input);
@@ -101,6 +105,55 @@ public class HeroPatchHistory {
         value.setSortOrder(order);
 
         changes.save(value);
+        return value.getId();
+    }
+
+    /**
+     * Rewrites a recorded change set in place (ADR-016, 2026-11-27): the source link, the summaries of the given
+     * locales and every line. What a mechanic did before moves to the first new line of the same mechanic and is
+     * dropped when no line names that mechanic any more.
+     */
+    public void rewrite(UUID changeSetId, String sourceUrl, List<Summary> summaries, List<Change> lines) {
+        var kept = previousByMechanic(changeSetId);
+
+        rewrites.openRewrite();
+        rewrites.replaceSourceUrl(changeSetId, sourceUrl);
+        rewrites.deleteTranslations(changeSetId, summaries.stream().map(Summary::locale).toList());
+        rewrites.deletePrevious(changeSetId);
+        rewrites.deleteLines(changeSetId);
+
+        summaries.forEach(summary -> appendTranslation(changeSetId, summary));
+        int order = 0;
+        for (var line : lines) {
+            UUID id = appendChange(changeSetId, order++, line);
+            var earlier = line instanceof MechanicChange mechanic ? kept.remove(mechanic.mechanicKey()) : null;
+            if (earlier != null) {
+                previous.save(movedPrevious(earlier, id));
+            }
+        }
+        previous.flush();
+    }
+
+    private Map<String, MechanicChangePrevious> previousByMechanic(UUID changeSetId) {
+        var keys = mechanics.findByChangeSetIdInOrderBySortOrderAscIdAsc(List.of(changeSetId)).stream()
+                .collect(Collectors.toMap(MechanicChangeClassification::getId,
+                        MechanicChangeClassification::getMechanicKey));
+        var kept = new HashMap<String, MechanicChangePrevious>();
+        previous.findAllById(keys.keySet()).forEach(value -> kept.putIfAbsent(keys.get(value.getMechanicChangeId()),
+                value));
+        return kept;
+    }
+
+    private static MechanicChangePrevious movedPrevious(MechanicChangePrevious earlier, UUID mechanicChangeId) {
+        var value = new MechanicChangePrevious();
+        value.setMechanicChangeId(mechanicChangeId);
+        value.setDescription(earlier.getDescription());
+        value.setSourceUrl(earlier.getSourceUrl());
+        value.setCreatedAt(earlier.getCreatedAt());
+        value.setCreatedByIssuer(earlier.getCreatedByIssuer());
+        value.setCreatedBySubject(earlier.getCreatedBySubject());
+
+        return value;
     }
 
     public Optional<MechanicChangeClassification> mechanicChange(UUID id) {
@@ -123,6 +176,10 @@ public class HeroPatchHistory {
         value.setCreatedBySubject(actor.subject());
 
         previous.saveAndFlush(value);
+    }
+
+    public Optional<Header> header(UUID changeSetId) {
+        return changeSets.header(changeSetId);
     }
 
     public Optional<UUID> heroId(UUID changeSetId) {

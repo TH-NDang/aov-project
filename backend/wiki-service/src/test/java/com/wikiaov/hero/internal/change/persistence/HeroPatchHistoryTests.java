@@ -50,8 +50,9 @@ class HeroPatchHistoryTests {
     private final MechanicChangeRepository mechanics = mock(MechanicChangeRepository.class);
     private final MechanicChangePreviousRepository previous = mock(MechanicChangePreviousRepository.class);
     private final HeroPatchChangePositionRepository positions = mock(HeroPatchChangePositionRepository.class);
+    private final HeroChangeSetRewriteRepository rewrites = mock(HeroChangeSetRewriteRepository.class);
     private final HeroPatchHistory history = new HeroPatchHistory(sets, translations, changes, assessments, mechanics,
-            previous, positions);
+            previous, positions, rewrites);
 
     @Test
     void batchesHistoryAndKeepsRequestedVietnameseAndAlphabeticalLocaleFallback() {
