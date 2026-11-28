@@ -220,13 +220,27 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     }
     await changeLanguage("en-US")
     assert.match(document.querySelector("table")!.textContent!, /QA Sword/)
-    assert.equal(button("Thiếu bản dịch"), undefined, "Translation filter follows the selected reference kind")
+    assert.equal(button("Thiếu tiếng Anh"), undefined, "Translation filter follows the selected reference kind")
     await act(async () => button("Tướng").click())
-    assert.match(button("Thiếu bản dịch").textContent!, /2/)
-    await act(async () => button("Thiếu bản dịch").click())
+    assert.match(button("Thiếu tiếng Anh").textContent!, /EN\s*2/)
+    assert.ok(
+      document.querySelector('[aria-label="Thêm tên tiếng Anh cho Airi"]'),
+      "A hero without an English name is marked on its row",
+    )
+    await act(async () => button("Thiếu tiếng Anh").click())
+    assert.equal(button("Thiếu tiếng Anh").getAttribute("aria-pressed"), "true")
     assert.equal(document.querySelectorAll("tbody tr").length, 2)
     await changeLanguage("vi-VN")
     assert.equal(document.querySelectorAll("tbody tr").length, 0)
+    assert.equal(
+      button("Thiếu tiếng Việt").getAttribute("aria-pressed"),
+      "true",
+      "The language being filtered keeps its toggle once nothing is missing",
+    )
+    await act(async () => button("Thiếu tiếng Anh").click())
+    assert.equal(language.value, "en-US", "Choosing a language with gaps reads the catalog in it")
+    assert.equal(document.querySelectorAll("tbody tr").length, 2)
+    await changeLanguage("vi-VN")
     await act(async () => button("Xóa bộ lọc").click())
     assert.ok(document.querySelectorAll("tbody tr").length > 2)
     assert.equal(button("Tất cả").getAttribute("aria-pressed"), "true")

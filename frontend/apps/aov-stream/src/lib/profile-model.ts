@@ -7,6 +7,8 @@ export interface UserProfile {
   timeZone: string
   dateFormat?: string
   currency: string | null
+  /** Whether Stream translates posts without being asked; missing from services older than ADR-037. */
+  autoTranslate?: boolean
   avatarAssetId: string | null
   avatarUrl: string | null
   version: number
@@ -17,7 +19,7 @@ export type ProfileDraft = Pick<
   UserProfile,
   "displayName" | "biography" | "locale" | "timeZone" | "currency" | "avatarAssetId"
 >
-export type ProfileRequest = ProfileDraft & { expectedVersion: number; dateFormat?: string }
+export type ProfileRequest = ProfileDraft & { expectedVersion: number; dateFormat?: string; autoTranslate?: boolean }
 export interface BrowserPreferences {
   languages: readonly string[]
   timeZone?: string

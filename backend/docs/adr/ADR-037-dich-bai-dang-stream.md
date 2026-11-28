@@ -73,7 +73,9 @@ trả bài đã dịch, không cache ở trình duyệt. Lỗi: 400 `TRANSLATION
 `budget`.
 
 **Tự dịch.** Hồ sơ người dùng có cờ `autoTranslate` (wiki-service, V089). Khách dùng bộ nhớ của trình duyệt. Khi bật,
-Stream dịch dần các bài đang hiện trên màn hình sang ngôn ngữ giao diện, vài bài một lúc.
+Stream dịch dần các bài đang hiện trên màn hình sang ngôn ngữ giao diện, vài bài một lúc. Bài có ảnh mà lời đã đúng
+ngôn ngữ người đọc thì không tự dịch, để tiết kiệm lượt dịch mỗi giờ; người đọc dịch chữ trong ảnh bằng mục "Dịch chữ
+trong ảnh" trong menu của bài.
 
 ## Hệ quả
 

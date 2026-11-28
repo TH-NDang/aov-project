@@ -6,9 +6,11 @@ import {
   PublicAccountMenu,
   PublicAccountSettings,
   PublicAccountSummary,
+  PublicAccountSwitch,
 } from "@aov/ui/components/public-account-menu"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { chooseAutoTranslate, useAccountAutoTranslate, useAutoTranslate } from "@aov/ui/lib/auto-translate"
 import { useAccountCurrency } from "@aov/ui/lib/currency"
 import { publicAuthError } from "@aov/ui/lib/public-auth"
 import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
@@ -17,6 +19,7 @@ import { useStreamLocale } from "./stream-locale"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { completeLogin, signIn, signOut, useCommunitySession } from "../lib/stream-auth"
 import { useNotifications, useReadNotifications, useUnreadCount } from "../lib/community-queries"
+import { useTranslationStatus } from "../lib/translation-queries"
 import { TimeAgo } from "./community-ui"
 import { StreamShell, WIKI_URL } from "./stream-shell"
 import { StreamHead } from "./stream-head"
@@ -48,10 +51,17 @@ export function CommunitySessionButton() {
     const saved = await saveProfile(profileRequest({ ...profileDraft(latest), currency }, latest.version))
     client.setQueryData(accountKeys.profile(session.revision), saved)
   })
+  useAccountAutoTranslate(profile.data, async (autoTranslate) => {
+    const latest = await wikiRequest<UserProfile>("/users/me")
+    const saved = await saveProfile({ ...profileRequest(profileDraft(latest), latest.version), autoTranslate })
+    client.setQueryData(accountKeys.profile(session.revision), saved)
+  })
   const { locale, setLocale, text } = useStreamLocale()
   const { theme, setTheme } = useStreamTheme()
   const mobile = usePageLayout() === "compact"
   const unread = useUnreadCount().data?.unread ?? 0
+  const translation = useTranslationStatus()
+  const autoTranslate = useAutoTranslate()
   const accountProps = {
     product: "stream" as const,
     locale,
@@ -63,6 +73,14 @@ export function CommunitySessionButton() {
     loading: session.status === "loading",
     onSignIn: () => signIn(),
     onSignOut: () => signOut(),
+    settings: translation.data?.enabled && (
+      <PublicAccountSwitch
+        icon={<StreamIcon name="globe" size={17} />}
+        label={text("Tự dịch bài đăng", "Translate posts")}
+        checked={autoTranslate}
+        onChange={(on) => void chooseAutoTranslate(on)}
+      />
+    ),
   }
   const links =
     session.status === "authenticated" &&

@@ -14,6 +14,15 @@ const PROBLEMS: Record<string, [string, string]> = {
     "Thông tin chưa hợp lệ hoặc trạng thái đã thay đổi. Hãy kiểm tra lại trước khi gửi.",
     "Some details are not valid, or the status has changed. Please check again before sending.",
   ],
+  TRANSLATION_RATE_LIMITED: [
+    "Bạn đã dịch nhiều bài trong giờ qua. Thử lại sau nhé.",
+    "You have translated many posts in the last hour. Try again later.",
+  ],
+  TRANSLATION_UNAVAILABLE: ["Tạm thời chưa dịch được bài viết.", "Posts cannot be translated right now."],
+  TRANSLATION_FAILED: [
+    "Chưa dịch được bài này. Thử lại sau nhé.",
+    "This post could not be translated. Try again later.",
+  ],
 }
 
 /**
