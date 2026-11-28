@@ -1123,7 +1123,8 @@ ngữ, thị trường hoặc mô tả ngắn, tối đa 80 ký tự) và `local
 hay URL; danh sách được thay cả cụm. V079 cũng bỏ ràng buộc `hero_patch_change_set_notes_source_check`: change set
 `PATCH_NOTES` có thể không có link riêng khi patch đã có link chung (ứng dụng kiểm tra một trong hai). V085 đưa mọi
 `source_url` khác nhau của change set `PATCH_NOTES` lên `patch.variant_source` của variant (nhãn và ngôn ngữ suy từ
-tên miền, tối đa 10 link); cột `source_url` giữ nguyên.
+tên miền, tối đa 10 link); cột `source_url` giữ nguyên. V088 (28/11/2026, ADR-037) thêm `region_code` tùy chọn: mã
+thị trường của bài (ứng dụng kiểm tra mã có trong `patch.region`, không có khóa ngoại); mỗi variant tối đa 20 link.
 
 ## 27. `patch.patch_release`
 
@@ -1160,6 +1161,10 @@ Validation application:
 
 - variant ruleset phải phù hợp RegionRulesetAssignment tại `effective_at`;
 - không schedule release mâu thuẫn timeline.
+
+Từ 28/11/2026 (ADR-037) Admin có thể thay mọi dòng của một variant trong một lần (`PUT
+admin/patch-variants/{id}/releases`). Khi so thứ tự timeline, dòng của chính variant đó không tính, để dời giờ của một
+patch không bị chặn bởi giờ cũ của nó. Không thêm bảng hay cột: thời điểm chung của các thị trường chỉ có trong Admin.
 
 ---
 
@@ -2066,14 +2071,15 @@ Migration V047 tạo schema `video` và bảng `video.subject_video`, thuộc mo
 | Cột | Ý nghĩa |
 |---|---|
 | `id` | UUID |
-| `subject_kind` | `HERO`, `SKIN`, `ITEM`, `ENCHANTMENT`, `ARCANA`, `SPELL` (`SKILL` bỏ từ V083) |
-| `subject_id` | Định danh mục; với `SKIN` là định danh tướng |
+| `subject_kind` | `HERO`, `SKIN`, `ITEM`, `ENCHANTMENT`, `ARCANA`, `SPELL`, `PATCH` (từ V089; `SKILL` bỏ từ V083) |
+| `subject_id` | Định danh mục; với `SKIN` là định danh tướng, với `PATCH` là định danh variant |
 | `subject_key` | Khóa trang phục; bắt buộc với `SKIN` và phải null với loại khác |
-| `purpose` | `INTRO`, `GUIDE_BASIC`, `GUIDE_ADVANCED`, `SKILL_DEMO`, `SKIN_SHOWCASE`, `SKIN_TRAILER`, `LORE`, `PATCH_CHANGE`, `OTHER` |
+| `purpose` | `INTRO`, `GUIDE_BASIC`, `GUIDE_ADVANCED`, `SKILL_DEMO`, `SKIN_SHOWCASE`, `SKIN_TRAILER`, `LORE`, `PATCH_CHANGE`, `PATCH_PREVIEW`, `PATCH_OVERVIEW`, `PATCH_REVIEW`, `OTHER` |
 | `title`, `note`, `channel_name`, `published_on` | Thông tin hiển thị |
+| `published_at`, `locale` | Thời điểm đăng và ngôn ngữ của video (V089), tùy chọn |
 | `url`, `provider`, `provider_video_id` | Liên kết đã chuẩn hóa; `provider_video_id` chỉ có khi nhúng được |
 | `start_seconds`, `duration_seconds` | Mốc bắt đầu và thời lượng |
-| `patch_variant_id` | Áp dụng từ patch này; null là mọi phiên bản |
+| `patch_variant_id` | Áp dụng từ patch này; null là mọi phiên bản. Với `PATCH` luôn bằng `subject_id` |
 | `display_order` | Thứ tự trong một mục |
 | `status` | `PUBLISHED`, `DRAFT`, `HIDDEN` |
 | `origin` | `MANUAL`, `IMPORT` |
@@ -2091,6 +2097,12 @@ Migration V083 (27/11/2026) bỏ loại `SKILL`: video của kỹ năng thành v
 cũ. Khi tướng đã có cùng `(url, start_seconds)`, hoặc hai kỹ năng cùng giữ một video, chỉ giữ một dòng: dòng
 `PUBLISHED` trước, rồi dòng của tướng, rồi dòng cũ nhất; dòng còn lại bị xóa, không ghi audit. Ràng buộc
 `subject_kind` và `subject_video_key_matches_kind` được tạo lại không có `SKILL`.
+
+Migration V089 (28/11/2026, ADR-037) thêm loại `PATCH` và ba mục đích `PATCH_PREVIEW`, `PATCH_OVERVIEW`,
+`PATCH_REVIEW` (ứng dụng chỉ cho video `PATCH` nhận ba mục đích này và `OTHER`), cột `published_at`
+`TIMESTAMPTZ` và `locale VARCHAR(35)`, ràng buộc `subject_video_patch_names_itself` (`subject_kind <> 'PATCH' OR
+patch_variant_id = subject_id`) và chỉ mục một phần `subject_video_patch_idx (patch_variant_id, status) WHERE
+patch_variant_id IS NOT NULL` cho trang patch.
 
 ## Chế độ chơi và Cờ Liên quân — V057 (ADR-023)
 
