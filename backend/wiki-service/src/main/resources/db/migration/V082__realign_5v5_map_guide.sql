@@ -1494,14 +1494,14 @@ SELECT '8e1d4a62-7c3b-4f05-a9e8-3b6c2d1f0a74', seed.mode_id, 2, 'PUBLISHED', 1, 
           "side": "BLUE",
           "label": "Đường Caesar",
           "x": 3.5,
-          "y": 38.5
+          "y": 32.9
         },
         {
           "key": "xanh-giua",
           "side": "BLUE",
           "label": "Đường giữa",
-          "x": 35.7,
-          "y": 64.3
+          "x": 36.9,
+          "y": 63.1
         },
         {
           "key": "xanh-rong",
@@ -1515,14 +1515,14 @@ SELECT '8e1d4a62-7c3b-4f05-a9e8-3b6c2d1f0a74', seed.mode_id, 2, 'PUBLISHED', 1, 
           "side": "RED",
           "label": "Đường Rồng",
           "x": 96.5,
-          "y": 61.5
+          "y": 67.1
         },
         {
           "key": "do-giua",
           "side": "RED",
           "label": "Đường giữa",
-          "x": 64.3,
-          "y": 35.7
+          "x": 63.1,
+          "y": 36.9
         },
         {
           "key": "do-caesar",
