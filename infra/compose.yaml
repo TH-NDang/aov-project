@@ -14,7 +14,7 @@ x-logging: &logging
 # Object storage is Cloudflare R2 (ADR-021, ADR-030). Its values default to empty instead of stopping Compose, so that
 # preflight can list every one that is missing at once.
 x-storage-tool: &storage-tool
-  image: rclone/rclone:1.71
+  image: rclone/rclone:1.76
   entrypoint: ["/bin/sh", "/scripts/media.sh"]
   environment:
     RCLONE_CONFIG_STORE_TYPE: s3
@@ -32,7 +32,7 @@ x-storage-tool: &storage-tool
   logging: *logging
 
 x-database-tool: &database-tool
-  image: postgres:17.6
+  image: postgres:17.11
   environment:
     PGUSER: ${POSTGRES_SUPERUSER:?set in .env}
     PGPASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
@@ -45,7 +45,7 @@ x-database-tool: &database-tool
 services:
   # One-shot: stops the start while an R2 value is missing, or when a public origin still has sample secrets.
   preflight:
-    image: postgres:17.6
+    image: postgres:17.11
     entrypoint: ["/bin/sh", "/scripts/preflight.sh"]
     environment:
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
@@ -77,7 +77,7 @@ services:
     logging: *logging
 
   postgres:
-    image: postgres:17.6
+    image: postgres:17.11
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_SUPERUSER:?set in .env}
@@ -138,7 +138,7 @@ services:
         condition: service_healthy
 
   redis:
-    image: redis:8.2-alpine
+    image: redis:8.10-alpine
     restart: unless-stopped
     # A cache that can be lost (ADR-012): no persistence, bounded memory, reachable only on this network.
     command:
@@ -173,7 +173,7 @@ services:
 
   # Run by scheduled.sh backup after the nightly dump: copies new dumps to the offsite bucket, never deleting one.
   db-offsite:
-    image: rclone/rclone:1.71
+    image: rclone/rclone:1.76
     profiles: [ops]
     entrypoint: ["/bin/sh", "/scripts/offsite.sh"]
     environment:
