@@ -157,6 +157,8 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `REQUIRE_STAFF_OTP`, `VERIFY_EMAIL` | Chỉ cho `keycloak-harden`, mặc định `false`; xem [Bảo mật realm](#bảo-mật-realm) |
 | `COMMUNITY_EXCHANGE_RATES_ENABLED` | Lấy tỷ giá hằng ngày từ `api.frankfurter.dev`; đặt `false` nếu không muốn gọi ra ngoài |
 | `YOUTUBE_API_KEY` | Khóa YouTube Data API v3 của `community-service`, cho phần xem kênh YouTube trong web. Tạo riêng cho máy chủ trên Google Cloud, chỉ cho phép YouTube Data API v3 và địa chỉ IP của máy chủ. Để trống thì chỉ đọc feed công khai của kênh |
+| `ANTHROPIC_API_KEY` | Khóa Claude API của `community-service`, dùng để dịch bài đăng Stream (ADR-037). Tạo trong một workspace riêng của Claude Console và đặt giới hạn chi tiêu ở đó. Để trống thì ẩn nút Dịch |
+| `COMMUNITY_TRANSLATION_MONTHLY_BUDGET_USD`, `COMMUNITY_TRANSLATION_HOURLY` | Tùy chọn: số USD tối đa cho việc dịch trong một tháng (UTC), mặc định 5; số bài mới một tài khoản hoặc địa chỉ được dịch trong một giờ, mặc định 30 |
 | `IMAGE_TAG`, `WIKI_MEM_LIMIT`, `COMMUNITY_MEM_LIMIT`, `KEYCLOAK_MEM_LIMIT`, `PAGE_READER_MEM_LIMIT` | Tùy chọn: nhãn image, giới hạn RAM |
 
 Hai điều dễ nhầm khi đổi `.env` sau lần chạy đầu:

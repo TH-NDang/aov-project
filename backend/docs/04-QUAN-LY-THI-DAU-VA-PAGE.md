@@ -1076,6 +1076,20 @@ video, nút Đăng ký và Mở YouTube, video mới nhất làm thẻ lớn, h�
 - Service chỉ đọc kênh mà hồ sơ đã công bố đang link tới, và giữ câu trả lời trong bộ nhớ (thông tin kênh 24 giờ, video
   30 phút).
 
+## Dịch bài đăng (28/11/2026)
+
+Bài đăng trên Stream có nút Dịch khi `community-service` có khóa Claude API (ADR-037). Bản dịch thay tiêu đề và nội dung
+tại chỗ, nút "Xem bản gốc" đưa về bài gốc; ảnh có chữ thì có thêm một dòng dịch dưới ảnh nói ảnh ghi gì. Người dùng bật
+"Tự dịch bài đăng" trong tài khoản (khách thì lưu trên trình duyệt) để Stream tự dịch các bài đang hiện sang ngôn ngữ giao
+diện.
+
+- Model Claude Haiku 5.5. Prompt có bảng thuật ngữ của riêng bài, lấy từ bảng thuật ngữ dùng chung và danh mục tướng,
+  trang bị, phép bổ trợ, ngọc, phù hiệu của wiki-service, nên "Trừng trị" thành "Punish", "bùa xanh" thành "blue buff".
+- Mỗi bài dịch một lần cho mỗi ngôn ngữ rồi lưu; sửa bài thì lần đọc sau dịch lại. Bài đã đúng ngôn ngữ người đọc và không
+  có ảnh không cần gọi model.
+- Giới hạn: 30 bản dịch mới mỗi giờ cho một tài khoản hoặc địa chỉ, và ngân sách mỗi tháng (mặc định 5 USD). Hết ngân sách
+  thì nút Dịch ẩn tới tháng sau.
+
 ## Kiểm chứng dữ liệu giải (28/11/2026)
 
 Phần lớn dữ liệu giải được nhập hoặc do AI đọc từ nguồn, chưa được chủ dự án tự đối chiếu. Admin cho người có quyền
@@ -1189,6 +1203,11 @@ V029 phục vụ "Kiểm chứng dữ liệu giải": bảng `tournament.content
 part, content_token, label, note, verified_at, verified_by, verified_by_name), unique(tournament_id, part, content_token),
 index (tournament_id, verified_at DESC). CHECK giữ dạng của `part` và token. Không đổi dữ liệu.
 
+V030 phục vụ "Dịch bài đăng": bảng `community.post_translation` (id, post_id FK bài, xóa theo bài, locale, source_hash,
+source_language, title, body, images jsonb, model, input_tokens, output_tokens, cost_micros, failed_checks jsonb,
+created_at), unique(post_id, locale); bảng `community.translation_usage` (month là ngày đầu tháng UTC, calls,
+input_tokens, output_tokens, cost_micros, updated_at) cộng dồn mỗi lời gọi Claude API. Không đổi dữ liệu.
+
 "Liên kết giữa các bản ghi thi đấu" (19/11/2026) không thêm migration: các trường mới nằm trong tài liệu jsonb, và dữ liệu
 cũ được điền bằng script chạy tay thay vì migration (ADR-032).
 
@@ -1216,6 +1235,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
 | GET /pages/{id}/youtube-channel?url= | Kênh YouTube sau một link của hồ sơ đã công bố (`url` đúng như hồ sơ ghi): {id,title,handle,description,avatarUrl,bannerUrl,subscriberCount,videoCount,url,videos,more}; `videos` là video mới nhất. 404 `CHANNEL_NOT_FOUND` khi hồ sơ không có link đó hoặc link không phải kênh, 503 `CHANNEL_UNAVAILABLE` khi chưa đọc được YouTube (ADR-034) |
 | GET /pages/{id}/youtube-channel/videos?url=&pageToken= | Video cũ hơn của kênh đó, 24 video một lần, mới trước: {videos,nextPageToken}. Không có `pageToken` thì bắt đầu từ video mới nhất; client bỏ video đã hiện |
+| GET /translation | {enabled,locales}: có dịch được không (có khóa và còn ngân sách tháng) và các ngôn ngữ dịch sang (ADR-037) |
+| GET /posts/{id}/translation?locale= | Bài đã công bố trên page công khai, dịch sang `locale`: {postId,locale,sourceLanguage,sameLanguage,title,body,images,model}; `images` mỗi ảnh {index,hasText,language,text}. `Cache-Control: no-store`. 400 `TRANSLATION_UNSUPPORTED_LOCALE`, 429 `TRANSLATION_RATE_LIMITED`, 502 `TRANSLATION_FAILED`, 503 `TRANSLATION_UNAVAILABLE` (`reason` disabled hoặc budget) |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
 | GET /admin/tournaments/facets?q=&alsoRegions=&status=&tier=&region=&year=&level= | {total,statuses,tiers,regions,years}: số giải mỗi giá trị lọc còn lại theo từ khóa và các bộ lọc khác; `level=MAIN` đếm theo giải chính |
 | GET /admin/tournaments/{id}/game-patches | Mùa và patch của từng ván: tự ghi (`GAME`), theo dòng phiên bản của giai đoạn (`STAGE`) hoặc không có (`NONE`) |

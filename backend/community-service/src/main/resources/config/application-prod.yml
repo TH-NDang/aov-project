@@ -28,3 +28,7 @@ community:
     capability-clients: ${COMMUNITY_CAPABILITY_CLIENTS:admin-aov-backend}
   wiki-base-url: ${WIKI_BASE_URL}
   allowed-origins: ${COMMUNITY_ALLOWED_ORIGINS}
+  translation:
+    # Only the site's own image host: a post may link an image anywhere, and the service must not fetch addresses of
+    # this server's network.
+    image-hosts: ${COMMUNITY_TRANSLATION_IMAGE_HOSTS:img.athahub.com}

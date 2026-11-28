@@ -22,6 +22,7 @@
         <springdoc.version>3.1.1</springdoc.version>
         <spring-modulith.version>2.1.1</spring-modulith.version>
         <spotless.version>3.10.4</spotless.version>
+        <anthropic.version>3.3.0</anthropic.version>
     </properties>
     <dependencies>
         <!-- Modular monolith: module boundaries are verified by ModuleArchitectureTest -->
@@ -76,6 +77,12 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
+        </dependency>
+        <!-- Translates Stream posts with the Claude API (ADR-037) -->
+        <dependency>
+            <groupId>com.anthropic</groupId>
+            <artifactId>anthropic-java</artifactId>
+            <version>${anthropic.version}</version>
         </dependency>
         <!-- Tests: module boundaries, MVC slices with security, PostgreSQL through Testcontainers -->
         <dependency>
