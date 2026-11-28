@@ -47,6 +47,7 @@ import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { cn } from "@aov/ui/lib/utils"
 import { Page } from "@/components/page-header"
+import { ThemedLogoImg } from "@/components/themed-logo-img"
 import { AccessGate, type Access } from "@/features/esports/pages/esports-shell"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { pageApi, pageError, pageKeys, publicSite } from "../api/page-api"
@@ -266,11 +267,12 @@ function Editor({
         <div className="flex flex-wrap items-start gap-4 px-4 pb-4 @3xl/profile-editor:px-5">
           <div className="relative -mt-10 shrink-0 sm:-mt-12">
             <span className="flex size-20 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-muted text-muted-foreground sm:size-24">
-              {httpUrl(content.avatarUrl) ? (
-                <img src={content.avatarUrl!} alt={`Logo ${content.name}`} className="size-full object-contain" />
-              ) : (
-                <ProfileTypeIcon kind={entry.kind} roles={content.personRoles} className="size-6" />
-              )}
+              <ThemedLogoImg
+                url={httpUrl(content.avatarUrl) ? content.avatarUrl : null}
+                alt={`Logo ${content.name}`}
+                className="size-full object-contain"
+                fallback={<ProfileTypeIcon kind={entry.kind} roles={content.personRoles} className="size-6" />}
+              />
             </span>
             {access.canWrite && pictured && (
               <Button

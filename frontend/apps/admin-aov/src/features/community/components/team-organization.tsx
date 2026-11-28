@@ -1,10 +1,11 @@
 import { Link } from "react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { Building2, Users } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
+import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { ThemedAvatarImage } from "@/components/themed-logo-img"
 import { OrganizationPicker } from "@/features/competition/organization-picker"
 import { pageApi, pageError, pageKeys } from "../api/page-api"
 import { Section } from "./profile-form-primitives"
@@ -66,7 +67,7 @@ export function OwnedTeamsSection({ organizationId, actorKey }: { organizationId
               <li key={team.id}>
                 <Link to={`/pages/${team.id}`} className="flex items-center gap-3 px-3 py-2 hover:bg-muted">
                   <Avatar className="size-9 rounded-lg border bg-background">
-                    <AvatarImage src={team.content?.avatarUrl || undefined} alt="" className="object-contain" />
+                    <ThemedAvatarImage url={team.content?.avatarUrl} />
                     <AvatarFallback className="rounded-lg">
                       <ProfileTypeIcon kind="TEAM" className="size-4" />
                     </AvatarFallback>
