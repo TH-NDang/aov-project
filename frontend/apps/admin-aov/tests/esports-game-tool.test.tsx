@@ -120,15 +120,58 @@ test("a game does not end inside the next one of the match", async () => {
 
 test("the clock shown by the game finds its 0:00", async () => {
   const kept = await tool({ content: recordedGame({ durationSeconds: null }), at: 4158 })
-  await type(field("Đồng hồ game đang hiện"), "7:00")
-  await click(button("Khớp giờ vào trận"))
+  await type(field("Đồng hồ trên màn hình"), "7:00")
+  assert.match(group("Đồng hồ game").textContent ?? "", /Mốc đang cho 7:20, nhanh 20 giây/)
+  await click(button("Đặt lúc vào trận ở ▸1:02:18"))
   assert.equal(kept.content().sourceTimestampSeconds, 4158 - 420)
+  assert.equal(field("Đồng hồ trên màn hình").value, "", "a written clock would only grow stale")
+})
+
+test("a broadcast that comes into the game at 0:15 places its 0:00 fifteen seconds before", async () => {
+  const kept = await tool({
+    content: recordedGame({ sourceTimestampSeconds: undefined, durationSeconds: null }),
+    at: 3735,
+  })
+  const clock = field("Đồng hồ trên màn hình")
+  assert.equal(clock.placeholder, "phút:giây")
+  await type(clock, "0:15")
+  assert.match(group("Đồng hồ game").textContent ?? "", /0:00 của ván ở ▸1:02:00/)
+  assert.equal(button("Tạm dừng", group("Đồng hồ game")), undefined, "no pause before the game has a 0:00")
+  await act(async () => clock.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true })))
+  assert.equal(kept.content().sourceTimestampSeconds, 3720)
+  assert.equal(kept.changes.at(-1)?.text, "Ván 2 vào trận lúc ▸1:02:00")
+})
+
+test("a clock behind the record later in the game is a pause, which a second reading makes longer", async () => {
+  const kept = await tool({ content: recordedGame({ durationSeconds: null }), at: 4158 })
+  const clock = field("Đồng hồ trên màn hình")
+  await type(clock, "7:00")
+  await act(async () => clock.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true })))
+  assert.equal(kept.content().sourceTimestampSeconds, 3718, "0:00 stays where it was")
+  assert.deepEqual(kept.content().timeline?.pauses, [{ atSeconds: 420, durationSeconds: 20 }])
+  assert.equal(kept.changes.at(-1)?.text, "Đã ghi tạm dừng lúc 7:00, dừng 0:20")
+
+  // Read again while the game still stood: the same pause grows.
+  await act(async () => kept.play(4170))
+  await type(field("Đồng hồ trên màn hình"), "7:00")
+  await click(button("Tạm dừng 0:12 ở 7:00"))
+  assert.deepEqual(kept.content().timeline?.pauses, [{ atSeconds: 420, durationSeconds: 32 }])
+  assert.equal(kept.changes.at(-1)?.text, "Đã ghi tạm dừng lúc 7:00, dừng 0:32")
+  await act(async () => kept.undo())
+  assert.deepEqual(kept.content().timeline?.pauses, [{ atSeconds: 420, durationSeconds: 20 }])
+})
+
+test("a clock that agrees with the record says so and offers nothing", async () => {
+  await tool({ content: recordedGame({ durationSeconds: null }), at: 4158 })
+  await type(field("Đồng hồ trên màn hình"), "7:20")
+  assert.match(group("Đồng hồ game").textContent ?? "", /Khớp với mốc vào trận/)
+  assert.equal(group("Đồng hồ game").querySelectorAll("button").length, 0)
 })
 
 test("pauses are entered as positions of the video and can be removed", async () => {
   const kept = await tool({ at: 4018 })
   assert.equal(field("Mốc video bắt đầu tạm dừng").placeholder, "1:06:58", "the start shows what Lấy would take")
-  await click(within("Tạm dừng", "Lấy"))
+  await click(within("Tạm dừng", "Lấy lúc dừng"))
   assert.equal(field("Mốc video bắt đầu tạm dừng").value, "1:06:58")
   await type(field("Mốc video tiếp tục ván"), "1:08:28")
   await click(button("Thêm"))
@@ -240,21 +283,23 @@ test("the mark chosen to be typed takes the focus from the menu", async () => {
 
 test("the clock shown by the game is typed over a faint clock that goes on with the video", async () => {
   const kept = await tool({ content: recordedGame({ durationSeconds: null }), at: 4158 })
-  assert.equal(field("Đồng hồ game đang hiện").placeholder, "7:20")
+  assert.equal(field("Đồng hồ trên màn hình").placeholder, "7:20")
   await act(async () => kept.play(4758))
-  assert.equal(field("Đồng hồ game đang hiện").placeholder, "17:20")
-  assert.equal(field("Đồng hồ game đang hiện").value, "")
-  assert.equal(within("Đồng hồ game đang hiện", "Khớp giờ vào trận")!.disabled, true)
+  assert.equal(field("Đồng hồ trên màn hình").placeholder, "17:20")
+  assert.equal(field("Đồng hồ trên màn hình").value, "")
+  assert.equal(group("Đồng hồ game").querySelectorAll("button").length, 0, "nothing to do until a clock is typed")
 })
 
-test("the start of a pause is where the video is when it is taken, not when the tool opened", async () => {
+test("a pause is taken where the game stops and added where it runs again", async () => {
   const kept = await tool({ at: 4018 })
   await act(async () => kept.play(4100))
-  await click(within("Tạm dừng", "Lấy"))
-  await act(async () => kept.play(4190))
-  await click(within("Tạm dừng", "Lấy"))
+  await click(within("Tạm dừng", "Lấy lúc dừng"))
   assert.equal(field("Mốc video bắt đầu tạm dừng").value, "1:08:20")
-  assert.equal(field("Mốc video tiếp tục ván").value, "1:09:50")
+  await act(async () => kept.play(4190))
+  await click(within("Tạm dừng", "Lấy lúc chạy lại"))
+  assert.deepEqual(kept.content().timeline?.pauses, [{ atSeconds: 382, durationSeconds: 90 }])
+  assert.equal(kept.changes.at(-1)?.text, "Đã ghi tạm dừng lúc 6:22, dừng 1:30")
+  assert.equal(field("Mốc video bắt đầu tạm dừng").value, "", "the form is ready for the next pause")
 })
 
 test("two pauses removed one after the other within one save both stay removed", async () => {
