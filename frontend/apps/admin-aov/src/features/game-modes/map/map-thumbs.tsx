@@ -11,12 +11,12 @@ export const CATEGORY_COLOR: Record<Category, string> = {
   MECHANIC: "var(--foreground)",
 }
 
-/** The object's uploaded icon, or the Wiki's drawn symbol while it has none. */
+/** The object's uploaded icon on a dark disc, since game icons are light, or the Wiki's drawn symbol while it has none. */
 export function ObjectThumb({ object, src, size = "sm" }: { object: MapObject; src?: string; size?: "sm" | "lg" }) {
   const box = size === "lg" ? "size-16" : "size-8"
   return (
     <span
-      className={`inline-grid ${box} shrink-0 place-items-center overflow-hidden rounded-full border-2 bg-muted`}
+      className={`inline-grid ${box} shrink-0 place-items-center overflow-hidden rounded-full border-2 ${src ? "bg-black/80" : "bg-muted"}`}
       style={{ borderColor: CATEGORY_COLOR[object.category], color: CATEGORY_COLOR[object.category] }}
     >
       {src ? (
