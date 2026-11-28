@@ -91,4 +91,23 @@ public final class PatchCommands {
             LocalDate effectiveOn
     ) {
     }
+
+    /**
+     * Every market's release of one patch, replacing the ones recorded before. A market left out loses its release.
+     * Editors usually give each market the same moment, since a patch reaches every market at once and only the local
+     * clocks differ; a market that got it on another day keeps a moment of its own (2026-11-28).
+     */
+    public record ReleasePlan(
+            @NotNull @Size(max = 16) List<@NotNull @Valid PlannedRelease> releases
+    ) {
+    }
+
+    /** One market's release: an exact moment, or a calendar day of that market when the hour is not known. */
+    public record PlannedRelease(
+            @NotNull UUID regionId,
+            Instant effectiveAt,
+            LocalDate effectiveOn,
+            @Size(max = 2000) String sourceUrl
+    ) {
+    }
 }

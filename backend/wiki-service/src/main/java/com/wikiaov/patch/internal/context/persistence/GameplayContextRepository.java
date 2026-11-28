@@ -2,6 +2,7 @@ package com.wikiaov.patch.internal.context.persistence;
 
 import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.PatchMarketRelease;
 import com.wikiaov.patch.PatchReleaseReference;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import java.time.Instant;
@@ -60,6 +61,16 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
             where r.code=:region and rel.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED order by p.sequence desc,rel.effectiveAt desc
             """)
     List<PatchReleaseReference> publishedReleases(String region);
+
+    /** Every release of a variant that is not cancelled, a day-only release with the day it announced. */
+    @Query("""
+            select new com.wikiaov.patch.PatchMarketRelease(r.code,r.timezone,rel.effectiveAt,rel.effectiveOn)
+            from PatchRelease rel join Region r on r.id=rel.regionId
+            where rel.patchVariantId=:variantId
+                and rel.status<>com.wikiaov.patch.internal.domain.PatchReleaseStatus.CANCELLED
+            order by r.sortOrder,r.code
+            """)
+    List<PatchMarketRelease> marketReleases(UUID variantId);
 
     String MARKET_AUTHORING = """
             select new com.wikiaov.patch.AuthoringContext(rel.id,r.id,r.code,s.id,s.displayName,

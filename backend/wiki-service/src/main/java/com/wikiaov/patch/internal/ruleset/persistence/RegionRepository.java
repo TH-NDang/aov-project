@@ -29,5 +29,9 @@ public interface RegionRepository extends Repository<Region, UUID> {
     @Query("select r from Region r where r.id=:id and r.lifecycleState=com.wikiaov.patch.internal.domain.PatchLifecycleState.ACTIVE")
     Optional<Region> lockActiveById(UUID id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Region r order by r.id")
+    List<Region> lockAll();
+
     Region saveAndFlush(Region region);
 }

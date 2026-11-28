@@ -2,6 +2,7 @@ package com.wikiaov.patch.internal.context.application;
 
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.patch.PatchMarketRelease;
 import com.wikiaov.patch.PatchReleaseReference;
 import com.wikiaov.patch.PatchSources;
 import com.wikiaov.patch.PublishedPatch;
@@ -78,7 +79,16 @@ public class PatchQueries implements PatchCatalog {
                         ? null
                         : new PublishedPatch.Text(text.getLocale(), text.getTitle(), text.getSummary(),
                                 text.getDescription(), text.getLocale(), !locale.equals(text.getLocale())),
-                region, locale, variantId, rulesetId, effectiveAt, sources.of(variantId));
+                region, locale, variantId, rulesetId, effectiveAt, sources.of(variantId), markets(variantId));
+    }
+
+    /** A confirmed day keeps only its day: the moment its confirmation recorded is not when the game updated. */
+    private List<PatchMarketRelease> markets(UUID variantId) {
+        return contexts.marketReleases(variantId).stream()
+                .map(release -> release.effectiveOn() == null
+                        ? release
+                        : new PatchMarketRelease(release.region(), release.timeZone(), null, release.effectiveOn()))
+                .toList();
     }
 
     @Override

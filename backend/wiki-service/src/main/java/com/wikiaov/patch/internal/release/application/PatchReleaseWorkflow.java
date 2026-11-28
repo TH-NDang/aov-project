@@ -3,7 +3,9 @@ package com.wikiaov.patch.internal.release.application;
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
+import com.wikiaov.patch.internal.application.PatchCommands.PlannedRelease;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.ReleasePlan;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
@@ -18,6 +20,11 @@ import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -53,7 +60,7 @@ public class PatchReleaseWorkflow {
         var variant = releases.lockAndReadVariant(variantId);
         requirePublished(variant, "Publish the variant before scheduling a release.");
         if (input.effectiveAt() != null) {
-            requireConsistentTimeline(input.regionId(), variant, input.effectiveAt());
+            requireConsistentTimeline(input.regionId(), variantId, variant, input.effectiveAt());
         }
 
         var release = createRelease(variantId, input, seasonId);
@@ -79,10 +86,76 @@ public class PatchReleaseWorkflow {
         var appliedAt = activationInstant(release, region, now,
                 seasons.scheduleStart(release.getSeasonId(), target.regionId()).orElse(null));
         seasons.requireRelease(release.getSeasonId(), target.regionId(), appliedAt);
-        requireConsistentTimeline(target.regionId(), variant, appliedAt);
+        requireConsistentTimeline(target.regionId(), target.variantId(), variant, appliedAt);
 
         markApplied(release, appliedAt);
         record("PATCH_RELEASE_CONFIRMED", releaseId);
+    }
+
+    /**
+     * Makes the patch's releases those of the plan: a market left out loses its release, a market whose moment did not
+     * change keeps its row and confirmation, and a moved release starts over (an exact moment applies from then, a day
+     * waits for confirmation again). Closed markets may record exact moments too, since the Wiki does not read them.
+     */
+    public void replace(UUID variantId, ReleasePlan plan) {
+        var regionsById = new HashMap<UUID, Region>();
+        releases.lockAllRegions().forEach(region -> regionsById.put(region.getId(), region));
+        var selectedVariant = releases.lockVariantWithinRuleset(variantId);
+        var variant = releases.lockAndReadVariant(variantId);
+        var wanted = requireValidPlan(plan, regionsById.keySet());
+        if (!wanted.isEmpty()) {
+            requirePublished(variant, "Publish the variant before scheduling a release.");
+        }
+
+        var current = new HashMap<UUID, PatchRelease>();
+        releases.lockVariantReleases(variantId).forEach(release -> current.put(release.getRegionId(), release));
+        int removed = 0;
+        for (var release : current.values()) {
+            if (!wanted.containsKey(release.getRegionId())) {
+                releases.delete(release);
+                removed++;
+            }
+        }
+        releases.flush();
+
+        UUID seasonId = selectedVariant.getSeasonId();
+        int moved = 0;
+        int added = 0;
+        int relinked = 0;
+        for (var row : wanted.values()) {
+            var release = current.get(row.regionId());
+            String source = blankToNull(row.sourceUrl());
+            if (release != null && sameMoment(release, row)) {
+                if (!Objects.equals(source, release.getSourceUrl())) {
+                    release.setSourceUrl(source);
+                    relinked++;
+                }
+                continue;
+            }
+
+            if (row.effectiveAt() != null) {
+                seasons.requireRelease(seasonId, row.regionId(), row.effectiveAt());
+                requireConsistentTimeline(row.regionId(), variantId, variant, row.effectiveAt());
+            } else {
+                seasons.requireReleaseDate(seasonId, row.regionId(), row.effectiveOn());
+            }
+            if (release == null) {
+                releases.insert(createRelease(variantId,
+                        new Release(row.regionId(), row.effectiveAt(), null, source, seasonId, row.effectiveOn()),
+                        seasonId));
+                added++;
+            } else {
+                move(release, row, source, seasonId);
+                moved++;
+            }
+        }
+        releases.flush();
+
+        if (removed + moved + added + relinked > 0) {
+            audit.record(new AuditEntry(actors.require(), "PATCH_RELEASES_REPLACED", CatalogAggregates.PATCH,
+                    variantId, null, null, null, null,
+                    Map.of("removed", removed, "moved", moved, "added", added, "relinked", relinked)));
+        }
     }
 
     /**
@@ -130,13 +203,64 @@ public class PatchReleaseWorkflow {
         }
     }
 
-    private void requireConsistentTimeline(UUID regionId, VariantSnapshot variant, Instant effectiveAt) {
+    private void requireConsistentTimeline(UUID regionId, UUID variantId, VariantSnapshot variant,
+            Instant effectiveAt) {
         if (!releases.regionUsesRulesetAt(regionId, variant.rulesetId(), effectiveAt)) {
             throw invalid("The region does not use this ruleset at the release time.");
         }
-        if (releases.contradictsTimeline(regionId, variant, effectiveAt)) {
+        if (releases.contradictsTimeline(regionId, variantId, variant, effectiveAt)) {
             throw invalid("The release would contradict the region patch timeline.");
         }
+    }
+
+    private static Map<UUID, PlannedRelease> requireValidPlan(ReleasePlan plan, Set<UUID> knownRegions) {
+        if (plan == null || plan.releases() == null) {
+            throw invalid("Provide the releases of every market.");
+        }
+        var wanted = new LinkedHashMap<UUID, PlannedRelease>();
+        for (var row : plan.releases()) {
+            if (row == null || row.regionId() == null) {
+                throw invalid("Every release needs a market.");
+            }
+            if (!knownRegions.contains(row.regionId())) {
+                throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "Patch resource does not exist.");
+            }
+            if ((row.effectiveAt() == null) == (row.effectiveOn() == null)) {
+                throw invalid("Provide either an exact timestamp or a calendar date.");
+            }
+            String source = blankToNull(row.sourceUrl());
+            if (source != null && !source.matches("https?://\\S+")) {
+                throw invalid("Source URL must use HTTP or HTTPS.");
+            }
+            if (wanted.put(row.regionId(), row) != null) {
+                throw invalid("Give each market one release.");
+            }
+        }
+        return wanted;
+    }
+
+    /** A day stays the same release whatever moment its confirmation recorded; an exact moment must match exactly. */
+    private static boolean sameMoment(PatchRelease release, PlannedRelease row) {
+        if (release.getStatus() == PatchReleaseStatus.CANCELLED) {
+            return false;
+        }
+        if (row.effectiveOn() != null) {
+            return row.effectiveOn().equals(release.getEffectiveOn());
+        }
+        return release.getEffectiveOn() == null && row.effectiveAt().equals(release.getEffectiveAt());
+    }
+
+    private static void move(PatchRelease release, PlannedRelease row, String source, UUID seasonId) {
+        release.setEffectiveAt(row.effectiveAt());
+        release.setEffectiveOn(row.effectiveOn());
+        release.setConfirmedAt(null);
+        release.setStatus(row.effectiveAt() == null ? PatchReleaseStatus.DRAFT : PatchReleaseStatus.SCHEDULED);
+        release.setSourceUrl(source);
+        release.setSeasonId(seasonId);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     private static void requireAvailableRegion(Region region) {
