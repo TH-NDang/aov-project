@@ -76,7 +76,8 @@ public class PatchReleaseWorkflow {
         var now = clock.instant();
         requireAnnouncedDateReached(release, region, now);
         requirePublished(variant, "Publish the variant before confirming its release.");
-        var appliedAt = activationInstant(release, region, now);
+        var appliedAt = activationInstant(release, region, now,
+                seasons.scheduleStart(release.getSeasonId(), target.regionId()).orElse(null));
         seasons.requireRelease(release.getSeasonId(), target.regionId(), appliedAt);
         requireConsistentTimeline(target.regionId(), variant, appliedAt);
 
@@ -160,15 +161,22 @@ public class PatchReleaseWorkflow {
     /**
      * A release dated today becomes active at the confirmation instant, because the hour it reached the game is not
      * known. A release dated on an earlier day is a historical record: it was already in the game by the end of that
-     * day, so it becomes active from the start of that day in the market's time zone. This keeps the order of past
-     * patches, so a season archive can be confirmed after the fact.
+     * day, so it becomes active from the start of that day in the market's time zone, or from the start of its season
+     * when the season opens later that same day. This keeps the order of past patches, so a season archive can be
+     * confirmed after the fact.
      */
-    private static Instant activationInstant(PatchRelease release, Region region, Instant now) {
+    private static Instant activationInstant(PatchRelease release, Region region, Instant now, Instant seasonStart) {
         var zone = ZoneId.of(region.getTimezone());
-        if (release.getEffectiveOn().isBefore(now.atZone(zone).toLocalDate())) {
-            return release.getEffectiveOn().atStartOfDay(zone).toInstant();
+        if (!release.getEffectiveOn().isBefore(now.atZone(zone).toLocalDate())) {
+            return now;
         }
-        return now;
+
+        var dayStart = release.getEffectiveOn().atStartOfDay(zone).toInstant();
+        var nextDayStart = release.getEffectiveOn().plusDays(1).atStartOfDay(zone).toInstant();
+        if (seasonStart != null && seasonStart.isAfter(dayStart) && seasonStart.isBefore(nextDayStart)) {
+            return seasonStart;
+        }
+        return dayStart;
     }
 
     private static void requirePublished(VariantSnapshot variant, String detail) {

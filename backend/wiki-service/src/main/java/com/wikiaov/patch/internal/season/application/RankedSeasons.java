@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -202,6 +203,14 @@ public class RankedSeasons {
     public RankedSeason require(UUID id) {
         return seasons.findById(id)
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "Season not found."));
+    }
+
+    /** When the market's schedule of the season starts, if the season has one there. */
+    public Optional<Instant> scheduleStart(UUID seasonId, UUID regionId) {
+        if (seasonId == null) {
+            return Optional.empty();
+        }
+        return schedules.findBySeasonIdAndRegionId(seasonId, regionId).map(SeasonSchedule::getStartsAt);
     }
 
     public void requireRelease(UUID seasonId, UUID regionId, Instant time) {

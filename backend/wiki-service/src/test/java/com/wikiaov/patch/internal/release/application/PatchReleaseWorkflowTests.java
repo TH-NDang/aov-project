@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -262,6 +263,21 @@ class PatchReleaseWorkflowTests {
         assertThat(release.getConfirmedAt()).isEqualTo(dayStart);
         assertThat(release.getEffectiveOn()).isEqualTo(pastDay);
         assertThat(release.getStatus()).isEqualTo(PatchReleaseStatus.SCHEDULED);
+    }
+
+    @Test
+    void confirmsAPastDateFromItsSeasonStartWhenTheSeasonOpensLaterThatDay() {
+        LocalDate seasonDay = LOCAL_TODAY.minusDays(6);
+        Instant seasonStart = Instant.parse("2026-10-14T23:00:00Z");
+        var release = prepareConfirmation(seasonDay);
+        when(seasons.scheduleStart(seasonId, regionId)).thenReturn(Optional.of(seasonStart));
+        when(releases.regionUsesRulesetAt(regionId, rulesetId, seasonStart)).thenReturn(true);
+
+        workflow.confirm(releaseId);
+
+        verify(seasons).requireRelease(seasonId, regionId, seasonStart);
+        assertThat(release.getEffectiveAt()).isEqualTo(seasonStart);
+        assertThat(release.getConfirmedAt()).isEqualTo(seasonStart);
     }
 
     @Test
