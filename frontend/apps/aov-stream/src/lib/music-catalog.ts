@@ -13,6 +13,8 @@ export type MusicTrack = {
   tag?: string
   /** The length of the video, where it is known. */
   seconds?: number
+  /** Music with no words sung, which the list marks. */
+  instrumental?: boolean
 }
 
 export type MusicListCode = "SONGS" | "ARENA" | "HEROES" | "GAMING" | "MINE"
@@ -119,18 +121,72 @@ const HEROES: readonly MusicTrack[] = [
   { video: "KoNMpMFKA8E", title: "The One and Only", artist: "Nhạc Viện Ngôi Sao", tag: "Valentine", seconds: 182 },
 ]
 
-/** Music for playing to that gamers have kept for years: electronic tracks, the League of Legends anthems and rock. */
+/**
+ * Music for playing to that gamers have kept for years: Vietnamese songs, electronic tracks and rock. Tracks without
+ * sung words are marked.
+ */
 const GAMING: readonly MusicTrack[] = [
+  // Vietnamese songs gamers have played for years.
+  { video: "Jk38OqdAQxc", title: "Độ Tộc 2", artist: "Masew x Phúc Du x Pháo x Độ Mixi", tag: "2021", seconds: 211 },
+  { video: "HOGfrOK9a84", title: "Tộc Ca", artist: "Phúc Du x SONBEAT", tag: "2019", seconds: 191 },
+  { video: "EV-91JV4Fws", title: "Túy Âm", artist: "Xesi x Masew x Nhatnguyen", tag: "2017", seconds: 201 },
+  { video: "1pquvJRgIMY", title: "Ái Nộ", artist: "Masew x Khôi Vũ", tag: "2021", seconds: 232 },
+  { video: "qkPgUgkQE4Y", title: "Đế Vương", artist: "Đình Dũng", tag: "2021", seconds: 271 },
+  { video: "WX7dUj14Z00", title: "Bạc Phận", artist: "K-ICM x Jack", tag: "2019", seconds: 256 },
+  { video: "j8U06veqxdU", title: "Sóng Gió", artist: "K-ICM x Jack", tag: "2019", seconds: 350 },
+  {
+    video: "J1VzE0S-jzk",
+    title: "Cô Thắm Không Về",
+    artist: "Phát Hồ x JokeS Bii x Sinike ft. DinhLong",
+    tag: "2019",
+    seconds: 255,
+  },
+  { video: "Llw9Q6akRo4", title: "Lạc Trôi", artist: "Sơn Tùng M-TP", tag: "2017", seconds: 272 },
+  { video: "32sYGCOYJUM", title: "Chạy Ngay Đi", artist: "Sơn Tùng M-TP", tag: "2018", seconds: 274 },
+  {
+    video: "knW7-x7Y7RE",
+    title: "Hãy Trao Cho Anh",
+    artist: "Sơn Tùng M-TP ft. Snoop Dogg",
+    tag: "2019",
+    seconds: 263,
+  },
+  { video: "mw7Y0jQ8_BU", title: "2 Phút Hơn (KAIZ Remix)", artist: "Pháo", tag: "2021", seconds: 190 },
+  { video: "jgZkrA8E5do", title: "Bigcityboi", artist: "Binz x Touliver", tag: "2020", seconds: 224 },
+  {
+    video: "yET2SBRuNm0",
+    title: "Thủ Đô Cypher",
+    artist: "RPT Orijinn, Low G, RZ Mas, RPT MCK",
+    tag: "2020",
+    seconds: 175,
+  },
+  { video: "Q6ZNsHvspEg", title: "Gieo Quẻ", artist: "Hoàng Thùy Linh & Đen", tag: "2022", seconds: 260 },
+  { video: "LaxkmhiECfM", title: "Bên Trên Tầng Lầu", artist: "Tăng Duy Tân", tag: "2022", seconds: 191 },
+  { video: "vPz8ftK_4bk", title: "Đánh Đổi", artist: "Obito ft. MCK", tag: "2023", seconds: 227 },
+  { video: "GpmOn4RyzZI", title: "Cắt Đôi Nỗi Sầu", artist: "Tăng Duy Tân ft. Drum7", tag: "2023", seconds: 203 },
   // Electronic tracks NoCopyrightSounds put out, the ones streamers may play live.
   { video: "K4DyBUG242c", title: "On & On", artist: "Cartoon, Jéja ft. Daniel Levi", tag: "NCS 2015", seconds: 208 },
   { video: "3nQNiWdeH2Q", title: "Heroes Tonight", artist: "Janji ft. Johnning", tag: "NCS 2015", seconds: 208 },
   { video: "yJg-Y5byMMw", title: "Mortals", artist: "Warriyo ft. Laura Brehm", tag: "NCS 2016", seconds: 230 },
   { video: "jK2aIUmmdP4", title: "My Heart", artist: "Different Heaven & EH!DE", tag: "NCS 2013", seconds: 267 },
-  { video: "J2X5mJ3HDYE", title: "Invincible", artist: "DEAF KEV", tag: "NCS 2015", seconds: 273 },
-  { video: "TW9d8vYrVFQ", title: "Sky High", artist: "Elektronomia", tag: "NCS 2017", seconds: 238 },
+  { video: "J2X5mJ3HDYE", title: "Invincible", artist: "DEAF KEV", tag: "NCS 2015", seconds: 273, instrumental: true },
+  {
+    video: "TW9d8vYrVFQ",
+    title: "Sky High",
+    artist: "Elektronomia",
+    tag: "NCS 2017",
+    seconds: 238,
+    instrumental: true,
+  },
   { video: "p7ZsBPK656s", title: "Blank", artist: "Disfigure", tag: "NCS 2013", seconds: 209 },
   { video: "S19UcWdOA-I", title: "Fearless pt.II", artist: "Lost Sky ft. Chris Linton", tag: "NCS 2017", seconds: 194 },
-  { video: "__CRWE-L45k", title: "Symbolism", artist: "Electro-Light", tag: "NCS 2014", seconds: 291 },
+  {
+    video: "__CRWE-L45k",
+    title: "Symbolism",
+    artist: "Electro-Light",
+    tag: "NCS 2014",
+    seconds: 291,
+    instrumental: true,
+  },
   { video: "LHvYrn3FAgI", title: "Superhero", artist: "Unknown Brain ft. Chris Linton", tag: "NCS 2016", seconds: 182 },
   // Electronic tracks from the artists' own channels (NCS took Fade and Candyland down, so these are the artists').
   { video: "60ItHLz5WEA", title: "Faded", artist: "Alan Walker", tag: "2015", seconds: 213 },
@@ -147,40 +203,16 @@ const GAMING: readonly MusicTrack[] = [
     video: "dhYOPzcsbGM",
     title: "On My Way",
     artist: "Alan Walker, Sabrina Carpenter & Farruko",
-    tag: "PUBG Mobile",
+    tag: "2019",
     seconds: 217,
   },
-  { video: "vg95MYlTb3c", title: "Fade", artist: "Alan Walker", tag: "2014", seconds: 264 },
-  { video: "IhchfhxvPKI", title: "Candyland", artist: "Tobu", tag: "2015", seconds: 199 },
-  { video: "n8X9_MgEdCg", title: "Unity", artist: "TheFatRat", tag: "2014", seconds: 249 },
+  { video: "vg95MYlTb3c", title: "Fade", artist: "Alan Walker", tag: "2014", seconds: 264, instrumental: true },
+  { video: "IhchfhxvPKI", title: "Candyland", artist: "Tobu", tag: "2015", seconds: 199, instrumental: true },
+  { video: "n8X9_MgEdCg", title: "Unity", artist: "TheFatRat", tag: "2014", seconds: 249, instrumental: true },
   { video: "B7xai5u_tnk", title: "Monody", artist: "TheFatRat ft. Laura Brehm", tag: "2015", seconds: 291 },
   { video: "cMg8KaMdDYo", title: "Fly Away", artist: "TheFatRat ft. Anjulie", tag: "2017", seconds: 194 },
   { video: "KR-eV7fHNbM", title: "The Calling", artist: "TheFatRat ft. Laura Brehm", tag: "2016", seconds: 234 },
   { video: "ALZHF5UqnU4", title: "Alone", artist: "Marshmello", tag: "2016", seconds: 200 },
-  // The League of Legends anthems, from Riot's channel.
-  { video: "fmI_Ndrxy14", title: "Warriors", artist: "Imagine Dragons", tag: "Worlds 2014", seconds: 170 },
-  { video: "Zasx9hjo4WY", title: "Ignite", artist: "Zedd", tag: "Worlds 2016", seconds: 226 },
-  { video: "r6zIGXun57U", title: "Legends Never Die", artist: "Against The Current", tag: "Worlds 2017", seconds: 179 },
-  {
-    video: "fB8TyLTD7EE",
-    title: "RISE",
-    artist: "The Glitch Mob, Mako, The Word Alive",
-    tag: "Worlds 2018",
-    seconds: 210,
-  },
-  { video: "UOxkGD8qRB4", title: "POP/STARS", artist: "K/DA", tag: "2018", seconds: 203 },
-  {
-    video: "i1IKnWDecwA",
-    title: "Phoenix",
-    artist: "Cailin Russo, Chrissy Costanza",
-    tag: "Worlds 2019",
-    seconds: 208,
-  },
-  { video: "KbNL9ZyB49c", title: "Take Over", artist: "Jeremy McKinnon, MAX, Henry", tag: "Worlds 2020", seconds: 225 },
-  { video: "1Z6CHioIn3s", title: "Burn It All Down", artist: "PVRIS", tag: "Worlds 2021", seconds: 212 },
-  { video: "D9G1VOjN_84", title: "Enemy", artist: "Imagine Dragons x J.I.D", tag: "Arcane", seconds: 213 },
-  { video: "C3GouGa0noM", title: "GODS", artist: "NewJeans", tag: "Worlds 2023", seconds: 255 },
-  { video: "5FrhtahQiRc", title: "Heavy Is The Crown", artist: "Linkin Park", tag: "Worlds 2024", seconds: 226 },
   // Rock that has stood behind game montages for years.
   { video: "7wtfhZwyrcc", title: "Believer", artist: "Imagine Dragons", tag: "2017", seconds: 217 },
   { video: "kXYiU_JCYtU", title: "Numb", artist: "Linkin Park", tag: "2003", seconds: 187 },
@@ -188,7 +220,14 @@ const GAMING: readonly MusicTrack[] = [
   { video: "1mjlM_RnsVE", title: "Monster", artist: "Skillet", tag: "2009", seconds: 187 },
   { video: "LBr7kECsjcQ", title: "Centuries", artist: "Fall Out Boy", tag: "2014", seconds: 272 },
   { video: "_PBlykN4KIY", title: "Unstoppable", artist: "The Score", tag: "2017", seconds: 191 },
-  { video: "hKRUPYrAQoE", title: "Victory", artist: "Two Steps From Hell", tag: "2015", seconds: 329 },
+  {
+    video: "hKRUPYrAQoE",
+    title: "Victory",
+    artist: "Two Steps From Hell",
+    tag: "2015",
+    seconds: 329,
+    instrumental: true,
+  },
 ]
 
 /** The lists offered by the site, in the order they are shown; the reader's own links come after them. */

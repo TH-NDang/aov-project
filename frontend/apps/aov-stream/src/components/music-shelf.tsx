@@ -25,7 +25,10 @@ function pick(list: MusicListCode, index: number, compact: boolean) {
   if (compact) music.setShelf(false)
 }
 
-/** One track of a list: picture, title, singer and what it belongs to; the one that plays is marked. */
+/**
+ * One track of a list: picture, title, singer, what it belongs to and whether it has no words; the one that plays is
+ * marked.
+ */
 function TrackRow({
   list,
   index,
@@ -53,7 +56,14 @@ function TrackRow({
           <b>{track.title}</b>
           <span>{track.artist}</span>
         </span>
-        {track.tag && <span className="hub-music-tag">{track.tag}</span>}
+        {(track.instrumental || track.tag) && (
+          <span className="hub-music-tags">
+            {track.instrumental && (
+              <span className="hub-music-tag hub-music-bare">{text("Không lời", "Instrumental")}</span>
+            )}
+            {track.tag && <span className="hub-music-tag">{track.tag}</span>}
+          </span>
+        )}
       </button>
       {mine && (
         <button
