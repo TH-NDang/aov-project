@@ -6,6 +6,7 @@ import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { usePostTranslation, useTranslationStatus } from "../../../lib/translation-queries"
 import {
+  foldsImageNotes,
   imageNotes,
   languageName,
   replacesWords,
@@ -136,23 +137,40 @@ export function PostTranslationBar({ state, post }: { state: PostTranslationStat
   )
 }
 
-/** What the pictures of a post say in the reader's language, one line per picture that has other words. */
+/**
+ * What the pictures of a post say in the reader's language, one entry per picture that has other words, with the
+ * lines the picture has. A long one (a schedule, a list of prizes) shows its first lines until the reader asks for all.
+ */
 export function PostImageNotes({ translation, count }: { translation: PostTranslation; count: number }) {
   const { languageTag, text } = useStreamLocale()
+  const [open, setOpen] = useState(false)
   const notes = imageNotes(translation, languageTag)
   if (!notes.length) return null
+  const folds = foldsImageNotes(notes)
   return (
-    <ul className="ps-image-notes" lang={languageTag} aria-label={text("Chữ trong ảnh", "Text in the images")}>
-      {notes.map((note) => (
-        <li key={note.index}>
-          <span className="ps-image-note-mark">
-            {count > 1 ? text(`Ảnh ${note.index + 1}`, `Image ${note.index + 1}`) : text("Trong ảnh", "In the image")}
-          </span>
-          <span>
-            <ReferenceText text={note.text} />
-          </span>
-        </li>
-      ))}
-    </ul>
+    <div className="ps-image-notes" data-folded={(folds && !open) || undefined}>
+      <ul lang={languageTag} aria-label={text("Chữ trong ảnh", "Text in the images")}>
+        {notes.map((note) => (
+          <li key={note.index}>
+            <span className="ps-image-note-mark">
+              {count > 1 ? text(`Ảnh ${note.index + 1}`, `Image ${note.index + 1}`) : text("Trong ảnh", "In the image")}
+            </span>
+            <span className="ps-image-note-text">
+              <ReferenceText text={note.text} />
+            </span>
+          </li>
+        ))}
+      </ul>
+      {folds && (
+        <button
+          type="button"
+          className="cp-text-button ps-image-notes-fold"
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? text("Thu gọn", "Show less") : text("Xem hết chữ trong ảnh", "Show all image text")}
+        </button>
+      )}
+    </div>
   )
 }

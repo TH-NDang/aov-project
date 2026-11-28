@@ -1,5 +1,7 @@
 import type { CommunityPost } from "@aov/community-contracts"
 import { dayKeyInZone } from "@aov/ui/lib/time-zone"
+import { firstLine } from "../../../lib/reference-model.ts"
+import { videoEmbed, videoPoster } from "./post-media-model.ts"
 
 /**
  * How a post is laid out. What it carries decides: news stands on the page's own stage, a video and pictures come
@@ -33,4 +35,34 @@ export function dayOpenings(posts: Pick<CommunityPost, "id" | "createdAt" | "pin
       openings.add(post.id)
   })
   return openings
+}
+
+/**
+ * What a folded pinned post shows: its first picture, or its video's, and its headline, or the first line of its words
+ * without the markup of names.
+ */
+export function pinnedSummary(post: Pick<CommunityPost, "title" | "body" | "videoUrl" | "imageUrls">) {
+  const embed = post.videoUrl ? videoEmbed(post.videoUrl) : null
+  return {
+    picture: post.imageUrls?.[0] ?? (embed ? videoPoster(embed, "mqdefault") : null),
+    headline: post.title?.trim() || firstLine(post.body) || "",
+  }
+}
+
+/** A post saved again as it is, with its words as `words` say, to be posted or kept as a draft. */
+export function postChange(
+  post: Pick<CommunityPost, "version" | "kind" | "title" | "body" | "videoUrl" | "imageUrls" | "asPage">,
+  publish: boolean,
+  words: { title?: string | null; body?: string } = {},
+) {
+  return {
+    version: post.version,
+    kind: post.kind,
+    title: words.title ?? post.title,
+    body: words.body ?? post.body,
+    videoUrl: post.videoUrl,
+    imageUrls: post.imageUrls,
+    asPage: post.asPage,
+    publish,
+  }
 }

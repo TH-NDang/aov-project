@@ -2,6 +2,12 @@ import { useState, type CSSProperties } from "react"
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CommunityPost, PageCard, PageRole } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@aov/ui/components/public-overlay"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { PageMark } from "../../../components/page-mark"
 import { ReferenceText } from "../../../components/reference-text"
@@ -121,14 +127,33 @@ export function PostComments({
                 </div>
                 <p className="pc-tools">
                   <TimeAgo value={comment.createdAt} />
-                  <button type="button" onClick={() => onReport(comment.id)}>
-                    {text("Báo cáo", "Report")}
-                  </button>
-                  {moderates && (
-                    <button type="button" disabled={hide.isPending} onClick={() => hide.mutate(comment.id)}>
-                      {text("Ẩn bình luận", "Hide comment")}
-                    </button>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" aria-label={text("Thao tác với bình luận", "Comment actions")}>
+                        <StreamIcon name="more" size={16} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="hub-popover hub-post-menu"
+                      drawerTitle={text("Tùy chọn bình luận", "Comment options")}
+                    >
+                      <DropdownMenuItem className="hub-menu-item" onSelect={() => onReport(comment.id)}>
+                        <StreamIcon name="flag" size={16} />
+                        {text("Báo cáo bình luận", "Report comment")}
+                      </DropdownMenuItem>
+                      {moderates && (
+                        <DropdownMenuItem
+                          className="hub-menu-item"
+                          disabled={hide.isPending}
+                          onSelect={() => hide.mutate(comment.id)}
+                        >
+                          <StreamIcon name="eyeOff" size={16} />
+                          {text("Ẩn bình luận", "Hide comment")}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </p>
               </div>
             </li>

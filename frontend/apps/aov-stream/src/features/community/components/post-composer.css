@@ -131,22 +131,56 @@
   gap: 8px;
   margin-left: auto;
 }
+/* The phone's way in: one wide button with the reader's mark, which opens the sheet. */
+.pw-open {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px 0 8px;
+  border: 1px solid var(--hub-border);
+  border-radius: 26px;
+  background: var(--hub-surface);
+  color: var(--hub-muted);
+  font-size: 15px;
+  text-align: left;
+}
+.pw-open-label {
+  flex: 1;
+}
+.pw-open > svg {
+  color: var(--hub-accent-strong);
+}
+.pw-open:active {
+  background: var(--hub-hover);
+}
+/* The sheet: the form without its card, room to write, and the buttons to post held at the bottom while typing. */
+.pw-sheet {
+  --public-bottom-body-padding: 0 16px;
+}
+.pw-form[data-sheet] {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+.pw-form[data-sheet] .pw-kinds {
+  margin-inline: 0;
+}
+.pw-form[data-sheet] .pw-body {
+  min-height: 28dvh;
+  font-size: 16px;
+}
+.pw-form[data-sheet] .pw-actions {
+  position: sticky;
+  bottom: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--hub-surface);
+}
 @media (max-width: 899.98px) {
   .pw {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .pw-self {
-    display: none;
-  }
-  .pw-line > .pw-kind {
-    width: 44px;
-    padding: 0;
-    justify-content: center;
-    overflow: hidden;
-    font-size: 0;
-  }
-  .pw-form {
-    border-radius: var(--hub-radius);
   }
   .pw-send {
     flex: 1 0 100%;

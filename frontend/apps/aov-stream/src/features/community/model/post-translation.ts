@@ -68,6 +68,17 @@ export function imageNotes(translation: PostTranslation, target: string) {
   )
 }
 
+/** Lines of picture words shown before "Show all": a schedule or a list of prizes runs longer and folds. */
+const IMAGE_NOTE_LINES = 3
+
+/** Whether the words of the pictures fold: more lines than that, counting a long line as several. */
+export const foldsImageNotes = (notes: { text: string }[]) =>
+  notes.reduce(
+    (lines, note) =>
+      lines + note.text.split("\n").reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / 60)), 0),
+    0,
+  ) > IMAGE_NOTE_LINES
+
 /** Whether the translation changes the words shown, rather than only adding what the images say. */
 export const replacesWords = (translation: PostTranslation, post: { title?: string | null; body: string }) =>
   !translation.sameLanguage &&

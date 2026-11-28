@@ -1,9 +1,11 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CommunityPost } from "@aov/community-contracts"
+import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { refreshPostLists } from "../../../lib/community-keys"
+import { postChange } from "../model/post-form"
 
 const REPORT_REASONS: readonly (readonly [string, string])[] = [
   ["Spam hoặc quảng cáo", "Spam or advertising"],
@@ -21,16 +23,7 @@ export function PostEditForm({ post, onClose }: { post: CommunityPost; onClose: 
   const [editedTitle, setEditedTitle] = useState(post.title || "")
   const edit = useMutation({
     mutationFn: (publish: boolean) =>
-      communityApi.editPost(post.pageId, post.id, {
-        version: post.version,
-        kind: post.kind,
-        title: editedTitle,
-        body: editedBody,
-        videoUrl: post.videoUrl,
-        imageUrls: post.imageUrls,
-        asPage: post.asPage,
-        publish,
-      }),
+      communityApi.editPost(post.pageId, post.id, postChange(post, publish, { title: editedTitle, body: editedBody })),
     onSuccess: async () => {
       onClose()
       await refreshPostLists(client)
@@ -86,6 +79,35 @@ export function PostEditForm({ post, onClose }: { post: CommunityPost; onClose: 
       {edit.isError && (
         <p className="cp-error" role="alert">
           {edit.error.message}
+        </p>
+      )}
+    </>
+  )
+}
+
+/** A draft says what can be done with it: post it as it is, or open it to change it first. */
+export function PostDraftActions({ post, onEdit }: { post: CommunityPost; onEdit: () => void }) {
+  const { text } = useStreamLocale()
+  const client = useQueryClient()
+  const publish = useMutation({
+    mutationFn: () => communityApi.editPost(post.pageId, post.id, postChange(post, true)),
+    onSuccess: () => refreshPostLists(client),
+  })
+  return (
+    <>
+      <div className="cp-actions">
+        <button className="cp-button cp-primary" disabled={publish.isPending} onClick={() => publish.mutate()}>
+          <StreamIcon name="send" size={16} />
+          {text("Đăng ngay", "Post now")}
+        </button>
+        <button className="cp-button" disabled={publish.isPending} onClick={onEdit}>
+          <StreamIcon name="edit" size={16} />
+          {text("Sửa", "Edit")}
+        </button>
+      </div>
+      {publish.isError && (
+        <p className="cp-error" role="alert">
+          {publish.error.message}
         </p>
       )}
     </>

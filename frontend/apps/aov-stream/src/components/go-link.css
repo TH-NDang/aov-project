@@ -30,11 +30,14 @@
   opacity: 1;
   translate: 2px -1px;
 }
-/* Inside a sentence a line under the name tells it from the words around it, with no arrow before its comma. */
+/*
+ * Inside a sentence a faint line under the name tells it from the words around it, with no arrow before its comma.
+ * It stays faint so a post that names several teams still reads as words; pointed at, it takes the accent.
+ */
 .hub-go-prose {
   color: var(--hub-text);
   text-decoration-line: underline;
-  text-decoration-color: color-mix(in srgb, var(--hub-accent-strong) 70%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--hub-accent-strong) 38%, transparent);
   text-decoration-thickness: 1px;
 }
 .hub-go-prose:is(:hover, :focus-visible) {

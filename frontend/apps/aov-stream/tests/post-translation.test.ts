@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { createTaskQueue } from "../src/lib/task-queue.ts"
 import {
+  foldsImageNotes,
   guessLanguage,
   imageNotes,
   languageName,
@@ -61,6 +62,18 @@ test("only pictures with words in another language get a note", () => {
     "en-US",
   )
   assert.deepEqual(notes, [{ index: 0, text: "Shop screen, 199 Vouchers.", language: "vi-VN" }])
+})
+
+test("the words of the pictures fold once they run past three lines", () => {
+  assert.equal(foldsImageNotes([{ text: "Chung kết tổng · 30/11 · 18:00" }]), false)
+  const schedule = ["Tuần 3", "Thứ Bảy 17:00: Talon gặp Buriram United", "Thứ Bảy 19:00: Bacon Time gặp KOG"]
+  assert.equal(foldsImageNotes([{ text: schedule.join("\n") }]), false)
+  assert.equal(foldsImageNotes([{ text: [...schedule, "Chủ Nhật 17:00: eArena gặp Full Sense"].join("\n") }]), true)
+  assert.equal(foldsImageNotes([{ text: "Một dòng rất dài ".repeat(15) }]), true)
+  assert.equal(
+    foldsImageNotes([{ text: "Ảnh một" }, { text: "Ảnh hai" }, { text: "Ảnh ba" }, { text: "Ảnh bốn" }]),
+    true,
+  )
 })
 
 test("a translation replaces the words only when they change", () => {

@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { postKindLabels, type PageRole, type PostKind } from "@aov/community-contracts"
+import { PublicDrawer, PublicDrawerContent } from "@aov/ui/components/public-overlay"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon, type StreamIconName } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
@@ -26,7 +28,8 @@ const imageLines = (value: string) =>
 
 /**
  * The place to write a post: one line that opens into the form of the kind asked for. `manage` is the page's own
- * manager, where an owner or editor writes as the page first.
+ * manager, where an owner or editor writes as the page first. A phone gets one wide button instead, which opens the
+ * form on a sheet from the bottom, with room to write and the buttons to post always in reach.
  */
 export function PostComposer({
   pageId,
@@ -42,21 +45,46 @@ export function PostComposer({
   const { text } = useStreamLocale()
   const session = useCommunitySession()
   const [kind, setKind] = useState<PostKind | null>(null)
+  const compact = usePageLayout() === "compact"
+  const form = (sheet: boolean) =>
+    kind && (
+      <ComposerForm
+        kind={kind}
+        setKind={setKind}
+        pageId={pageId}
+        pageName={pageName}
+        role={role}
+        manage={manage}
+        sheet={sheet}
+        close={() => setKind(null)}
+      />
+    )
+  if (compact)
+    return (
+      <section className="pw" aria-label={text("Viết bài mới", "Write a new post")}>
+        <button type="button" className="pw-open" onClick={() => setKind("TEXT")}>
+          <AuthorMark name={session.name} small />
+          <span className="pw-open-label">{text("Viết bài…", "Write a post…")}</span>
+          <StreamIcon name="edit" size={18} />
+        </button>
+        <PublicDrawer open={kind != null} onOpenChange={(open) => !open && setKind(null)}>
+          <PublicDrawerContent
+            className="pw-sheet"
+            title={text(`Viết trên trang ${pageName}`, `Write on the page of ${pageName}`)}
+            aria-describedby={undefined}
+          >
+            {form(true)}
+          </PublicDrawerContent>
+        </PublicDrawer>
+      </section>
+    )
   return (
     <section className="pw" data-open={kind != null || undefined} aria-label={text("Viết bài mới", "Write a new post")}>
       <span className="pw-self">
         <AuthorMark name={session.name} />
       </span>
       {kind ? (
-        <ComposerForm
-          kind={kind}
-          setKind={setKind}
-          pageId={pageId}
-          pageName={pageName}
-          role={role}
-          manage={manage}
-          close={() => setKind(null)}
-        />
+        form(false)
       ) : (
         <div className="pw-line">
           <button type="button" className="pw-prompt" onClick={() => setKind("TEXT")}>
@@ -83,6 +111,7 @@ function ComposerForm({
   pageName,
   role,
   manage,
+  sheet,
   close,
 }: {
   kind: PostKind
@@ -91,6 +120,8 @@ function ComposerForm({
   pageName: string
   role: PageRole | ""
   manage: boolean
+  /** On the phone's sheet, which closes by itself. */
+  sheet: boolean
   close: () => void
 }) {
   const { text } = useStreamLocale()
@@ -126,6 +157,7 @@ function ComposerForm({
   return (
     <form
       className="pw-form"
+      data-sheet={sheet || undefined}
       onSubmit={(event) => {
         event.preventDefault()
         if (ready) write.mutate(true)
@@ -144,9 +176,11 @@ function ComposerForm({
             {text(postKindLabels[value], postKindEnglish[value])}
           </button>
         ))}
-        <button type="button" className="hub-icon-button pw-close" aria-label={text("Đóng", "Close")} onClick={close}>
-          <StreamIcon name="close" size={18} />
-        </button>
+        {!sheet && (
+          <button type="button" className="hub-icon-button pw-close" aria-label={text("Đóng", "Close")} onClick={close}>
+            <StreamIcon name="close" size={18} />
+          </button>
+        )}
       </div>
       {kind === "NEWS" && (
         <label>

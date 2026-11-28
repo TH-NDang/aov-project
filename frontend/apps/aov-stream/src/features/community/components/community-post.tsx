@@ -28,7 +28,7 @@ import { foldsBody, postForm } from "../model/post-form"
 import { replacesWords } from "../model/post-translation"
 import { PostImages, PostVideo } from "./post-media"
 import { AuthorMark, PostComments } from "./post-comments"
-import { PostEditForm, PostReportForm } from "./post-forms"
+import { PostDraftActions, PostEditForm, PostReportForm } from "./post-forms"
 import { PostImageNotes, PostTranslationBar, usePostTranslationState } from "./post-translation"
 import "./community-post.css"
 
@@ -122,6 +122,9 @@ export function PostCard({
         <PostContent post={post} page={page} translation={editing ? null : translation.shown} />
         {!editing && <PostTranslationBar state={translation} post={post} />}
         {editing && <PostEditForm post={post} onClose={() => setEditing(false)} />}
+        {!editing && post.status === "DRAFT" && canEdit && (
+          <PostDraftActions post={post} onEdit={() => setEditing(true)} />
+        )}
         <div className="ps-actions">
           {published && (
             <button
@@ -142,19 +145,21 @@ export function PostCard({
               {shown.likes > 0 && <span>{shown.likes.toLocaleString(languageTag)}</span>}
             </button>
           )}
-          <button
-            className="ps-action"
-            aria-expanded={expanded}
-            aria-label={text(
-              `Bình luận · ${post.comments.toLocaleString(languageTag)}`,
-              `${post.comments.toLocaleString(languageTag)} ${post.comments === 1 ? "comment" : "comments"}`,
-            )}
-            disabled={!published}
-            onClick={() => setExpanded(!expanded)}
-          >
-            <StreamIcon name="message" size={20} />
-            {post.comments > 0 && <span>{post.comments.toLocaleString(languageTag)}</span>}
-          </button>
+          {post.status !== "DRAFT" && (
+            <button
+              className="ps-action"
+              aria-expanded={expanded}
+              aria-label={text(
+                `Bình luận · ${post.comments.toLocaleString(languageTag)}`,
+                `${post.comments.toLocaleString(languageTag)} ${post.comments === 1 ? "comment" : "comments"}`,
+              )}
+              disabled={!published}
+              onClick={() => setExpanded(!expanded)}
+            >
+              <StreamIcon name="message" size={20} />
+              {post.comments > 0 && <span>{post.comments.toLocaleString(languageTag)}</span>}
+            </button>
+          )}
           {(published || canEdit || canModerate) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

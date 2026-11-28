@@ -19,19 +19,34 @@
   color: var(--hub-accent-strong);
 }
 
-/* What each picture says: a margin note under the pictures, one line per picture with other words. */
+/*
+ * What each picture says: a margin note under the pictures, one entry per picture with other words, keeping the lines
+ * the picture has. A long note shows its first lines and fades until the reader opens it.
+ */
 .ps-image-notes {
   display: grid;
-  gap: 6px;
+  justify-items: start;
+  gap: 4px;
   width: 100%;
-  margin: 0;
   padding: 10px 12px;
   border-left: 3px solid var(--hub-accent-strong);
   border-radius: 0 var(--aov-radius-control) var(--aov-radius-control) 0;
   background: var(--hub-accent-soft);
+}
+.ps-image-notes > ul {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   list-style: none;
   font-size: 14px;
   line-height: 21px;
+}
+.ps-image-notes[data-folded] > ul {
+  max-height: 84px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
 }
 .ps-image-notes li {
   display: grid;
@@ -49,20 +64,28 @@
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
+.ps-image-note-text {
+  white-space: pre-line;
+}
+.ps-image-notes-fold {
+  padding: 2px 0;
+  font-size: 13px;
+}
 /* On the dark stage of a news post the note sits on the picture's light, not on the page. */
 .ps-news .ps-image-notes {
   border-left-color: rgb(255 255 255 / 70%);
   border-radius: 0;
   background: rgb(0 0 0 / 34%);
 }
-.ps-news .ps-image-notes li {
+.ps-news .ps-image-notes li,
+.ps-news .ps-image-notes-fold {
   color: rgb(255 255 255 / 90%);
 }
 .ps-news .ps-image-note-mark {
   color: #fff;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 899.98px) {
   /* A phone keeps the mark above the words, so a long line never squeezes into a narrow column. */
   .ps-image-notes li {
     grid-template-columns: 1fr;

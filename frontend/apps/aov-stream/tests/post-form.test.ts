@@ -1,6 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { dayOpenings, foldsBody, postForm } from "../src/features/community/model/post-form.ts"
+import {
+  dayOpenings,
+  foldsBody,
+  pinnedSummary,
+  postChange,
+  postForm,
+} from "../src/features/community/model/post-form.ts"
 
 const post = (extra: object = {}) => ({ kind: "TEXT" as const, body: "", videoUrl: null, imageUrls: [], ...extra })
 
@@ -47,4 +53,30 @@ test("the post after a pinned one opens its day again", () => {
   ]
 
   assert.deepEqual([...dayOpenings(posts, "UTC")], ["pinned", "next"])
+})
+
+test("a folded pinned post shows its first picture, else its video's, and its headline", () => {
+  const news = { title: "Bảo trì ngày 3/12", body: "Máy chủ bảo trì.", videoUrl: null, imageUrls: ["a.jpg", "b.jpg"] }
+  assert.deepEqual(pinnedSummary(news), { picture: "a.jpg", headline: "Bảo trì ngày 3/12" })
+  const video = { title: null, body: "", videoUrl: "https://www.youtube.com/watch?v=tDg0yapYuOw", imageUrls: [] }
+  assert.equal(pinnedSummary(video).picture, "https://i.ytimg.com/vi/tDg0yapYuOw/mqdefault.jpg")
+})
+
+test("a pinned post without a headline shows the first line of its words without the markup of names", () => {
+  const words = { title: null, body: "\nChúc mừng <ref=team:t1>Saigon Phantom</ref>!\nHẹn gặp lại.", videoUrl: null }
+  assert.deepEqual(pinnedSummary(words), { picture: null, headline: "Chúc mừng Saigon Phantom!" })
+})
+
+test("a draft posted as it is keeps its words and everything it carries", () => {
+  const draft = {
+    version: 3,
+    kind: "NEWS" as const,
+    title: "Mini game",
+    body: "Đoán tỉ số.",
+    videoUrl: null,
+    imageUrls: ["a.jpg"],
+    asPage: true,
+  }
+  assert.deepEqual(postChange(draft, true), { ...draft, publish: true })
+  assert.equal(postChange(draft, false, { body: "Đoán đúng tỉ số." }).body, "Đoán đúng tỉ số.")
 })

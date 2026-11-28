@@ -1,0 +1,52 @@
+/* A pinned post folded to one line: its picture, its headline and the day, on a quiet surface that opens it. */
+.ps-pin-row {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-muted);
+  text-align: left;
+  transition: border-color 140ms;
+}
+.ps-pin-row:hover,
+.ps-pin-row:focus-visible {
+  border-color: var(--hub-accent-strong);
+}
+.ps-pin-row > img,
+.ps-pin-mark {
+  width: 72px;
+  height: 52px;
+  flex: none;
+  border-radius: calc(var(--hub-radius-sm) - 4px);
+  background: var(--hub-sunken);
+  object-fit: cover;
+}
+.ps-pin-mark {
+  display: grid;
+  place-items: center;
+  color: var(--hub-accent-strong);
+}
+.ps-pin-words {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+}
+.ps-pin-words > strong {
+  overflow: hidden;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 21px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ps-pin-words > small {
+  font-size: 13px;
+  line-height: 18px;
+}

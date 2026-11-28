@@ -76,15 +76,21 @@
   font-size: 12px;
   line-height: 16px;
 }
+/* The comment's other actions wait behind one quiet mark beside its time, so a thread reads as talk. */
 .pc-tools > button {
-  min-height: 32px;
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
   padding: 0;
   border: 0;
+  border-radius: var(--aov-radius-pill);
   background: none;
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--hub-muted);
 }
-.pc-tools > button:hover {
+.pc-tools > button:hover,
+.pc-tools > button[data-state="open"] {
+  background: var(--hub-hover);
   color: var(--hub-text);
 }
 .pc-reply {

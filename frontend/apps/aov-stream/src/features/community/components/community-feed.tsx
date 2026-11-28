@@ -8,6 +8,7 @@ import { useCommunitySession } from "../../../lib/stream-auth"
 import { dayOpenings } from "../model/post-form"
 import { PostCard } from "./community-post"
 import { PostComposer } from "./post-composer"
+import { PinnedPost } from "./pinned-post"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
@@ -102,9 +103,13 @@ export function CommunityFeed({
         </div>
       ) : (
         <div className="ps-list">
-          {items.map((post) => (
-            <PostCard key={post.id} post={post} role={role} page={page} journal opensDay={openings.has(post.id)} />
-          ))}
+          {items.map((post) =>
+            post.pinned ? (
+              <PinnedPost key={post.id} post={post} role={role} page={page} />
+            ) : (
+              <PostCard key={post.id} post={post} role={role} page={page} journal opensDay={openings.has(post.id)} />
+            ),
+          )}
         </div>
       )}
       <InfiniteScroll
