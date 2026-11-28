@@ -117,6 +117,13 @@ export async function withGlobals<T>(values: Record<string, unknown>, run: () =>
 export const createWindow = (url = "http://localhost/", html = '<div id="root"></div>') =>
   new JSDOM(html, { url, pretendToBeVisual: true })
 
+/**
+ * A jsdom window at `url` where the test may run a script with `window.eval`, for a static page of `public/` that runs
+ * in a window of its own; nothing is installed as a global.
+ */
+export const createScriptWindow = (url: string, html: string) =>
+  new JSDOM(html, { url, pretendToBeVisual: true, runScripts: "outside-only" })
+
 /** The document of static markup, such as what `renderToStaticMarkup` returns; nothing is installed as a global. */
 export const parseHtml = (markup: string) => new JSDOM(markup).window.document
 

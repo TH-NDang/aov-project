@@ -4,6 +4,7 @@ import { createAuthenticatedClient } from "../src/lib/api/authenticated-client.t
 import {
   createAuthRequest,
   googleRedirectOutcome,
+  isGoogleBroadcast,
   isGoogleCompletion,
   isGoogleError,
 } from "../src/app/auth/auth-api.ts"
@@ -75,6 +76,16 @@ test("a Google sign-in error is accepted only from the popup at the Keycloak ori
     isGoogleError({ ...valid, data: { type: "aov-google-error" } } as MessageEvent, popup, keycloakOrigin),
     false,
   )
+})
+
+test("a Google broadcast is accepted only with the current state and a status", () => {
+  const valid = { type: "aov-google-complete", state: "current", status: "success" }
+  assert.equal(isGoogleBroadcast(valid, "current"), true)
+  assert.equal(isGoogleBroadcast(valid, "previous"), false)
+  assert.equal(isGoogleBroadcast({ ...valid, type: "aov-google-error" }, "current"), false)
+  assert.equal(isGoogleBroadcast({ type: "aov-google-complete", state: "current" }, "current"), false)
+  assert.equal(isGoogleBroadcast(null, "current"), false)
+  assert.equal(isGoogleBroadcast("aov-google-complete", "current"), false)
 })
 
 test("a same-page Google sign-in reports the status the completion page saved", () => {

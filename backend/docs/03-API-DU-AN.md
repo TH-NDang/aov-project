@@ -160,7 +160,9 @@ dưới tên `totp` cho tài khoản đã bật xác thực hai bước (ADR-028
 
 Callback hợp lệ nhưng bị từ chối/hủy sẽ chuyển về trang hoàn tất với trạng thái lỗi cố định;
 không chuyển thông báo thô của IdP hoặc token vào URL. Popup báo hoàn tất cho opener bằng
-postMessage kiểm tra origin, source và state. Frontend sau đó gọi refresh để lấy access token.
+postMessage kiểm tra origin, source và state. Nếu popup mất opener trên đường đi (một trang có header COOP làm vậy), trang
+hoàn tất báo qua BroadcastChannel `aov-admin-google` cùng origin, Admin chỉ nhận state của lần đăng nhập nó đang chờ, rồi
+popup tự đóng. Frontend sau đó gọi refresh để lấy access token.
 State/verifier được lưu tối đa 5 phút, chỉ dùng một lần, xem giới hạn nhiều replica trong ADR-007.
 
 ### 1.4 Hồ sơ người dùng dùng chung (ADR-008)

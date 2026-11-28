@@ -34,6 +34,26 @@ export function isGoogleCompletion(event: MessageEvent, popup: Window, state: st
   )
 }
 
+/**
+ * BroadcastChannel of a Google popup that lost its opener (a COOP header on its path does that); public/auth/
+ * google-complete.js posts to the same name. Only pages of this origin can post on it.
+ */
+export const GOOGLE_CHANNEL = "aov-admin-google"
+
+export function isGoogleBroadcast(
+  data: unknown,
+  state: string,
+): data is { type: "aov-google-complete"; state: string; status: string } {
+  const message = data as { type?: unknown; state?: unknown; status?: unknown } | null
+  return (
+    typeof message === "object" &&
+    message !== null &&
+    message.type === "aov-google-complete" &&
+    message.state === state &&
+    typeof message.status === "string"
+  )
+}
+
 /** sessionStorage key of a same-page Google sign-in; public/auth/google-complete.js writes the same key. */
 export const GOOGLE_REDIRECT_KEY = "aov-admin-google-redirect"
 
