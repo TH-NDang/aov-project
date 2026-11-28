@@ -2703,7 +2703,10 @@ khung hình trung vị của bản đồ nhỏ trong video rồi làm đối x�
 V082 (28/11/2026, theo góp ý của chủ trang) đặt trụ, gói máu và nhà chính thẳng trên đường của chúng: đường biên cách
 mép 3,5, đường giữa trên đường chéo `x + y = 100`; tường quanh mỗi nhà chính thành hai cung đều (bản đồ nhỏ bị biểu
 tượng che nên dò ra các mảnh mỏng). Mã và `key` tham chiếu giữ nguyên. Khi có địa hình, Wiki vẽ viền bản đồ thành một
-bức tường bao quanh (cùng chất đá với tường bên trong), Admin vẽ mờ viền đó trên bản đồ nhỏ.
+bức tường bao quanh (cùng chất đá với tường bên trong), Admin vẽ mờ viền đó trên bản đồ nhỏ. V084 (28/11/2026) uốn
+hai đường biên quanh góc trên trái và dưới phải thay cho góc vuông, thêm một gờ tường cong ngoài mỗi khúc uốn chừa góc
+nhỏ cho Cổng dịch chuyển và Rồng tiểu lam, bo tròn hai góc nhà chính, và dời bốn Mắt tinh linh tới chỗ chủ trang đánh
+dấu, sát tường quanh nhà chính.
 
 Admin sửa bản đồ ở trang riêng của chế độ (Chế độ → “Mở bản đồ chiến trường”), theo các tab Chung, Đối tượng, Khu vực,
 Địa hình, Đường, Nhịp điệu và JSON. Vị trí, góc khu vực và tuyến đường đặt bằng cách chạm lên bản đồ nhỏ và kéo để dời;

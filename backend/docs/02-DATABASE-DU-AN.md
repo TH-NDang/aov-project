@@ -2100,7 +2100,9 @@ trên `game_mode` trước khi tạo/sửa/xuất bản revision của chế đ�
 V081 thêm bản đồ xuất bản đầu tiên cho chế độ `5v5` (UUID cố định, người tạo `urn:wikiaov:migration`); bỏ qua khi
 chưa có chế độ `5v5` hoặc chế độ đã có bản đồ. V082 xuất bản revision 2 (trụ, gói máu, nhà chính nằm thẳng trên đường;
 tường quanh nhà chính thành cung đều) với `source_revision_id` là revision của V081; chỉ chạy khi bản đồ vẫn chỉ có đúng
-revision đó, tức chưa ai mở nháp hay xuất bản bản khác.
+revision đó, tức chưa ai mở nháp hay xuất bản bản khác. V084 xuất bản revision 3 (đường biên uốn quanh góc, góc nhà
+chính bo tròn, Mắt tinh linh dời chỗ) với `source_revision_id` là revision của V082; chỉ chạy khi bản đồ vẫn chỉ có hai
+revision của V081 và V082.
 
 `gamemode.community_lineup` — đội hình cộng đồng:
 
