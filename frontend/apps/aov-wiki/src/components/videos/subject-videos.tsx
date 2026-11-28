@@ -246,7 +246,7 @@ export function VideoGallery({
   )
 }
 
-/** Everything the hero page shows: its own videos, one list per skill, and lore videos. */
+/** Everything the hero page shows: its video section, the strip of skill videos, and lore videos. */
 export function useHeroVideos(heroId: string, selectedId?: string | null) {
   const query = useQuery(subjectVideosQuery("HERO", heroId))
   const versioned = useVersionedVideos(query.data, selectedId)

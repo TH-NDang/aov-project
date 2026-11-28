@@ -57,8 +57,7 @@ public class SubjectVideos {
     private static final int NOTE_LIMIT = 1000;
     private static final int CHANNEL_LIMIT = 120;
     private static final int KEY_LIMIT = 160;
-    private static final Set<VideoSubjectKind> HERO_FAMILY = Set.of(VideoSubjectKind.HERO, VideoSubjectKind.SKILL,
-            VideoSubjectKind.SKIN);
+    private static final Set<VideoSubjectKind> HERO_FAMILY = Set.of(VideoSubjectKind.HERO, VideoSubjectKind.SKIN);
     private static final Sort LIST_ORDER = Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.asc("id"));
     private static final UUID IMPORT_AUDIT_ID = new UUID(0, 0);
 
@@ -85,8 +84,8 @@ public class SubjectVideos {
     }
 
     /**
-     * A hero's page shows its own videos and those of its skills and skins, so the hero kind covers all three. The skill
-     * and skin kinds narrow to one subject when a key is given.
+     * A hero's page shows its own videos and those of its skins, so the hero kind covers both. The skin kind narrows to
+     * one skin when a key is given.
      */
     @Transactional(readOnly = true)
     public PublicVideoList published(VideoSubjectKind kind, UUID subjectId, @Nullable String subjectKey) {
@@ -94,7 +93,7 @@ public class SubjectVideos {
             throw invalid("Provide the subject kind and id.");
         }
         if (subjectKey != null && !kind.requiresKey()) {
-            throw invalid("Only skills and skins take a subject key.");
+            throw invalid("Only skins take a subject key.");
         }
 
         List<SubjectVideo> rows = subjectKey == null
@@ -311,7 +310,7 @@ public class SubjectVideos {
             return "The duration must be positive.";
         }
         if (row.subjectKind().requiresKey() != (row.subjectKey() != null && !row.subjectKey().isBlank())) {
-            return "Only skills and skins take a subject key.";
+            return "Only skins take a subject key.";
         }
 
         boolean exists = subjects.computeIfAbsent(subjectIdentity(row.subjectKind(), row.subjectId(), row.subjectKey()),
@@ -368,7 +367,7 @@ public class SubjectVideos {
             throw invalid("Provide the subject, purpose and status.");
         }
         if (input.subjectKind().requiresKey() != (input.subjectKey() != null && !input.subjectKey().isBlank())) {
-            throw invalid("Skills and skins need a subject key; other subjects do not take one.");
+            throw invalid("Skins need a subject key; other subjects do not take one.");
         }
         if (input.subjectKey() != null && input.subjectKey().length() > KEY_LIMIT) {
             throw invalid("The subject key is limited to " + KEY_LIMIT + " characters.");
@@ -392,7 +391,7 @@ public class SubjectVideos {
 
     private static void requireCapabilities(Actor actor, VideoSubjectKind kind, VideoStatus status) {
         String write = switch (kind) {
-            case HERO, SKILL, SKIN -> Capabilities.HERO_WRITE;
+            case HERO, SKIN -> Capabilities.HERO_WRITE;
             case ITEM -> Capabilities.ITEM_WRITE;
             case ENCHANTMENT -> Capabilities.ENCHANTMENT_WRITE;
             case ARCANA -> Capabilities.ARCANA_WRITE;

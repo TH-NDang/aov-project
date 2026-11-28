@@ -5,7 +5,7 @@ export {
   videoWatchUrl,
 } from "@aov/ui/lib/video-playback"
 
-export type VideoSubjectKind = "HERO" | "SKILL" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL"
+export type VideoSubjectKind = "HERO" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL"
 export type VideoPurpose =
   | "INTRO"
   | "GUIDE_BASIC"
@@ -76,18 +76,19 @@ export function videosAtVersion<T extends Pick<PublicVideo, "patchVariantId">>(
   })
 }
 
-/** Splits a hero's videos by where the page shows them. Skin videos belong to the skin viewer. */
-export function splitHeroVideos<T extends Pick<PublicVideo, "subjectKind" | "subjectKey" | "purpose">>(
-  videos: readonly T[],
-) {
+/**
+ * Splits a hero's videos by where the page shows them: skill demos in one strip under the abilities, the rest in the
+ * video section. Skin videos belong to the skin viewer.
+ */
+export function splitHeroVideos<T extends Pick<PublicVideo, "subjectKind" | "purpose">>(videos: readonly T[]) {
   const general: T[] = []
-  const bySkill = new Map<string, T[]>()
+  const skills: T[] = []
   for (const video of videos) {
-    if (video.subjectKind === "HERO") general.push(video)
-    else if (video.subjectKind === "SKILL" && video.subjectKey)
-      bySkill.set(video.subjectKey, [...(bySkill.get(video.subjectKey) ?? []), video])
+    if (video.subjectKind !== "HERO") continue
+    if (video.purpose === "SKILL_DEMO") skills.push(video)
+    else general.push(video)
   }
-  return { general, loreCount: general.filter((video) => video.purpose === "LORE").length, bySkill }
+  return { general, skills, loreCount: general.filter((video) => video.purpose === "LORE").length }
 }
 
 /** How a reader usually looks for a video: how to play first, background later. */

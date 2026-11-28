@@ -1,8 +1,6 @@
 package com.wikiaov.hero.internal.video.infrastructure;
 
 import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
-import com.wikiaov.hero.internal.skills.persistence.SkillIdentityRepository;
-import com.wikiaov.hero.internal.skills.persistence.entity.SkillIdentityRow;
 import com.wikiaov.hero.internal.skins.persistence.SkinIdentityRepository;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinIdentityRow;
 import com.wikiaov.hero.internal.video.persistence.HeroVideoSubjectRepository;
@@ -25,13 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class HeroVideoSubjectProvider implements VideoSubjectProvider {
     private final HeroIdentityRepository heroes;
-    private final SkillIdentityRepository skills;
     private final SkinIdentityRepository skins;
     private final HeroVideoSubjectRepository names;
 
     @Override
     public Set<VideoSubjectKind> kinds() {
-        return Set.of(VideoSubjectKind.HERO, VideoSubjectKind.SKILL, VideoSubjectKind.SKIN);
+        return Set.of(VideoSubjectKind.HERO, VideoSubjectKind.SKIN);
     }
 
     @Override
@@ -39,7 +36,6 @@ public class HeroVideoSubjectProvider implements VideoSubjectProvider {
     public boolean exists(VideoSubjectKind kind, UUID id, @Nullable String key) {
         return switch (kind) {
             case HERO -> heroes.existsById(id);
-            case SKILL -> key != null && skills.existsById(new SkillIdentityRow.Key(id, key));
             case SKIN -> key != null && skins.existsById(new SkinIdentityRow.Key(id, key));
             default -> false;
         };
@@ -54,7 +50,6 @@ public class HeroVideoSubjectProvider implements VideoSubjectProvider {
 
         var subjects = new ArrayList<VideoSubject>();
         subjects.addAll(VideoSubjectName.collapse(VideoSubjectKind.HERO, names.heroNames(), locale, legacyCodes));
-        subjects.addAll(VideoSubjectName.collapse(VideoSubjectKind.SKILL, names.skillNames(), locale, Map.of()));
         subjects.addAll(VideoSubjectName.collapse(VideoSubjectKind.SKIN, names.skinNames(), locale, Map.of()));
 
         return subjects;

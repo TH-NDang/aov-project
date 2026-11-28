@@ -26,21 +26,29 @@ interface VideoGroup {
   videos: AdminVideo[]
 }
 
-/** The subject's own videos come first, then one group per skill and skin that has any. */
+/**
+ * The entry's own videos come first, split the way the wiki shows a hero's: the skill demos sit under its abilities and
+ * the rest in its video section. Then one group per skin that has any.
+ */
 function groupVideos(videos: readonly AdminVideo[], subjects: readonly VideoSubject[]): VideoGroup[] {
   const groups = new Map<string, VideoGroup>()
   for (const video of videos) {
-    const id = videoSubjectId(video)
+    const skills = video.subjectKind === "HERO" && video.purpose === "SKILL_DEMO"
+    const id = `${videoSubjectId(video)}${skills ? ":skills" : ""}`
     let group = groups.get(id)
     if (!group) {
-      const subject = subjects.find((candidate) => subjectId(candidate) === id) ?? null
+      const subject = subjects.find((candidate) => subjectId(candidate) === videoSubjectId(video)) ?? null
       const name = video.subjectKey ? (subject?.name ?? video.subjectKey) : null
       group = {
         id,
         subject,
         label: name
           ? `${KIND_LABELS[video.subjectKind]} · ${name}`
-          : `Video của ${KIND_LABELS[video.subjectKind].toLowerCase()}`,
+          : skills
+            ? "Video kỹ năng"
+            : video.subjectKind === "HERO"
+              ? "Video tướng"
+              : `Video của ${KIND_LABELS[video.subjectKind].toLowerCase()}`,
         videos: [],
       }
       groups.set(id, group)
@@ -48,13 +56,13 @@ function groupVideos(videos: readonly AdminVideo[], subjects: readonly VideoSubj
     group.videos.push(video)
   }
   const rank = (group: VideoGroup) =>
-    group.videos[0].subjectKind === "SKILL" ? 1 : group.videos[0].subjectKind === "SKIN" ? 2 : 0
+    group.videos[0].subjectKind === "SKIN" ? 2 : group.id.endsWith(":skills") ? 1 : 0
   return [...groups.values()].sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label, "vi"))
 }
 
 /**
- * Manages every video of one catalog entry. A hero's panel also covers its skills and skins, so an editor sees them all
- * in one place and can pick the exact target when adding.
+ * Manages every video of one catalog entry. A hero's panel also covers its skins and is the one place for videos of its
+ * skills, so an editor sees them all together and picks the exact target when adding.
  */
 export function SubjectVideosPanel({
   kind,
@@ -94,7 +102,7 @@ export function SubjectVideosPanel({
           count={list.data?.items.length}
           description={
             kind === "HERO"
-              ? "Gắn nhiều video cho tướng, từng kỹ năng hoặc từng trang phục. Có hiệu lực ngay, không cần xuất bản lại tướng."
+              ? "Video kỹ năng: chọn loại Minh họa kỹ năng. Có hiệu lực ngay."
               : "Có hiệu lực ngay, không cần xuất bản lại mục này."
           }
           actions={
@@ -123,7 +131,7 @@ export function SubjectVideosPanel({
           <p className="type-body">Chưa có video nào.</p>
           <p className="type-meta">
             {kind === "HERO"
-              ? "Thêm video cách chơi, combo, cốt truyện hoặc thay đổi sau một bản cập nhật."
+              ? "Thêm video cách chơi, kỹ năng, combo hoặc cốt truyện."
               : "Thêm video hướng dẫn hoặc thay đổi sau một bản cập nhật."}
           </p>
         </div>

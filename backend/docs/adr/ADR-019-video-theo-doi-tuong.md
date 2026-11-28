@@ -23,7 +23,8 @@ chu trình nháp và xuất bản của tướng, và không làm thay đổi sn
   gắn vào một đối tượng, nên một đối tượng có bao nhiêu video tùy ý.
 - Đối tượng được xác định bằng `subject_kind`, `subject_id`, `subject_key`:
   - `HERO`, `ITEM`, `ENCHANTMENT`, `ARCANA`, `SPELL`: `subject_id` là định danh của mục, không có key.
-  - `SKILL`, `SKIN`: `subject_id` là định danh tướng, `subject_key` là khóa kỹ năng hoặc trang phục.
+  - `SKIN`: `subject_id` là định danh tướng, `subject_key` là khóa trang phục.
+  - `SKILL` có đến 27/11/2026, xem phần sửa đổi bên dưới.
 - Không có khóa ngoại sang module khác. Module sở hữu đối tượng cài port `VideoSubjectProvider` ở gốc
   module `video`: kiểm tra đối tượng tồn tại khi ghi và trả danh mục đối tượng cho màn hình quản trị.
   Module `video` không đọc bảng của module khác.
@@ -44,7 +45,7 @@ chu trình nháp và xuất bản của tướng, và không làm thay đổi sn
 - `status` có ba giá trị: `PUBLISHED` hiện công khai, `DRAFT` chờ duyệt, `HIDDEN` đã bác. Nhập lại dữ
   liệu thu thập bỏ qua dòng đã có, nên video đã bác không quay lại hàng chờ. `origin` phân biệt
   `MANUAL` và `IMPORT`.
-- Quyền dùng lại capability của đối tượng, không thêm role: tướng, kỹ năng, trang phục cần `hero:write`;
+- Quyền dùng lại capability của đối tượng, không thêm role: tướng, trang phục cần `hero:write`;
   mục kho cần `item:write`, `enchantment:write`, `arcana:write`, `spell:write`. Đưa video vào hoặc ra
   khỏi trạng thái `PUBLISHED` cần thêm capability `:publish` tương ứng.
 
@@ -73,3 +74,17 @@ của repo thu thập.
   nhiều player. YouTube dùng `youtube-nocookie.com`; Facebook, TikTok, Twitch có thể đặt cookie của họ sau khi bấm phát.
 - Video bị chủ kênh xóa hoặc tắt nhúng sẽ không phát được. Không có việc kiểm tra định kỳ trong phạm vi
   này; người đọc vẫn có liên kết mở trên YouTube.
+
+## Sửa đổi 27/11/2026: kỹ năng không có video riêng
+
+Chủ dự án thấy mỗi kỹ năng có ô thêm video và chỗ hiện riêng là rời rạc: người biên tập phải mở từng kỹ năng, người
+đọc phải bấm từng kỹ năng mới thấy video. Video kỹ năng thường minh họa cả bộ chiêu chứ không riêng một chiêu.
+
+- Bỏ loại `SKILL`. Video về kỹ năng là video của tướng với `purpose = SKILL_DEMO`, thêm ở mục Video của tướng trong
+  admin như mọi video khác, nên một tướng có bao nhiêu video kỹ năng tùy ý ở một chỗ.
+- Admin nhóm video của tướng thành "Video tướng" và "Video kỹ năng" theo `purpose`, đúng chỗ wiki hiện chúng. Màn sửa
+  kỹ năng không còn phần video.
+- Wiki hiện mọi video `SKILL_DEMO` của tướng thành một dải dưới bộ kỹ năng, mở trong cùng khung xem với danh sách
+  phát; mục Video giữ các loại còn lại.
+- V083 chuyển dữ liệu cũ (quy tắc ở 02-DATABASE). Không còn gắn video vào một chiêu cụ thể; nếu sau này cần, thêm
+  nhãn kỹ năng tùy chọn trên video của tướng thay vì khôi phục loại `SKILL`.

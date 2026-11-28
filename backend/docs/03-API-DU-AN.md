@@ -3292,18 +3292,19 @@ hợp đồng và tính bất biến của snapshot theo đặc tả 04.
 
 GET `/api/wiki/v1/videos` (công khai)
 - Query: `subjectKind` và `subjectId` bắt buộc, `subjectKey` tùy chọn; tham số khác trả 400.
-- `subjectKind=HERO` trả cả video của kỹ năng và trang phục của tướng đó. `SKILL`, `SKIN` kèm
-  `subjectKey` thu về một mục. `subjectKey` với loại khác trả 422 `VIDEO_INVALID`.
+- `subjectKind=HERO` trả cả video trang phục của tướng đó. `SKIN` kèm `subjectKey` thu về một trang phục.
+  `subjectKey` với loại khác trả 422 `VIDEO_INVALID`. Từ V083 không còn loại `SKILL` (trả 400); video về kỹ năng
+  là video `HERO` với `purpose=SKILL_DEMO`.
 - Trả `{items: [...]}`, tối đa 200 dòng `PUBLISHED`, theo `displayOrder` rồi ngày đăng mới nhất. Mỗi dòng
   không có `status`, `origin`, `version`. Cache: chính sách public của mục 51. Lọc theo patch do client thực hiện.
 
-Các API quản trị đều cần `catalog:read`. Ghi cần `hero:write` (tướng, kỹ năng, trang phục), `item:write`,
+Các API quản trị đều cần `catalog:read`. Ghi cần `hero:write` (tướng, trang phục), `item:write`,
 `enchantment:write`, `arcana:write` hoặc `spell:write`. Đưa video vào hoặc ra khỏi `PUBLISHED` cần thêm
 capability `:publish` tương ứng; thiếu quyền trả 403.
 
 GET `/api/wiki/v1/admin/videos`
 - Query: `subjectKind`, `subjectId`, `subjectKey`, `status`, `purpose`, `origin`, `q`, `page`, `size` (1 đến 100,
-  mặc định 24). `HERO` kèm `subjectId` gồm cả kỹ năng và trang phục của tướng. Trả `PageSlice`.
+  mặc định 24). `HERO` kèm `subjectId` gồm cả trang phục của tướng. Trả `PageSlice`.
 
 GET `/api/wiki/v1/admin/videos/subjects`
 - Query: `locale`, mặc định `vi-VN`. Trả `{items: [{kind, id, key, code, name, aliases}]}` cho mọi mục có thể
