@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 import type { ObjectiveKind, PublishedGame, Side } from "@aov/community-contracts"
-import { StreamIcon, type StreamIconName } from "../../../components/stream-icon"
+import { ObjectiveMark } from "../../../components/objective-mark"
 import { StreamImage } from "../../../components/stream-image"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { WatchLink } from "../../../components/watch-link"
@@ -15,13 +15,6 @@ export const OBJECTIVE_NAMES: Record<ObjectiveKind, readonly [string, string]> =
   TURRET: ["Phá trụ", "Destroyed a tower"],
   BASE: ["Phá nhà chính", "Destroyed the base"],
   OTHER: ["Chiếm mục tiêu", "Took an objective"],
-}
-export const OBJECTIVE_ICONS: Record<ObjectiveKind, StreamIconName> = {
-  DARK_SLAYER: "slayer",
-  ABYSSAL_DRAGON: "dragon",
-  TURRET: "tower",
-  BASE: "core",
-  OTHER: "flag",
 }
 
 /**
@@ -53,7 +46,7 @@ export function GameTrack({
       <ul className="tn-objectives-legend">
         {kinds.map((kind) => (
           <li key={kind}>
-            <StreamIcon name={OBJECTIVE_ICONS[kind]} size={16} />
+            <ObjectiveMark objective={kind} size={16} />
             {text(...OBJECTIVE_NAMES[kind])}
           </li>
         ))}
@@ -86,7 +79,7 @@ export function GameTrack({
                 const mark = (
                   <>
                     <span>
-                      <StreamIcon name={OBJECTIVE_ICONS[kind]} size={18} />
+                      <ObjectiveMark objective={kind} size={18} />
                       <span className="sr-only">{named}</span>
                     </span>
                     <time>{at}</time>

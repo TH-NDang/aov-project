@@ -10,16 +10,23 @@ export const battleMapKeys = {
   map: (mode: string) => ["battle-map", mode] as const,
 }
 
+/** A published battlefield map: its content and the uploaded pictures it names, by asset. */
+export interface BattleMap {
+  content: MapContent
+  images: Record<string, { url: string }>
+}
+
 /** The published battlefield map of a mode, as the Wiki shows it; it changes only when an editor publishes. */
 export const battleMapQuery = (mode: string) =>
   queryOptions({
     queryKey: battleMapKeys.map(mode),
-    queryFn: async ({ signal }) =>
-      (await wikiPublicRequest<{ content: MapContent }>(`/game-modes/${encodeURIComponent(mode)}/map`, { signal }))
-        .content,
+    queryFn: async ({ signal }) => {
+      const map = await wikiPublicRequest<BattleMap>(`/game-modes/${encodeURIComponent(mode)}/map`, { signal })
+      return { content: map.content, images: map.images ?? {} } satisfies BattleMap
+    },
     staleTime: 60 * 60_000,
     gcTime: 6 * 60 * 60_000,
     retry: false,
     refetchOnWindowFocus: false,
-    meta: { storedAnswer: "stream-battle-map@1" },
+    meta: { storedAnswer: "stream-battle-map@2" },
   })
