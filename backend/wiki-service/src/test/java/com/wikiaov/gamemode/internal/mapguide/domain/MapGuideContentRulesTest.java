@@ -42,14 +42,27 @@ class MapGuideContentRulesTest {
 
     @Test
     void theRealignedMapKeepsEveryReferenceAndPutsWhatStandsOnALaneOnItsLine() throws IOException {
-        var seeded = seededMap(SEED);
-        var realigned = seededMap(REALIGNED);
+        keepsReferencesAndLaneLines(seededMap(REALIGNED));
+    }
 
-        assertThat(MapGuideContentRules.validate(realigned)).isEmpty();
-        assertThat(MapGuideContentRules.missingFields(realigned)).isEmpty();
-        assertThat(MapGuideContentRules.references(realigned))
-                .containsExactlyInAnyOrderElementsOf(MapGuideContentRules.references(seeded));
-        var onLanes = realigned.objects().stream()
+    @Test
+    void theMapWithRoundedCornersKeepsEveryReferenceAndBendsBothSideLanes() throws IOException {
+        var rounded = seededMap(ROUNDED);
+
+        keepsReferencesAndLaneLines(rounded);
+        assertThat(rounded.lanes())
+                .filteredOn(lane -> List.of("duong-caesar", "duong-rong").contains(lane.code()))
+                .hasSize(2)
+                .allSatisfy(lane -> assertThat(lane.path()).hasSizeGreaterThan(3));
+        assertThat(rounded.terrain()).hasSizeGreaterThan(seededMap(REALIGNED).terrain().size());
+    }
+
+    private static void keepsReferencesAndLaneLines(MapGuideContent map) throws IOException {
+        assertThat(MapGuideContentRules.validate(map)).isEmpty();
+        assertThat(MapGuideContentRules.missingFields(map)).isEmpty();
+        assertThat(MapGuideContentRules.references(map))
+                .containsExactlyInAnyOrderElementsOf(MapGuideContentRules.references(seededMap(SEED)));
+        var onLanes = map.objects().stream()
                 .filter(object -> LANE_PLACES.contains(object.code()))
                 .flatMap(object -> object.positions().stream())
                 .toList();
@@ -201,6 +214,7 @@ class MapGuideContentRulesTest {
 
     private static final String SEED = "V081__seed_5v5_map_guide.sql";
     private static final String REALIGNED = "V082__realign_5v5_map_guide.sql";
+    private static final String ROUNDED = "V084__round_5v5_map_corners.sql";
     private static final List<String> LANE_PLACES = List.of("tru-trong", "tru-giua", "tru-ngoai", "goi-mau");
 
     /** Side lanes run 3.5 in from the edge; the middle lane runs on the diagonal x + y = 100. */
