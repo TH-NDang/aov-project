@@ -31,13 +31,29 @@ class MapGuideContentRulesTest {
 
     @Test
     void theSeededMapOfFiveVersusFiveIsConsistentAndComplete() throws IOException {
-        var content = seededMap();
+        var content = seededMap(SEED);
 
         assertThat(MapGuideContentRules.validate(content)).isEmpty();
         assertThat(MapGuideContentRules.missingFields(content)).isEmpty();
         assertThat(MapGuideContentRules.references(content)).contains("rong", "tru-ngoai.xanh-giua",
                 "tru-ngoai.do-caesar", "khong-lo-thuat-si.do", "hang-rong", "rung-xanh-caesar", "duong-giua");
         assertThat(content.terrain()).extracting(Terrain::kind).contains("WALL", "RIVER", "JUNGLE");
+    }
+
+    @Test
+    void theRealignedMapKeepsEveryReferenceAndPutsWhatStandsOnALaneOnItsLine() throws IOException {
+        var seeded = seededMap(SEED);
+        var realigned = seededMap(REALIGNED);
+
+        assertThat(MapGuideContentRules.validate(realigned)).isEmpty();
+        assertThat(MapGuideContentRules.missingFields(realigned)).isEmpty();
+        assertThat(MapGuideContentRules.references(realigned))
+                .containsExactlyInAnyOrderElementsOf(MapGuideContentRules.references(seeded));
+        var onLanes = realigned.objects().stream()
+                .filter(object -> LANE_PLACES.contains(object.code()))
+                .flatMap(object -> object.positions().stream())
+                .toList();
+        assertThat(onLanes).hasSize(24).allSatisfy(spot -> assertThat(onALaneLine(spot)).as(spot.key()).isTrue());
     }
 
     @Test
@@ -183,9 +199,18 @@ class MapGuideContentRulesTest {
                 List.of(new Point(30.0, 25.0), new Point(36.0, 25.0), new Point(33.0, 31.0)));
     }
 
-    private static MapGuideContent seededMap() throws IOException {
-        try (var stream = MapGuideContentRulesTest.class
-                .getResourceAsStream("/db/migration/V081__seed_5v5_map_guide.sql")) {
+    private static final String SEED = "V081__seed_5v5_map_guide.sql";
+    private static final String REALIGNED = "V082__realign_5v5_map_guide.sql";
+    private static final List<String> LANE_PLACES = List.of("tru-trong", "tru-giua", "tru-ngoai", "goi-mau");
+
+    /** Side lanes run 3.5 in from the edge; the middle lane runs on the diagonal x + y = 100. */
+    private static boolean onALaneLine(Spot spot) {
+        return spot.x() == 3.5 || spot.x() == 96.5 || spot.y() == 3.5 || spot.y() == 96.5
+                || Math.abs(spot.x() + spot.y() - 100) < 1e-9;
+    }
+
+    private static MapGuideContent seededMap(String migration) throws IOException {
+        try (var stream = MapGuideContentRulesTest.class.getResourceAsStream("/db/migration/" + migration)) {
             assertThat(stream).isNotNull();
             String sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             String json = sql.substring(sql.indexOf("$json$") + 6, sql.lastIndexOf("$json$"));

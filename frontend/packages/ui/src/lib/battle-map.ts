@@ -275,6 +275,22 @@ export function roundedPath(outline: readonly MapPoint[], radius = 2) {
   return `M${at(first.leave)}${rest.map((corner) => `L${at(corner.enter)}Q${at(corner.point)} ${at(corner.leave)}`).join("")}Z`
 }
 
+/**
+ * The wall that closes the map in, as in the game where the outer lanes run along it: the square's edge with an
+ * opening `width` in from it, its corners rounded. Fill it with the even-odd rule. Maps with traced terrain draw it.
+ */
+export function frameWallPath(width = 1.3, radius = 3) {
+  const near = width
+  const far = 100 - width
+  const opening = [
+    { x: near, y: near },
+    { x: far, y: near },
+    { x: far, y: far },
+    { x: near, y: far },
+  ]
+  return `M0 0H100V100H0Z${roundedPath(opening, radius)}`
+}
+
 /** The last mark of the timeline reached at `seconds`, or null before the first one. */
 export function momentAt(tempo: readonly TempoMoment[], seconds: number) {
   return tempo.filter((moment) => moment.seconds <= seconds).at(-1) ?? null

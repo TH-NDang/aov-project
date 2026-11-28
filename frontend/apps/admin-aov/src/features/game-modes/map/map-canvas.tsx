@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
 import {
+  frameWallPath,
   roundedPath,
   TERRAIN_KINDS,
   terrainOf,
@@ -32,17 +33,25 @@ export const TERRAIN_STYLE: Record<TerrainKind, { fill: string; opacity: number;
   WALL: { fill: "var(--foreground)", opacity: 0.32, round: 1.2 },
 }
 
-/** Every traced shape of the ground, from the floor up, as faint fills. */
+const FRAME = frameWallPath()
+
+/** Every traced shape of the ground, from the floor up, as faint fills, closed in by the wall the Wiki draws around it. */
 export function TerrainShapes({ content }: { content: MapContent }) {
-  return TERRAIN_KINDS.flatMap((kind) =>
-    terrainOf(content, kind).map((shape, index) => (
-      <path
-        key={`${kind}-${index}`}
-        d={roundedPath(shape.outline, TERRAIN_STYLE[kind].round)}
-        fill={TERRAIN_STYLE[kind].fill}
-        fillOpacity={TERRAIN_STYLE[kind].opacity}
-      />
-    )),
+  if (!(content.terrain ?? []).length) return null
+  return (
+    <>
+      {TERRAIN_KINDS.flatMap((kind) =>
+        terrainOf(content, kind).map((shape, index) => (
+          <path
+            key={`${kind}-${index}`}
+            d={roundedPath(shape.outline, TERRAIN_STYLE[kind].round)}
+            fill={TERRAIN_STYLE[kind].fill}
+            fillOpacity={TERRAIN_STYLE[kind].opacity}
+          />
+        )),
+      )}
+      <path d={FRAME} fillRule="evenodd" fill={TERRAIN_STYLE.WALL.fill} fillOpacity={TERRAIN_STYLE.WALL.opacity} />
+    </>
   )
 }
 

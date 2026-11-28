@@ -3,6 +3,7 @@ import type { ModeImage } from "../auto-chess-model"
 import { LaneMark, MapGlyph } from "@aov/ui/components/battle-map-glyph"
 import {
   centre,
+  frameWallPath,
   pathOf,
   roundedPath,
   terrainOf,
@@ -37,9 +38,12 @@ export function ObjectIcon({
 /** How far each kind of terrain rounds its corners, in percent of the map: rock and water are soft, the floor less. */
 const ROUNDING: Record<TerrainKind, number> = { JUNGLE: 2.5, RIVER: 3, BUSH: 1.5, WALL: 1.2 }
 
+/** The wall around the whole map, drawn as part of the board's rim (see .wiki-map-board[data-walled]). */
+const FRAME = frameWallPath()
+
 /**
  * The traced ground of the map: the jungle floor with a faint grass grain, the river, bushes, and walls raised off the
- * floor by a cast shadow and a lit top edge.
+ * floor by a cast shadow and a lit top edge, the wall around the map among them.
  */
 function Terrain({ content }: { content: MapContent }) {
   const paths = (kind: TerrainKind) =>
@@ -60,16 +64,19 @@ function Terrain({ content }: { content: MapContent }) {
         <path key={index} className="wiki-map-bush" d={d} />
       ))}
       <g className="wiki-map-wall-shadow" transform="translate(0.45 0.75)">
+        <path d={FRAME} fillRule="evenodd" />
         {walls.map((d, index) => (
           <path key={index} d={d} />
         ))}
       </g>
       <g className="wiki-map-wall-rim" transform="translate(-0.2 -0.3)">
+        <path d={FRAME} fillRule="evenodd" />
         {walls.map((d, index) => (
           <path key={index} d={d} />
         ))}
       </g>
       <g className="wiki-map-wall">
+        <path className="wiki-map-frame" d={FRAME} fillRule="evenodd" />
         {walls.map((d, index) => (
           <path key={index} d={d} />
         ))}
@@ -121,7 +128,7 @@ export function MapBoard({
   const areas = terrain ? content.areas.filter((area) => showAreas || highlightArea?.code === area.code) : content.areas
 
   return (
-    <div className="wiki-map-board" data-art={background ? "" : undefined}>
+    <div className="wiki-map-board" data-art={background ? "" : undefined} data-walled={terrain || undefined}>
       <div className="wiki-map-field">
         <svg
           className="wiki-map-ground"
