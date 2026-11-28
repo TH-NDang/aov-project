@@ -1,6 +1,5 @@
-import type { ComponentProps } from "react"
 import type { BuildStep, Selection } from "@aov/community-contracts"
-import { Check, TriangleAlert } from "lucide-react"
+import { Check, Shield, TriangleAlert, Zap } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { formatClock } from "@/lib/clock"
 import { itemKey, itemName, type ItemIndex } from "../../model/build"
@@ -43,9 +42,12 @@ export function ChosenMark() {
 /** A step in words: the item, what it was built from and when the player had it. */
 export function stepLabel(step: BuildStep, index: ItemIndex) {
   const parts = (step.from ?? []).map((part) => itemName(part, index))
+  const gone = (step.replaces ?? []).map((entry) => itemName(entry, index))
   return [
     itemName(step.item, index),
+    step.role === "PROTECTIVE" ? "bảo hộ" : null,
     parts.length ? `lên từ ${parts.join(" và ")}` : null,
+    gone.length ? `bán ${gone.join(" và ")} để lấy` : null,
     step.atSeconds != null ? `có lúc ${formatClock(step.atSeconds)}` : null,
   ]
     .filter(Boolean)
@@ -53,7 +55,7 @@ export function stepLabel(step: BuildStep, index: ItemIndex) {
 }
 
 /** What went into an item, as small pictures over its lower left corner: from small to large, the way it was built. */
-function Parts({ step, index, size }: { step: BuildStep; index: ItemIndex; size: number }) {
+export function Parts({ step, index, size }: { step: BuildStep; index: ItemIndex; size: number }) {
   if (!step.from?.length) return null
   return (
     <span className="absolute -bottom-1.5 -left-2 flex -space-x-1.5" data-parts={step.from.length}>
@@ -71,7 +73,7 @@ function Parts({ step, index, size }: { step: BuildStep; index: ItemIndex; size:
 }
 
 /** Marks an item with something to fix; the reason stands under the lists. */
-function ProblemMark() {
+export function ProblemMark() {
   return (
     <span className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full bg-popover">
       <TriangleAlert size={14} className="text-(--aov-warning)" aria-hidden="true" />
@@ -79,88 +81,32 @@ function ProblemMark() {
   )
 }
 
-type StepProps = Omit<ComponentProps<"button">, "children"> & {
-  step: BuildStep
-  index: ItemIndex
-  problem?: boolean
-}
-
-/** One of the six slots, filled: the item with its parts, its name and the time the player had it. */
-export function BuildTile({
-  step,
-  index,
-  number,
-  borrowed,
-  problem,
-  className,
-  ...props
-}: StepProps & {
-  number: number
-  /** Read off a snapshot rather than from a list of the player's own. */
-  borrowed: boolean
-}) {
+/**
+ * The marks over the picture of an item: a bolt where the Wiki gives it an active effect, a shield where it was bought
+ * for protection. Both say nothing of the other: an active item may be the build itself.
+ */
+export function ItemMarks({ item, index, protective }: { item: Selection; index: ItemIndex; protective?: boolean }) {
   return (
-    <button
-      type="button"
-      data-item={itemKey(step.item, index)}
-      title={stepLabel(step, index)}
-      aria-label={`Ô ${number}: ${stepLabel(step, index)}`}
-      {...props}
-      className={cn(
-        "flex w-full min-w-0 flex-col items-center gap-2 rounded-lg px-0.5 pt-2 pb-1.5 text-center hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted",
-        className,
+    <>
+      {index.find(item)?.active && (
+        <span
+          className="absolute -top-1.5 -right-1.5 grid size-4.5 place-items-center rounded-full bg-(--aov-game-gold) text-(--aov-on-medal) ring-2 ring-popover"
+          title="Có kích hoạt"
+          data-mark="active"
+        >
+          <Zap size={10} strokeWidth={3} fill="currentColor" aria-hidden="true" />
+        </span>
       )}
-    >
-      <span className="relative inline-flex">
-        <ItemIcon
-          item={step.item}
-          index={index}
-          size={52}
-          className={cn(
-            "rounded-lg",
-            borrowed && "outline-1 outline-offset-2 outline-muted-foreground/50 outline-dashed",
-          )}
-        />
-        <Parts step={step} index={index} size={22} />
-        {problem && <ProblemMark />}
-      </span>
-      <span className="line-clamp-3 min-h-8 w-full text-xs leading-4 text-balance">
-        {itemName(step.item, index)}
-        {step.atSeconds != null && (
-          <>
-            {" "}
-            <span className="esp-num text-muted-foreground">{formatClock(step.atSeconds)}</span>
-          </>
-        )}
-      </span>
-    </button>
-  )
-}
-
-/** An item of a list that grows: smaller than a slot, its name beside it. */
-export function BuildChip({ step, index, problem, className, ...props }: StepProps) {
-  return (
-    <button
-      type="button"
-      data-item={itemKey(step.item, index)}
-      title={stepLabel(step, index)}
-      aria-label={stepLabel(step, index)}
-      {...props}
-      className={cn(
-        "flex h-full min-h-12 w-full min-w-0 items-center gap-3 rounded-lg border px-2 py-1 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted",
-        className,
+      {protective && (
+        <span
+          className="absolute -bottom-1.5 -left-1.5 grid size-4.5 place-items-center rounded-full bg-(--aov-info) text-background ring-2 ring-popover"
+          title="Bảo hộ"
+          data-mark="protective"
+        >
+          <Shield size={10} strokeWidth={3} fill="currentColor" aria-hidden="true" />
+        </span>
       )}
-    >
-      <span className="relative inline-flex">
-        <ItemIcon item={step.item} index={index} size={32} className={cn(step.place === "REPLACED" && "opacity-75")} />
-        <Parts step={step} index={index} size={16} />
-        {problem && <ProblemMark />}
-      </span>
-      <span className="min-w-0 text-xs leading-4">
-        <span className="line-clamp-2 font-semibold">{itemName(step.item, index)}</span>
-        {step.atSeconds != null && <span className="esp-num text-muted-foreground">{formatClock(step.atSeconds)}</span>}
-      </span>
-    </button>
+    </>
   )
 }
 

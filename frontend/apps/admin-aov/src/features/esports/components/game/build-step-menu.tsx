@@ -1,29 +1,34 @@
 import { useState, type ReactNode } from "react"
-import type { BuildPlace, BuildStep, Reference, Selection } from "@aov/community-contracts"
-import { ArrowLeft, ArrowRight, ChevronLeft, Plus, Trash2 } from "lucide-react"
+import type { BuildRole, BuildStep, Reference, Selection } from "@aov/community-contracts"
+import { ArrowDown, ArrowUp, ChevronLeft, Plus, Trash2 } from "lucide-react"
+import { Checkbox } from "@aov/ui/components/checkbox"
 import { cn } from "@aov/ui/lib/utils"
 import { formatClock } from "@/lib/clock"
 import {
-  BUILD_PLACES,
   BUILD_REFUSALS,
+  BUILD_ROLES,
   MIN_TIER,
-  buildPlace,
+  buildRole,
+  fates,
+  heldBefore,
   itemKey,
   itemName,
-  moveItem,
   recipeParts,
   removeItem,
+  setRole,
+  setSold,
   setTime,
   shiftItem,
-  stepsAt,
+  successor,
   togglePart,
+  toggleReplaced,
   upgradeItem,
   upgradesOf,
   type BuildEdit,
   type BuildRefusal,
   type ItemIndex,
 } from "../../model/build"
-import { ItemButton, ItemIcon } from "./build-item"
+import { ItemButton, ItemIcon, ItemMarks } from "./build-item"
 import { BuildTimeField } from "./build-time-field"
 import { ItemPicker } from "./item-picker"
 
@@ -31,7 +36,7 @@ import { ItemPicker } from "./item-picker"
 export type ApplyEdit = (edit: (steps: BuildStep[]) => BuildEdit, done: string) => BuildRefusal | null
 
 /** The part of the menu an edit was asked for in, so the reason it is refused stands there. */
-type Spot = "place" | "upgrade" | "parts" | "time"
+type Spot = "order" | "role" | "upgrade" | "parts" | "replaces" | "sold" | "time"
 
 function Part({ title, reason, children }: { title: string; reason?: string | null; children: ReactNode }) {
   return (
@@ -55,8 +60,8 @@ const iconButton =
   "grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground aria-disabled:opacity-30 aria-disabled:hover:bg-transparent"
 
 /**
- * What can be done with one item of a build: its place and order, what it went into, what it came from and when the
- * player had it. Everything is done at once; a refused edit says why beside what asked for it.
+ * What can be done with one item of a build: its role and order, what it went into, what it came from, what was sold for
+ * it and when the player had it. Everything is done at once; a refused edit says why beside what asked for it.
  */
 export function BuildStepMenu({
   step,
@@ -64,6 +69,7 @@ export function BuildStepMenu({
   index,
   duration,
   nowGame,
+  stamp = null,
   onSeek,
   onEdit,
   onClose,
@@ -76,6 +82,8 @@ export function BuildStepMenu({
   duration?: number | null
   /** The game second the video is at. */
   nowGame?: number | null
+  /** The second an item added from here is given, when one is. */
+  stamp?: number | null
   onSeek?: (gameSecond: number) => void
   onEdit: ApplyEdit
   /** Called once the item is another one, or gone, with the key of the item the focus goes to. */
@@ -92,8 +100,11 @@ export function BuildStepMenu({
   const recipe = recipeParts(step.item, index)
   const from = step.from ?? []
   const parts = [...recipe, ...from.filter((part) => !recipe.some((entry) => entry.id === itemKey(part, index)))]
-  const row = stepsAt(steps, step.place)
-  const at = row.indexOf(step)
+  const at = steps.indexOf(step)
+  const fate = fates(steps, index)[at]
+  const next = successor(steps, at, index)
+  const replaces = step.replaces ?? []
+  const sellable = heldBefore(steps, at, index)
   const reasonAt = (spot: Spot) => (refusal?.spot === spot ? BUILD_REFUSALS[refusal.reason] : null)
 
   const apply = (spot: Spot, edit: (steps: BuildStep[]) => BuildEdit, done: string) => {
@@ -107,17 +118,22 @@ export function BuildStepMenu({
     return apply("parts", (current) => togglePart(current, key, part, index), done)
   }
   const upgrade = (target: Reference) => {
-    const edit = (current: BuildStep[]) => upgradeItem(current, key, target, index)
+    const edit = (current: BuildStep[]) => upgradeItem(current, key, target, index, stamp)
     if (apply("upgrade", edit, `${name} đã lên ${target.name}`)) onClose(target.id)
   }
-  const move = (to: BuildPlace) => {
-    const edit = (current: BuildStep[]) => moveItem(current, key, to, index)
-    apply("place", edit, `Đã chuyển ${name} sang “${buildPlace(to).label}”`)
+  const role = (to: BuildRole) =>
+    apply("role", (current) => setRole(current, key, to, index), `${name} là đồ ${buildRole(to).label.toLowerCase()}`)
+  const replace = (gone: Selection) => {
+    const off = replaces.some((entry) => itemKey(entry, index) === itemKey(gone, index))
+    const done = off ? `${name} không thay ${itemName(gone, index)}` : `Đã bán ${itemName(gone, index)} để lấy ${name}`
+    apply("replaces", (current) => toggleReplaced(current, key, gone, index), done)
   }
-  const shift = (by: -1 | 1) => apply("place", (current) => shiftItem(current, key, by, index), `Đã đổi thứ tự ${name}`)
+  const sell = (sold: boolean) =>
+    apply("sold", (current) => setSold(current, key, sold, index), sold ? `Đã bán ${name}` : `${name} giữ đến cuối ván`)
+  const shift = (by: -1 | 1) => apply("order", (current) => shiftItem(current, key, by, index), `Đã đổi thứ tự ${name}`)
   const remove = () => {
-    const beside = row[at + 1] ?? row[at - 1]
-    if (apply("place", (current) => removeItem(current, key, index), `Đã bỏ ${name}`))
+    const beside = steps[at + 1] ?? steps[at - 1]
+    if (apply("order", (current) => removeItem(current, key, index), `Đã bỏ ${name}`))
       onClose(beside && itemKey(beside.item, index))
   }
 
@@ -152,19 +168,22 @@ export function BuildStepMenu({
   return (
     <div className="space-y-3 p-3">
       <header className="flex items-center gap-2.5">
-        <ItemIcon item={step.item} index={index} size={36} />
+        <span className="relative inline-flex">
+          <ItemIcon item={step.item} index={index} size={36} />
+          <ItemMarks item={step.item} index={index} protective={step.role === "PROTECTIVE"} />
+        </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold" title={name}>
             {name}
           </span>
           <span className="type-meta block">{tier ? `Cấp ${tier}` : "Chưa rõ cấp"}</span>
         </span>
-        {row.length > 1 && (
+        {steps.length > 1 && (
           <span className="flex" role="group" aria-label="Thứ tự lên">
             {(
               [
-                { by: -1, label: "Sớm hơn", icon: ArrowLeft, end: at === 0 },
-                { by: 1, label: "Muộn hơn", icon: ArrowRight, end: at === row.length - 1 },
+                { by: -1, label: "Sớm hơn", icon: ArrowUp, end: at === 0 },
+                { by: 1, label: "Muộn hơn", icon: ArrowDown, end: at === steps.length - 1 },
               ] as const
             ).map((entry) => (
               <button
@@ -172,9 +191,9 @@ export function BuildStepMenu({
                 type="button"
                 aria-label={entry.label}
                 title={entry.label}
-                // Stays focusable at the end of the row, so the key that led there does not lose its place.
+                // Stays focusable at the end of the list, so the key that led there does not lose its place.
                 aria-disabled={entry.end}
-                onClick={() => shift(entry.by)}
+                onClick={() => !entry.end && shift(entry.by)}
                 className={iconButton}
               >
                 <entry.icon size={16} />
@@ -192,27 +211,34 @@ export function BuildStepMenu({
           <Trash2 size={16} />
         </button>
       </header>
+      <Reason>{reasonAt("order")}</Reason>
 
-      <div className="space-y-1">
-        <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1" role="group" aria-label={`Chỗ của ${name}`}>
-          {BUILD_PLACES.map((entry) => (
-            <button
-              key={entry.code}
-              type="button"
-              aria-pressed={entry.code === step.place}
-              title={entry.hint}
-              onClick={() => move(entry.code)}
-              className={cn(
-                "h-8 rounded-md px-1 text-xs font-semibold",
-                entry.code === step.place ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {entry.short}
-            </button>
-          ))}
+      {fate !== "UPGRADED" && (
+        <div className="space-y-1">
+          <div
+            className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
+            role="group"
+            aria-label={`Vai trò của ${name}`}
+          >
+            {BUILD_ROLES.map((entry) => (
+              <button
+                key={entry.code}
+                type="button"
+                aria-pressed={entry.code === step.role}
+                title={entry.hint}
+                onClick={() => role(entry.code)}
+                className={cn(
+                  "h-8 rounded-md px-1 text-xs font-semibold",
+                  entry.code === step.role ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
+          <Reason>{reasonAt("role")}</Reason>
         </div>
-        <Reason>{reasonAt("place")}</Reason>
-      </div>
+      )}
 
       {upgrades.length > 0 && (
         <Part title="Nâng lên" reason={reasonAt("upgrade")}>
@@ -257,6 +283,37 @@ export function BuildStepMenu({
             </button>
           </div>
         </Part>
+      )}
+
+      {sellable.length > 0 && (
+        <Part title="Bán món nào để lấy" reason={reasonAt("replaces")}>
+          <div className="grid grid-cols-4 gap-1">
+            {sellable.map((entry) => (
+              <ItemButton
+                key={itemKey(entry.item, index)}
+                item={entry.item}
+                index={index}
+                pressed={replaces.some((gone) => itemKey(gone, index) === itemKey(entry.item, index))}
+                onClick={() => replace(entry.item)}
+              />
+            ))}
+          </div>
+        </Part>
+      )}
+
+      {next >= 0 ? (
+        <p className="type-meta">
+          {fate === "UPGRADED" ? "Đã lên" : "Đã bán để lấy"}{" "}
+          <span className="font-semibold text-foreground">{itemName(steps[next]!.item, index)}</span>
+        </p>
+      ) : (
+        <div className="space-y-1">
+          <label className="flex items-center gap-2 text-xs">
+            <Checkbox checked={!!step.sold} onCheckedChange={(checked) => sell(checked === true)} />
+            Bán trước khi hết ván, không rõ lấy món gì
+          </label>
+          <Reason>{reasonAt("sold")}</Reason>
+        </div>
       )}
 
       <Part title="Thời điểm" reason={reasonAt("time")}>

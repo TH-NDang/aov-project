@@ -1,36 +1,38 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import type { BuildPlace, Participant, Selection } from "@aov/community-contracts"
+import type { BuildRole, BuildRoles, BuildStep, Participant, Selection } from "@aov/community-contracts"
 import { Camera, RotateCcw, TriangleAlert } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Checkbox } from "@aov/ui/components/checkbox"
 import { confirmAction } from "@/components/confirm-dialog"
 import { formatClock } from "@/lib/clock"
-import { BuildPlaceBlock, type OpenPart } from "../components/game/build-place"
+import { BuildEnd } from "../components/game/build-end"
+import { BuildPath, type OpenPart } from "../components/game/build-path"
 import { BuildStepMenu, type ApplyEdit } from "../components/game/build-step-menu"
 import {
   BUILD_REFUSALS,
   addItem,
   buildOf,
-  buildPlace,
   buildProblems,
+  buildRole,
   editBuild,
   itemKey,
   itemName,
   refused,
-  removeItem,
   seenItems,
+  setRole,
   type BuildRefusal,
   type ItemIndex,
 } from "../model/build"
 
 /**
- * The items a player built, in three places: those kept to the end, those given up and those bought for a moment.
- * Every edit is a change to the list the player has when it is saved; while nobody wrote one, that is what the snapshot
- * at the end of the game shows, so the first edit writes a list of its own.
+ * The items a player built, in the order they were bought, each for the build itself or for protection; the six slots
+ * the game ended with are read from them. Every edit is a change to the list the player has when it is saved; while
+ * nobody wrote one, that is what the snapshot at the end of the game shows, so the first edit writes a list of its own.
  */
 export function BuildEditor({
   participant,
   index,
+  roles,
   duration,
   nowGame,
   stamp,
@@ -41,6 +43,8 @@ export function BuildEditor({
 }: {
   participant: Participant
   index: ItemIndex
+  /** The role last recorded for each item, for this hero first: what an added item is bought for unless changed. */
+  roles?: BuildRoles
   /** How long the game lasted, when known. */
   duration?: number | null
   /** The game second the video is at, when a synced video plays beside the editor. */
@@ -101,79 +105,46 @@ export function BuildEditor({
     })
     if (confirmed) onEdit((current) => ({ ...current, build: [] }), "Đã bỏ danh sách trang bị riêng")
   }
-  const pick = (place: BuildPlace, item: Selection, seenAt: number | null): BuildRefusal | null => {
-    const key = itemKey(item, index)
+  // An item added now is given the second the video is at, while that is asked for.
+  const stampAt = stamp ? now : null
+  const pick = (item: Selection, seenAt: number | null, replaces: Selection[] = []): BuildRefusal | null => {
     const name = itemName(item, index)
-    const listed = build.steps.find((step) => itemKey(step.item, index) === key)
-    if (listed?.place === place) return edit((steps) => removeItem(steps, key, index), `Đã bỏ ${name}`)
-    const at = seenAt ?? (stamp ? now : null)
-    const done = listed ? `Đã chuyển ${name} sang` : `Đã thêm ${name} vào`
-    return edit((steps) => addItem(steps, item, place, index, at), `${done} “${buildPlace(place).label}”`)
+    const id = index.find(item)?.id ?? item.id
+    const remembered = id ? roles?.items[id] : undefined
+    const role: BuildRole = remembered ?? "CORE"
+    const sold = replaces.map((gone) => itemName(gone, index))
+    const done = [
+      `Đã thêm ${name}`,
+      sold.length ? `bán ${sold.join(" và ")} để lấy` : null,
+      remembered === "PROTECTIVE" ? "bảo hộ như lần ghi trước" : null,
+    ]
+    return edit(
+      (steps) => addItem(steps, item, role, index, seenAt ?? stampAt, replaces),
+      done.filter(Boolean).join(", "),
+    )
   }
-
-  const place = (code: BuildPlace) => (
-    <BuildPlaceBlock
-      place={code}
-      steps={build.steps}
-      index={index}
-      borrowed={!!build.snapshot}
-      problems={new Set(problems.map((problem) => problem.step))}
-      seen={seen}
-      inline={inline}
-      open={open}
-      onOpen={setOpen}
-      onClose={(part) => setOpen((current) => (current === part ? null : current))}
-      onPick={(item, seenAt) => pick(code, item, seenAt)}
-      aside={
-        code === "KEPT" &&
-        beneath && (
-          <Button
-            size="xs"
-            variant="ghost"
-            className="ml-auto text-muted-foreground"
-            title="Bỏ danh sách đã ghi, trang bị lại đọc từ mốc"
-            onClick={() => void readAgain()}
-          >
-            <RotateCcw aria-hidden /> Đọc lại từ mốc {formatClock(beneath.atSeconds)}
-          </Button>
-        )
-      }
-      footer={
-        now != null && (
-          <label
-            htmlFor={stampId}
-            className="ml-auto flex items-center gap-2 text-xs text-muted-foreground"
-            title="Món thêm vào nhận thời điểm video đang ở"
-            // The search keeps the focus, so the next name is typed at once. A press of the words would hand it to the
-            // box with the label's own click, so they turn the box by hand.
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={(event) => {
-              if (event.target instanceof Element && event.target.closest("button")) return
-              event.preventDefault()
-              onStamp(!stamp)
-            }}
-          >
-            <Checkbox id={stampId} checked={stamp} onCheckedChange={(checked) => onStamp(checked === true)} />
-            Ghi kèm lúc video {formatClock(now)}
-          </label>
-        )
-      }
-      menu={(step) => (
-        <BuildStepMenu
-          step={step}
-          steps={build.steps}
-          index={index}
-          duration={duration}
-          nowGame={now}
-          onSeek={onSeekGame}
-          onEdit={edit}
-          onClose={(next = "") => {
-            focusNext.current = next
-            setOpen(null)
-          }}
-        />
-      )}
-    />
+  const changeRole = (step: BuildStep, role: BuildRole) => {
+    const key = itemKey(step.item, index)
+    const name = itemName(step.item, index)
+    edit((steps) => setRole(steps, key, role, index), `${name} là đồ ${buildRole(role).label.toLowerCase()}`)
+  }
+  const stampBox = now != null && (
+    <label
+      htmlFor={stampId}
+      data-keep-catalogue
+      className="ml-auto flex items-center gap-2 text-xs text-muted-foreground"
+      title="Món thêm vào nhận thời điểm video đang ở"
+      // A press of the words would hand the focus to the box with the label's own click, so they turn it by hand.
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest("button")) return
+        event.preventDefault()
+        onStamp(!stamp)
+      }}
+    >
+      <Checkbox id={stampId} checked={stamp} onCheckedChange={(checked) => onStamp(checked === true)} />
+      Ghi kèm lúc video {formatClock(now)}
+    </label>
   )
 
   return (
@@ -192,11 +163,54 @@ export function BuildEditor({
           </Button>
         </div>
       )}
-      {place("KEPT")}
-      <div className="grid gap-4 @lg:grid-cols-2">
-        {place("REPLACED")}
-        {place("SITUATIONAL")}
-      </div>
+      <BuildEnd
+        steps={build.steps}
+        index={index}
+        borrowed={!!build.snapshot}
+        aside={
+          beneath && (
+            <Button
+              size="xs"
+              variant="ghost"
+              className="ml-auto text-muted-foreground"
+              title="Bỏ danh sách đã ghi, trang bị lại đọc từ mốc"
+              onClick={() => void readAgain()}
+            >
+              <RotateCcw aria-hidden /> Đọc lại từ mốc {formatClock(beneath.atSeconds)}
+            </Button>
+          )
+        }
+      />
+      <BuildPath
+        steps={build.steps}
+        index={index}
+        problems={new Set(problems.map((problem) => problem.step))}
+        seen={seen}
+        now={stampAt}
+        heading={stampBox}
+        inline={inline}
+        open={open}
+        onOpen={setOpen}
+        onClose={(part) => setOpen((current) => (current === part ? null : current))}
+        onPick={pick}
+        onRole={changeRole}
+        menu={(step) => (
+          <BuildStepMenu
+            step={step}
+            steps={build.steps}
+            index={index}
+            duration={duration}
+            nowGame={now}
+            stamp={stampAt}
+            onSeek={onSeekGame}
+            onEdit={edit}
+            onClose={(next = "") => {
+              focusNext.current = next
+              setOpen(null)
+            }}
+          />
+        )}
+      />
       {problems.length > 0 && (
         <ul className="space-y-1 text-xs" aria-label="Cần sửa">
           {problems.map(({ step, reason }, position) => (

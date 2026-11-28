@@ -11,6 +11,7 @@ import type {
   Side,
   TeamContent,
 } from "@aov/community-contracts"
+import { endSlots, itemIndex } from "./build"
 import { IMPORTED_HERO_CODES } from "./imported-hero-names"
 import { compactKey, nameKey } from "./name-key"
 import { seatKey, type ItemRef, type SeatKey, type SlotState } from "./timeline"
@@ -114,6 +115,7 @@ export function buildGameView(
   const enchantment = referenceIndex(catalog?.enchantments)
   const arcanum = referenceIndex(catalog?.arcana)
   const item = referenceIndex(catalog?.items)
+  const items = itemIndex(catalog?.items)
   const snapshots: GameView["snapshots"] = {}
   const kept: NonNullable<GameView["kept"]> = {}
   const side = (code: Side): GameSideView => {
@@ -128,8 +130,8 @@ export function buildGameView(
       const key = seatKey(code, lane)
       if (participant?.equipmentSnapshots.length) snapshots[key] = participant.equipmentSnapshots
       if (participant?.build?.length)
-        kept[key] = participant.build.flatMap((step) => {
-          const ref = step.place === "KEPT" ? item(step.item) : null
+        kept[key] = endSlots(participant.build, items).flatMap((step) => {
+          const ref = item(step.item)
           return ref ? [{ id: ref.id, name: ref.name, atSeconds: step.atSeconds ?? null }] : []
         })
       return {
