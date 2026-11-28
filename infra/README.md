@@ -601,3 +601,6 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
   YouTube (gồm `www.youtube-nocookie.com`), Twitch, Facebook, TikTok. Thêm nhúng mới hay script ngoài thì sửa chính sách ở
   đó. `Referrer-Policy: strict-origin-when-cross-origin` cũng nằm ở đó và phải giữ, nếu không YouTube trả lỗi 153. Nếu bật
   proxy Cloudflare, các tính năng chèn script như Web Analytics, Rocket Loader hay Email Obfuscation sẽ bị chặn.
+- **Cross-Origin-Opener-Policy** (`same-origin-allow-popups`) cũng đặt ở đó, trừ các trang mà popup đăng nhập Google của
+  Admin đi qua: `/admin/auth/`, `/idp/` và callback `/api/wiki/*/auth/google/callback`. Nếu một trong các trang đó có COOP,
+  popup sang Google sẽ mất liên kết với Admin: Admin báo cửa sổ đã đóng, còn popup dừng ở trang hoàn tất mà không tự đóng.

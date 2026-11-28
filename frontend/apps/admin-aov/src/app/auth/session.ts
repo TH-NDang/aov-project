@@ -1,8 +1,10 @@
 import { randomId } from "@/lib/random-id"
 import {
+  GOOGLE_CHANNEL,
   GOOGLE_REDIRECT_KEY,
   createAuthRequest,
   googleRedirectOutcome,
+  isGoogleBroadcast,
   isGoogleCompletion,
   isGoogleError,
 } from "./auth-api"
@@ -33,6 +35,12 @@ let generation = 0
 let refreshTimer: ReturnType<typeof setTimeout> | undefined
 const listeners = new Set<() => void>()
 const channel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("aov-admin-session")
+const googleChannel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(GOOGLE_CHANNEL)
+/**
+ * The Google sign-in this tab started. Its popup reports by postMessage, or on googleChannel when it lost its opener.
+ * Such a popup also reads as closed, so the flow outlives the failed promise (without `finish`) until it expires.
+ */
+let googleFlow: { state: string; expiresAt: number; finish?: (status: string) => void } | undefined
 const messages: Record<string, string> = {
   AUTH_INVALID_CREDENTIALS:
     "Tên đăng nhập, mật khẩu hoặc mã xác thực 2 bước chưa đúng. Tài khoản đã bật xác thực 2 bước cần nhập mã 6 số mới nhất.",
@@ -106,8 +114,30 @@ if (channel)
   channel.onmessage = (event) => {
     if (event.data === "logout") {
       cancelLogin()
+      googleFlow = undefined
       expireSession()
     }
+  }
+if (googleChannel)
+  googleChannel.onmessage = (event) => {
+    const flow = googleFlow
+    if (!flow || flow.expiresAt < Date.now() || !isGoogleBroadcast(event.data, flow.state)) return
+    const status = event.data.status
+    if (flow.finish) {
+      flow.finish(status)
+      return
+    }
+    // Admin already reported the window as closed; the sign-in still completes here.
+    googleFlow = undefined
+    if (status !== "success") {
+      publish({ error: messages[status] ?? googleCancelled })
+      return
+    }
+    void refreshSession()
+      .then(readActor)
+      .catch((error) => {
+        if (session.status !== "authenticated") publish({ error: authMessage(error) })
+      })
   }
 const authRequest = createAuthRequest()
 /** Serialize refresh-cookie rotation across tabs where Web Locks are available. */
@@ -206,9 +236,10 @@ export function cancelLogin() {
 }
 export function loginGoogle(): Promise<void> {
   cancelLogin()
+  googleFlow = undefined
   if (!session.googleEnabled) return Promise.reject(new Error(messages.AUTH_GOOGLE_DISABLED))
   const popup = window.open(
-    import.meta.env.BASE_URL + "auth/google-wait.html",
+    (import.meta.env?.BASE_URL ?? "/") + "auth/google-wait.html",
     "aov-google-" + randomId(),
     "popup=yes,width=480,height=740,left=" +
       Math.max(0, window.screenX + (window.outerWidth - 480) / 2) +
@@ -220,27 +251,24 @@ export function loginGoogle(): Promise<void> {
     let state: string | undefined
     let keycloakOrigin: string | undefined
     let done = false
-    const cleanup = () => {
+    /** `keepFlow` leaves the flow open to a completion on googleChannel. */
+    const cleanup = (keepFlow = false) => {
       done = true
       window.removeEventListener("message", receive)
       clearInterval(closed)
       clearTimeout(timeout)
       cancelPopup = undefined
+      if (googleFlow?.finish === finish) googleFlow = keepFlow ? { ...googleFlow, finish: undefined } : undefined
       popup.close()
     }
-    const fail = (message: string) => {
+    const fail = (message: string, keepFlow = false) => {
       if (!done) {
-        cleanup()
+        cleanup(keepFlow)
         reject(new Error(message))
       }
     }
-    const receive = (event: MessageEvent) => {
-      if (!done && keycloakOrigin && isGoogleError(event, popup, keycloakOrigin)) {
-        fail(googleErrors[event.data.code] ?? googleErrors.UNKNOWN)
-        return
-      }
-      if (done || !state || !isGoogleCompletion(event, popup, state, window.location.origin)) return
-      const status = event.data.status
+    const finish = (status: string) => {
+      if (done) return
       if (status !== "success") {
         fail(messages[status] ?? googleCancelled)
         return
@@ -248,8 +276,16 @@ export function loginGoogle(): Promise<void> {
       cleanup()
       void refreshSession().then(readActor).then(resolve, reject)
     }
+    const receive = (event: MessageEvent) => {
+      if (!done && keycloakOrigin && isGoogleError(event, popup, keycloakOrigin)) {
+        fail(googleErrors[event.data.code] ?? googleErrors.UNKNOWN)
+        return
+      }
+      if (state && isGoogleCompletion(event, popup, state, window.location.origin)) finish(event.data.status)
+    }
     const closed = window.setInterval(() => {
-      if (popup.closed) fail("Cửa sổ đăng nhập đã đóng. Bạn có thể thử lại.")
+      // A popup that lost its opener reads as closed too, and may still finish on googleChannel.
+      if (popup.closed) fail("Cửa sổ đăng nhập đã đóng. Bạn có thể thử lại.", true)
     }, 500)
     const timeout = window.setTimeout(() => fail("Đã hết thời gian chờ đăng nhập."), 300000)
     cancelPopup = () => fail("Đã hủy đăng nhập.")
@@ -258,6 +294,7 @@ export function loginGoogle(): Promise<void> {
       (result) => {
         if (done) return
         state = result.state
+        googleFlow = { state, expiresAt: Date.now() + 300000, finish }
         keycloakOrigin = new URL(result.authorizationUrl, window.location.href).origin
         popup.location.href = result.authorizationUrl
       },
@@ -267,6 +304,7 @@ export function loginGoogle(): Promise<void> {
 }
 export async function logout() {
   cancelLogin()
+  googleFlow = undefined
   expireSession()
   channel?.postMessage("logout")
   try {

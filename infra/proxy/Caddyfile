@@ -68,8 +68,13 @@ http://127.0.0.1:2020 {
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Strict-Transport-Security "max-age=31536000"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
-		Cross-Origin-Opener-Policy "same-origin-allow-popups"
 	}
+
+	# The Google sign-in popup of Admin goes from Admin's auth pages through Keycloak to Google and back through the
+	# callback to Admin's completion page. Those pages of ours carry no COOP: with one, the step to Google moves the popup
+	# into a new browsing context group, Admin loses the window, and the popup can neither report back nor close.
+	@opener_isolated not path /idp/* /admin/auth/* /api/wiki/*/auth/google/callback
+	header @opener_isolated Cross-Origin-Opener-Policy "same-origin-allow-popups"
 
 	# The Wiki, Stream and Admin share this origin with content people post, so scripts may only come from here
 	# (and the YouTube player API of Admin's VOD player). Pictures and links in posts can name any https host. Keycloak
