@@ -3,6 +3,34 @@ export interface PatchSourceLink {
   url: string
   label: string
   locale: string | null
+  /** The market that published the page; older answers leave it out. */
+  region?: string | null
+}
+
+/** The order markets are listed in, the reader's own first when it is one of them. */
+const MARKET_ORDER = ["VN", "TH", "TW", "ID"]
+
+export interface SourceGroup {
+  region: string | null
+  links: PatchSourceLink[]
+}
+
+/** The links grouped by the market that published them, links without a market last, each group in the patch's order. */
+export function sourcesByMarket(links: PatchSourceLink[], readerRegion?: string) {
+  const order = readerRegion ? [readerRegion, ...MARKET_ORDER.filter((code) => code !== readerRegion)] : MARKET_ORDER
+  const groups = new Map<string | null, PatchSourceLink[]>()
+  for (const link of links) {
+    const region = link.region || null
+    groups.set(region, [...(groups.get(region) ?? []), link])
+  }
+  const rank = (region: string | null) => {
+    if (region === null) return Number.MAX_SAFE_INTEGER
+    const index = order.indexOf(region)
+    return index === -1 ? order.length : index
+  }
+  return [...groups.entries()]
+    .map(([region, grouped]): SourceGroup => ({ region, links: grouped }))
+    .sort((a, b) => rank(a.region) - rank(b.region))
 }
 
 const WEB_ADDRESS = /^https?:\/\/\S+$/i

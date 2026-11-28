@@ -16,7 +16,9 @@ import com.wikiaov.access.ActorType;
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
+import com.wikiaov.patch.internal.application.PatchCommands.PlannedRelease;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.ReleasePlan;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
@@ -78,7 +80,7 @@ class PatchReleaseWorkflowTests {
         order.verify(seasons).requireRelease(seasonId, regionId, NOW);
         order.verify(releases).lockAndReadVariant(variantId);
         order.verify(releases).regionUsesRulesetAt(regionId, rulesetId, NOW);
-        order.verify(releases).contradictsTimeline(regionId, published, NOW);
+        order.verify(releases).contradictsTimeline(regionId, variantId, published, NOW);
         order.verify(releases).insert(saved.capture());
         order.verify(audit).record(AuditEntry.of(actor, "PATCH_RELEASE_SCHEDULED", "PATCH", createdId));
         var release = saved.getValue();
@@ -107,7 +109,7 @@ class PatchReleaseWorkflowTests {
         verify(releases, never()).lockActiveRegion(regionId);
         verify(seasons).requireReleaseDate(seasonId, regionId, LOCAL_TODAY);
         verify(releases, never()).regionUsesRulesetAt(any(), any(), any());
-        verify(releases, never()).contradictsTimeline(any(), any(), any());
+        verify(releases, never()).contradictsTimeline(any(), any(), any(), any());
         var saved = ArgumentCaptor.forClass(PatchRelease.class);
         verify(releases).insert(saved.capture());
         assertThat(saved.getValue().getSeasonId()).isEqualTo(seasonId);
@@ -206,7 +208,7 @@ class PatchReleaseWorkflowTests {
         assertInvalid(() -> workflow.schedule(variantId, exactRelease()),
                 "The region does not use this ruleset at the release time.");
 
-        verify(releases, never()).contradictsTimeline(any(), any(), any());
+        verify(releases, never()).contradictsTimeline(any(), any(), any(), any());
         verify(releases, never()).insert(any());
         verifyNoInteractions(audit);
     }
@@ -215,7 +217,7 @@ class PatchReleaseWorkflowTests {
     void refusesContradictoryTimelineWithoutSavingOrAuditing() {
         prepareScheduling(seasonId);
         when(releases.regionUsesRulesetAt(regionId, rulesetId, NOW)).thenReturn(true);
-        when(releases.contradictsTimeline(regionId, published, NOW)).thenReturn(true);
+        when(releases.contradictsTimeline(regionId, variantId, published, NOW)).thenReturn(true);
 
         assertInvalid(() -> workflow.schedule(variantId, exactRelease()),
                 "The release would contradict the region patch timeline.");
@@ -238,7 +240,7 @@ class PatchReleaseWorkflowTests {
         order.verify(releases).lockRelease(releaseId);
         order.verify(seasons).requireRelease(seasonId, regionId, NOW);
         order.verify(releases).regionUsesRulesetAt(regionId, rulesetId, NOW);
-        order.verify(releases).contradictsTimeline(regionId, published, NOW);
+        order.verify(releases).contradictsTimeline(regionId, variantId, published, NOW);
         order.verify(audit).record(AuditEntry.of(actor, "PATCH_RELEASE_CONFIRMED", "PATCH", releaseId));
         assertThat(release.getEffectiveAt()).isEqualTo(NOW);
         assertThat(release.getConfirmedAt()).isEqualTo(NOW);
@@ -257,7 +259,7 @@ class PatchReleaseWorkflowTests {
         workflow.confirm(releaseId);
 
         verify(seasons).requireRelease(seasonId, regionId, dayStart);
-        verify(releases).contradictsTimeline(regionId, published, dayStart);
+        verify(releases).contradictsTimeline(regionId, variantId, published, dayStart);
         verify(audit).record(AuditEntry.of(actor, "PATCH_RELEASE_CONFIRMED", "PATCH", releaseId));
         assertThat(release.getEffectiveAt()).isEqualTo(dayStart);
         assertThat(release.getConfirmedAt()).isEqualTo(dayStart);
@@ -355,7 +357,7 @@ class PatchReleaseWorkflowTests {
     void failedConfirmationLeavesDraftUnchanged() {
         var release = prepareConfirmation(LOCAL_TODAY);
         when(releases.regionUsesRulesetAt(regionId, rulesetId, NOW)).thenReturn(true);
-        when(releases.contradictsTimeline(regionId, published, NOW)).thenReturn(true);
+        when(releases.contradictsTimeline(regionId, variantId, published, NOW)).thenReturn(true);
 
         assertInvalid(() -> workflow.confirm(releaseId),
                 "The release would contradict the region patch timeline.");
@@ -405,6 +407,81 @@ class PatchReleaseWorkflowTests {
         assertInvalid(() -> workflow.adoptSeason(variantId, seasonId),
                 "The release date must overlap its market season.");
         assertThat(cancelled.getSeasonId()).isNotEqualTo(seasonId);
+    }
+
+    @Test
+    void replacingKeepsAnUnchangedDayAndItsConfirmation() {
+        prepareScheduling(seasonId);
+        when(releases.lockAllRegions()).thenReturn(List.of(region(true)));
+        var kept = existingRelease(seasonId, PatchReleaseStatus.SCHEDULED);
+        kept.setEffectiveOn(LOCAL_TODAY);
+        kept.setEffectiveAt(NOW);
+        kept.setConfirmedAt(NOW);
+        when(releases.lockVariantReleases(variantId)).thenReturn(List.of(kept));
+
+        workflow.replace(variantId, new ReleasePlan(List.of(new PlannedRelease(regionId, null, LOCAL_TODAY, null))));
+
+        assertThat(kept.getConfirmedAt()).isEqualTo(NOW);
+        assertThat(kept.getStatus()).isEqualTo(PatchReleaseStatus.SCHEDULED);
+        verify(releases, never()).delete(any());
+        verify(releases, never()).insert(any());
+        verifyNoInteractions(seasons, audit);
+    }
+
+    @Test
+    void replacingMovesAConfirmedDayToAnExactMomentAfterCheckingTheTimeline() {
+        prepareScheduling(seasonId);
+        when(releases.lockAllRegions()).thenReturn(List.of(region(false)));
+        var moved = existingRelease(seasonId, PatchReleaseStatus.SCHEDULED);
+        moved.setEffectiveOn(LOCAL_TODAY);
+        moved.setEffectiveAt(NOW.minusSeconds(3600));
+        moved.setConfirmedAt(NOW.minusSeconds(3600));
+        when(releases.lockVariantReleases(variantId)).thenReturn(List.of(moved));
+        when(releases.regionUsesRulesetAt(regionId, rulesetId, NOW)).thenReturn(true);
+
+        workflow.replace(variantId,
+                new ReleasePlan(List.of(new PlannedRelease(regionId, NOW, null, " https://example.com/n "))));
+
+        verify(seasons).requireRelease(seasonId, regionId, NOW);
+        verify(releases).contradictsTimeline(regionId, variantId, published, NOW);
+        assertThat(moved.getEffectiveAt()).isEqualTo(NOW);
+        assertThat(moved.getEffectiveOn()).isNull();
+        assertThat(moved.getConfirmedAt()).isNull();
+        assertThat(moved.getStatus()).isEqualTo(PatchReleaseStatus.SCHEDULED);
+        assertThat(moved.getSourceUrl()).isEqualTo("https://example.com/n");
+        verify(audit).record(any());
+    }
+
+    @Test
+    void replacingRemovesMarketsLeftOutAndAddsNewOnes() {
+        prepareScheduling(null);
+        UUID otherRegion = UUID.randomUUID();
+        when(releases.lockAllRegions()).thenReturn(List.of(region(true),
+                new Region(otherRegion, "TW", "Taiwan", "AOV", "zh-TW", "Asia/Taipei", false)));
+        var dropped = existingRelease(null, PatchReleaseStatus.DRAFT);
+        dropped.setEffectiveOn(LOCAL_TODAY);
+        when(releases.lockVariantReleases(variantId)).thenReturn(List.of(dropped));
+
+        workflow.replace(variantId,
+                new ReleasePlan(List.of(new PlannedRelease(otherRegion, null, LOCAL_TODAY.minusDays(6), null))));
+
+        verify(releases).delete(dropped);
+        var saved = ArgumentCaptor.forClass(PatchRelease.class);
+        verify(releases).insert(saved.capture());
+        assertThat(saved.getValue().getRegionId()).isEqualTo(otherRegion);
+        assertThat(saved.getValue().getEffectiveOn()).isEqualTo(LOCAL_TODAY.minusDays(6));
+        assertThat(saved.getValue().getStatus()).isEqualTo(PatchReleaseStatus.DRAFT);
+    }
+
+    @Test
+    void replacingRejectsTwoReleasesForOneMarket() {
+        prepareScheduling(null);
+        when(releases.lockAllRegions()).thenReturn(List.of(region(true)));
+        var plan = new ReleasePlan(List.of(new PlannedRelease(regionId, null, LOCAL_TODAY, null),
+                new PlannedRelease(regionId, NOW, null, null)));
+
+        assertInvalid(() -> workflow.replace(variantId, plan), "Give each market one release.");
+        verify(releases, never()).delete(any());
     }
 
     private PatchRelease existingRelease(UUID releaseSeasonId, PatchReleaseStatus status) {

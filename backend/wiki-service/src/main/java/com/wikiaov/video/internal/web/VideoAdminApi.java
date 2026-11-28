@@ -27,20 +27,21 @@ import org.springframework.http.ResponseEntity;
  */
 @Tag(name = "video admin")
 public interface VideoAdminApi {
-    @Operation(operationId = "videoAdminApi_list", summary = "Search videos", description = "Pages through videos of every status. Filtering HERO with a subject id includes that hero's skin videos. Requires catalog:read.", security = @SecurityRequirement(name = "bearerAuth"), responses = @ApiResponse(responseCode = "200", description = "Page of videos.", useReturnTypeSchema = true))
+    @Operation(operationId = "videoAdminApi_list", summary = "Search videos", description = "Pages through videos of every status. Filtering HERO with a subject id includes that hero's skin videos. A patch variant filter keeps the videos that name that patch: its own and the change videos of what changed in it. Requires catalog:read.", security = @SecurityRequirement(name = "bearerAuth"), responses = @ApiResponse(responseCode = "200", description = "Page of videos.", useReturnTypeSchema = true))
     PageSlice<AdminVideo> list(
             @Parameter(description = "Subject kind.") VideoSubjectKind subjectKind,
-            @Parameter(description = "Entry id; the hero id for HERO and SKIN.") UUID subjectId,
+            @Parameter(description = "Entry id; the hero id for HERO and SKIN, the patch variant id for PATCH.") UUID subjectId,
             @Parameter(description = "Skin key.") String subjectKey,
             @Parameter(description = "Status.") VideoStatus status,
             @Parameter(description = "Purpose.") VideoPurpose purpose,
             @Parameter(description = "How the row was created.") VideoOrigin origin,
             @Parameter(description = "Text in the title or link.") String q,
+            @Parameter(description = "Patch variant the videos name.") UUID patchVariantId,
             @Parameter(description = "Zero-based page.") @Min(0) int page,
             @Parameter(description = "Page size, from 1 to 100; default 24.") @Min(1) @Max(100) int size,
             @Parameter(hidden = true) HttpServletRequest request);
 
-    @Operation(operationId = "videoAdminApi_subjects", summary = "List subjects that can have videos", description = "Returns every hero, skin and warehouse entry with its display name and alternative names, for pickers and for matching imported data. Requires catalog:read.", security = @SecurityRequirement(name = "bearerAuth"), responses = @ApiResponse(responseCode = "200", description = "All subjects.", useReturnTypeSchema = true))
+    @Operation(operationId = "videoAdminApi_subjects", summary = "List subjects that can have videos", description = "Returns every hero, skin, warehouse entry and patch variant with its display name and alternative names, for pickers and for matching imported data. Requires catalog:read.", security = @SecurityRequirement(name = "bearerAuth"), responses = @ApiResponse(responseCode = "200", description = "All subjects.", useReturnTypeSchema = true))
     SubjectList subjects(@Parameter(description = "Preferred locale for names, default vi-VN.") String locale,
             @Parameter(hidden = true) HttpServletRequest request);
 

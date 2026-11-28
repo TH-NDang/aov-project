@@ -1,6 +1,7 @@
 package com.wikiaov.patch.internal.authoring.persistence;
 
 import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.patch.PatchVariantTitle;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import jakarta.persistence.LockModeType;
@@ -18,6 +19,14 @@ public interface PatchVariantRepository extends JpaRepository<PatchVariant, UUID
 
     @Query("select p.code from PatchVariant v join GamePatch p on p.id=v.patchId where v.id=:variantId")
     Optional<String> patchCode(UUID variantId);
+
+    @Query("""
+            select new com.wikiaov.patch.PatchVariantTitle(v.id,p.code,t.locale,t.title)
+            from PatchVariant v join GamePatch p on p.id=v.patchId
+            left join GamePatchTranslation t on t.patchId=p.id
+            order by p.sequence desc,v.id,t.locale
+            """)
+    List<PatchVariantTitle> titles();
 
     List<PatchVariant> findBySeasonId(UUID seasonId);
 

@@ -26,11 +26,13 @@ public interface PatchReleaseRepository extends JpaRepository<PatchRelease, UUID
     @Query("select r.regionId as regionId,r.patchVariantId as variantId from PatchRelease r where r.id=:id")
     Optional<Target> targetById(UUID id);
 
+    /** Whether another patch's release in the region would come out of ruleset order next to one at {@code at}. */
     @Query("select count(r)>0 from PatchRelease r join PatchVariant v on v.id=r.patchVariantId "
             + "where r.regionId=:regionId and r.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED and v.rulesetId=:rulesetId "
+            + "and r.patchVariantId<>:variantId "
             + "and ((r.effectiveAt<=:at and v.rulesetOrdinal>=:ordinal) "
             + "or (r.effectiveAt>=:at and v.rulesetOrdinal<=:ordinal))")
-    boolean contradictsTimeline(UUID regionId, UUID rulesetId, Instant at, long ordinal);
+    boolean contradictsTimeline(UUID regionId, UUID rulesetId, UUID variantId, Instant at, long ordinal);
 
     interface Target {
         UUID getRegionId();

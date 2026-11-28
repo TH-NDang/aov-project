@@ -66,8 +66,8 @@ test("an editor gives a patch two labelled links and they are kept in the order 
     await waitFor(() => sent.length === 1, "The links are sent")
     assert.deepEqual(sent[0], {
       sources: [
-        { url: "https://rov.in.th/news/patch", label: "Thái Lan", locale: "th-TH" },
-        { url: "https://lienquan.garena.vn/patch", label: "Tiếng Việt", locale: "vi-VN" },
+        { url: "https://rov.in.th/news/patch", label: "Thái Lan", locale: "th-TH", region: "TH" },
+        { url: "https://lienquan.garena.vn/patch", label: "Tiếng Việt", locale: "vi-VN", region: null },
       ],
     })
     await waitFor(() => !document.querySelector('[role="dialog"]'), "The dialog closes after saving")
@@ -75,7 +75,7 @@ test("an editor gives a patch two labelled links and they are kept in the order 
     assert.deepEqual(
       links.map((link) => [link.textContent, link.href]),
       [
-        ["Thái Lan· ภาษาไทย", "https://rov.in.th/news/patch"],
+        ["THThái Lan· ภาษาไทย", "https://rov.in.th/news/patch"],
         ["Tiếng Việt", "https://lienquan.garena.vn/patch"],
       ],
     )

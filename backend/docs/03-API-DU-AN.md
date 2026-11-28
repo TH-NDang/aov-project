@@ -794,8 +794,13 @@ size=20
 ```
 
 Trả patch families cùng release/effective metadata của region yêu cầu. Mỗi patch có thêm `sources`: danh sách
-`{url, label, locale}` là link tới ghi chú cập nhật chính thức của variant, theo thứ tự biên tập viên chọn (rỗng khi
-chưa có). Chi tiết patch (mục 10) trả cùng trường này.
+`{url, label, locale, region}` là link tới ghi chú cập nhật chính thức của variant, theo thứ tự biên tập viên chọn (rỗng
+khi chưa có; `locale`, `region` bỏ khi trống). Chi tiết patch (mục 10) trả cùng trường này.
+
+Từ 28/11/2026 (ADR-038) mỗi patch có thêm `markets`: lịch của variant ở mọi thị trường có lịch không bị hủy, kể cả thị
+trường đang khóa, theo thứ tự thị trường. Mỗi dòng `{region, timeZone, effectiveAt?, effectiveOn?}`: `effectiveAt` khi
+biết thời điểm chính xác, `effectiveOn` (ngày theo lịch của thị trường) khi chỉ biết ngày, kể cả khi ngày đã được xác
+nhận. Thị trường không có lịch không xuất hiện. Chi tiết patch trả cùng trường này.
 
 ---
 
@@ -1958,6 +1963,36 @@ Request:
 
 Backend validate ruleset assignment của region tại effective time.
 
+### 42.1 Thay lịch của cả patch (28/11/2026, ADR-038)
+
+```http
+PUT /api/wiki/v1/admin/patch-variants/{variantId}/releases
+```
+
+```json
+{
+  "releases": [
+    { "regionId": "...VN", "effectiveAt": "2026-09-28T20:30:00Z", "sourceUrl": "https://lienquan.garena.vn/..." },
+    { "regionId": "...TW", "effectiveAt": "2026-09-23T00:00:00Z" },
+    { "regionId": "...ID", "effectiveOn": "2026-09-18" }
+  ]
+}
+```
+
+- Cần `patch:publish`, trả 204. Tối đa 16 dòng, mỗi thị trường một dòng, mỗi dòng đúng một trong `effectiveAt` và
+  `effectiveOn`, `sourceUrl` HTTP(S) tùy chọn (tối đa 2.000 ký tự). Danh sách rỗng xóa mọi lịch của variant; danh sách
+  có dòng cần variant đã publish.
+- Thị trường không có trong danh sách mất lịch. Dòng cùng thời điểm (ngày so ngày, giờ so giờ) giữ nguyên id, trạng
+  thái và xác nhận, chỉ cập nhật `sourceUrl`. Dòng đổi thời điểm: giờ chính xác thành `SCHEDULED` áp dụng từ lúc đó, ngày
+  thành `DRAFT` chờ xác nhận lại.
+- Mọi dòng thêm hoặc đổi đều kiểm tra lịch mùa của thị trường; giờ chính xác còn kiểm tra ruleset của thị trường tại lúc
+  đó và thứ tự patch (dòng của chính variant không tính). Thị trường đang khóa cũng nhận giờ chính xác.
+- Lỗi: 404 `PATCH_NOT_FOUND` khi variant hoặc thị trường không tồn tại; 422 `PATCH_INVALID` khi thiếu hoặc thừa thời
+  điểm, trùng thị trường, ngoài mùa, sai ruleset, đảo thứ tự hoặc variant chưa publish; 409 `PATCH_CONFLICT` khi trùng
+  thời điểm với patch khác của cùng thị trường.
+- Có thay đổi thì ghi một audit `PATCH_RELEASES_REPLACED` (aggregate PATCH, id variant) với số dòng `removed`, `moved`,
+  `added`, `relinked`.
+
 ---
 
 ## 43. Region/ruleset admin
@@ -3005,10 +3040,11 @@ change set, sai trả 422 `HERO_INVALID_CONTENT`; change set không tồn tại 
 - `GET /admin/patch-variants/{id}/notes/{locale}` cần `catalog:read`, trả `{body, version}` của đúng patch và ngôn ngữ (chưa ghi: chuỗi rỗng, phiên bản 0).
   `PUT` cùng đường dẫn cần `patch:write`, nhận `{body, expectedVersion}`; tối đa 20.000 ký tự, để trống để bỏ ghi chú, xung đột trả 409.
   Ghi chú bổ sung không tạo sự kiện gameplay cho tướng hoặc kho trang bị.
-- `GET /admin/patch-variants/{id}/sources` cần `catalog:read`, trả danh sách `{url, label, locale}` theo thứ tự.
-  `PUT` cùng đường dẫn cần `patch:write`, nhận `{sources: [{url, label, locale}]}` và thay cả danh sách: tối đa 10 link,
-  `url` HTTP(S) tối đa 2.048 ký tự và không trùng, `label` không rỗng tối đa 80 ký tự (cắt khoảng trắng hai đầu),
-  `locale` bỏ trống hoặc là thẻ BCP 47 chuẩn. Sai trả 422 `PATCH_INVALID`, variant không tồn tại trả 404. Lưu khi danh
+- `GET /admin/patch-variants/{id}/sources` cần `catalog:read`, trả danh sách `{url, label, locale, region}` theo thứ tự.
+  `PUT` cùng đường dẫn cần `patch:write`, nhận `{sources: [{url, label, locale, region}]}` và thay cả danh sách: tối đa
+  20 link (10 trước 28/11/2026), `url` HTTP(S) tối đa 2.048 ký tự và không trùng, `label` không rỗng tối đa 80 ký tự
+  (cắt khoảng trắng hai đầu), `locale` bỏ trống hoặc là thẻ BCP 47 chuẩn, `region` bỏ trống hoặc là mã thị trường có
+  thật (`VN`, `TH`, `TW`, `ID`, ...; ADR-038). Sai trả 422 `PATCH_INVALID`, variant không tồn tại trả 404. Lưu khi danh
   sách đổi thì ghi audit `PATCH_SOURCES_UPDATED` (aggregate PATCH, id variant). Link chung là nguồn của mọi change set
   `PATCH_NOTES` không có `sourceUrl` riêng và hiện trên trang patch công khai. Từ 28/11/2026 Admin chỉ ghi link chung,
   không gửi `sourceUrl` riêng cho change set mới (ADR-016).
@@ -3306,34 +3342,43 @@ GET `/api/wiki/v1/videos` (công khai)
   là video `HERO` với `purpose=SKILL_DEMO`.
 - Trả `{items: [...]}`, tối đa 200 dòng `PUBLISHED`, theo `displayOrder` rồi ngày đăng mới nhất. Mỗi dòng
   không có `status`, `origin`, `version`. Cache: chính sách public của mục 51. Lọc theo patch do client thực hiện.
+- `subjectKind=PATCH` (28/11/2026, ADR-038) nhận id variant và trả video của patch cùng video `PATCH_CHANGE` có
+  `patchVariantId` là variant đó (thường là video của tướng), theo `publishedOn` rồi `publishedAt` cũ trước, dòng không
+  có ngày xếp cuối. Client tự chia trước và sau phát hành theo `markets` của patch.
+- Mỗi dòng có thêm `publishedAt` (thời điểm đăng) và `locale` (ngôn ngữ của video) khi biết.
 
 Các API quản trị đều cần `catalog:read`. Ghi cần `hero:write` (tướng, trang phục), `item:write`,
-`enchantment:write`, `arcana:write` hoặc `spell:write`. Đưa video vào hoặc ra khỏi `PUBLISHED` cần thêm
+`enchantment:write`, `arcana:write`, `spell:write` hoặc `patch:write` (video của patch). Đưa video vào hoặc ra khỏi `PUBLISHED` cần thêm
 capability `:publish` tương ứng; thiếu quyền trả 403.
 
 GET `/api/wiki/v1/admin/videos`
-- Query: `subjectKind`, `subjectId`, `subjectKey`, `status`, `purpose`, `origin`, `q`, `page`, `size` (1 đến 100,
-  mặc định 24). `HERO` kèm `subjectId` gồm cả trang phục của tướng. Trả `PageSlice`.
+- Query: `subjectKind`, `subjectId`, `subjectKey`, `status`, `purpose`, `origin`, `q`, `patchVariantId`, `page`,
+  `size` (1 đến 100, mặc định 24). `HERO` kèm `subjectId` gồm cả trang phục của tướng. `patchVariantId` giữ các video
+  ghi patch đó (video của patch và video thay đổi gắn patch). Trả `PageSlice`.
 
 GET `/api/wiki/v1/admin/videos/subjects`
 - Query: `locale`, mặc định `vi-VN`. Trả `{items: [{kind, id, key, code, name, aliases}]}` cho mọi mục có thể
-  gắn video. `aliases` gồm tên cũ và mã cũ, dùng để so khớp dữ liệu nhập.
+  gắn video, kể cả mọi patch variant (`kind=PATCH`, `code` là mã patch, `name` là tiêu đề patch). `aliases` gồm tên cũ và mã cũ, dùng để so khớp dữ liệu nhập.
 
 POST `/api/wiki/v1/admin/videos` và PUT `/api/wiki/v1/admin/videos/{id}`
 - Body: `subjectKind`, `subjectId`, `subjectKey`, `purpose`, `title`, `note`, `url`, `startSeconds`,
-  `durationSeconds`, `channelName`, `publishedOn`, `patchVariantId`, `displayOrder`, `status`,
+  `durationSeconds`, `channelName`, `publishedOn`, `publishedAt`, `locale`, `patchVariantId`, `displayOrder`, `status`,
   `expectedVersion` (bắt buộc với PUT). POST trả 201.
+- `PATCH_PREVIEW`, `PATCH_OVERVIEW`, `PATCH_REVIEW` chỉ dành cho `subjectKind=PATCH`; video `PATCH` chỉ nhận ba mục
+  đích đó và `OTHER`. Video `PATCH` luôn có `patchVariantId` bằng `subjectId` (gửi khác trả 422). `locale` bỏ trống
+  hoặc là thẻ BCP 47 chuẩn.
 - `url` chỉ nhận `http`, `https`. Mọi dạng link YouTube đổi về `https://www.youtube.com/watch?v=ID`; `startSeconds`
   null thì lấy từ `t=` hoặc `start=` của link. Thiếu `displayOrder` khi tạo thì xếp cuối.
-- Lỗi: 422 `VIDEO_INVALID`, 422 `VIDEO_SUBJECT_NOT_FOUND`, 404 `PATCH_NOT_FOUND` khi patch không tồn tại,
-  404 `VIDEO_NOT_FOUND`, 409 `VIDEO_DUPLICATE`, 409 `VIDEO_CONFLICT`. Audit `VIDEO_CREATED`, `VIDEO_UPDATED`.
+- Lỗi: 422 `VIDEO_INVALID` (từ 28/11/2026 cả khi `patchVariantId` không tồn tại, trước đó là 404
+  `PATCH_NOT_FOUND`), 422 `VIDEO_SUBJECT_NOT_FOUND`, 404 `VIDEO_NOT_FOUND`, 409 `VIDEO_DUPLICATE`, 409 `VIDEO_CONFLICT`. Audit `VIDEO_CREATED`, `VIDEO_UPDATED`.
 
 DELETE `/api/wiki/v1/admin/videos/{id}?expectedVersion=`
 - Trả 204. Audit `VIDEO_DELETED`. Video nhập từ dữ liệu thu thập nên ẩn thay vì xóa để không quay lại.
 
 POST `/api/wiki/v1/admin/videos/import`
-- Body: `{items: [{subjectKind, subjectId, subjectKey, purpose, title, url, durationSeconds, publishedOn,
-  displayOrder, status}]}`, 1 đến 500 dòng; kiểm tra quyền của mọi dòng trước khi ghi.
+- Body: `{items: [{subjectKind, subjectId, subjectKey, purpose, title, url, durationSeconds, channelName,
+  publishedOn, publishedAt, locale, patchVariantId, displayOrder, status}]}`, 1 đến 500 dòng; kiểm tra quyền của mọi
+  dòng trước khi ghi. Dòng sai mục đích, sai `locale` hoặc gắn patch không tồn tại bị báo trong `rejected`.
 - Trả `{created, skipped, rejected: [{index, reason}]}`. Dòng đã có bị bỏ qua và giữ nguyên; dòng sai được báo
   mà không làm hỏng cả lô. Audit `VIDEOS_IMPORTED` nếu có dòng được thêm.
 

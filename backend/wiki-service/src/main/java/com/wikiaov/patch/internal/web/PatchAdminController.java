@@ -4,6 +4,7 @@ import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
 import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
 import com.wikiaov.patch.internal.application.PatchCommands.Patch;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.ReleasePlan;
 import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchCommands.Title;
@@ -136,5 +137,12 @@ public class PatchAdminController implements PatchAdminApi {
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId release(@PathVariable UUID id, @RequestBody Release body) {
         return new CreatedId(authoring.release(id, body));
+    }
+
+    @Override
+    @PutMapping(path = "/patch-variants/{id}/releases", version = "1")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void releases(@PathVariable UUID id, @RequestBody ReleasePlan body) {
+        authoring.replaceReleases(id, body);
     }
 }

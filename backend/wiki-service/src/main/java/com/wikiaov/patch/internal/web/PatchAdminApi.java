@@ -4,6 +4,7 @@ import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
 import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
 import com.wikiaov.patch.internal.application.PatchCommands.Patch;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.ReleasePlan;
 import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchCommands.Title;
@@ -113,4 +114,10 @@ public interface PatchAdminApi {
     })
     CreatedId release(@Parameter(description = "Id identifier.") UUID id,
             @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Release body);
+
+    @Operation(operationId = "patchAdminApi_releases", summary = "Replace releases - patch admin", description = "Replaces every market's release of a patch variant. Each row gives a market and exactly one of an exact moment (effectiveAt) or a calendar day of that market (effectiveOn); a market left out loses its release. Unchanged rows keep their confirmation; a moved day waits for confirmation again. Closed markets may record exact moments. Season windows and the ruleset order of each market are checked as for one release. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "204", description = "Successful operation; no response body.", content = @Content)
+    })
+    void releases(@Parameter(description = "Id identifier.") UUID id,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ReleasePlan body);
 }

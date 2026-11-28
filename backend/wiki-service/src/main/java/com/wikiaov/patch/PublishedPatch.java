@@ -13,6 +13,8 @@ import org.jspecify.annotations.Nullable;
  *             left out together when the patch has no translation
  * @param effectiveAt when the release starts in this market, or {@code null} for a variant read before it is dated
  * @param sources the links to the official notes of the variant, in the order editors gave them
+ * @param markets when each market gets this variant, ordered like the markets; a market without a known release is
+ *                left out
  */
 public record PublishedPatch(
         UUID id,
@@ -24,7 +26,8 @@ public record PublishedPatch(
         UUID variantId,
         UUID rulesetId,
         @Nullable Instant effectiveAt,
-        List<PatchSource> sources
+        List<PatchSource> sources,
+        List<PatchMarketRelease> markets
 ) {
 
     /** The title and notes of a patch in the picked locale, and whether that locale replaced the requested one. */

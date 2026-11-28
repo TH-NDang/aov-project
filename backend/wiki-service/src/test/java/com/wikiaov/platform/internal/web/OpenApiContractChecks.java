@@ -326,7 +326,7 @@ abstract class OpenApiContractChecks {
     }
 
     private static PublishedPatch patch(UUID id, UUID variant, UUID ruleset) {
-        return new PublishedPatch(id, "patch", 1, null, "VN", "vi-VN", variant, ruleset, null, List.of());
+        return new PublishedPatch(id, "patch", 1, null, "VN", "vi-VN", variant, ruleset, null, List.of(), List.of());
     }
 
     Set<String> domainValues(JsonNode spec, String path) {

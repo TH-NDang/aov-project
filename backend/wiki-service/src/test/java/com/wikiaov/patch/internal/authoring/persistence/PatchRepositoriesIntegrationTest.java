@@ -133,16 +133,17 @@ class PatchRepositoriesIntegrationTest {
         String path = "/api/wiki/v1/admin/patch-variants/" + variant + "/sources";
         String two = """
                 {"sources":[
-                  {"url":"https://lienquan.garena.vn/notes","label":" Tiếng Việt ","locale":"vi-VN"},
+                  {"url":"https://lienquan.garena.vn/notes","label":" Tiếng Việt ","locale":"vi-VN","region":"%s"},
                   {"url":"https://www.rov.in.th/patch-notes/x","label":"Thái Lan","locale":""}
-                ]}""";
+                ]}""".formatted(regionCode);
 
         mvc.perform(get(path).with(reader)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
         mvc.perform(put(path).with(reader).contentType("application/json").content(two))
                 .andExpect(status().isForbidden());
         mvc.perform(put(path).with(writer).contentType("application/json").content(two))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].label").value("Tiếng Việt"))
-                .andExpect(jsonPath("$[1].locale").doesNotExist());
+                .andExpect(jsonPath("$[0].region").value(regionCode))
+                .andExpect(jsonPath("$[1].locale").doesNotExist()).andExpect(jsonPath("$[1].region").doesNotExist());
         mvc.perform(put(path).with(writer).contentType("application/json")
                 .content("{\"sources\":[{\"url\":\"https://www.rov.in.th/patch-notes/x\",\"label\":\"TH\"},"
                         + "{\"url\":\"https://lienquan.garena.vn/notes\",\"label\":\"VN\"}]}"))
@@ -153,6 +154,7 @@ class PatchRepositoriesIntegrationTest {
         for (String bad : List.of("{\"sources\":[{\"url\":\"ftp://x.org/a\",\"label\":\"A\"}]}",
                 "{\"sources\":[{\"url\":\"https://x.org/a\",\"label\":\" \"}]}",
                 "{\"sources\":[{\"url\":\"https://x.org/a\",\"label\":\"A\",\"locale\":\"vi_vn\"}]}",
+                "{\"sources\":[{\"url\":\"https://x.org/a\",\"label\":\"A\",\"region\":\"NOWHERE\"}]}",
                 "{\"sources\":[{\"url\":\"https://x.org/a\",\"label\":\"A\"},"
                         + "{\"url\":\"https://x.org/a\",\"label\":\"B\"}]}")) {
             mvc.perform(put(path).with(writer).contentType("application/json").content(bad))
@@ -166,16 +168,68 @@ class PatchRepositoriesIntegrationTest {
 
     @Test
     void preservesAssignmentAndReleaseTimelineBoundaries() {
+        UUID otherVariant = UUID.randomUUID();
         assertThat(assignments.appliesAt(region, ruleset, start)).isTrue();
         assertThat(assignments.appliesAt(region, ruleset, start.minusNanos(1000))).isFalse();
         assertThat(assignments.appliesAt(region, ruleset, end)).isFalse();
-        assertThat(releases.contradictsTimeline(region, ruleset, effective, 2)).isTrue();
-        assertThat(releases.contradictsTimeline(region, ruleset, effective.plusSeconds(1), 3)).isFalse();
-        assertThat(releases.contradictsTimeline(region, ruleset, effective.plusSeconds(1), 1)).isTrue();
-        assertThat(releases.contradictsTimeline(region, ruleset, effective.minusSeconds(1), 3)).isTrue();
-        assertThat(releases.contradictsTimeline(region, ruleset, effective.minusSeconds(1), 1)).isFalse();
+        assertThat(releases.contradictsTimeline(region, ruleset, otherVariant, effective, 2)).isTrue();
+        assertThat(releases.contradictsTimeline(region, ruleset, otherVariant, effective.plusSeconds(1), 3)).isFalse();
+        assertThat(releases.contradictsTimeline(region, ruleset, otherVariant, effective.plusSeconds(1), 1)).isTrue();
+        assertThat(releases.contradictsTimeline(region, ruleset, otherVariant, effective.minusSeconds(1), 3)).isTrue();
+        assertThat(releases.contradictsTimeline(region, ruleset, otherVariant, effective.minusSeconds(1), 1)).isFalse();
+        assertThat(releases.contradictsTimeline(region, ruleset, variant, effective.minusSeconds(1), 2)).isFalse();
         write("update patch.patch_release set status='CANCELLED' where id=?", release);
-        assertThat(releases.contradictsTimeline(region, ruleset, effective, 2)).isFalse();
+        assertThat(releases.contradictsTimeline(region, ruleset, otherVariant, effective, 2)).isFalse();
+    }
+
+    @Test
+    void replacesTheReleasesOfAVariantKeepingUnchangedRows() throws Exception {
+        var publisher = jwt().authorities(new SimpleGrantedAuthority("catalog:read"),
+                new SimpleGrantedAuthority("patch:publish"));
+        String path = "/api/wiki/v1/admin/patch-variants/" + variant + "/releases";
+        String same = "{\"releases\":[{\"regionId\":\"" + region + "\",\"effectiveAt\":\"" + effective
+                + "\",\"sourceUrl\":\"https://x.org/notes\"}]}";
+
+        mvc.perform(put(path).with(publisher).contentType("application/json").content(same))
+                .andExpect(status().isNoContent());
+        assertThat(jdbc.sql("select id from patch.patch_release where patch_variant_id=?").param(variant)
+                .query(UUID.class).single()).isEqualTo(release);
+        assertThat(jdbc.sql("select source_url from patch.patch_release where id=?").param(release)
+                .query(String.class).single()).isEqualTo("https://x.org/notes");
+
+        Instant later = effective.plusSeconds(3600);
+        mvc.perform(put(path).with(publisher).contentType("application/json")
+                .content("{\"releases\":[{\"regionId\":\"" + region + "\",\"effectiveAt\":\"" + later + "\"}]}"))
+                .andExpect(status().isNoContent());
+        assertThat(jdbc.sql("select effective_at from patch.patch_release where id=?").param(release)
+                .query(Timestamp.class).single().toInstant()).isEqualTo(later);
+        assertThat(contexts.marketReleases(variant)).singleElement().satisfies(value -> {
+            assertThat(value.region()).isEqualTo(regionCode);
+            assertThat(value.timeZone()).isEqualTo("Asia/Ho_Chi_Minh");
+            assertThat(value.effectiveAt()).isEqualTo(later);
+            assertThat(value.effectiveOn()).isNull();
+        });
+
+        for (String bad : List.of(
+                "{\"releases\":[{\"regionId\":\"" + region + "\",\"effectiveAt\":\"" + later
+                        + "\",\"effectiveOn\":\"2026-01-02\"}]}",
+                "{\"releases\":[{\"regionId\":\"" + region + "\",\"effectiveOn\":\"2026-01-02\"},"
+                        + "{\"regionId\":\"" + region + "\",\"effectiveOn\":\"2026-01-03\"}]}",
+                "{\"releases\":[{\"regionId\":\"" + region + "\",\"effectiveOn\":\"2027-06-01\"}]}")) {
+            mvc.perform(put(path).with(publisher).contentType("application/json").content(bad))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+        mvc.perform(put(path).with(publisher).contentType("application/json")
+                .content(
+                        "{\"releases\":[{\"regionId\":\"" + UUID.randomUUID() + "\",\"effectiveOn\":\"2026-01-02\"}]}"))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(put(path).with(publisher).contentType("application/json").content("{\"releases\":[]}"))
+                .andExpect(status().isNoContent());
+        assertThat(jdbc.sql("select count(*) from patch.patch_release where patch_variant_id=?").param(variant)
+                .query(Long.class).single()).isZero();
+        assertThat(jdbc.sql("select count(*) from access.audit_event where aggregate_id=? and "
+                + "action='PATCH_RELEASES_REPLACED'").param(variant).query(Long.class).single()).isEqualTo(3L);
     }
 
     @Test

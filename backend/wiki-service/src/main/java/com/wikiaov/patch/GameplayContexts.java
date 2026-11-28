@@ -31,6 +31,15 @@ public interface GameplayContexts {
     PatchVariantReference variant(UUID variantId);
 
     /**
+     * Same as {@link #variant}, but an unknown variant answers nothing, so a caller can turn it into its own error
+     * without the rollback-only mark {@link #find} describes.
+     */
+    Optional<PatchVariantReference> findVariant(UUID variantId);
+
+    /** The titles of every patch variant in every locale, for pickers and matching imported data. */
+    List<PatchVariantTitle> variantTitles();
+
+    /**
      * Where a variant stands in its ruleset; later patches have higher numbers and an observation without a patch is
      * 0. The four warehouse catalogs order their revisions with it (ADR-031).
      */

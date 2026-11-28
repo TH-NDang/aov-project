@@ -131,6 +131,10 @@ mỗi địa chỉ một lần.
   form ghi thay đổi mời thêm link chung trước khi lưu. Change set cũ chưa có link chung giữ link riêng khi sửa.
 - Trang tướng công khai dẫn tới link chung của patch theo ngôn ngữ người đọc, link riêng chỉ là dự phòng.
 
+### Bổ sung ngày 2026-11-28: nguồn theo thị trường
+
+Link nguồn chung ghi thêm thị trường của bài (tùy chọn) và mỗi patch có tối đa 20 link, xem ADR-038.
+
 ## Hệ quả
 
 - Ghi được thay đổi của các patch đã qua mà không cần thu thập lại toàn bộ dữ liệu tướng.

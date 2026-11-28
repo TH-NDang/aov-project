@@ -22,6 +22,7 @@ import com.wikiaov.video.internal.application.VideoViews.PublicVideoList;
 import com.wikiaov.video.internal.application.VideoViews.SubjectList;
 import com.wikiaov.video.internal.domain.VideoLink;
 import com.wikiaov.video.internal.domain.VideoOrigin;
+import com.wikiaov.video.internal.domain.VideoPurpose;
 import com.wikiaov.video.internal.domain.VideoStatus;
 import com.wikiaov.video.internal.persistence.SubjectVideoRepository;
 import com.wikiaov.video.internal.persistence.SubjectVideoSpecifications;
@@ -33,6 +34,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -57,6 +59,7 @@ public class SubjectVideos {
     private static final int NOTE_LIMIT = 1000;
     private static final int CHANNEL_LIMIT = 120;
     private static final int KEY_LIMIT = 160;
+    private static final int LOCALE_LIMIT = 35;
     private static final Set<VideoSubjectKind> HERO_FAMILY = Set.of(VideoSubjectKind.HERO, VideoSubjectKind.SKIN);
     private static final Sort LIST_ORDER = Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.asc("id"));
     private static final UUID IMPORT_AUDIT_ID = new UUID(0, 0);
@@ -85,7 +88,7 @@ public class SubjectVideos {
 
     /**
      * A hero's page shows its own videos and those of its skins, so the hero kind covers both. The skin kind narrows to
-     * one skin when a key is given.
+     * one skin when a key is given. A patch's page shows its own videos and the change videos that name it.
      */
     @Transactional(readOnly = true)
     public PublicVideoList published(VideoSubjectKind kind, UUID subjectId, @Nullable String subjectKey) {
@@ -96,12 +99,15 @@ public class SubjectVideos {
             throw invalid("Only skins take a subject key.");
         }
 
-        List<SubjectVideo> rows = subjectKey == null
-                ? videos.findBySubjectIdAndStatusAndSubjectKindInOrderByDisplayOrderAscPublishedOnDescIdAsc(subjectId,
-                        VideoStatus.PUBLISHED, kind == VideoSubjectKind.HERO ? HERO_FAMILY : Set.of(kind),
-                        Limit.of(PUBLIC_LIMIT))
-                : videos.findBySubjectIdAndStatusAndSubjectKindAndSubjectKeyOrderByDisplayOrderAscPublishedOnDescIdAsc(
-                        subjectId, VideoStatus.PUBLISHED, kind, subjectKey, Limit.of(PUBLIC_LIMIT));
+        List<SubjectVideo> rows = kind == VideoSubjectKind.PATCH
+                ? videos.patchVideos(subjectId, VideoStatus.PUBLISHED, Limit.of(PUBLIC_LIMIT))
+                : subjectKey == null
+                        ? videos.findBySubjectIdAndStatusAndSubjectKindInOrderByDisplayOrderAscPublishedOnDescIdAsc(
+                                subjectId,
+                                VideoStatus.PUBLISHED, kind == VideoSubjectKind.HERO ? HERO_FAMILY : Set.of(kind),
+                                Limit.of(PUBLIC_LIMIT))
+                        : videos.findBySubjectIdAndStatusAndSubjectKindAndSubjectKeyOrderByDisplayOrderAscPublishedOnDescIdAsc(
+                                subjectId, VideoStatus.PUBLISHED, kind, subjectKey, Limit.of(PUBLIC_LIMIT));
 
         return new PublicVideoList(rows.stream().map(SubjectVideos::publicView).toList());
     }
@@ -116,7 +122,7 @@ public class SubjectVideos {
                         ? HERO_FAMILY
                         : Set.of(filter.subjectKind());
         var specification = SubjectVideoSpecifications.matching(kinds, filter.subjectId(), filter.subjectKey(),
-                filter.status(), filter.purpose(), filter.origin(), filter.q());
+                filter.status(), filter.purpose(), filter.origin(), filter.q(), filter.patchVariantId());
         Sort order = filter.subjectId() == null
                 ? LIST_ORDER
                 : Sort.by(Sort.Order.asc("subjectKind"), Sort.Order.asc("subjectKey"), Sort.Order.asc("displayOrder"),
@@ -140,7 +146,7 @@ public class SubjectVideos {
         requireSubject(input.subjectKind(), input.subjectId(), input.subjectKey());
         VideoLink link = link(input.url());
         int start = start(input.startSeconds(), link);
-        requirePatch(input.patchVariantId());
+        requirePatch(input.subjectKind(), input.subjectId(), input.patchVariantId());
 
         if (videos.existsBySubjectKindAndSubjectIdAndSubjectKeyAndUrlAndStartSeconds(input.subjectKind(),
                 input.subjectId(), input.subjectKey(), link.url(), start)) {
@@ -180,7 +186,7 @@ public class SubjectVideos {
         requireSubject(input.subjectKind(), input.subjectId(), input.subjectKey());
         VideoLink link = link(input.url());
         int start = start(input.startSeconds(), link);
-        requirePatch(input.patchVariantId());
+        requirePatch(input.subjectKind(), input.subjectId(), input.patchVariantId());
 
         boolean sameTarget = video.getSubjectKind() == input.subjectKind()
                 && video.getSubjectId().equals(input.subjectId())
@@ -312,6 +318,19 @@ public class SubjectVideos {
         if (row.subjectKind().requiresKey() != (row.subjectKey() != null && !row.subjectKey().isBlank())) {
             return "Only skins take a subject key.";
         }
+        if (row.channelName() != null && row.channelName().strip().length() > CHANNEL_LIMIT) {
+            return "The channel name is limited to " + CHANNEL_LIMIT + " characters.";
+        }
+        String problem = purposeProblem(row.subjectKind(), row.purpose());
+        if (problem == null) {
+            problem = localeProblem(row.locale());
+        }
+        if (problem == null) {
+            problem = patchProblem(row.subjectKind(), row.subjectId(), row.patchVariantId());
+        }
+        if (problem != null) {
+            return problem;
+        }
 
         boolean exists = subjects.computeIfAbsent(subjectIdentity(row.subjectKind(), row.subjectId(), row.subjectKey()),
                 ignored -> subjectExists(row.subjectKind(), row.subjectId(), row.subjectKey()));
@@ -331,7 +350,11 @@ public class SubjectVideos {
         video.setProviderVideoId(link.providerVideoId());
         video.setStartSeconds(link.startSeconds());
         video.setDurationSeconds(row.durationSeconds());
+        video.setChannelName(blankToNull(row.channelName()));
         video.setPublishedOn(row.publishedOn());
+        video.setPublishedAt(row.publishedAt());
+        video.setLocale(blankToNull(row.locale()));
+        video.setPatchVariantId(patchOf(row.subjectKind(), row.subjectId(), row.patchVariantId()));
         video.setDisplayOrder(displayOrder);
         video.setStatus(row.status());
         video.setOrigin(VideoOrigin.IMPORT);
@@ -356,7 +379,9 @@ public class SubjectVideos {
         video.setDurationSeconds(input.durationSeconds());
         video.setChannelName(blankToNull(input.channelName()));
         video.setPublishedOn(input.publishedOn());
-        video.setPatchVariantId(input.patchVariantId());
+        video.setPublishedAt(input.publishedAt());
+        video.setLocale(blankToNull(input.locale()));
+        video.setPatchVariantId(patchOf(input.subjectKind(), input.subjectId(), input.patchVariantId()));
         video.setStatus(input.status());
         video.setUpdatedAt(clock.instant());
     }
@@ -387,6 +412,13 @@ public class SubjectVideos {
         if (input.durationSeconds() != null && input.durationSeconds() <= 0) {
             throw invalid("The duration must be positive.");
         }
+        String problem = purposeProblem(input.subjectKind(), input.purpose());
+        if (problem == null) {
+            problem = localeProblem(input.locale());
+        }
+        if (problem != null) {
+            throw invalid(problem);
+        }
     }
 
     private static void requireCapabilities(Actor actor, VideoSubjectKind kind, VideoStatus status) {
@@ -396,6 +428,7 @@ public class SubjectVideos {
             case ENCHANTMENT -> Capabilities.ENCHANTMENT_WRITE;
             case ARCANA -> Capabilities.ARCANA_WRITE;
             case SPELL -> Capabilities.SPELL_WRITE;
+            case PATCH -> Capabilities.PATCH_WRITE;
         };
         if (!actor.has(write)) {
             throw new AccessDeniedException("Editing these videos requires " + write + ".");
@@ -418,10 +451,48 @@ public class SubjectVideos {
         return provider != null && provider.exists(kind, id, key);
     }
 
-    private void requirePatch(@Nullable UUID variantId) {
-        if (variantId != null) {
-            contexts.variant(variantId);
+    private void requirePatch(VideoSubjectKind kind, UUID subjectId, @Nullable UUID variantId) {
+        String problem = patchProblem(kind, subjectId, variantId);
+        if (problem != null) {
+            throw invalid(problem);
         }
+    }
+
+    /** A patch's own video names that patch, if it names one at all; any other link must be to a patch that exists. */
+    private @Nullable String patchProblem(VideoSubjectKind kind, UUID subjectId, @Nullable UUID variantId) {
+        if (kind == VideoSubjectKind.PATCH) {
+            return variantId == null || variantId.equals(subjectId)
+                    ? null
+                    : "A patch video belongs to the patch it is attached to.";
+        }
+        return variantId == null || contexts.findVariant(variantId).isPresent()
+                ? null
+                : "The patch does not exist.";
+    }
+
+    /** Patch purposes describe a whole update, so only patch videos take them. */
+    private static @Nullable String purposeProblem(VideoSubjectKind kind, VideoPurpose purpose) {
+        if (purpose.patchOnly() && kind != VideoSubjectKind.PATCH) {
+            return "Only patch videos are previews, overviews or reviews of a patch.";
+        }
+        if (kind == VideoSubjectKind.PATCH && !purpose.patchOnly() && purpose != VideoPurpose.OTHER) {
+            return "A patch video is a preview, an overview, a review or another video.";
+        }
+        return null;
+    }
+
+    private static @Nullable String localeProblem(@Nullable String locale) {
+        if (locale == null || locale.isBlank()) {
+            return null;
+        }
+        String value = locale.strip();
+        return value.length() <= LOCALE_LIMIT && Locale.forLanguageTag(value).toLanguageTag().equals(value)
+                ? null
+                : "Use a canonical BCP 47 locale for the video's language.";
+    }
+
+    private static @Nullable UUID patchOf(VideoSubjectKind kind, UUID subjectId, @Nullable UUID variantId) {
+        return kind == VideoSubjectKind.PATCH ? subjectId : variantId;
     }
 
     private static VideoLink link(String url) {
@@ -461,14 +532,16 @@ public class SubjectVideos {
         return new PublicVideo(video.getId(), video.getSubjectKind(), video.getSubjectId(), video.getSubjectKey(),
                 video.getPurpose(), video.getTitle(), video.getNote(), video.getUrl(), video.getProvider(),
                 video.getProviderVideoId(), video.getStartSeconds(), video.getDurationSeconds(),
-                video.getChannelName(), video.getPublishedOn(), video.getPatchVariantId());
+                video.getChannelName(), video.getPublishedOn(), video.getPublishedAt(), video.getLocale(),
+                video.getPatchVariantId());
     }
 
     private static AdminVideo adminView(SubjectVideo video) {
         return new AdminVideo(video.getId(), video.getSubjectKind(), video.getSubjectId(), video.getSubjectKey(),
                 video.getPurpose(), video.getTitle(), video.getNote(), video.getUrl(), video.getProvider(),
                 video.getProviderVideoId(), video.getStartSeconds(), video.getDurationSeconds(),
-                video.getChannelName(), video.getPublishedOn(), video.getPatchVariantId(), video.getDisplayOrder(),
+                video.getChannelName(), video.getPublishedOn(), video.getPublishedAt(), video.getLocale(),
+                video.getPatchVariantId(), video.getDisplayOrder(),
                 video.getStatus(), video.getOrigin(), video.getVersion(), video.getCreatedAt(), video.getUpdatedAt());
     }
 

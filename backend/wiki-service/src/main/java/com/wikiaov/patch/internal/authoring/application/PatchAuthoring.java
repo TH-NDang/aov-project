@@ -4,6 +4,7 @@ import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
 import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
 import com.wikiaov.patch.internal.application.PatchCommands.Patch;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.ReleasePlan;
 import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchCommands.Title;
@@ -87,6 +88,11 @@ public class PatchAuthoring {
     @PreAuthorize("hasAuthority('patch:publish')")
     public UUID release(UUID variantId, Release input) {
         return releases.schedule(variantId, input);
+    }
+
+    @PreAuthorize("hasAuthority('patch:publish')")
+    public void replaceReleases(UUID variantId, ReleasePlan input) {
+        releases.replace(variantId, input);
     }
 
     @PreAuthorize("hasAuthority('patch:publish')")

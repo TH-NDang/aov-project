@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 public interface SubjectVideoRepository
         extends
@@ -30,4 +31,17 @@ public interface SubjectVideoRepository
             UUID subjectId, String subjectKey);
 
     List<SubjectVideo> findBySubjectIdIn(Collection<UUID> subjectIds);
+
+    /**
+     * A patch's own videos and the change videos that name it, oldest first, so a reader sees what came before and after
+     * the release. Videos without a date come last.
+     */
+    @Query("""
+            select v from SubjectVideo v
+            where v.patchVariantId=:variantId and v.status=:status
+                and (v.subjectKind=com.wikiaov.video.VideoSubjectKind.PATCH
+                    or v.purpose=com.wikiaov.video.internal.domain.VideoPurpose.PATCH_CHANGE)
+            order by v.publishedOn asc nulls last,v.publishedAt asc nulls last,v.displayOrder,v.id
+            """)
+    List<SubjectVideo> patchVideos(UUID variantId, VideoStatus status, Limit limit);
 }

@@ -42,6 +42,10 @@ export interface ImportVideo {
   url: string
   durationSeconds: number | null
   publishedOn: string | null
+  publishedAt?: string | null
+  channelName?: string | null
+  locale?: string | null
+  patchVariantId?: string | null
   displayOrder: number | null
   status: VideoStatus
 }

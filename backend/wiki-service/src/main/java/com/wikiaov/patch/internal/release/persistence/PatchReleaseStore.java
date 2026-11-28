@@ -90,8 +90,25 @@ public class PatchReleaseStore {
         return assignments.appliesAt(regionId, rulesetId, effectiveAt);
     }
 
-    public boolean contradictsTimeline(UUID regionId, VariantSnapshot variant, Instant effectiveAt) {
-        return releases.contradictsTimeline(regionId, variant.rulesetId(), effectiveAt, variant.ordinal());
+    public boolean contradictsTimeline(UUID regionId, UUID variantId, VariantSnapshot variant, Instant effectiveAt) {
+        return releases.contradictsTimeline(regionId, variant.rulesetId(), variantId, effectiveAt, variant.ordinal());
+    }
+
+    /** Locks every market in id order, so a writer of several markets never waits on one that waits on it. */
+    public List<Region> lockAllRegions() {
+        return regions.lockAll();
+    }
+
+    public void delete(PatchRelease release) {
+        releases.delete(release);
+    }
+
+    public void flush() {
+        try {
+            releases.flush();
+        } catch (DataIntegrityViolationException exception) {
+            throw new ApiException(PatchErrorCode.PATCH_CONFLICT, "The patch operation conflicts with existing data.");
+        }
     }
 
     public void insert(PatchRelease release) {

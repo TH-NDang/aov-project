@@ -5,7 +5,7 @@ export {
   videoWatchUrl,
 } from "@aov/ui/lib/video-playback"
 
-export type VideoSubjectKind = "HERO" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL"
+export type VideoSubjectKind = "HERO" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL" | "PATCH"
 export type VideoPurpose =
   | "INTRO"
   | "GUIDE_BASIC"
@@ -15,6 +15,9 @@ export type VideoPurpose =
   | "SKIN_TRAILER"
   | "LORE"
   | "PATCH_CHANGE"
+  | "PATCH_PREVIEW"
+  | "PATCH_OVERVIEW"
+  | "PATCH_REVIEW"
   | "OTHER"
 
 export interface PublicVideo {
@@ -32,6 +35,10 @@ export interface PublicVideo {
   durationSeconds: number | null
   channelName: string | null
   publishedOn: string | null
+  /** When the video went up; older rows only have the day. */
+  publishedAt?: string | null
+  /** BCP 47 tag of the language spoken in the video. */
+  locale?: string | null
   patchVariantId: string | null
 }
 
@@ -44,6 +51,9 @@ const PURPOSE_TEXT: Record<VideoPurpose, readonly [string, string]> = {
   SKIN_TRAILER: ["Trailer", "Trailer"],
   LORE: ["Cốt truyện", "Lore"],
   PATCH_CHANGE: ["Thay đổi theo bản", "Patch changes"],
+  PATCH_PREVIEW: ["Xem trước", "Preview"],
+  PATCH_OVERVIEW: ["Tổng hợp", "Overview"],
+  PATCH_REVIEW: ["Trải nghiệm", "Hands-on"],
   OTHER: ["Khác", "Other"],
 }
 

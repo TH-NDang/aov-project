@@ -9,6 +9,7 @@ import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.notes.persistence.PatchSourceLinkRepository;
 import com.wikiaov.patch.internal.notes.persistence.entity.PatchSourceLink;
+import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import java.net.URI;
@@ -29,12 +30,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class PatchSourceLinks implements PatchSources {
-    static final int MAX_SOURCES = 10;
+    static final int MAX_SOURCES = 20;
     static final int MAX_LABEL = 80;
     static final int MAX_URL = 2048;
 
     private final PatchSourceLinkRepository links;
     private final PatchVariantRepository variants;
+    private final RegionRepository regions;
     private final CurrentActor actors;
     private final AuditLog audit;
 
@@ -61,6 +63,7 @@ public class PatchSourceLinks implements PatchSources {
     @PreAuthorize("hasAuthority('patch:write')")
     public List<PatchSource> save(UUID id, UpdatePatchSources input) {
         var wanted = validate(input);
+        requireKnownRegions(wanted);
 
         variants.lockById(id).orElseThrow(PatchSourceLinks::notFound);
         var before = of(id);
@@ -79,6 +82,7 @@ public class PatchSourceLinks implements PatchSources {
             row.setUrl(source.url());
             row.setLabel(source.label());
             row.setLocale(source.locale());
+            row.setRegionCode(source.region());
             rows.add(row);
         }
         links.saveAllAndFlush(rows);
@@ -108,12 +112,21 @@ public class PatchSourceLinks implements PatchSources {
                     || !Locale.forLanguageTag(locale).toLanguageTag().equals(locale))) {
                 throw invalid("Use a canonical BCP 47 locale for a source link.");
             }
+            String region = source.region() == null || source.region().isBlank() ? null : source.region().strip();
             if (!urls.add(url)) {
                 throw invalid("Each source link may appear once.");
             }
-            result.add(new PatchSource(url, label, locale));
+            result.add(new PatchSource(url, label, locale, region));
         }
         return List.copyOf(result);
+    }
+
+    private void requireKnownRegions(List<PatchSource> sources) {
+        for (var source : sources) {
+            if (source.region() != null && regions.findByCode(source.region()).isEmpty()) {
+                throw invalid("A source link names a market that does not exist.");
+            }
+        }
     }
 
     private static String requireUrl(String value) {
@@ -131,7 +144,7 @@ public class PatchSourceLinks implements PatchSources {
     }
 
     private static PatchSource view(PatchSourceLink link) {
-        return new PatchSource(link.getUrl(), link.getLabel(), link.getLocale());
+        return new PatchSource(link.getUrl(), link.getLabel(), link.getLocale(), link.getRegionCode());
     }
 
     private static ApiException invalid(String detail) {
