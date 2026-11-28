@@ -19,6 +19,8 @@ public final class TranslationChecks {
     /** Short names in capitals, such as tournaments and teams (AOG, FPT), are written the same everywhere. */
     private static final Pattern ACRONYM = Pattern
             .compile("(?<![\\p{L}\\p{N}])\\p{Lu}[\\p{Lu}\\p{N}]+(?![\\p{L}\\p{N}])");
+    /** A word that starts with a capital, as names do. */
+    private static final Pattern CAPITALISED = Pattern.compile("(?<![\\p{L}\\p{N}])\\p{Lu}[\\p{L}\\p{M}]*");
 
     private TranslationChecks() {
     }
@@ -86,7 +88,7 @@ public final class TranslationChecks {
 
     /**
      * Whether a text reads in another language than the target. Quotes, links, reference tags, names kept in every
-     * language and capital-letter acronyms are left out first.
+     * language and capital-letter acronyms are left out first, and for English and Indonesian every capitalised word.
      */
     static boolean wrongLanguage(@Nullable String text, String target, Set<String> keptNames) {
         if (text == null || text.isBlank()) {
@@ -95,7 +97,13 @@ public final class TranslationChecks {
         String value = Glossary.nfc(text);
         value = REF.matcher(value).replaceAll(" ");
         value = QUOTED.matcher(value).replaceAll(" ");
-        value = ACRONYM.matcher(PostLanguage.plain(value)).replaceAll(" ").toLowerCase(Locale.ROOT);
+        value = ACRONYM.matcher(PostLanguage.plain(value)).replaceAll(" ");
+        if (target.equals("en-US") || target.equals("id-ID")) {
+            // A skin or event name kept as written is capitalised and does not count; a sentence left in
+            // Vietnamese is mostly lower case and still does.
+            value = CAPITALISED.matcher(value).replaceAll(" ");
+        }
+        value = value.toLowerCase(Locale.ROOT);
         for (String name : keptNames) {
             if (name.length() >= 3) {
                 value = value.replace(Glossary.nfc(name).toLowerCase(Locale.ROOT), " ");

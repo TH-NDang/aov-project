@@ -48,6 +48,15 @@ class TranslationChecksTest {
     }
 
     @Test
+    void aSkinNameKeptAsWrittenDoesNotFailAnEnglishAnswer() {
+        // The live API answered this for a shop screenshot on 2026-11-28.
+        assertThat(TranslationChecks.wrongLanguage("Shop screen titled \"SHOP\". It lists the new skin Laville Thần "
+                + "Kiếm, priced at 199 Vouchers, with a \"Buy now\" button.", "en-US", Set.of("Laville"))).isFalse();
+        assertThat(TranslationChecks.wrongLanguage("Skin mới của Laville đẹp quá, mua ngay thôi", "en-US",
+                Set.of("Laville"))).isTrue();
+    }
+
+    @Test
     void englishLeftInAVietnameseAnswerFails() {
         assertThat(TranslationChecks.wrongLanguage("The jungler should take the red buff before the fight starts",
                 "vi-VN", Set.of())).isTrue();
