@@ -131,6 +131,11 @@ test("sound and speed change on the row", async () => {
     await click(named(document, "Bật tiếng"))
     assert.deepEqual(sounds().at(-1), { volume: 100, muted: false })
     const speeds = named(document, "Tốc độ phát") as HTMLSelectElement
+    assert.deepEqual(
+      [...speeds.options].map((option) => option.value),
+      ["2", "1.5", "1.25", "1", "0.75", "0.5"],
+      "the fastest speed comes first",
+    )
     await act(async () => speeds.focus())
     await choose(speeds, "1.5")
     assert.notEqual(document.activeElement, speeds, "the keys go back to the desk once a speed is chosen")

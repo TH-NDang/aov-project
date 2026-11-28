@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import {
-  Captions,
   Maximize,
   Minimize,
   Pause,
   Play,
   SkipBack,
   SkipForward,
+  SlidersHorizontal,
   Volume2,
   VolumeX,
   Youtube,
@@ -259,7 +259,7 @@ export function Transport(props: TransportProps) {
               pressed={youtubeControls}
               onClick={() => props.onYoutubeControls(!youtubeControls)}
             >
-              <Captions size={16} />
+              <SlidersHorizontal size={16} />
             </Key>
             <YoutubeLink {...props} />
             {onFullscreen && (
