@@ -11,6 +11,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RecordLifec
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildRole;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
@@ -221,6 +222,7 @@ public class GameRecords {
                 participant.build().forEach(value -> {
                     add(itemIds, value.item());
                     value.from().forEach(part -> add(itemIds, part));
+                    value.replaces().forEach(gone -> add(itemIds, gone));
                 });
             }
         }
@@ -235,12 +237,27 @@ public class GameRecords {
         }
     }
 
-    /** The entries a snapshot needs; what an item is made of helps while recording and is no part of a game. */
+    /**
+     * The entries a snapshot needs; what an item is made of helps while recording and is no part of a game. Whether an
+     * item has an active effect is kept, since a reader marks such an item.
+     */
     private static List<Reference> used(List<Reference> references, Set<UUID> ids) {
         return references.stream().filter(reference -> ids.contains(reference.id()))
                 .map(found -> new Reference(found.id(), found.code(), found.name(), found.iconUrl(), found.tier(),
-                        found.color(), found.branchCode(), found.revisionId()))
+                        found.color(), found.branchCode(), found.revisionId(), null, found.active()))
                 .toList();
+    }
+
+    /**
+     * The role a new step of a build of the hero starts with, by item: the one last recorded for the hero, otherwise the
+     * one last recorded for any hero. Items nobody recorded are absent and start as part of the build.
+     */
+    public Map<UUID, BuildRole> buildRoles(UUID heroId) {
+        var roles = new LinkedHashMap<UUID, BuildRole>();
+        for (var row : games.buildRoles(heroId.toString())) {
+            roles.put(UUID.fromString(row[0].toString()), BuildRole.valueOf(row[1].toString()));
+        }
+        return roles;
     }
 
     public Impact deletionImpact(UUID id) {

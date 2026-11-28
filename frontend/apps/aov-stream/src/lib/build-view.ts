@@ -1,5 +1,4 @@
 import type {
-  BuildPlace,
   BuildStep,
   Catalog,
   EnchantmentAllocation,
@@ -14,19 +13,28 @@ import { findReference, hasLoadout, present, snapshotAt } from "./tournament-mod
 /** The slots of an inventory. */
 const SLOTS = 6
 
-/** An item with the game second it was held, where that is known. */
+/** What became of an item: held when the game ended, gone into a later item, or sold. */
+export type Fate = "HELD" | "UPGRADED" | "SOLD"
+/** An item with the game second it was bought, where that is known. */
 export type BuiltPart = { item: Selection; atSeconds: number | null }
-/** An item a player had, with the items of a lower tier it grew from. */
-export type BuiltItem = BuiltPart & { from: BuiltPart[] }
+/** An item a player had, the earlier ones it grew from, and whether it was bought for protection. */
+export type BuiltItem = BuiltPart & { from: BuiltPart[]; protective: boolean }
+/** An item of the path with what became of it, and the earlier items sold for it. */
+export type PathStep = BuiltItem & {
+  fate: Fate
+  /** The later item it went into or was sold for, with its place in the path; null when nothing recorded follows it. */
+  next: (BuiltPart & { at: number }) | null
+  replaces: BuiltPart[]
+}
 
-/** What a player had, the way a reader asks for it: held to the end, given up, and bought for a moment. */
+/** What a player had, the way a reader asks for it: what they ended with, and the path that led there. */
 export type BuildView = {
   /** Read from the items somebody wrote down, or from an inventory the source showed. */
   source: "STEPS" | "INVENTORY"
-  /** In the order somebody listed them, or the order they lay in the inventory. */
-  kept: BuiltItem[]
-  replaced: BuiltItem[]
-  situational: BuiltItem[]
+  /** The slots held at the end, the build itself before what was bought for protection; an inventory in its order. */
+  end: BuiltItem[]
+  /** The items written down, in the order they were bought; none for an inventory. */
+  path: PathStep[]
   /** Slots of the inventory nobody could read. */
   unread: number
   /** The game second the inventory was shown; null for items written down. */
@@ -35,38 +43,47 @@ export type BuildView = {
 }
 
 /** One entry of the wiki, or one name while the record has no more than that. */
-const identity = ({ id, name }: Selection) => id || `name:${name?.trim().toLocaleLowerCase("vi-VN")}`
+const identity = ({ id, name }: Selection) => id || `name:${name?.trim().toLocaleLowerCase("vi-VN").normalize("NFKC")}`
+
+const names = (selections: Selection[] | undefined, key: string) =>
+  (selections ?? []).some((selection) => present(selection) && identity(selection) === key)
 
 /**
- * The items written down, each told once: one that was given up and went into another item is told by that item, with
- * the time it was first held. A second purchase is no step of its own, so when it was held again is not known.
+ * The items written down, with what became of each as the service reads it: an item a later step grew from went into
+ * it, one a later step replaces was sold for it, and the rest were held to the end unless marked sold.
  */
 function fromSteps(steps: BuildStep[]): BuildView {
-  const givenUp = new Map(
-    steps.filter((step) => step.place === "REPLACED").map((step) => [identity(step.item), step.atSeconds ?? null]),
+  const keys = steps.map((step) => identity(step.item))
+  const next = keys.map((key, at) =>
+    steps.findIndex((later, after) => after > at && (names(later.from, key) || names(later.replaces, key))),
   )
-  const used = new Set<string>()
-  const partOf = (item: Selection): BuiltPart => {
-    const key = identity(item)
-    const atSeconds = used.has(key) ? null : (givenUp.get(key) ?? null)
-    used.add(key)
-    return { item, atSeconds }
+  const fate = (at: number): Fate => {
+    if (next[at]! >= 0) return names(steps[next[at]!]!.from, keys[at]!) ? "UPGRADED" : "SOLD"
+    return steps[at]!.sold ? "SOLD" : "HELD"
   }
-  const built = steps.map(({ place, item, atSeconds = null, from = [] }) => ({
-    place,
-    item,
-    atSeconds,
-    from: from.filter(present).map(partOf),
-  }))
-  const placed = (place: BuildPlace) =>
-    built
-      .filter((one) => one.place === place && !(place === "REPLACED" && used.has(identity(one.item))))
-      .map(({ item, atSeconds, from }): BuiltItem => ({ item, atSeconds, from }))
+  // A part is the earlier step that went into this one; an item nobody wrote down as a step has no time.
+  const partsOf = (at: number, selections: Selection[] = []) =>
+    selections.filter(present).map((item): BuiltPart => {
+      const earlier = next.findIndex((successor, before) => successor === at && keys[before] === identity(item))
+      return { item, atSeconds: earlier >= 0 ? (steps[earlier]!.atSeconds ?? null) : null }
+    })
+  const path = steps.map((step, at): PathStep => {
+    const later = steps[next[at]!]
+    return {
+      item: step.item,
+      atSeconds: step.atSeconds ?? null,
+      from: partsOf(at, step.from),
+      protective: step.role === "PROTECTIVE",
+      fate: fate(at),
+      next: later ? { item: later.item, atSeconds: later.atSeconds ?? null, at: next[at]! } : null,
+      replaces: partsOf(at, step.replaces),
+    }
+  })
+  const held = path.filter((step) => step.fate === "HELD")
   return {
     source: "STEPS",
-    kept: placed("KEPT"),
-    replaced: placed("REPLACED"),
-    situational: placed("SITUATIONAL"),
+    end: [...held.filter((step) => !step.protective), ...held.filter((step) => step.protective)],
+    path,
     unread: 0,
     atSeconds: null,
     note: null,
@@ -82,9 +99,8 @@ function fromInventory(snapshot: EquipmentSnapshot, catalog: Catalog, whole: boo
   const shown = whole || held.every(lowest) ? held : held.filter((item) => !lowest(item))
   return {
     source: "INVENTORY",
-    kept: shown.map((item) => ({ item, atSeconds: null, from: [] })),
-    replaced: [],
-    situational: [],
+    end: shown.map((item) => ({ item, atSeconds: null, from: [], protective: false })),
+    path: [],
     unread: Math.max(0, SLOTS - read.length),
     atSeconds: snapshot.atSeconds,
     note: snapshot.note?.trim() || null,
@@ -102,16 +118,39 @@ export function buildOf(participant: Participant, catalog: Catalog): BuildView |
   return last ? fromInventory(last, catalog, false) : null
 }
 
+/** Seconds between the marks on the time of a chart. */
+const TICK = 300
+/** The share of a chart at its end that holds the length of the game, so no other mark stands there. */
+const END_ROOM = 0.12
+
+/** One bar of a chart of the path, as shares of the game; `open` where the item was sold for nothing recorded. */
+export type PathBar = { from: number; to: number; open: boolean }
+export type PathChart = { bars: PathBar[]; ticks: number[] }
+
+/**
+ * The items of a path as bars over the minutes of a game, each from when it was bought until it went into another, was
+ * sold or the game ended. Null where that cannot be drawn: the length of the game or the time of an item is not known.
+ */
+export function pathChart(path: PathStep[], duration: number | null | undefined): PathChart | null {
+  if (!duration || path.length < 2) return null
+  if (path.some(({ atSeconds }) => atSeconds == null || atSeconds > duration)) return null
+  const share = (second: number) => Math.min(1, Math.max(0, second / duration))
+  const bars = path.map((step) => {
+    const from = share(step.atSeconds!)
+    return {
+      from,
+      to: Math.max(from, share(step.next?.atSeconds ?? duration)),
+      open: step.fate === "SOLD" && !step.next,
+    }
+  })
+  const ticks = Array.from({ length: Math.floor((duration * (1 - END_ROOM)) / TICK) + 1 }, (_, at) => at * TICK)
+  return { bars, ticks }
+}
+
 /** What a player held at a second of the game: the inventory shown last by then, whole. */
 export function inventoryAt(participant: Participant, catalog: Catalog, seconds: number): BuildView | null {
   const seen = snapshotAt(participant.equipmentSnapshots, seconds)
   return seen ? fromInventory(seen, catalog, true) : null
-}
-
-/** Whether the times of items say that they are listed in the order they were built. */
-export function inBuiltOrder(items: BuiltItem[]): boolean {
-  const times = items.flatMap(({ atSeconds }) => atSeconds ?? [])
-  return times.length > 1 && times.every((second, at) => at === 0 || second >= times[at - 1]!)
 }
 
 /** What a lineup shows of a player: what was built over the whole game, or the inventory at a second of it. */

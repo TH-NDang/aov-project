@@ -95,7 +95,7 @@ const itemsStep = (seats: [Side, Lane, Partial<Participant>][]) => {
   const progress = recordingProgress(entry)
   return { progress, step: progress.steps.find((step) => step.id === "items")! }
 }
-const list: Partial<Participant> = { build: [{ item: { id: null, name: "Thánh kiếm" }, place: "REPLACED" }] }
+const list: Partial<Participant> = { build: [{ item: { id: null, name: "Thánh kiếm" }, role: "CORE", sold: true }] }
 const moment = (item: string | null): Partial<Participant> => ({
   equipmentSnapshots: [{ atSeconds: 900, slots: [{ slot: 1, known: true, item: item ? { name: item } : null }] }],
 })

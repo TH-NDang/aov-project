@@ -7,19 +7,22 @@ import {
   buildOf,
   buildProblems,
   editBuild,
+  endSlots,
+  fates,
   itemGroups,
   itemIndex,
   itemKey,
   itemName,
-  moveItem,
   recipeParts,
   refused,
   removeItem,
   seenItems,
+  setRole,
+  setSold,
   setTime,
   shiftItem,
-  stepsAt,
   togglePart,
+  toggleReplaced,
   unlisted,
   upgradeItem,
   upgradesOf,
@@ -50,10 +53,10 @@ const ITEMS = [
 const LENGTH = 900
 const index = itemIndex(ITEMS)
 const pick = (id: string) => ({ id, name: ITEMS.find((item) => item.id === id)!.name })
-const step = (id: string, place: BuildStep["place"] = "KEPT", more: Partial<BuildStep> = {}): BuildStep => ({
+const step = (id: string, more: Partial<BuildStep> = {}): BuildStep => ({
   item: pick(id),
   from: [],
-  place,
+  role: "CORE",
   atSeconds: null,
   ...more,
 })
@@ -70,11 +73,14 @@ const participant = (more: Partial<Participant> = {}): Participant => ({
   equipmentEvents: [],
   ...more,
 })
-/** Twenty-four items typed by hand, as many as a list holds. */
-const full = Array.from({ length: MAX_STEPS }, (_, position): BuildStep => ({
-  item: { id: null, name: `Món ${position}` },
-  place: "SITUATIONAL",
-}))
+/** Items typed by hand and sold on the way, as many as asked for. */
+const typed = (count: number) =>
+  Array.from({ length: count }, (_, position): BuildStep => ({
+    item: { id: null, name: `Món ${position}` },
+    role: "PROTECTIVE",
+    sold: true,
+  }))
+const SIX = ["holy", "aegis", "fang", "revive", "boots", "greaves"]
 
 const keys = (edit: BuildEdit) => (refused(edit) ? edit : edit.map((entry) => itemKey(entry.item, index)))
 const partsOf = (edit: BuildEdit, id: string) =>
@@ -86,7 +92,7 @@ const steps = (edit: BuildEdit) => {
 
 test("a list somebody wrote is read as it is, whatever the snapshots show", () => {
   const build = buildOf(
-    participant({ build: [step("sword", "REPLACED")], equipmentSnapshots: [snapshot(900, ["holy"])] }),
+    participant({ build: [step("sword", { sold: true })], equipmentSnapshots: [snapshot(900, ["holy"])] }),
     LENGTH,
     index,
   )
@@ -94,7 +100,27 @@ test("a list somebody wrote is read as it is, whatever the snapshots show", () =
   assert.equal(build.snapshot, null)
 })
 
-test("without a list the items are those the game ended with, all of them kept", () => {
+test("a list of the first kind reads its places as roles and sales", () => {
+  const first = [
+    { item: pick("sword"), from: [], place: "REPLACED" },
+    { item: pick("boots"), from: [], place: "REPLACED" },
+    { item: pick("holy"), from: [pick("sword")], place: "KEPT" },
+    { item: pick("revive"), from: [], place: "SITUATIONAL" },
+  ] as unknown as BuildStep[]
+  const { steps: read } = buildOf(participant({ build: first }), LENGTH, index)
+  assert.deepEqual(
+    read.map((entry) => [entry.role, !!entry.sold, "place" in entry]),
+    [
+      ["CORE", false, false],
+      ["CORE", true, false],
+      ["CORE", false, false],
+      ["PROTECTIVE", false, false],
+    ],
+  )
+  assert.deepEqual(fates(read, index), ["UPGRADED", "SOLD", "HELD", "HELD"])
+})
+
+test("without a list the items are those the game ended with, all of them the build itself", () => {
   const build = buildOf(
     participant({ equipmentSnapshots: [snapshot(300, ["boots"]), snapshot(900, ["holy", undefined, "boots", null])] }),
     LENGTH,
@@ -102,8 +128,8 @@ test("without a list the items are those the game ended with, all of them kept",
   )
   assert.deepEqual(keys(build.steps), ["holy", "boots"])
   assert.deepEqual(
-    build.steps.map((entry) => entry.place),
-    ["KEPT", "KEPT"],
+    build.steps.map((entry) => entry.role),
+    ["CORE", "CORE"],
   )
   assert.equal(build.snapshot?.atSeconds, 900)
 })
@@ -138,7 +164,7 @@ test("a snapshot that shows no item leaves nothing to read", () => {
 
 test("the first edit writes a list of its own out of what the snapshot shows", () => {
   const before = participant({ equipmentSnapshots: [snapshot(900, ["holy", "boots"])] })
-  const after = editBuild(before, LENGTH, (list) => addItem(list, pick("revive"), "SITUATIONAL", index), index)
+  const after = editBuild(before, LENGTH, (list) => addItem(list, pick("revive"), "PROTECTIVE", index), index)
   assert.ok(!refused(after))
   assert.deepEqual(keys(after.build!), ["holy", "boots", "revive"])
   assert.equal(after.equipmentSnapshots, before.equipmentSnapshots, "the snapshot stays")
@@ -146,7 +172,7 @@ test("the first edit writes a list of its own out of what the snapshot shows", (
 
 test("over an inventory of the middle of the game the first edit starts an empty list", () => {
   const before = participant({ equipmentSnapshots: [snapshot(300, ["boots"])] })
-  const after = editBuild(before, LENGTH, (list) => addItem(list, pick("revive"), "KEPT", index), index)
+  const after = editBuild(before, LENGTH, (list) => addItem(list, pick("revive"), "CORE", index), index)
   assert.ok(!refused(after))
   assert.deepEqual(keys(after.build!), ["revive"])
 })
@@ -154,88 +180,141 @@ test("over an inventory of the middle of the game the first edit starts an empty
 test("an edit that changes nothing leaves the player untouched", () => {
   const before = participant({ build: [step("holy")] })
   assert.equal(
-    editBuild(before, LENGTH, (list) => moveItem(list, "holy", "KEPT", index), index),
+    editBuild(before, LENGTH, (list) => setRole(list, "holy", "CORE", index), index),
     before,
   )
 })
 
-test("an item is added as the latest one built", () => {
-  const list = steps(addItem([step("boots")], pick("holy"), "REPLACED", index, 420))
-  assert.deepEqual(list[1], step("holy", "REPLACED", { atSeconds: 420 }))
+test("an item is added as the latest one built, with the role it is given", () => {
+  const list = steps(addItem([step("boots")], pick("revive"), "PROTECTIVE", index, 420))
+  assert.deepEqual(list[1], step("revive", { role: "PROTECTIVE", atSeconds: 420 }))
 })
 
-test("an item added with a time stands before the first one built later, in whatever place", () => {
-  const list = [step("boots"), step("sword", "REPLACED", { atSeconds: 300 }), step("holy", "KEPT", { atSeconds: 600 })]
-  assert.deepEqual(keys(addItem(list, pick("fang"), "KEPT", index, 450)), ["boots", "sword", "fang", "holy"])
-  assert.deepEqual(keys(addItem(list, pick("fang"), "KEPT", index, 600)), ["boots", "sword", "holy", "fang"])
+test("an item added with a time stands before the first one built later", () => {
+  const list = [step("boots"), step("greaves", { atSeconds: 300 }), step("holy", { atSeconds: 600 })]
+  assert.deepEqual(keys(addItem(list, pick("aegis"), "CORE", index, 450)), ["boots", "greaves", "aegis", "holy"])
+  assert.deepEqual(keys(addItem(list, pick("aegis"), "CORE", index, 600)), ["boots", "greaves", "holy", "aegis"])
 })
 
-test("adding an item that is listed moves it instead of listing it twice", () => {
-  const list = steps(addItem([step("boots"), step("holy")], pick("boots"), "REPLACED", index))
-  assert.deepEqual(keys(list), ["boots", "holy"])
-  assert.equal(list[0]!.place, "REPLACED")
+test("an item grows from the parts of its recipe the player held when it was bought", () => {
+  const list = steps(addItem([step("sword", { atSeconds: 100 }), step("boots")], pick("holy"), "CORE", index, 500))
+  assert.deepEqual(partsOf(list, "holy"), ["sword"])
+  assert.deepEqual(fates(list, index), ["UPGRADED", "HELD", "HELD"])
+})
+
+test("a part that already went into another item is not taken again", () => {
+  const list = steps(addItem([step("sword"), step("fang", { from: [pick("sword")] })], pick("holy"), "CORE", index))
+  assert.deepEqual(partsOf(list, "holy"), [])
+})
+
+test("an item that is listed already is not listed twice", () => {
+  assert.equal(addItem([step("boots"), step("holy")], pick("boots"), "CORE", index), "TWICE")
 })
 
 test("an item typed by hand is the catalogue's item of that name", () => {
-  const typed = { id: null, name: "giay ho ve" }
-  assert.deepEqual(steps(addItem([], typed, "KEPT", index))[0]!.item, pick("boots"))
-  assert.deepEqual(keys(addItem([step("boots")], typed, "SITUATIONAL", index)), ["boots"], "so it is listed once")
+  const name = { id: null, name: "giay ho ve" }
+  assert.deepEqual(steps(addItem([], name, "CORE", index))[0]!.item, pick("boots"))
+  assert.equal(addItem([step("boots")], name, "CORE", index), "TWICE", "so it is listed once")
 })
 
 test("an item of tier 1 is no step of a build", () => {
-  assert.equal(addItem([], pick("short"), "KEPT", index), "TIER")
+  assert.equal(addItem([], pick("short"), "CORE", index), "TIER")
 })
 
 test("an item the catalogue does not know can be listed under its name", () => {
-  const list = steps(addItem([], { id: null, name: "Món cũ" }, "KEPT", index))
+  const list = steps(addItem([], { id: null, name: "Món cũ" }, "CORE", index))
   assert.equal(itemName(list[0]!.item, index), "Món cũ")
 })
 
-test("a seventh item cannot be kept to the end, neither added nor moved there", () => {
-  const six = ["holy", "aegis", "fang", "revive", "boots", "greaves"].map((id) => step(id))
-  assert.equal(addItem(six, pick("sword"), "KEPT", index), "KEPT")
-  assert.equal(moveItem([...six, step("sword", "REPLACED")], "sword", "KEPT", index), "KEPT")
+test("with six items held a seventh asks which one was sold for it", () => {
+  const six = SIX.map((id) => step(id))
+  assert.equal(addItem(six, pick("gauntlet"), "CORE", index), "HELD")
+  const list = steps(addItem(six, pick("gauntlet"), "CORE", index, null, [pick("boots")]))
+  assert.deepEqual(list.at(-1)!.replaces, [pick("boots")])
+  assert.deepEqual(keys(endSlots(list, index)), ["holy", "aegis", "fang", "revive", "greaves", "gauntlet"])
+})
+
+test("an item that grows from one of the six takes no seventh slot", () => {
+  const six = ["sword", "boots", "greaves", "gauntlet", "comet", "aegis"].map((id) => step(id))
+  const list = steps(addItem(six, pick("holy"), "CORE", index))
+  assert.deepEqual(partsOf(list, "holy"), ["sword"])
+})
+
+test("an item is sold only for one bought before it and still held then", () => {
+  const list = [step("sword"), step("fang", { from: [pick("sword")] })]
+  assert.equal(addItem(list, pick("revive"), "CORE", index, null, [pick("sword")]), "GONE")
+  assert.equal(addItem(list, pick("revive"), "CORE", index, null, [pick("holy")]), "GONE")
 })
 
 test("a list holds at most twenty-four items", () => {
-  assert.equal(addItem(full, pick("holy"), "SITUATIONAL", index), "STEPS")
+  assert.equal(addItem(typed(MAX_STEPS), pick("holy"), "CORE", index), "STEPS")
 })
 
-test("an item moves past the next one of its place, whatever stands between them", () => {
-  const list = [step("boots"), step("sword", "REPLACED"), step("holy"), step("aegis")]
-  assert.deepEqual(keys(shiftItem(list, "boots", 1, index)), ["sword", "holy", "boots", "aegis"])
-  assert.deepEqual(keys(stepsAt(shiftItem(list, "aegis", -1, index), "KEPT")), ["boots", "aegis", "holy"])
+test("the end slots are the items held, those of the build before the protective ones", () => {
+  const list = [step("revive", { role: "PROTECTIVE" }), step("holy"), step("boots", { sold: true })]
+  assert.deepEqual(keys(endSlots(list, index)), ["holy", "revive"])
 })
 
-test("an item at the end of its place stays where it is", () => {
-  const list = [step("boots"), step("sword", "REPLACED"), step("holy")]
+test("an item moves one place in the order it was bought", () => {
+  const list = [step("boots"), step("sword"), step("holy"), step("aegis")]
+  assert.deepEqual(keys(shiftItem(list, "boots", 1, index)), ["sword", "boots", "holy", "aegis"])
+  assert.deepEqual(keys(shiftItem(list, "aegis", -1, index)), ["boots", "sword", "aegis", "holy"])
+})
+
+test("an item at either end of the list stays where it is", () => {
+  const list = [step("boots"), step("sword"), step("holy")]
   assert.equal(shiftItem(list, "boots", -1, index), list)
-  assert.equal(shiftItem(list, "sword", 1, index), list)
+  assert.equal(shiftItem(list, "holy", 1, index), list)
 })
 
-test("an upgraded item keeps its place, takes the lower one as its part and has no time yet", () => {
-  const list = steps(
-    upgradeItem([step("boots"), step("sword", "SITUATIONAL", { atSeconds: 180 })], "sword", pick("holy"), index),
+test("an item does not move past one whose time says otherwise, nor above one sold for it", () => {
+  assert.equal(
+    shiftItem([step("boots", { atSeconds: 100 }), step("sword", { atSeconds: 200 })], "boots", 1, index),
+    "ORDER",
   )
-  assert.deepEqual(list[1], step("holy", "SITUATIONAL", { from: [pick("sword")] }))
+  const sold = [step("boots"), step("revive", { replaces: [pick("boots")] })]
+  assert.equal(shiftItem(sold, "revive", -1, index), "GONE")
 })
 
-test("upgrading into an item that is listed makes the lower one its part there", () => {
+test("an upgrade adds the later item grown from the lower one, bought for the same", () => {
   const list = steps(
-    upgradeItem([step("holy", "KEPT", { atSeconds: 400 }), step("sword")], "sword", pick("holy"), index),
+    upgradeItem([step("boots"), step("sword", { role: "PROTECTIVE", atSeconds: 180 })], "sword", pick("revive"), index),
   )
-  assert.deepEqual(list, [step("holy", "KEPT", { atSeconds: 400, from: [pick("sword")] })])
+  assert.deepEqual(list[2], step("revive", { role: "PROTECTIVE", from: [pick("sword")] }))
+  assert.deepEqual(fates(list, index), ["HELD", "UPGRADED", "HELD"])
+})
+
+test("an upgrade at a second goes where that second belongs, never before the lower item", () => {
+  const list = [step("sword", { atSeconds: 100 }), step("boots", { atSeconds: 300 })]
+  assert.deepEqual(keys(upgradeItem(list, "sword", pick("holy"), index, 200)), ["sword", "holy", "boots"])
+  assert.equal(upgradeItem([step("sword", { atSeconds: 300 })], "sword", pick("holy"), index, 200), "ORDER")
+})
+
+test("upgrading into an item listed later makes the lower one its part there", () => {
+  const list = steps(upgradeItem([step("sword"), step("holy", { atSeconds: 400 })], "sword", pick("holy"), index))
+  assert.deepEqual(list, [step("sword"), step("holy", { atSeconds: 400, from: [pick("sword")] })])
+})
+
+test("an item listed before another did not grow from it", () => {
+  assert.equal(upgradeItem([step("holy"), step("sword")], "sword", pick("holy"), index), "ORDER")
 })
 
 test("an item made of two takes both as its parts, one after the other", () => {
   const one = steps(upgradeItem([step("gauntlet"), step("greaves")], "gauntlet", pick("aegis"), index))
   const both = steps(upgradeItem(one, "greaves", pick("aegis"), index))
-  assert.deepEqual(keys(both), ["aegis"])
+  assert.deepEqual(keys(both), ["gauntlet", "greaves", "aegis"])
   assert.deepEqual(partsOf(both, "aegis"), ["gauntlet", "greaves"])
+  assert.deepEqual(fates(both, index), ["UPGRADED", "UPGRADED", "HELD"])
 })
 
-test("an item is upgraded into none of tier 1", () => {
+test("an item is upgraded into none of tier 1, nor into one it cannot have grown from", () => {
   assert.equal(upgradeItem([step("sword")], "sword", pick("short"), index), "TIER")
+  assert.equal(upgradeItem([step("holy")], "holy", pick("sword"), index), "LOWER")
+})
+
+test("an upgrade into a listed item that has three parts already is refused", () => {
+  const list = [step("greaves"), step("aegis", { from: ["sword", "gauntlet", "boots"].map(pick) })]
+  assert.equal(upgradeItem(list, "greaves", pick("aegis"), index), "PARTS")
 })
 
 test("a part pressed again is taken off", () => {
@@ -245,7 +324,7 @@ test("a part pressed again is taken off", () => {
 })
 
 test("an item is built from at most three others", () => {
-  const list = [step("revive", "KEPT", { from: ["sword", "greaves", "boots"].map(pick) })]
+  const list = [step("revive", { from: ["sword", "greaves", "boots"].map(pick) })]
   assert.equal(togglePart(list, "revive", pick("gauntlet"), index), "PARTS")
 })
 
@@ -256,14 +335,8 @@ test("a part is of a lower tier than its item, or one the recipe names", () => {
 })
 
 test("a part the catalogue does not know is taken, its tier being unknown", () => {
-  const typed = { id: null, name: "Món cũ" }
-  assert.equal(steps(togglePart([step("holy")], "holy", typed, index))[0]!.from!.length, 1)
-})
-
-test("an item with a part that cannot go into another is not upgraded into it", () => {
-  const list = [step("greaves", "KEPT", { from: [pick("boots")] })]
-  const finished = reference("plate", "Giáp thép", 2, ["greaves"])
-  assert.equal(upgradeItem(list, "greaves", { id: "plate" }, itemIndex([...ITEMS, finished])), "LOWER")
+  const name = { id: null, name: "Món cũ" }
+  assert.equal(steps(togglePart([step("holy")], "holy", name, index))[0]!.from!.length, 1)
 })
 
 test("an item is no part of itself, and no part is of tier 1", () => {
@@ -271,22 +344,61 @@ test("an item is no part of itself, and no part is of tier 1", () => {
   assert.equal(togglePart([step("holy")], "holy", pick("short"), index), "TIER")
 })
 
+test("an item sold for another is pressed on and off among those held before it", () => {
+  const list = [step("boots"), step("sword"), step("revive")]
+  const on = steps(toggleReplaced(list, "revive", pick("boots"), index))
+  assert.deepEqual(on[2]!.replaces, [pick("boots")])
+  assert.deepEqual(steps(toggleReplaced(on, "revive", pick("boots"), index)), list)
+  assert.equal(toggleReplaced(list, "revive", pick("revive"), index), "SAME")
+  assert.equal(toggleReplaced(list, "sword", pick("revive"), index), "GONE")
+})
+
+test("an item is bought from the sale of at most two others", () => {
+  const list = [
+    step("boots"),
+    step("sword"),
+    step("greaves"),
+    step("revive", { replaces: ["boots", "sword"].map(pick) }),
+  ]
+  assert.equal(toggleReplaced(list, "revive", pick("greaves"), index), "REPLACED")
+})
+
+test("an item sold for nothing recorded is held no more, and held again only into a free slot", () => {
+  const sold = steps(setSold([step("boots")], "boots", true, index))
+  assert.deepEqual(fates(sold, index), ["SOLD"])
+  const seven = [...SIX.map((id) => step(id)), step("sword", { sold: true })]
+  assert.equal(setSold(seven, "sword", false, index), "HELD")
+})
+
+test("a role is changed in place", () => {
+  const list = steps(setRole([step("holy"), step("revive")], "revive", "PROTECTIVE", index))
+  assert.deepEqual(
+    list.map((entry) => entry.role),
+    ["CORE", "PROTECTIVE"],
+  )
+})
+
 test("a time is inside the game, or any while its length is unknown", () => {
   assert.equal(setTime([step("holy")], "holy", 901, 900, index), "TIME")
   assert.equal(steps(setTime([step("holy")], "holy", 901, null, index))[0]!.atSeconds, 901)
-  assert.equal(steps(setTime([step("holy", "KEPT", { atSeconds: 60 })], "holy", null, 900, index))[0]!.atSeconds, null)
+  assert.equal(steps(setTime([step("holy", { atSeconds: 60 })], "holy", null, 900, index))[0]!.atSeconds, null)
 })
 
 test("a time that contradicts those of other items moves the item to where it belongs", () => {
-  const list = [step("holy", "KEPT", { atSeconds: 600 }), step("boots"), step("fang", "KEPT", { atSeconds: 800 })]
+  const list = [step("holy", { atSeconds: 600 }), step("boots"), step("fang", { atSeconds: 800 })]
   assert.deepEqual(keys(setTime(list, "boots", 200, LENGTH, index)), ["boots", "holy", "fang"])
   assert.deepEqual(keys(setTime(list, "holy", 850, LENGTH, index)), ["boots", "fang", "holy"])
 })
 
 test("a time that agrees with the others leaves the item where it is", () => {
-  const list = [step("holy"), step("boots"), step("fang", "KEPT", { atSeconds: 800 })]
+  const list = [step("holy"), step("boots"), step("fang", { atSeconds: 800 })]
   assert.deepEqual(keys(setTime(list, "boots", 800, LENGTH, index)), ["holy", "boots", "fang"])
   assert.deepEqual(keys(setTime(list, "fang", null, LENGTH, index)), ["holy", "boots", "fang"])
+})
+
+test("a time that would move an item after the one sold for it is refused", () => {
+  const list = [step("boots"), step("revive", { atSeconds: 500, replaces: [pick("boots")] })]
+  assert.equal(setTime(list, "boots", 600, LENGTH, index), "GONE")
 })
 
 test("the last item of a list over a snapshot cannot be taken out, since the snapshot would be read again", () => {
@@ -305,8 +417,13 @@ test("the last item of a list can be taken out over nothing, and over an invento
 })
 
 test("of an item a list written elsewhere names twice, the later one is taken out", () => {
-  const list = [step("holy", "KEPT", { atSeconds: 400 }), step("holy", "SITUATIONAL")]
+  const list = [step("holy", { atSeconds: 400 }), step("holy", { role: "PROTECTIVE" })]
   assert.deepEqual(removeItem(list, "holy", index), [list[0]])
+})
+
+test("an item taken out is taken out of what was bought from its sale", () => {
+  const list = [step("boots"), step("revive", { replaces: [pick("boots")] })]
+  assert.deepEqual(removeItem(list, "boots", index), [step("revive")])
 })
 
 test("a recipe offers the parts of tier 2 and up", () => {
@@ -361,7 +478,7 @@ test("an item that is a part already is not offered as seen", () => {
   const seen = seenItems(
     participant({ equipmentSnapshots: [snapshot(300, ["sword"]), snapshot(900, ["holy"])] }),
     LENGTH,
-    [step("holy", "KEPT", { from: [pick("sword")] })],
+    [step("holy", { from: [pick("sword")] })],
     index,
   )
   assert.deepEqual(seen, [])
@@ -370,11 +487,11 @@ test("an item that is a part already is not offered as seen", () => {
 test("what the service would refuse in a list is named item by item", () => {
   const problems = buildProblems(
     [
-      step("holy", "KEPT", { atSeconds: 2000 }),
-      step("short", "REPLACED"),
-      step("fang", "KEPT", { from: [pick("fang")] }),
-      step("holy", "SITUATIONAL"),
-      step("boots", "KEPT", { from: [pick("aegis")] }),
+      step("holy", { atSeconds: 2000 }),
+      step("short"),
+      step("fang", { from: [pick("fang")] }),
+      step("holy"),
+      step("boots", { from: [pick("aegis")] }),
     ],
     LENGTH,
     index,
@@ -391,8 +508,34 @@ test("what the service would refuse in a list is named item by item", () => {
   )
 })
 
+test("times that go back, sales of what was not held and a seventh held item are named", () => {
+  const problems = buildProblems(
+    [
+      step("boots", { atSeconds: 300 }),
+      step("sword", { atSeconds: 200 }),
+      step("revive", { replaces: [pick("greaves")] }),
+      ...["holy", "aegis", "fang", "comet"].map((id) => step(id)),
+    ],
+    LENGTH,
+    index,
+  )
+  assert.deepEqual(
+    problems.map(({ step: entry, reason }) => [entry.item.id, reason]),
+    [
+      ["sword", "ORDER"],
+      ["revive", "GONE"],
+      ["comet", "HELD"],
+    ],
+  )
+})
+
 test("a list the service accepts has nothing to fix", () => {
-  const list = [step("aegis", "KEPT", { from: ["gauntlet", "greaves"].map(pick), atSeconds: 400 }), step("boots")]
+  const list = [
+    step("gauntlet"),
+    step("aegis", { from: ["gauntlet", "greaves"].map(pick), atSeconds: 400 }),
+    step("boots"),
+    step("revive", { role: "PROTECTIVE", replaces: [pick("boots")] }),
+  ]
   assert.deepEqual(buildProblems(list, 900, index), [])
 })
 
@@ -422,7 +565,7 @@ test("a search that finds only what cannot be listed says why", () => {
 })
 
 test("a part a list written elsewhere names twice is said to repeat, not to be one too many", () => {
-  const list = [step("aegis", "KEPT", { from: [pick("greaves"), pick("greaves")] })]
+  const list = [step("aegis", { from: [pick("greaves"), pick("greaves")] })]
   assert.deepEqual(
     buildProblems(list, LENGTH, index).map(({ reason }) => reason),
     ["TWICE"],
@@ -433,16 +576,9 @@ test("an item looked for among its own parts is said not to grow from itself", (
   assert.equal(unlisted(index, "thanh kiem", pick("holy")), "SAME")
 })
 
-/** Items typed by hand, as many as asked for. */
-const typed = (count: number) =>
-  Array.from({ length: count }, (_, position): BuildStep => ({
-    item: { id: null, name: `Món ${position}` },
-    place: "SITUATIONAL",
-  }))
-
 test("a list takes a twenty-fourth item and refuses a twenty-fifth", () => {
-  assert.equal(steps(addItem(typed(23), pick("holy"), "SITUATIONAL", index)).length, 24)
-  assert.equal(addItem(typed(24), pick("holy"), "SITUATIONAL", index), "STEPS")
+  assert.equal(steps(addItem(typed(23), pick("holy"), "CORE", index)).length, 24)
+  assert.equal(addItem(typed(24), pick("holy"), "CORE", index), "STEPS")
 })
 
 test("a list written elsewhere with a twenty-fifth item names that one", () => {
@@ -453,14 +589,9 @@ test("a list written elsewhere with a twenty-fifth item names that one", () => {
   )
 })
 
-test("only the items kept to the end count against its six slots", () => {
-  const six = ["holy", "aegis", "fang", "revive", "boots", "greaves"].map((id) => step(id))
-  assert.deepEqual(buildProblems([...six, step("sword", "REPLACED")], LENGTH, index), [])
-})
-
-test("an upgrade that would give the new item a fourth part is refused", () => {
-  const list = [step("greaves", "KEPT", { from: ["sword", "gauntlet", "boots"].map(pick) })]
-  assert.equal(upgradeItem(list, "greaves", pick("aegis"), index), "PARTS")
+test("only the items held to the end count against its six slots", () => {
+  const six = SIX.map((id) => step(id))
+  assert.deepEqual(buildProblems([...six, step("sword", { sold: true })], LENGTH, index), [])
 })
 
 test("a time before the game starts is refused and its last second is taken", () => {

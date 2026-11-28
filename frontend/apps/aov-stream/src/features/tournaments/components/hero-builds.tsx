@@ -51,11 +51,14 @@ function PartArt({ part }: { part: BuildPart }) {
 /** Parts of one kind with the games they were seen in, most often first; the bar is their share of those games. */
 function Parts({
   title,
+  kind,
   counts: { of, parts },
   limit,
   all,
 }: {
   title: string
+  /** Which parts they are, for the colour of their bars. */
+  kind: string
   counts: PartCounts
   limit: number
   /** Whether the kind is recorded in as many games as any, which the head of the section says already. */
@@ -65,7 +68,7 @@ function Parts({
   const fold = useFold(parts, limit, title)
   if (!parts.length) return null
   return (
-    <section className="tn-hbuild-kind">
+    <section className="tn-hbuild-kind" data-kind={kind}>
       <h3>
         {title}
         {!all && <span>{text(`${of} ván có ghi`, `recorded in ${gamesText(of, text, languageTag)}`)}</span>}
@@ -91,10 +94,10 @@ function Parts({
 }
 
 /** The kinds of parts that were recorded at all, as the title of the section names them. */
-function useTitle({ items, situational, enchantments, spells }: BuildCounts) {
+function useTitle({ items, protective, sold, enchantments, spells }: BuildCounts) {
   const { text } = useStreamLocale()
   const kinds = [
-    items.of + situational.of > 0 && text("trang bị", "items"),
+    items.of + protective.of + sold.of > 0 && text("trang bị", "items"),
     enchantments.of > 0 && text("phù hiệu", "enchantments"),
     spells.of > 0 && text("phụ trợ", "spells"),
   ].filter((kind) => !!kind)
@@ -107,8 +110,8 @@ function Builds({ counts, games }: { counts: BuildCounts; games: number }) {
   const title = useTitle(counts)
   const known = counts.games.toLocaleString(languageTag)
   const picked = gamesText(games, text, languageTag)
-  const parts = (name: string, key: "items" | "situational" | "enchantments" | "spells", limit = OTHERS) => (
-    <Parts title={name} counts={counts[key]} limit={limit} all={counts[key].of === counts.games} />
+  const parts = (name: string, key: Exclude<keyof BuildCounts, "games">, limit = OTHERS) => (
+    <Parts title={name} kind={key} counts={counts[key]} limit={limit} all={counts[key].of === counts.games} />
   )
   return (
     <Section
@@ -117,11 +120,12 @@ function Builds({ counts, games }: { counts: BuildCounts; games: number }) {
       note={text(`${known} trong ${picked} có ghi`, `recorded in ${known} of ${picked}`)}
     >
       <div className="tn-hbuild">
-        {parts(text("Trang bị", "Items"), "items", ITEMS[layout])}
+        {parts(text("Trang bị chính", "Core items"), "items", ITEMS[layout])}
         <div className="tn-hbuild-rest">
+          {parts(text("Bảo hộ", "Protective items"), "protective")}
+          {parts(text("Hay bán để đổi món", "Often sold for another"), "sold")}
           {parts(text("Phù hiệu chính", "Main enchantment"), "enchantments")}
           {parts(text("Phụ trợ", "Spell"), "spells")}
-          {parts(text("Trang bị tình huống", "Situational items"), "situational")}
         </div>
       </div>
     </Section>

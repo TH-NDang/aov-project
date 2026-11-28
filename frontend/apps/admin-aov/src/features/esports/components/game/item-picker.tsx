@@ -17,7 +17,7 @@ import {
 import { nameKey } from "../../model/name-key"
 import { ChosenMark, ItemIcon } from "./build-item"
 
-/** An item that is recorded already: where, and whether that is the place being filled. */
+/** An item that is recorded already: what became of it, and whether it is one of those being chosen. */
 export type ItemMark = { label: string; here: boolean }
 
 type Option = { key: string; item: Reference; atSeconds: number | null }
@@ -65,7 +65,7 @@ function neighbour(options: HTMLElement[], from: number, key: string) {
 /**
  * The catalogue's items as pictures with their names, the finished ones first. It stays open while several are added:
  * Enter takes the marked one and selects the search text, so the next name is typed over it. What is recorded already
- * is marked with its place, and pressing it is the caller's to answer: it never adds the same item twice.
+ * is marked with what became of it, and pressing it is the caller's to answer: it never adds the same item twice.
  */
 export function ItemPicker({
   label,
@@ -265,7 +265,7 @@ function OptionTile({
       aria-label={mark ? `${option.item.name}, ${mark.label}` : option.item.name}
       data-option={option.item.code}
       data-marked={marked || undefined}
-      title={mark && !mark.here ? `${option.item.name}: đang ở ${mark.label}, bấm để chuyển` : option.item.name}
+      title={mark ? `${option.item.name}: ${mark.label}` : option.item.name}
       // The search keeps the focus, so typing the next name needs no second press.
       onMouseDown={(event) => event.preventDefault()}
       onClick={onPick}

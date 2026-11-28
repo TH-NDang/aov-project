@@ -4,7 +4,7 @@ import type { Catalog, GameSide, Loadout, Participant, PublishedGame, Selection 
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
-import { enchantmentBranches, inBuiltOrder, isRecorded, type BuildView, type BuiltItem } from "../../../lib/build-view"
+import { enchantmentBranches, isRecorded, type BuildView, type BuiltItem } from "../../../lib/build-view"
 import { laneName } from "../../../lib/feed-words"
 import {
   clock,
@@ -16,6 +16,7 @@ import {
   type CatalogKind,
 } from "../../../lib/tournament-model"
 import { BuildItem } from "./build-item"
+import { BuildPath, EndSlots } from "./build-path"
 import { heroHref, nicknameOf, SeatNames } from "./loadout-names"
 import { ReferenceArt } from "./reference-art"
 import "./loadout-card.css"
@@ -39,29 +40,15 @@ function Line({ note, ...named }: Named & { note?: ReactNode }) {
   )
 }
 
-/** An item, when it was held and what it grew from. */
-function ItemLine({ catalog, built, gone }: { catalog: Catalog; built: BuiltItem; gone?: true }) {
+/** An item of an inventory with its name. */
+function ItemLine({ catalog, built }: { catalog: Catalog; built: BuiltItem }) {
   const { text } = useStreamLocale()
-  const name = (item: Selection) => referenceName(catalog, "items", item, text(...UNKNOWN_REFERENCE))
   return (
-    <li data-gone={gone}>
-      <BuildItem catalog={catalog} built={{ ...built, from: [] }} gone={gone} />
+    <li>
+      <BuildItem catalog={catalog} built={built} />
       <span>
-        <b>{name(built.item)}</b>
-        {built.from.length > 0 && (
-          <span className="tn-loadout-from">
-            {text("Lên từ", "Grew from")}
-            {built.from.map((part, index) => (
-              <span key={index}>
-                <ReferenceArt catalog={catalog} kind="items" selection={part.item} />
-                {name(part.item)}
-                {part.atSeconds != null && <time>{clock(part.atSeconds)}</time>}
-              </span>
-            ))}
-          </span>
-        )}
+        <b>{referenceName(catalog, "items", built.item, text(...UNKNOWN_REFERENCE))}</b>
       </span>
-      {built.atSeconds != null && <time>{clock(built.atSeconds)}</time>}
     </li>
   )
 }
@@ -71,16 +58,19 @@ function Part({
   label,
   note,
   caveat,
+  whole,
   children,
 }: {
   label?: string
   note?: string | null
   caveat?: (string | false | null | undefined)[]
+  /** The lines take the width of the card under their name. */
+  whole?: boolean
   children: ReactNode
 }) {
   const said = (caveat ?? []).filter(Boolean)
   return (
-    <div data-continued={!label || undefined}>
+    <div data-continued={!label || undefined} data-whole={whole || undefined}>
       <dt>
         {label}
         {note && <small>{note}</small>}
@@ -123,55 +113,63 @@ function Enchantments({ catalog, seat }: { catalog: Catalog; seat: Participant }
   ))
 }
 
-/** How the record knows the items of a build; one that was written down says their order only with their times. */
-function buildNote({ source, kept, atSeconds }: BuildView, duration: number | null | undefined, text: Say) {
-  if (source === "STEPS") return inBuiltOrder(kept) ? text("theo thứ tự lên", "in the order built") : undefined
+/** When the source showed the inventory that stands in for the items nobody wrote down. */
+function inventoryNote({ atSeconds }: BuildView, duration: number | null | undefined, text: Say) {
   if (atSeconds === duration) return text("lúc ván kết thúc", "when the game ended")
   return text(`lúc ${clock(atSeconds ?? 0)}`, `at ${clock(atSeconds ?? 0)}`)
 }
 
-/** The items of a player by what became of them. */
-function Items({ game, build }: { game: PublishedGame; build: BuildView | null }) {
+/**
+ * The items of a player: the slots they ended with, then the path that led there. An inventory the source showed stands
+ * in, with when it was shown, while nobody wrote the items down.
+ */
+function Items({ game, build, wide }: { game: PublishedGame; build: BuildView | null; wide: boolean }) {
   const { text } = useStreamLocale()
-  const label = text("Trang bị", "Items")
+  const { catalog, content } = game
   if (!build)
     return (
-      <Part label={label}>
+      <Part label={text("Trang bị", "Items")}>
         <p>{text("Chưa rõ", "Not known")}</p>
       </Part>
     )
-  const { source, kept, replaced, situational, unread } = build
-  const list = (items: BuiltItem[], gone?: true) => (
-    <ul>
-      {items.map((built, index) => (
-        <ItemLine key={index} catalog={game.catalog} built={built} gone={gone} />
-      ))}
-    </ul>
-  )
+  const { end, path, unread } = build
+  if (build.source === "INVENTORY")
+    return (
+      <Part
+        label={text("Trang bị", "Items")}
+        note={inventoryNote(build, content.durationSeconds, text)}
+        caveat={[
+          unread > 0 && text(`${unread} ô chưa rõ`, `${unread} ${unread === 1 ? "slot" : "slots"} not known`),
+          build.note,
+        ]}
+      >
+        {end.length > 0 ? (
+          <ul>
+            {end.map((built, index) => (
+              <ItemLine key={index} catalog={catalog} built={built} />
+            ))}
+          </ul>
+        ) : (
+          !unread && <p>{text("Không có trang bị", "No items")}</p>
+        )}
+      </Part>
+    )
   return (
     <>
-      {(kept.length > 0 || source === "INVENTORY") && (
-        <Part
-          label={label}
-          note={buildNote(build, game.content.durationSeconds, text)}
-          caveat={[
-            unread > 0 && text(`${unread} ô chưa rõ`, `${unread} ${unread === 1 ? "slot" : "slots"} not known`),
-            build.note,
-          ]}
-        >
-          {kept.length > 0 ? list(kept) : !unread && <p>{text("Không có trang bị", "No items")}</p>}
-        </Part>
-      )}
-      {replaced.length > 0 && (
-        <Part label={text("Đã đổi", "Given up")} note={text("lấy món khác", "for another item")}>
-          {list(replaced, true)}
-        </Part>
-      )}
-      {situational.length > 0 && (
-        <Part label={text("Tình huống", "Situational")} note={text("dùng một lúc", "held for a while")}>
-          {list(situational)}
-        </Part>
-      )}
+      <Part label={text("Cuối ván", "End of game")}>
+        {end.length > 0 ? (
+          <EndSlots catalog={catalog} build={build} />
+        ) : (
+          <p>{text("Đã bán hết", "Everything was sold")}</p>
+        )}
+      </Part>
+      <Part
+        label={text("Lộ trình lên đồ", "Build path")}
+        note={text(`${path.length} món`, `${path.length} items`)}
+        whole
+      >
+        <BuildPath catalog={catalog} path={path} duration={content.durationSeconds} wide={wide} />
+      </Part>
     </>
   )
 }
@@ -200,8 +198,8 @@ function Doors({ game, seat, hero }: { game: PublishedGame; seat: Participant; h
 }
 
 /**
- * Everything recorded of one player of a game: the hero, the spell, the enchantments by branch, the items with what
- * they grew from and when, and the arcana. `build` are the items the lineup shows at the moment.
+ * Everything recorded of one player of a game: the hero, the spell, the enchantments by branch, the arcana, and the
+ * items they ended with and the path that led there. `build` are the items the lineup shows at the moment.
  */
 export function LoadoutCard({
   game,
@@ -239,7 +237,6 @@ export function LoadoutCard({
             )}
           </Part>
           <Enchantments catalog={catalog} seat={seat} />
-          <Items game={game} build={build} />
           {hasLoadout(seat, "arcana") && (
             <Part label={text("Bảng ngọc", "Arcana")} caveat={[caveatOf(seat.arcana, text)]}>
               <ul>
@@ -249,6 +246,7 @@ export function LoadoutCard({
               </ul>
             </Part>
           )}
+          <Items game={game} build={build} wide={wide} />
         </dl>
       ) : (
         <p className="tn-loadout-nothing">

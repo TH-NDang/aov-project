@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act, useState } from "react"
 import type {
+  BuildRoles,
   BuildStep,
   Catalog,
   EquipmentSnapshot,
@@ -43,15 +44,15 @@ const ITEMS = [
   reference("holy", "Thánh kiếm", 3, ["sword"]),
   reference("aegis", "Khiên thánh quang", 3, ["gauntlet", "greaves"]),
   reference("fang", "Nanh Fenrir", 3, ["sword"]),
-  reference("revive", "Giáp hộ mệnh", 3, ["sword"]),
+  { ...reference("revive", "Giáp hộ mệnh", 3, ["sword"]), active: true },
   reference("rage", "Giáp cuồng nộ", 3, ["greaves"]),
 ]
 const index = itemIndex(ITEMS)
 const pick = (id: string) => ({ id, name: ITEMS.find((item) => item.id === id)!.name })
-const step = (id: string, place: BuildStep["place"] = "KEPT", more: Partial<BuildStep> = {}): BuildStep => ({
+const step = (id: string, more: Partial<BuildStep> = {}): BuildStep => ({
   item: pick(id),
   from: [],
-  place,
+  role: "CORE",
   atSeconds: null,
   ...more,
 })
@@ -90,7 +91,17 @@ const top = (kept: Kept) => kept.content().sides[0]!.participants[0]!
 /** The editor over one player of a fifteen-minute game; `latest` is what it wrote and `said` what it said of it. */
 let latest = player()
 let said = ""
-function Host({ start, nowGame, inline }: { start: Participant; nowGame?: number; inline?: boolean }) {
+function Host({
+  start,
+  nowGame,
+  inline,
+  roles,
+}: {
+  start: Participant
+  nowGame?: number
+  inline?: boolean
+  roles?: BuildRoles
+}) {
   const [value, setValue] = useState(start)
   const [stamp, setStamp] = useState(false)
   latest = value
@@ -98,6 +109,7 @@ function Host({ start, nowGame, inline }: { start: Participant; nowGame?: number
     <BuildEditor
       participant={value}
       index={index}
+      roles={roles}
       duration={900}
       nowGame={nowGame}
       stamp={stamp}
@@ -111,22 +123,21 @@ function Host({ start, nowGame, inline }: { start: Participant; nowGame?: number
     />
   )
 }
-const edit = (more: Partial<Participant> = {}, nowGame?: number, inline?: boolean) =>
-  render(<Host start={player(more)} nowGame={nowGame} inline={inline} />)
+const edit = (more: Partial<Participant> = {}, nowGame?: number, inline?: boolean, roles?: BuildRoles) =>
+  render(<Host start={player(more)} nowGame={nowGame} inline={inline} roles={roles} />)
 
 const one = <T extends HTMLElement = HTMLElement>(selector: string) => {
   const element = document.querySelector<T>(selector)
   assert.ok(element, `nothing matches ${selector}`)
   return element
 }
-const listed = (place?: BuildStep["place"]) =>
-  (latest.build ?? []).filter((entry) => !place || entry.place === place).map((entry) => entry.item.id)
+const listed = () => (latest.build ?? []).map((entry) => entry.item.id)
 const stepOf = (id: string) => (latest.build ?? []).find((entry) => entry.item.id === id)
 const menu = () => document.querySelector<HTMLElement>('[role="dialog"]')
 const catalogue = () => document.querySelector<HTMLElement>('[role="listbox"]')
 const search = () => one<HTMLInputElement>('[aria-label="Tìm trang bị"]')
 const openItem = (id: string) => click(one(`[data-item="${id}"]`))
-const openPlace = (place: BuildStep["place"]) => click(one(`[data-place="${place}"] [data-add]`))
+const openAdd = () => click(one("[data-path] [data-add]"))
 const choose = (code: string) => click(one(`[data-option="${code}"]`))
 const inMenu = (label: string) => click(button(label, menu()!), label)
 const press = async (key: string) => {
@@ -139,11 +150,11 @@ test("without a list of its own the editor says which moment it reads, and the f
   assert.match(one('[data-source="snapshot"]').textContent ?? "", /Đang đọc từ mốc 15:00/)
   assert.deepEqual(listed(), [], "nothing is written by looking")
 
-  await openPlace("SITUATIONAL")
+  await openAdd()
   await choose("revive")
   assert.deepEqual(listed(), ["holy", "boots", "revive"])
   assert.equal(document.querySelector('[data-source="snapshot"]'), null)
-  assert.equal(said, "Đã thêm Giáp hộ mệnh vào “Tình huống”, ghi thành danh sách riêng")
+  assert.equal(said, "Đã thêm Giáp hộ mệnh, ghi thành danh sách riêng")
 })
 
 test("a moment of the middle of the game starts no list, and its items are offered with it", async () => {
@@ -151,7 +162,7 @@ test("a moment of the middle of the game starts no list, and its items are offer
   assert.equal(document.querySelector('[data-source="snapshot"]'), null)
   assert.equal(document.querySelector('[data-item="boots"]'), null)
 
-  await openPlace("KEPT")
+  await openAdd()
   assert.match(catalogue()!.textContent ?? "", /Đã thấy ở các mốc.*Giày hộ vệ5:00/)
   await choose("boots")
   assert.equal(stepOf("boots")?.atSeconds, 300)
@@ -160,52 +171,55 @@ test("a moment of the middle of the game starts no list, and its items are offer
 test("the items of a moment are written down as they are in one press", async () => {
   await edit({ equipmentSnapshots: [snapshot(900, ["holy", "boots"])] })
   await click(button("Ghi danh sách này"))
-  assert.deepEqual(listed("KEPT"), ["holy", "boots"])
+  assert.deepEqual(listed(), ["holy", "boots"])
 })
 
 test("the first edit can be taken back, and the items are read from the moment again", async () => {
   const kept = await onDesk({ equipmentSnapshots: [snapshot(900, ["holy", "boots"])] })
   await openItem("boots")
-  await inMenu("Đã đổi")
+  await inMenu("Bảo hộ")
   assert.deepEqual(
-    top(kept)
-      .build?.filter((entry) => entry.place === "REPLACED")
-      .map((entry) => entry.item.id),
-    ["boots"],
+    top(kept).build?.map((entry) => entry.role),
+    ["CORE", "PROTECTIVE"],
   )
   await act(async () => kept.undo())
   assert.equal(top(kept).build?.length ?? 0, 0)
   assert.ok(document.querySelector('[data-source="snapshot"]'))
 })
 
-test("the six slots are filled in a row from the open catalogue, which closes with the sixth", async () => {
+test("items are added in a row from the open catalogue, and a seventh asks which one was sold for it", async () => {
   await edit()
-  assert.equal(document.querySelectorAll('[data-place="KEPT"] [data-add]').length, 6)
-  await openPlace("KEPT")
-  for (const code of ["boots", "holy", "aegis", "fang", "revive"]) await choose(code)
-  assert.ok(catalogue(), "it stays open while a slot is free")
-  await choose("rage")
-  assert.equal(catalogue(), null)
-  assert.deepEqual(listed("KEPT"), ["boots", "holy", "aegis", "fang", "revive", "rage"])
-  assert.equal(document.querySelectorAll('[data-place="KEPT"] [data-add]').length, 0)
+  assert.equal(document.querySelectorAll("[data-end] [aria-label='Ô trống']").length, 6)
+  await openAdd()
+  for (const code of ["boots", "holy", "aegis", "fang", "revive", "rage"]) await choose(code)
+  assert.ok(catalogue(), "it stays open")
+  await choose("gauntlet")
+  const chooser = one('[aria-label="Món bán để lấy"]')
+  assert.match(chooser.textContent ?? "", /Đủ 6 ô\. Găng bạch kim thay món nào\?/)
+  await click(button("Giày hộ vệ", chooser))
+  assert.deepEqual(listed(), ["boots", "holy", "aegis", "fang", "revive", "rage", "gauntlet"])
+  assert.deepEqual(stepOf("gauntlet")!.replaces, [pick("boots")])
+  assert.equal(said, "Đã thêm Găng bạch kim, bán Giày hộ vệ để lấy")
+  assert.equal(document.querySelectorAll("[data-end] [aria-label='Ô trống']").length, 0)
+  assert.match(one('[data-item="boots"]').textContent ?? "", /Đã bán\s*7/)
 })
 
 test("without room beside the list the catalogue opens under it, takes items and is closed there", async () => {
   await edit({}, undefined, true)
-  await openPlace("KEPT")
+  await openAdd()
   assert.equal(menu(), null, "nothing lies over the rest of the screen")
-  assert.ok(one('[data-place="KEPT"]').contains(catalogue()))
+  assert.ok(one("[data-path]").contains(catalogue()))
   await choose("holy")
   await choose("boots")
-  assert.deepEqual(listed("KEPT"), ["holy", "boots"])
+  assert.deepEqual(listed(), ["holy", "boots"])
   await click(button("Đóng danh mục"))
   assert.equal(catalogue(), null)
-  assert.ok(document.activeElement?.hasAttribute("data-add"), "the focus is back on the next free slot")
+  assert.ok(document.activeElement?.hasAttribute("data-add"), "the focus is back on the line that adds")
 })
 
 test("the catalogue offers no item of tier 1 and lists finished items first", async () => {
   await edit()
-  await openPlace("KEPT")
+  await openAdd()
   assert.equal(document.querySelector('[data-option="short"]'), null)
   assert.deepEqual(
     [...catalogue()!.querySelectorAll("h5")].map((heading) => heading.textContent),
@@ -213,26 +227,54 @@ test("the catalogue offers no item of tier 1 and lists finished items first", as
   )
 })
 
-test("an item that is listed elsewhere is marked with its place and moves instead of being listed twice", async () => {
-  await edit({ build: [step("boots"), step("holy")] })
-  await openPlace("REPLACED")
-  assert.match(one('[data-option="boots"]').textContent ?? "", /Cuối ván/)
-  await choose("boots")
-  assert.deepEqual(listed(), ["boots", "holy"])
-  assert.deepEqual(listed("REPLACED"), ["boots"])
+test("an item that is listed is marked with what became of it and is not listed twice", async () => {
+  await edit({ build: [step("sword"), step("holy", { from: [pick("sword")] })] })
+  await openAdd()
+  assert.match(one('[data-option="sword"]').textContent ?? "", /Đã lên/)
+  assert.match(one('[data-option="holy"]').textContent ?? "", /Cuối ván/)
+  await choose("holy")
+  assert.match(alertText(), /Mỗi món chỉ ghi một lần/)
+  assert.deepEqual(listed(), ["sword", "holy"])
 })
 
-test("an item pressed again in its own place is taken out", async () => {
-  await edit({ build: [step("holy")] })
-  await openPlace("KEPT")
-  assert.equal(one('[data-option="holy"]').getAttribute("aria-selected"), "true")
+test("an item takes the role last recorded for it, and says so", async () => {
+  await edit({}, undefined, false, { items: { revive: "PROTECTIVE" } })
+  await openAdd()
+  await choose("revive")
+  assert.equal(said, "Đã thêm Giáp hộ mệnh, bảo hộ như lần ghi trước")
   await choose("holy")
-  assert.deepEqual(listed(), [])
+  assert.deepEqual(
+    latest.build!.map((entry) => entry.role),
+    ["PROTECTIVE", "CORE"],
+  )
+  assert.ok(one('[data-item="revive"]').querySelector('[data-mark="protective"]'))
+})
+
+test("an item grows from the part of its recipe the player holds", async () => {
+  await edit({ build: [step("sword")] })
+  await openAdd()
+  await choose("holy")
+  assert.deepEqual(stepOf("holy")!.from, [pick("sword")])
+  assert.match(one('[data-item="sword"]').textContent ?? "", /lên\s*2/)
+})
+
+test("the pill beside an item turns its role, and the end slots put protective items last", async () => {
+  await edit({ build: [step("revive"), step("holy"), step("boots", { sold: true })] })
+  await click(button("Giáp hộ mệnh: Chính. Đổi sang Bảo hộ"))
+  assert.equal(stepOf("revive")!.role, "PROTECTIVE")
+  assert.equal(said, "Giáp hộ mệnh là đồ bảo hộ")
+  const end = one("[data-end]")
+  assert.deepEqual(
+    [...end.querySelectorAll("li[title]")].map((slot) => slot.getAttribute("title")),
+    ["Thánh kiếm", "Giáp hộ mệnh"],
+  )
+  assert.ok(end.querySelector('[data-mark="protective"]'))
+  assert.ok(end.querySelector('[data-mark="active"]'), "the bolt of an item that is activated")
 })
 
 test("a name typed without accents is taken with Enter, and a second Enter does not take it out again", async () => {
   await edit()
-  await openPlace("KEPT")
+  await openAdd()
   await type(search(), "thanh k")
   await press("Enter")
   assert.deepEqual(listed(), ["holy"], "the name that begins with the text, before one that only holds it")
@@ -242,7 +284,7 @@ test("a name typed without accents is taken with Enter, and a second Enter does 
 
 test("arrow keys walk the catalogue from the search and Enter takes what they reach", async () => {
   await edit()
-  await openPlace("KEPT")
+  await openAdd()
   await press("ArrowRight")
   assert.equal(document.querySelector("[data-marked]"), null, "sideways keys move the text cursor at first")
   await press("ArrowDown")
@@ -255,17 +297,15 @@ test("arrow keys walk the catalogue from the search and Enter takes what they re
 
 test("a name the catalogue does not have can be written by hand", async () => {
   await edit()
-  await openPlace("SITUATIONAL")
+  await openAdd()
   await type(search(), "Món cũ")
   await click(button("Dùng tên “Món cũ”"))
-  assert.deepEqual(latest.build, [
-    { item: { id: null, name: "Món cũ" }, from: [], place: "SITUATIONAL", atSeconds: null },
-  ])
+  assert.deepEqual(latest.build, [{ item: { id: null, name: "Món cũ" }, from: [], role: "CORE", atSeconds: null }])
 })
 
 test("a search that finds only items of tier 1 says why none is offered", async () => {
   await edit()
-  await openPlace("KEPT")
+  await openAdd()
   await type(search(), "kiem ngan")
   assert.match(catalogue()!.textContent ?? "", /Chỉ ghi trang bị cấp 2 và cấp 3/)
 })
@@ -274,15 +314,15 @@ test("an item seen at an earlier moment is offered first and brings that moment 
   await edit({
     equipmentSnapshots: [snapshot(300, ["boots"]), snapshot(900, ["holy"])],
   })
-  await openPlace("REPLACED")
+  await openAdd()
   assert.equal(catalogue()!.querySelector("h5")?.textContent, "Đã thấy ở các mốc")
   await click(catalogue()!.querySelector('[data-option="boots"]'))
-  assert.deepEqual(stepOf("boots"), step("boots", "REPLACED", { atSeconds: 300 }))
+  assert.deepEqual(stepOf("boots"), step("boots", { atSeconds: 300 }))
 })
 
 test("items are added with the time of the video only while that is asked for", async () => {
   await edit({}, 400)
-  await openPlace("SITUATIONAL")
+  await openAdd()
   await choose("revive")
   await click(one('[role="checkbox"]'))
   await choose("holy")
@@ -292,7 +332,7 @@ test("items are added with the time of the video only while that is asked for", 
 
 test("the words of the video stamp turn it on and hand the box no click, which would take the focus", async () => {
   await edit({}, 400)
-  await openPlace("SITUATIONAL")
+  await openAdd()
   const box = one('[role="checkbox"]')
   let clicks = 0
   box.addEventListener("click", () => clicks++)
@@ -303,23 +343,37 @@ test("the words of the video stamp turn it on and hand the box no click, which w
   assert.equal(clicks, 0)
 })
 
-test("a seventh item kept to the end is refused where it was asked for, with the reason", async () => {
+test("an item sold is held again only while a slot is free, refused where it was asked for", async () => {
   const six = ["boots", "holy", "aegis", "fang", "revive", "rage"].map((id) => step(id))
-  await edit({ build: [...six, step("sword", "REPLACED")] })
+  await edit({ build: [...six, step("sword", { sold: true })] })
   await openItem("sword")
-  await inMenu("Cuối ván")
-  assert.match(alertText(), /Đã đủ sáu ô/)
-  assert.deepEqual(listed("REPLACED"), ["sword"])
+  await click(menu()!.querySelector('[role="checkbox"]'), "the sale")
+  assert.match(alertText(), /Đủ sáu ô cuối ván/)
+  assert.equal(stepOf("sword")!.sold, true)
 })
 
-test("an item of tier 2 is upgraded into one it goes into and stays as its part", async () => {
-  await edit({ build: [step("boots"), step("sword", "KEPT", { atSeconds: 180 })] })
+test("an item of tier 2 is upgraded into a later one that grew from it", async () => {
+  await edit({ build: [step("boots"), step("sword", { atSeconds: 180 })] })
   await openItem("sword")
   await inMenu("Thánh kiếm")
-  assert.deepEqual(latest.build, [step("boots"), step("holy", "KEPT", { from: [pick("sword")] })])
-  assert.equal(menu(), null, "the item the menu was about is another one now")
-  assert.ok(one('[data-item="holy"]').querySelector('[data-parts="1"]'), "the part is drawn over the item")
+  assert.deepEqual(latest.build, [
+    step("boots"),
+    step("sword", { atSeconds: 180 }),
+    step("holy", { from: [pick("sword")] }),
+  ])
+  assert.equal(menu(), null, "the menu was about the lower item")
   assert.match(one('[data-item="holy"]').getAttribute("aria-label") ?? "", /lên từ Kiếm dài/)
+  assert.match(one('[data-item="sword"]').textContent ?? "", /lên\s*3/)
+})
+
+test("an item sold for another is chosen among those held before it", async () => {
+  await edit({ build: [step("boots"), step("holy"), step("revive")] })
+  await openItem("revive")
+  const sold = one('[aria-label="Bán món nào để lấy"]')
+  await click(button("Giày hộ vệ", sold))
+  assert.deepEqual(stepOf("revive")!.replaces, [pick("boots")])
+  assert.equal(said, "Đã bán Giày hộ vệ để lấy Giáp hộ mệnh")
+  assert.match(one('[data-item="revive"]').textContent ?? "", /Thay\s*1/)
 })
 
 test("a finished item offers no upgrade", async () => {
@@ -336,12 +390,12 @@ test("an item of tier 2 that is made of tier 1 alone offers no parts", async () 
   assert.equal(menu()!.querySelector('[aria-label="Lên từ"]'), null)
 })
 
-test("an upgrade that is listed already comes first and takes the lower item over", async () => {
+test("an upgrade that is listed already comes first and takes the lower item as its part", async () => {
   await edit({ build: [step("sword"), step("holy")] })
   await openItem("sword")
   assert.match(menu()!.querySelector('[aria-label="Nâng lên"] button')!.textContent ?? "", /Thánh kiếm.*đang có/)
   await inMenu("Thánh kiếm")
-  assert.deepEqual(latest.build, [step("holy", "KEPT", { from: [pick("sword")] })])
+  assert.deepEqual(latest.build, [step("sword"), step("holy", { from: [pick("sword")] })])
 })
 
 test("the parts of an item are switched on and off, and any other item can be chosen", async () => {
@@ -358,7 +412,7 @@ test("the parts of an item are switched on and off, and any other item can be ch
 })
 
 test("a fourth part is refused in the list it was chosen from", async () => {
-  await edit({ build: [step("holy", "KEPT", { from: ["sword", "greaves", "boots"].map(pick) })] })
+  await edit({ build: [step("holy", { from: ["sword", "greaves", "boots"].map(pick) })] })
   await openItem("holy")
   await inMenu("Món khác")
   await choose("gauntlet")
@@ -403,18 +457,20 @@ test("no time is taken from a video that shows what follows the game", async () 
   assert.equal(button("Lấy lúc video", menu()!), undefined)
 })
 
-test("an item moves earlier and later among those of its place", async () => {
-  await edit({ build: [step("boots"), step("sword", "REPLACED"), step("holy")] })
+test("an item moves earlier and later in the order it was bought", async () => {
+  await edit({ build: [step("boots"), step("sword"), step("holy")] })
   await openItem("holy")
+  await inMenu("Sớm hơn")
+  assert.deepEqual(listed(), ["boots", "holy", "sword"])
   await inMenu("Sớm hơn")
   assert.deepEqual(listed(), ["holy", "boots", "sword"])
   assert.equal(one('[aria-label="Sớm hơn"]').getAttribute("aria-disabled"), "true")
   await inMenu("Muộn hơn")
-  assert.deepEqual(listed("KEPT"), ["boots", "holy"])
+  assert.deepEqual(listed(), ["boots", "holy", "sword"])
 })
 
 test("an item that is taken out comes back, with all that was recorded, when that is undone", async () => {
-  const build = [step("boots"), step("holy", "KEPT", { from: [pick("sword")], atSeconds: 400 })]
+  const build = [step("boots"), step("holy", { from: [pick("sword")], atSeconds: 400 })]
   const kept = await onDesk({ build })
   await openItem("holy")
   await inMenu("Bỏ Thánh kiếm")
@@ -433,8 +489,8 @@ test("every edit says what it did", async () => {
   assert.equal(said, "Thánh kiếm lên từ Kiếm dài")
   await inMenu("Lấy lúc video 6:40")
   assert.equal(said, "Đã ghi lúc có Thánh kiếm: 6:40")
-  await inMenu("Tình huống")
-  assert.equal(said, "Đã chuyển Thánh kiếm sang “Tình huống”")
+  await inMenu("Bảo hộ")
+  assert.equal(said, "Thánh kiếm là đồ bảo hộ")
 })
 
 test("the focus stays beside an item that was taken out, and with the one another went into", async () => {
@@ -447,11 +503,11 @@ test("the focus stays beside an item that was taken out, and with the one anothe
   assert.equal((document.activeElement as HTMLElement).dataset.item, "fang")
 })
 
-test("a moved item keeps its menu open in its new place", async () => {
+test("a role changed in the menu keeps the menu open", async () => {
   await edit({ build: [step("boots"), step("holy")] })
   await openItem("holy")
-  await inMenu("Tình huống")
-  assert.deepEqual(listed("SITUATIONAL"), ["holy"])
+  await inMenu("Bảo hộ")
+  assert.equal(stepOf("holy")!.role, "PROTECTIVE")
   assert.equal(menu()!.getAttribute("aria-label"), "Thánh kiếm")
 })
 
@@ -473,7 +529,7 @@ test("a list is given up for the moment beneath it only after a question", async
 })
 
 test("an item the service would refuse is named with the reason", async () => {
-  await edit({ build: [step("holy", "KEPT", { atSeconds: 2000 }), step("short", "REPLACED")] })
+  await edit({ build: [step("holy", { atSeconds: 2000 }), step("short", { sold: true })] })
   assert.deepEqual(
     [...one('[aria-label="Cần sửa"]').children].map((line) => line.textContent),
     ["Thánh kiếm: Thời điểm phải nằm trong ván.", "Kiếm ngắn: Chỉ ghi trang bị cấp 2 và cấp 3."],
@@ -521,7 +577,7 @@ test("the items of a player are counted at once, and edits made before the last 
   assert.equal(tab(), "Trang bị1")
 
   const answer = kept.hold()
-  await openPlace("KEPT")
+  await openAdd()
   await choose("holy")
   await choose("aegis")
   assert.equal(tab(), "Trang bị3", "shown at once")
@@ -569,9 +625,9 @@ const slots = () =>
     .map((slot) => slot.getAttribute("aria-label"))
     .filter((label) => !label?.includes("chưa quan sát"))
 
-test("the six slots read the kept items, each from its time on, where no source showed the equipment", async () => {
+test("the six slots read the items held to the end, each from its time on, where no source showed them", async () => {
   const content = withTop({
-    build: [step("boots"), step("sword", "REPLACED"), step("holy", "KEPT", { atSeconds: 400 })],
+    build: [step("boots"), step("sword", { sold: true }), step("holy", { atSeconds: 400 })],
   })
   const rendered = await render(board(content, 100))
   assert.deepEqual(slots(), ["Giày hộ vệ"])

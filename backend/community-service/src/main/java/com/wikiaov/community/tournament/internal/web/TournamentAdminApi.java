@@ -2,6 +2,7 @@ package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.PageLimits;
 import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.BuildRoles;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Create;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
@@ -157,6 +158,9 @@ public interface TournamentAdminApi {
 
     @Operation(operationId = "tournamentAdminApi_getGame", summary = "Read a game")
     View<Game> getGame(UUID id);
+
+    @Operation(operationId = "tournamentAdminApi_buildRoles", summary = "The role a new step of a build of a hero starts with, by item")
+    BuildRoles buildRoles(UUID heroId, @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "tournamentAdminApi_createGame", summary = "Create a game")
     View<Game> createGame(Create<Game> request);

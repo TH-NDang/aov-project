@@ -26,6 +26,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RegistryArc
 import com.wikiaov.community.tournament.internal.catalog.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildRole;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
@@ -348,13 +349,15 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
-    void aBuildKeepsItsPlacesPartsAndTimesAndIsFrozenWithThePublishedGame() throws Exception {
+    void aBuildKeepsItsRolesPartsSalesAndTimesAndIsFrozenWithThePublishedGame() throws Exception {
         var game = fixture().game();
         var draft = create("games", withBuild(game, List.of(
-                new BuildStep(new Selection(null, "Boots"), List.of(), BuildPlace.REPLACED, null),
-                new BuildStep(new Selection(null, "Blade"), List.of(new Selection(null, "Half a blade")),
-                        BuildPlace.KEPT, 540),
-                new BuildStep(new Selection(null, "Revive"), null, BuildPlace.SITUATIONAL, null))));
+                new BuildStep(new Selection(null, "Boots"), List.of(), List.of(), BuildRole.CORE, false, null),
+                new BuildStep(new Selection(null, "Blade"), List.of(new Selection(null, "Half a blade")), List.of(),
+                        BuildRole.CORE, false, 540),
+                new BuildStep(new Selection(null, "Revive"), List.of(), List.of(new Selection(null, "Boots")),
+                        BuildRole.PROTECTIVE, false, 560),
+                new BuildStep(new Selection(null, "Orb"), List.of(), List.of(), BuildRole.PROTECTIVE, true, null))));
 
         var published = write(post(ADMIN + "/games/" + draft.get("id") + "/publish"),
                 Map.of("version", version(draft)));
@@ -363,11 +366,52 @@ class TournamentApiIntegrationTest {
 
         String build = "$.content.sides[0].participants[0].build";
         mvc.perform(get(PUBLIC + "/games/" + draft.get("id"))).andExpect(status().isOk())
-                .andExpect(jsonPath(build + ".length()").value(3))
-                .andExpect(jsonPath(build + "[0].place").value("REPLACED"))
+                .andExpect(jsonPath(build + ".length()").value(4))
+                .andExpect(jsonPath(build + "[0].role").value("CORE"))
+                .andExpect(jsonPath(build + "[0].replaces").doesNotExist())
+                .andExpect(jsonPath(build + "[0].sold").doesNotExist())
+                .andExpect(jsonPath(build + "[0].place").doesNotExist())
                 .andExpect(jsonPath(build + "[1].from[0].name").value("Half a blade"))
                 .andExpect(jsonPath(build + "[1].atSeconds").value(540))
-                .andExpect(jsonPath(build + "[2].place").value("SITUATIONAL"));
+                .andExpect(jsonPath(build + "[2].role").value("PROTECTIVE"))
+                .andExpect(jsonPath(build + "[2].replaces[0].name").value("Boots"))
+                .andExpect(jsonPath(build + "[3].sold").value(true));
+    }
+
+    @Test
+    void aBuildOfTheFirstListsIsAnsweredAsItIsWrittenNow() throws Exception {
+        var game = fixture().game();
+        var draft = create("games", withBuild(game, List.of(
+                new BuildStep(new Selection(null, "Boots"), List.of(), null, null, false, null, BuildPlace.REPLACED),
+                new BuildStep(new Selection(null, "Revive"), List.of(), null, null, false, null,
+                        BuildPlace.SITUATIONAL))));
+
+        String build = "$.content.sides[0].participants[0].build";
+        mvc.perform(authorized(get(ADMIN + "/games/" + draft.get("id")))).andExpect(status().isOk())
+                .andExpect(jsonPath(build + "[0].role").value("CORE"))
+                .andExpect(jsonPath(build + "[0].sold").value(true))
+                .andExpect(jsonPath(build + "[0].place").doesNotExist())
+                .andExpect(jsonPath(build + "[1].role").value("PROTECTIVE"))
+                .andExpect(jsonPath(build + "[1].sold").doesNotExist());
+    }
+
+    @Test
+    void theRoleOfAnItemIsTheOneLastRecordedForTheHeroOrElseForAnyHero() throws Exception {
+        var skud = new Selection(UUID.randomUUID(), "Skud");
+        var liliana = new Selection(UUID.randomUUID(), "Liliana");
+        var orb = new Selection(UUID.randomUUID(), "Orb");
+        create("games", played(fixture().game(), skud,
+                List.of(new BuildStep(orb, List.of(), List.of(), BuildRole.PROTECTIVE, false, null))));
+        create("games", played(fixture().game(), liliana,
+                List.of(new BuildStep(orb, List.of(), List.of(), BuildRole.CORE, false, null))));
+
+        String role = "$.items." + orb.id();
+        mvc.perform(authorized(get(ADMIN + "/build-roles").param("heroId", skud.id().toString())))
+                .andExpect(status().isOk()).andExpect(jsonPath(role).value("PROTECTIVE"));
+        mvc.perform(authorized(get(ADMIN + "/build-roles").param("heroId", UUID.randomUUID().toString())))
+                .andExpect(status().isOk()).andExpect(jsonPath(role).value("CORE"));
+        mvc.perform(authorized(get(ADMIN + "/build-roles").param("heroId", skud.id().toString()).param("x", "1")))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -380,7 +424,7 @@ class TournamentApiIntegrationTest {
         catalogHolds(blade, part);
         var draft = create("games", withBuild(fixture().game(),
                 List.of(new BuildStep(new Selection(blade.id(), "Blade"),
-                        List.of(new Selection(part.id(), "Half a blade")), BuildPlace.KEPT, null))));
+                        List.of(new Selection(part.id(), "Half a blade")), List.of(), BuildRole.CORE, false, null))));
 
         write(post(ADMIN + "/games/" + draft.get("id") + "/publish"), Map.of("version", version(draft)));
 
@@ -1490,6 +1534,21 @@ class TournamentApiIntegrationTest {
 
         when(catalog.read(anyString(), anyString(), nullable(UUID.class), nullable(UUID.class), anyBoolean()))
                 .thenReturn(new Catalog(List.of(), List.of(items), List.of(), List.of(), List.of(), context));
+    }
+
+    /** The game with its first seat playing this hero and building this. */
+    private static Game played(Game game, Selection hero, List<BuildStep> build) {
+        var built = withBuild(game, build);
+        var blue = built.sides().getFirst();
+        var first = blue.participants().getFirst();
+        var participants = new ArrayList<>(blue.participants());
+        participants.set(0, new Participant(first.playerId(), first.lane(), hero, first.spell(), null, null,
+                List.of(), List.of(), null, null, first.build()));
+        var sides = new ArrayList<>(built.sides());
+        sides.set(0, new GameSide(blue.side(), blue.teamId(), blue.bans(), participants));
+        return new Game(built.seriesId(), built.number(), built.region(), built.locale(), built.seasonId(),
+                built.patchVariantId(), built.startedAt(), built.durationSeconds(), built.winner(), built.sourceUrl(),
+                built.sourceTimestampSeconds(), built.note(), sides, built.includeUnscoped(), built.timeline());
     }
 
     private static Game withBuild(Game game, List<BuildStep> build) {

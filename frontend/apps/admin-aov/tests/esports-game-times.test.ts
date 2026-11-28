@@ -80,10 +80,7 @@ test("what a broadcast showed and what a player built count as recorded too", ()
   assert.equal(lastRecorded(content), 0)
   assert.equal(lastRecorded(withSeat({ spellObservedAtSeconds: 12 })), 12)
   assert.equal(lastRecorded(withSeat({ equipmentSnapshots: [{ atSeconds: 640, slots: [] }] })), 640)
-  assert.equal(
-    lastRecorded(withSeat({ build: [{ item: selection("Gươm Loki"), place: "KEPT", atSeconds: 700 }] })),
-    700,
-  )
+  assert.equal(lastRecorded(withSeat({ build: [{ item: selection("Gươm Loki"), role: "CORE", atSeconds: 700 }] })), 700)
   assert.match(lengthRefusal(withSeat({ spellObservedAtSeconds: 12 }), 11)!, /Ván đã ghi tới 0:12/)
 })
 

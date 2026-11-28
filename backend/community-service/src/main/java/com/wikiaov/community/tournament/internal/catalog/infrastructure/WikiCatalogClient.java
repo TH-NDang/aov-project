@@ -130,7 +130,8 @@ public class WikiCatalogClient implements WikiCatalogSource {
                 name == null ? string(row.get("code")) : name, icon, integer(content.get("tier")),
                 string(content.get("color")), string(content.get("branchCode")), revision,
                 maps(content.get("components")).stream().map(component -> uuid(component.get("itemId")))
-                        .filter(Objects::nonNull).distinct().toList());
+                        .filter(Objects::nonNull).distinct().toList(),
+                maps(content.get("effects")).stream().anyMatch(effect -> "ACTIVE".equals(effect.get("activation"))));
     }
 
     private static @Nullable String url(Map<String, Object> asset) {

@@ -529,8 +529,8 @@ public final class TournamentContent {
     }
 
     /**
-     * What became of an item a player built: still held when the game ended, given up for another, or bought for a
-     * moment of the game, such as a revive, and no part of the build itself.
+     * Where the first lists of items put an item (25/11/2026): held to the end, given up, or bought for a moment. Read
+     * once into {@link BuildRole} and {@link BuildStep#sold()} and never written again.
      */
     public enum BuildPlace {
         KEPT,
@@ -539,19 +539,42 @@ public final class TournamentContent {
     }
 
     /**
-     * An item a player built, in the order it was built. A second purchase of the same item is no second step.
-     * {@code from} are the items that went into it, of a lower tier unless its recipe names one of its own;
-     * {@code atSeconds} is known only for some.
+     * What an item was bought for: the build itself, or protection, such as a revive or an item that saves its holder for
+     * a moment. Whether an item has an active effect says nothing of it.
+     */
+    public enum BuildRole {
+        CORE,
+        PROTECTIVE
+    }
+
+    /**
+     * An item of tier 2 or 3 a player built, in the order it was built; a second purchase of the same item is no second
+     * step. {@code from} are the items that went into it, of a lower tier unless its recipe names one of its own; one of
+     * them that is an earlier step went into it then. {@code replaces} are earlier steps sold for it, and {@code sold}
+     * says that this one was sold for something nobody recorded. {@code atSeconds} is known only for some. What became
+     * of each item is read with {@link BuildPath}. {@code place} is only read from the first lists.
      */
     public record BuildStep(
             Selection item,
             List<Selection> from,
-            BuildPlace place,
-            Integer atSeconds
+            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Selection> replaces,
+            BuildRole role,
+            @JsonInclude(JsonInclude.Include.NON_DEFAULT) Boolean sold,
+            Integer atSeconds,
+            @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable BuildPlace place
     ) {
         public BuildStep {
             from = from == null ? List.of() : List.copyOf(from);
-            place = place == null ? BuildPlace.KEPT : place;
+            replaces = replaces == null ? List.of() : List.copyOf(replaces);
+            sold = Boolean.TRUE.equals(sold);
+            if (role == null) {
+                role = place == BuildPlace.SITUATIONAL ? BuildRole.PROTECTIVE : BuildRole.CORE;
+            }
+        }
+
+        public BuildStep(Selection item, List<Selection> from, List<Selection> replaces, BuildRole role, boolean sold,
+                Integer atSeconds) {
+            this(item, from, replaces, role, sold, atSeconds, null);
         }
     }
 
@@ -573,7 +596,7 @@ public final class TournamentContent {
             enchantments = enchantments == null ? new Loadout<>(null, null, null) : enchantments;
             equipmentSnapshots = equipmentSnapshots == null ? List.of() : List.copyOf(equipmentSnapshots);
             equipmentEvents = equipmentEvents == null ? List.of() : List.copyOf(equipmentEvents);
-            build = build == null ? List.of() : List.copyOf(build);
+            build = build == null ? List.of() : BuildPath.current(build);
         }
 
         public Participant(UUID playerId, Lane lane, Selection hero, Selection spell,
@@ -750,7 +773,10 @@ public final class TournamentContent {
         }
     }
 
-    /** {@code components} are the items an item is made of, where the wiki has verified its recipe. */
+    /**
+     * {@code components} are the items an item is made of, where the wiki has verified its recipe; {@code active} says
+     * that an item has an effect its holder uses.
+     */
     public record Reference(
             UUID id,
             String code,
@@ -760,15 +786,22 @@ public final class TournamentContent {
             String color,
             String branchCode,
             UUID revisionId,
-            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<UUID> components
+            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<UUID> components,
+            @JsonInclude(JsonInclude.Include.NON_DEFAULT) Boolean active
     ) {
         public Reference {
             components = components == null ? List.of() : List.copyOf(components);
+            active = Boolean.TRUE.equals(active);
         }
 
         public Reference(UUID id, String code, String name, String iconUrl, Integer tier, String color,
                 String branchCode, UUID revisionId) {
-            this(id, code, name, iconUrl, tier, color, branchCode, revisionId, null);
+            this(id, code, name, iconUrl, tier, color, branchCode, revisionId, null, false);
+        }
+
+        public Reference(UUID id, String code, String name, String iconUrl, Integer tier, String color,
+                String branchCode, UUID revisionId, List<UUID> components) {
+            this(id, code, name, iconUrl, tier, color, branchCode, revisionId, components, false);
         }
     }
 
