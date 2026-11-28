@@ -86,5 +86,5 @@ Chủ dự án thấy mỗi kỹ năng có ô thêm video và chỗ hiện riên
   kỹ năng không còn phần video.
 - Wiki hiện mọi video `SKILL_DEMO` của tướng thành một dải dưới bộ kỹ năng, mở trong cùng khung xem với danh sách
   phát; mục Video giữ các loại còn lại.
-- V078 chuyển dữ liệu cũ (quy tắc ở 02-DATABASE). Không còn gắn video vào một chiêu cụ thể; nếu sau này cần, thêm
+- V083 chuyển dữ liệu cũ (quy tắc ở 02-DATABASE). Không còn gắn video vào một chiêu cụ thể; nếu sau này cần, thêm
   nhãn kỹ năng tùy chọn trên video của tướng thay vì khôi phục loại `SKILL`.

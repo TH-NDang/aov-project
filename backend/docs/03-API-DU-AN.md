@@ -3293,7 +3293,7 @@ hợp đồng và tính bất biến của snapshot theo đặc tả 04.
 GET `/api/wiki/v1/videos` (công khai)
 - Query: `subjectKind` và `subjectId` bắt buộc, `subjectKey` tùy chọn; tham số khác trả 400.
 - `subjectKind=HERO` trả cả video trang phục của tướng đó. `SKIN` kèm `subjectKey` thu về một trang phục.
-  `subjectKey` với loại khác trả 422 `VIDEO_INVALID`. Từ V078 không còn loại `SKILL` (trả 400); video về kỹ năng
+  `subjectKey` với loại khác trả 422 `VIDEO_INVALID`. Từ V083 không còn loại `SKILL` (trả 400); video về kỹ năng
   là video `HERO` với `purpose=SKILL_DEMO`.
 - Trả `{items: [...]}`, tối đa 200 dòng `PUBLISHED`, theo `displayOrder` rồi ngày đăng mới nhất. Mỗi dòng
   không có `status`, `origin`, `version`. Cache: chính sách public của mục 51. Lọc theo patch do client thực hiện.

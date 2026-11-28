@@ -15,7 +15,7 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-/** ADR-019 as amended on 2026-11-27: V078 moves every skill video into its hero's one list. */
+/** ADR-019 as amended on 2026-11-27: V083 moves every skill video into its hero's one list. */
 @DockerBacked
 class SkillVideoMergeMigrationIntegrationTest {
     private static final String SAME = "https://www.youtube.com/watch?v=aaaaaaaaaaa";
@@ -25,7 +25,7 @@ class SkillVideoMergeMigrationIntegrationTest {
     void skillVideosJoinTheHerosListAfterItsOwnAndKeepOneRowPerVideo() throws Exception {
         try (var database = TestcontainersConfiguration.postgres()) {
             database.start();
-            migrate(database, "76");
+            migrate(database, "82");
             UUID hero = UUID.randomUUID();
             UUID other = UUID.randomUUID();
             try (var c = connect(database)) {

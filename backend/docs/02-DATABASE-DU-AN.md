@@ -2043,7 +2043,7 @@ Migration V047 tạo schema `video` và bảng `video.subject_video`, thuộc mo
 | Cột | Ý nghĩa |
 |---|---|
 | `id` | UUID |
-| `subject_kind` | `HERO`, `SKIN`, `ITEM`, `ENCHANTMENT`, `ARCANA`, `SPELL` (`SKILL` bỏ từ V078) |
+| `subject_kind` | `HERO`, `SKIN`, `ITEM`, `ENCHANTMENT`, `ARCANA`, `SPELL` (`SKILL` bỏ từ V083) |
 | `subject_id` | Định danh mục; với `SKIN` là định danh tướng |
 | `subject_key` | Khóa trang phục; bắt buộc với `SKIN` và phải null với loại khác |
 | `purpose` | `INTRO`, `GUIDE_BASIC`, `GUIDE_ADVANCED`, `SKILL_DEMO`, `SKIN_SHOWCASE`, `SKIN_TRAILER`, `LORE`, `PATCH_CHANGE`, `OTHER` |
@@ -2063,7 +2063,7 @@ Ràng buộc `subject_video_unique` là `UNIQUE NULLS NOT DISTINCT (subject_kind
 start_seconds)`, cần PostgreSQL 15 trở lên. Chỉ mục `subject_video_public_idx (subject_id, status,
 display_order)` phục vụ đọc công khai, `subject_video_review_idx (status, updated_at DESC)` phục vụ hàng chờ.
 
-Migration V078 (27/11/2026) bỏ loại `SKILL`: video của kỹ năng thành video của tướng sở hữu, giữ nguyên `purpose`,
+Migration V083 (27/11/2026) bỏ loại `SKILL`: video của kỹ năng thành video của tướng sở hữu, giữ nguyên `purpose`,
 `subject_key` về null, `version` tăng 1. Các video này xếp sau video sẵn có của tướng, theo khóa kỹ năng rồi thứ tự
 cũ. Khi tướng đã có cùng `(url, start_seconds)`, hoặc hai kỹ năng cùng giữ một video, chỉ giữ một dòng: dòng
 `PUBLISHED` trước, rồi dòng của tướng, rồi dòng cũ nhất; dòng còn lại bị xóa, không ghi audit. Ràng buộc
