@@ -32,7 +32,7 @@ import { selectSkillTranslation, skillLabel, skillVariantLabel } from "../../mod
 import { mechanicSkillKey } from "../../model/patch-changes/patch-description-marks"
 import { NativeSelect } from "@/components/native-select"
 import { Input } from "@aov/ui/components/input"
-import { usePatchSources } from "./patch-sources"
+import { PatchSourceStrip, usePatchSources } from "./patch-sources"
 
 const api = createPublishingApi(backendRequest)
 export const compactControl =
@@ -55,7 +55,7 @@ export interface PatchChangeEditorProps {
   onCancel?: () => void
 }
 
-/** One form for both sources: rows pick keys from a snapshot, and patch notes also need a source link. */
+/** One form for both sources: rows pick keys from a snapshot, and patch notes cite the links of their patch. */
 export function PatchChangeEditor({
   source,
   heroId,
@@ -76,13 +76,12 @@ export function PatchChangeEditor({
   const [rows, setRows] = useState<ChangeRow[]>(() => (initialRows?.length ? initialRows : [emptyRow("STAT")]))
   const starter = useRef(notes && !initialRows?.length ? rows[0].id : null)
   const [summary, setSummary] = useState(editing?.summary ?? "")
-  const [sourceUrl, setSourceUrl] = useState(defaultSourceUrl)
-  // The patch's shared links are the source unless this hero's change came from a page of its own: a new change
-  // follows them, and a recorded one keeps the link it was written with.
-  const shared = usePatchSources(variantId).data ?? []
-  const [ownChoice, setOwnChoice] = useState<boolean | null>(editing ? !!defaultSourceUrl : null)
-  const ownLink = !shared.length || (ownChoice ?? false)
-  const showUrl = notes && ownLink
+  // Patch notes cite the patch's shared links, written once for every hero of the patch. A change recorded before
+  // its patch had any keeps the link it was written with until the patch gets some.
+  const sources = usePatchSources(variantId)
+  const shared = sources.data ?? []
+  const keepsOwnLink = notes && !!editing && !shared.length && isHttpUrl(defaultSourceUrl)
+  const needsShared = notes && sources.isSuccess && !shared.length && !keepsOwnLink
   const [introduces, setIntroduces] = useState(false)
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -95,14 +94,7 @@ export function PatchChangeEditor({
       rowProblem(row, source) ?? (duplicates.has(row.id) ? "Dòng này trùng với một dòng phía trên." : null),
     ]),
   )
-  const urlProblem = !showUrl
-    ? null
-    : isHttpUrl(sourceUrl)
-      ? null
-      : shared.length || sourceUrl.trim()
-        ? "Dán liên kết ghi chú cập nhật chính thức (http/https)."
-        : "Thêm link nguồn chung cho patch, hoặc dán link riêng (http/https)."
-  const invalid = !summary.trim() || !!urlProblem || [...problems.values()].some(Boolean)
+  const invalid = !summary.trim() || needsShared || [...problems.values()].some(Boolean)
   const skills = notes ? [...(reference?.SKILLS?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder) : []
   // A skill without an icon of its own shows the hero's library picture, as the skills editor does.
   const library = useHeroSkillImages(notes ? heroId : undefined).data ?? []
@@ -124,7 +116,7 @@ export function PatchChangeEditor({
     setError("")
     try {
       const content = {
-        sourceUrl: !notes || ownLink ? sourceUrl.trim() || null : null,
+        sourceUrl: !notes || keepsOwnLink ? defaultSourceUrl.trim() || null : null,
         summaryTranslations: [{ locale, summary: summary.trim() }],
         changes: rows.map(changePayload),
       }
@@ -163,45 +155,19 @@ export function PatchChangeEditor({
       }}
     >
       <fieldset disabled={busy} className="min-w-0 space-y-4">
-        {notes && !showUrl && (
-          <p className="type-meta flex flex-wrap items-center gap-x-2 gap-y-1">
+        {notes && shared.length > 0 && (
+          <p className="type-meta flex items-center gap-2">
             <Link2 aria-hidden className="size-4" />
             Nguồn: {shared.length} link chung của patch.
-            <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setOwnChoice(true)}>
-              Dùng link riêng cho tướng này
-            </Button>
           </p>
         )}
-        {showUrl && (
-          <label className="grid gap-1.5 text-sm">
-            <span className="flex items-center justify-between gap-2">
-              <span className="font-medium">{shared.length ? "Link riêng của tướng" : "Nguồn ghi chú cập nhật"}</span>
-              {shared.length > 0 && (
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  className="h-auto p-0"
-                  onClick={() => setOwnChoice(false)}
-                >
-                  Dùng link chung
-                </Button>
-              )}
-            </span>
-            <span className="relative">
-              <Link2 className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="url"
-                inputMode="url"
-                className={cn(compactControl, "pl-8")}
-                placeholder="https://lienquan.garena.vn/…"
-                value={sourceUrl}
-                aria-invalid={checked && !!urlProblem}
-                onChange={(event) => setSourceUrl(event.target.value)}
-              />
-            </span>
-            {checked && urlProblem && <span className="text-xs text-destructive">{urlProblem}</span>}
-          </label>
+        {needsShared && (
+          <div className="space-y-2 rounded-md border border-dashed p-2.5">
+            <p className="type-meta" role={checked ? "alert" : undefined}>
+              Patch chưa có link nguồn. Thêm link ghi chú cập nhật một lần, mọi tướng của patch dùng chung.
+            </p>
+            <PatchSourceStrip variantId={variantId} canEdit />
+          </div>
         )}
         {!editing && (
           <label className="flex items-start gap-2.5 rounded-md border p-2.5">

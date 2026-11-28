@@ -199,6 +199,12 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
     assert.equal(document.querySelector('[aria-label="Phạm vi hiển thị"]'), null)
     assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
+    // The schedule already names the patch's markets, and defaults every hero shares live with the hero stats.
+    assert.deepEqual(
+      [...document.querySelectorAll('[aria-label="Thiết lập patch"] button')].map((b) => b.getAttribute("aria-label")),
+      ["Lịch phát hành", "Kiểm tra dữ liệu"],
+    )
+    assert.doesNotMatch(document.body.textContent ?? "", /Thị trường của patch/)
     assert.equal(document.querySelector('[aria-label="Gán mùa cho Việt Nam"]'), null)
     assert.ok(document.querySelector('button[aria-label="Xem thay đổi Airi"]'))
     assert.ok(document.querySelector("td.sticky"))
