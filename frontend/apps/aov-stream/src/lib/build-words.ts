@@ -1,8 +1,11 @@
 import type { Catalog, Participant, Selection } from "@aov/community-contracts"
-import { mainEnchantment, type BuildView, type BuiltItem, type LineupRecord } from "./build-view.ts"
-import { clock, present, referenceName, UNKNOWN_REFERENCE } from "./tournament-model.ts"
+import { mainEnchantment, type BuildView, type BuiltItem, type LineupRecord, type PathStep } from "./build-view.ts"
+import { clock, findReference, present, referenceName, UNKNOWN_REFERENCE } from "./tournament-model.ts"
 
 type Say = (vi: string, en: string) => string
+
+/** The highest tier of an item; one below it that was given up was held on the way to another. */
+const TOP_TIER = 3
 
 /** What a reader who cannot see the pictures of a seat hears: the spell, the main enchantment and the items. */
 export function loadoutWords(seat: Participant, catalog: Catalog, build: BuildView | null, text: Say): string {
@@ -11,14 +14,68 @@ export function loadoutWords(seat: Participant, catalog: Catalog, build: BuildVi
   const items = (label: string, list: BuiltItem[] = []) =>
     list.length > 0 && `${label}: ${list.map((built) => name("items", built.item)).join(", ")}`
   const main = mainEnchantment(seat)
+  const end = build?.end ?? []
   const said = [
     present(seat.spell) && `${text("Phụ trợ", "Spell")}: ${name("spells", seat.spell)}`,
     main && `${text("Phù hiệu", "Enchantment")}: ${name("enchantments", main.selection)}`,
-    items(text("Trang bị", "Items"), build?.kept),
-    items(text("Đã đổi", "Given up"), build?.replaced),
-    items(text("Tình huống", "Situational"), build?.situational),
+    items(
+      text("Trang bị", "Items"),
+      end.filter((built) => !built.protective),
+    ),
+    items(
+      text("Bảo hộ", "Protective"),
+      end.filter((built) => built.protective),
+    ),
+    items(
+      text("Đã bán", "Sold"),
+      build?.path.filter((step) => step.fate === "SOLD"),
+    ),
   ].filter(Boolean)
   return said.length ? `${said.join(". ")}.` : ""
+}
+
+/** What a line of the path says beside an item: its tier, what became of it, and what it came from. */
+export type PathNotes = { tier: string | null; fate: string | null; lineage: string | null }
+
+export function pathNotes(step: PathStep, catalog: Catalog, text: Say): PathNotes {
+  const name = (item: Selection) => referenceName(catalog, "items", item, text(...UNKNOWN_REFERENCE))
+  const and = (names: string[]) => names.join(text(" và ", " and "))
+  const tier = findReference(catalog, "items", step.item)?.tier
+  const { next, atSeconds } = step
+  const minutes = next?.atSeconds != null && atSeconds != null ? Math.round((next.atSeconds - atSeconds) / 60) : 0
+  let fate: string | null = null
+  if (step.fate === "UPGRADED" && next)
+    fate =
+      minutes > 0
+        ? text(`giữ ${minutes} phút, lên ${name(next.item)}`, `held ${minutes} min, then built into ${name(next.item)}`)
+        : text(`lên ${name(next.item)}`, `built into ${name(next.item)}`)
+  else if (step.fate === "SOLD" && next)
+    fate =
+      next.atSeconds != null
+        ? text(
+            `bán lúc ${clock(next.atSeconds)} lấy ${name(next.item)}`,
+            `sold at ${clock(next.atSeconds)} for ${name(next.item)}`,
+          )
+        : text(`bán để lấy ${name(next.item)}`, `sold for ${name(next.item)}`)
+  else if (step.fate === "SOLD") fate = text("bán trước khi hết ván", "sold before the end")
+  const parts = step.from.map(({ item, atSeconds: bought }) =>
+    bought == null
+      ? name(item)
+      : text(`${name(item)} mua lúc ${clock(bought)}`, `${name(item)} bought at ${clock(bought)}`),
+  )
+  const lineage = [
+    parts.length > 0 && text(`từ ${and(parts)}`, `from ${and(parts)}`),
+    step.replaces.length > 0 &&
+      text(
+        `thay ${and(step.replaces.map(({ item }) => name(item)))}`,
+        `in place of ${and(step.replaces.map(({ item }) => name(item)))}`,
+      ),
+  ].filter((words): words is string => !!words)
+  return {
+    tier: step.fate !== "HELD" && tier != null && tier < TOP_TIER ? text(`Cấp ${tier}`, `Tier ${tier}`) : null,
+    fate,
+    lineage: lineage.length ? lineage.join(", ") : null,
+  }
 }
 
 /** What nobody recorded of a game, in one sentence; null where every kind of thing is recorded for somebody. */

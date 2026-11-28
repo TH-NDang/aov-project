@@ -1,0 +1,266 @@
+/* The slots a player ended with, on a plate of their own; what was bought for protection stands behind a line. */
+.tn-end-slots {
+  --end-gap: 6px;
+  --build-item: 32px;
+  --reference-size: 32px;
+  --build-ground: var(--hub-sunken);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--end-gap);
+  width: fit-content;
+  max-width: 100%;
+  padding: 7px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-sunken);
+}
+.tn-end-slot {
+  position: relative;
+  display: block;
+}
+/* What was bought for protection stands behind a line. */
+.tn-end-slot[data-apart] {
+  margin-left: var(--end-gap);
+}
+.tn-end-slot[data-apart]::before {
+  content: "";
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  left: calc(var(--end-gap) * -1 - 0.5px);
+  width: 1px;
+  background: var(--hub-border-strong);
+}
+
+/* The path down a rail: the time, a mark for what became of the item, the item and its words. */
+.tn-loadout-card .tn-path {
+  --rail-time: 40px;
+  --build-item: 32px;
+  --reference-size: 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-loadout-card .tn-path[data-timeless] {
+  --rail-time: 0px;
+}
+.tn-loadout-card .tn-path > li {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  grid-template-columns: var(--rail-time) 10px var(--build-item) minmax(0, 1fr);
+  align-items: start;
+  gap: 0 10px;
+  padding: 5px 0;
+}
+.tn-loadout-card .tn-path[data-timeless] > li {
+  grid-template-columns: 10px var(--build-item) minmax(0, 1fr);
+}
+.tn-loadout-card .tn-path time {
+  line-height: 32px;
+  text-align: right;
+}
+/* A held item of the build is a full mark, one of protection a diamond, one given up an empty ring. */
+.tn-loadout-card .tn-path i {
+  width: 10px;
+  height: 10px;
+  margin-top: 11px;
+  border-radius: 50%;
+  background: var(--aov-game-gold);
+}
+.tn-loadout-card .tn-path [data-protective] > i {
+  border-radius: 2px;
+  background: var(--hub-blue);
+  rotate: 45deg;
+  scale: 0.85;
+}
+.tn-loadout-card .tn-path :is([data-fate="upgraded"], [data-fate="sold"]) > i {
+  border: 2px solid var(--hub-muted);
+  background: none;
+}
+/* The rail runs from one mark to the next. */
+.tn-loadout-card .tn-path > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 30px;
+  left: calc(var(--rail-time) + 14.5px);
+  width: 1px;
+  height: calc(100% - 14px);
+  background: var(--hub-border-strong);
+}
+.tn-loadout-card .tn-path[data-timeless] > li:not(:last-child)::after {
+  left: 4.5px;
+}
+.tn-loadout-card .tn-path b {
+  display: flex;
+  min-height: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+}
+.tn-loadout-card .tn-path [data-fate="upgraded"] b,
+.tn-loadout-card .tn-path [data-fate="sold"] b {
+  color: var(--hub-text-soft);
+  font-weight: 500;
+}
+.tn-loadout-card .tn-path em {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hub-blue) 16%, transparent);
+  color: var(--hub-blue);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+}
+.tn-loadout-card .tn-path small {
+  display: block;
+  margin: -6px 0 2px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-loadout-card .tn-path small > span + span::before {
+  content: " · ";
+  color: var(--hub-muted);
+}
+.tn-path [data-tone="upgraded"] {
+  color: var(--hub-success);
+}
+.tn-path [data-tone="sold"] {
+  color: var(--aov-warning);
+}
+
+/* The path over the minutes of the game: a line for each item, its bar from when it was bought until it was gone. */
+.tn-path-chart {
+  --chart-columns: 18px 24px 112px minmax(0, 1fr);
+  --build-item: 24px;
+  --reference-size: 24px;
+  --bar-core: var(--aov-game-gold);
+  --bar-protective: var(--hub-blue);
+  --bar-upgraded: var(--hub-success);
+  --bar-sold: color-mix(in srgb, var(--aov-warning) 45%, var(--hub-sunken));
+  padding-top: 4px;
+}
+.tn-path-axis,
+.tn-loadout-card .tn-path-chart ol > li {
+  display: grid;
+  grid-template-columns: var(--chart-columns);
+  align-items: center;
+  gap: 0 8px;
+}
+.tn-path-axis {
+  margin-bottom: 4px;
+}
+.tn-path-axis > span {
+  position: relative;
+  height: 20px;
+  grid-column: 4;
+  border-bottom: 1px solid var(--hub-border);
+}
+.tn-path-axis small {
+  position: absolute;
+  left: calc(var(--at) * 100%);
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  translate: -50% 0;
+}
+.tn-path-axis small:first-child {
+  translate: 0 0;
+}
+.tn-path-axis small[data-end] {
+  translate: -100% 0;
+}
+.tn-loadout-card .tn-path-chart ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tn-loadout-card .tn-path-chart ol > li {
+  min-height: 34px;
+}
+.tn-path-num {
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.tn-loadout-card .tn-path-chart b {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tn-path-track {
+  position: relative;
+  height: 10px;
+}
+.tn-path-bar {
+  position: absolute;
+  left: calc(var(--from) * 100%);
+  width: max(6px, calc((var(--to) - var(--from)) * 100%));
+  height: 100%;
+  border-radius: 5px;
+  background: var(--bar);
+}
+.tn-path-chart [data-kind="core"] {
+  --bar: var(--bar-core);
+}
+.tn-path-chart [data-kind="protective"] {
+  --bar: var(--bar-protective);
+}
+.tn-path-chart [data-kind="upgraded"] {
+  --bar: repeating-linear-gradient(90deg, var(--bar-upgraded) 0 5px, transparent 5px 8px);
+}
+.tn-path-chart [data-kind="sold"] {
+  --bar: var(--bar-sold);
+}
+/* Sold for nothing recorded: when it went is not known, so its bar fades out. */
+.tn-path-bar[data-open] {
+  background: linear-gradient(90deg, var(--bar-sold), transparent);
+}
+.tn-loadout-card .tn-path-bar > small {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 6px);
+  margin: 0;
+  color: var(--hub-success);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  translate: 0 -50%;
+}
+.tn-loadout-card [data-kind="sold"] .tn-path-bar > small {
+  color: var(--aov-warning);
+}
+.tn-loadout-card .tn-path-bar > small[data-inside] {
+  right: 6px;
+  left: auto;
+}
+.tn-path-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 4px;
+  padding: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  list-style: none;
+}
+.tn-loadout-card .tn-path-legend > li {
+  display: flex;
+  min-height: 0;
+  align-items: center;
+  gap: 6px;
+}
+.tn-path-legend > li::before {
+  content: "";
+  width: 16px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bar);
+}

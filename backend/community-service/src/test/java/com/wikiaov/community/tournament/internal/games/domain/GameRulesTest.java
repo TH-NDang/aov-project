@@ -3,7 +3,7 @@ package com.wikiaov.community.tournament.internal.games.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildRole;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
@@ -159,17 +159,19 @@ class GameRulesTest {
     }
 
     @Test
-    void aBuildListsTheItemsOfHigherTiersWithWhatTheyGrewFrom() {
-        var build = List.of(new BuildStep(selection(202), List.of(), BuildPlace.REPLACED, 180),
-                new BuildStep(selection(201), List.of(selection(202), selection(203)), BuildPlace.KEPT, 420),
-                new BuildStep(new Selection(null, "Observed item"), null, BuildPlace.SITUATIONAL, null));
+    void aBuildListsTheItemsOfHigherTiersWithWhatTheyGrewFromAndWhatTheyReplaced() {
+        var build = List.of(new BuildStep(selection(202), List.of(), List.of(), BuildRole.CORE, false, 180),
+                new BuildStep(selection(203), List.of(), List.of(), BuildRole.CORE, false, 300),
+                new BuildStep(selection(201), List.of(selection(202)), List.of(), BuildRole.CORE, false, 420),
+                new BuildStep(new Selection(null, "Observed item"), List.of(), List.of(selection(203)),
+                        BuildRole.PROTECTIVE, false, null));
 
         assertThat(GameRules.violations(withBuild(build), true, CATALOG)).isEmpty();
     }
 
     @Test
     void aBuildNamesNoItemTwiceHoweverOftenItWasBought() {
-        var build = List.of(step(selection(201), BuildPlace.KEPT), step(selection(201), BuildPlace.SITUATIONAL));
+        var build = List.of(step(selection(201)), step(selection(201)));
 
         assertThat(GameRules.violations(withBuild(build), false, null))
                 .containsExactly("sides[0].participants[0].build[1].item.duplicate");
@@ -177,30 +179,84 @@ class GameRulesTest {
 
     @Test
     void aBuildHasNoMoreThanTwentyFourSteps() {
-        assertThat(GameRules.violations(withBuild(steps(24, BuildPlace.SITUATIONAL)), false, null)).isEmpty();
-        assertThat(GameRules.violations(withBuild(steps(25, BuildPlace.SITUATIONAL)), false, null))
+        var build = new ArrayList<>(steps(6));
+        build.addAll(steps(18).stream().map(step -> new BuildStep(new Selection(null, step.item().name() + " sold"),
+                List.of(), List.of(), BuildRole.PROTECTIVE, true, null)).toList());
+        assertThat(GameRules.violations(withBuild(build), false, null)).isEmpty();
+
+        build.add(step(new Selection(null, "One more")));
+        assertThat(GameRules.violations(withBuild(build), false, null))
                 .containsExactly("sides[0].participants[0].build.maximum");
     }
 
     @Test
     void aBuildHoldsNoMoreItemsToTheEndThanAnInventoryHasSlots() {
-        assertThat(GameRules.violations(withBuild(steps(7, BuildPlace.KEPT)), false, null))
-                .containsExactly("sides[0].participants[0].build[6].kept.maximum");
+        assertThat(GameRules.violations(withBuild(steps(7)), false, null))
+                .containsExactly("sides[0].participants[0].build.held.maximum");
     }
 
     @Test
-    void itemsGivenUpOrBoughtForAMomentDoNotCountTowardsTheSixHeldToTheEnd() {
-        var build = new ArrayList<>(steps(6, BuildPlace.KEPT));
-        build.add(step(selection(202), BuildPlace.REPLACED));
-        build.add(step(selection(201), BuildPlace.SITUATIONAL));
+    void itemsThatWentIntoOthersOrWereSoldDoNotCountTowardsTheSixHeldToTheEnd() {
+        var build = new ArrayList<BuildStep>();
+        build.add(step(new Selection(null, "Part")));
+        build.add(new BuildStep(new Selection(null, "Boots"), List.of(), List.of(), BuildRole.CORE, false, null));
+        build.addAll(steps(4));
+        build.add(new BuildStep(new Selection(null, "Grown"), List.of(new Selection(null, "part")), List.of(),
+                BuildRole.CORE, false, null));
+        build.add(new BuildStep(new Selection(null, "Revive"), List.of(), List.of(new Selection(null, "Boots")),
+                BuildRole.PROTECTIVE, false, null));
+        build.add(new BuildStep(new Selection(null, "For a moment"), List.of(), List.of(), BuildRole.PROTECTIVE,
+                true, null));
 
         assertThat(GameRules.violations(withBuild(build), false, null)).isEmpty();
     }
 
     @Test
+    void aStepReplacesOnlyItemsBoughtBeforeItAndStillHeld() {
+        var build = List.of(step(selection(202)),
+                new BuildStep(selection(201), List.of(selection(202)), List.of(), BuildRole.CORE, false, null),
+                new BuildStep(selection(204), List.of(), List.of(selection(202), selection(203)), BuildRole.CORE,
+                        false, null),
+                new BuildStep(selection(205), List.of(), List.of(selection(205)), BuildRole.CORE, false, null),
+                new BuildStep(selection(203), List.of(), List.of(selection(201), selection(201)), BuildRole.CORE,
+                        false, null));
+
+        assertThat(GameRules.violations(withBuild(build), false, null)).containsExactly(
+                "sides[0].participants[0].build[2].replaces[0].gone",
+                "sides[0].participants[0].build[2].replaces[1].notBuilt",
+                "sides[0].participants[0].build[3].replaces[0].same",
+                "sides[0].participants[0].build[4].replaces[1].duplicate");
+    }
+
+    @Test
+    void aStepReplacesNoMoreThanTwoItemsAndNamesEachOfThem() {
+        var three = List.of(step(selection(201)), step(selection(202)), step(selection(203)),
+                new BuildStep(selection(204), List.of(), List.of(selection(201), selection(202), selection(203)),
+                        BuildRole.CORE, false, null));
+        var blank = List.of(new BuildStep(selection(204), List.of(), List.of(new Selection(null, " ")),
+                BuildRole.CORE, false, null));
+
+        assertThat(GameRules.violations(withBuild(three), false, null))
+                .containsExactly("sides[0].participants[0].build[3].replaces.maximum");
+        assertThat(GameRules.violations(withBuild(blank), false, null))
+                .containsExactly("sides[0].participants[0].build[0].replaces[0]");
+    }
+
+    @Test
+    void theStepsOfABuildFollowTheOrderTheyWereBoughtIn() {
+        var build = List.of(new BuildStep(selection(202), List.of(), List.of(), BuildRole.CORE, false, 300),
+                new BuildStep(selection(203), List.of(), List.of(), BuildRole.CORE, false, null),
+                new BuildStep(selection(201), List.of(), List.of(), BuildRole.CORE, false, 240));
+
+        assertThat(GameRules.violations(withBuild(build), false, null))
+                .containsExactly("sides[0].participants[0].build[2].time.order");
+    }
+
+    @Test
     void aBuildLeavesOutTheItemsOfTheLowestTier() {
-        var build = List.of(new BuildStep(selection(201), List.of(selection(200)), BuildPlace.KEPT, null),
-                step(selection(200), BuildPlace.REPLACED));
+        var build = List.of(
+                new BuildStep(selection(201), List.of(selection(200)), List.of(), BuildRole.CORE, false, null),
+                step(selection(200)));
 
         assertThat(GameRules.violations(withBuild(build), true, CATALOG)).containsExactly(
                 "sides[0].participants[0].build[0].from[0].tier", "sides[0].participants[0].build[1].item.tier");
@@ -208,8 +264,7 @@ class GameRulesTest {
 
     @Test
     void anItemOfABuildDoesNotGrowFromItselfNorTwiceFromAnother() {
-        var build = List.of(new BuildStep(selection(201), List.of(selection(201), selection(202), selection(202)),
-                BuildPlace.KEPT, null));
+        var build = List.of(grown(selection(201), selection(201), selection(202), selection(202)));
         var refused = List.of("sides[0].participants[0].build[0].from[0].same",
                 "sides[0].participants[0].build[0].from[2].duplicate");
 
@@ -220,8 +275,8 @@ class GameRulesTest {
     @Test
     void anItemOfABuildIsMadeOfNoMoreThanThreeOthers() {
         var parts = IntStream.rangeClosed(1, 4).mapToObj(index -> new Selection(null, "Part " + index)).toList();
-        var three = List.of(new BuildStep(selection(201), parts.subList(0, 3), BuildPlace.KEPT, null));
-        var four = List.of(new BuildStep(selection(201), parts, BuildPlace.KEPT, null));
+        var three = List.of(grown(selection(201), parts.subList(0, 3).toArray(Selection[]::new)));
+        var four = List.of(grown(selection(201), parts.toArray(Selection[]::new)));
 
         assertThat(GameRules.violations(withBuild(three), false, null)).isEmpty();
         assertThat(GameRules.violations(withBuild(four), false, null))
@@ -230,7 +285,7 @@ class GameRulesTest {
 
     @Test
     void anItemOfABuildDoesNotGrowFromOneOfAHigherTier() {
-        var build = List.of(new BuildStep(selection(202), List.of(selection(201)), BuildPlace.KEPT, null));
+        var build = List.of(grown(selection(202), selection(201)));
 
         assertThat(GameRules.violations(withBuild(build), true, CATALOG))
                 .containsExactly("sides[0].participants[0].build[0].from[0].notLower");
@@ -238,8 +293,7 @@ class GameRulesTest {
 
     @Test
     void twoFinishedItemsOfABuildDoNotGrowFromEachOther() {
-        var build = List.of(new BuildStep(selection(201), List.of(selection(204)), BuildPlace.KEPT, null),
-                new BuildStep(selection(204), List.of(selection(201)), BuildPlace.KEPT, null));
+        var build = List.of(grown(selection(201), selection(204)), grown(selection(204), selection(201)));
 
         assertThat(GameRules.violations(withBuild(build), true, CATALOG)).containsExactly(
                 "sides[0].participants[0].build[0].from[0].notLower",
@@ -248,7 +302,7 @@ class GameRulesTest {
 
     @Test
     void anItemOfABuildMayGrowFromOneOfItsOwnTierThatItsRecipeNames() {
-        var build = List.of(new BuildStep(selection(205), List.of(selection(203)), BuildPlace.KEPT, null));
+        var build = List.of(grown(selection(205), selection(203)));
 
         assertThat(GameRules.violations(withBuild(build), true, CATALOG)).isEmpty();
     }
@@ -256,16 +310,15 @@ class GameRulesTest {
     @Test
     void aPartIsComparedWithItsItemOnlyWhenTheTiersOfBothAreKnown() {
         var named = new Selection(null, "Observed part");
-        var build = List.of(new BuildStep(selection(202), List.of(named, selection(206)), BuildPlace.KEPT, null),
-                new BuildStep(selection(206), List.of(selection(204)), BuildPlace.KEPT, null),
-                new BuildStep(new Selection(null, "Observed item"), List.of(selection(204)), BuildPlace.KEPT, null));
+        var build = List.of(grown(selection(202), named, selection(206)), grown(selection(206), selection(204)),
+                grown(new Selection(null, "Observed item"), selection(204)));
 
         assertThat(GameRules.violations(withBuild(build), true, CATALOG)).isEmpty();
     }
 
     @Test
     void anItemIsBuiltInsideTheGame() {
-        var build = List.of(new BuildStep(selection(201), List.of(), BuildPlace.KEPT, 601));
+        var build = List.of(new BuildStep(selection(201), List.of(), List.of(), BuildRole.CORE, false, 601));
 
         assertThat(GameRules.violations(withBuild(build), false, null))
                 .containsExactly("sides[0].participants[0].build[0].atSeconds.range");
@@ -273,13 +326,13 @@ class GameRulesTest {
 
     @Test
     void aBuildThatNamesNoItemIsRefused() {
-        assertThat(GameRules.violations(withBuild(List.of(step(null, BuildPlace.KEPT))), false, null))
+        assertThat(GameRules.violations(withBuild(List.of(step(null))), false, null))
                 .containsExactly("sides[0].participants[0].build[0].item");
     }
 
     @Test
     void anItemOfABuildMustExistInThePatch() {
-        var build = List.of(new BuildStep(selection(999), List.of(selection(998)), BuildPlace.KEPT, null));
+        var build = List.of(grown(selection(999), selection(998)));
 
         assertThat(GameRules.violations(withBuild(build), true, CATALOG)).containsExactly(
                 "sides[0].participants[0].build[0].item.unavailableInPatch",
@@ -623,14 +676,17 @@ class GameRulesTest {
                 first.spell(), null, null, List.of(), List.of(), null, null, build));
     }
 
-    private static BuildStep step(Selection item, BuildPlace place) {
-        return new BuildStep(item, List.of(), place, null);
+    private static BuildStep step(Selection item) {
+        return new BuildStep(item, List.of(), List.of(), BuildRole.CORE, false, null);
     }
 
-    /** As many different items of one place, known by their names alone. */
-    private static List<BuildStep> steps(int count, BuildPlace place) {
-        return IntStream.rangeClosed(1, count).mapToObj(index -> step(new Selection(null, "Item " + index), place))
-                .toList();
+    private static BuildStep grown(Selection item, Selection... parts) {
+        return new BuildStep(item, List.of(parts), List.of(), BuildRole.CORE, false, null);
+    }
+
+    /** As many different items held to the end, known by their names alone. */
+    private static List<BuildStep> steps(int count) {
+        return IntStream.rangeClosed(1, count).mapToObj(index -> step(new Selection(null, "Item " + index))).toList();
     }
 
     private static Game withLoadouts(Loadout<ArcanaAllocation> arcana, Loadout<EnchantmentAllocation> enchantments) {

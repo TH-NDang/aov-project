@@ -1,10 +1,10 @@
 package com.wikiaov.community.tournament.internal.games.domain;
 
+import com.wikiaov.community.tournament.internal.domain.BuildPath;
 import com.wikiaov.community.tournament.internal.domain.CatalogLocales;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
@@ -22,13 +22,11 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Seat;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TimelineEvent;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -68,6 +66,8 @@ public final class GameRules {
     /** A build: at most this many items, none of the lowest tier, each made of at most three others. */
     public static final int MAX_BUILD_STEPS = 24;
     public static final int MAX_BUILD_PARTS = 3;
+    /** Items sold for one item: an inventory that is full gives one up, rarely two. */
+    public static final int MAX_BUILD_REPLACED = 2;
     public static final int MIN_BUILD_TIER = 2;
 
     private GameRules() {
@@ -614,30 +614,77 @@ public final class GameRules {
         build(participant, path + ".build", publication, duration, catalog, errors);
     }
 
-    /** The items a player built, each of them once; no more of them are held at the end than an inventory has slots. */
+    /**
+     * The items a player built, each of them once and in the order they were bought, so their times never go back. A
+     * step replaces only items bought before it and still held then; no more items are held at the end than an
+     * inventory has slots.
+     */
     private static void build(Participant participant, String path, boolean publication, Integer duration,
             Catalog catalog, List<String> errors) {
-        if (participant.build().size() > MAX_BUILD_STEPS) {
+        var steps = participant.build();
+        if (steps.size() > MAX_BUILD_STEPS) {
             errors.add(path + ".maximum");
             return;
         }
 
         var references = catalog == null ? null : catalog.items();
         var items = new HashSet<String>();
-        int kept = 0;
-        for (int index = 0; index < participant.build().size(); index++) {
-            var step = participant.build().get(index);
+        var held = new HashSet<String>();
+        Integer previous = null;
+        for (int index = 0; index < steps.size(); index++) {
+            var step = steps.get(index);
             String field = path + "[" + index + "]";
             buildItem(step.item(), publication, field + ".item", references, errors);
-            if (present(step.item()) && !items.add(identity(step.item()))) {
-                errors.add(field + ".item.duplicate");
-            }
             buildParts(step, publication, field + ".from", references, errors);
+            buildReplaced(step, field + ".replaces", items, held, errors);
+            step.from().stream().filter(GameRules::present).forEach(part -> held.remove(identity(part)));
+            if (present(step.item())) {
+                if (!items.add(identity(step.item()))) {
+                    errors.add(field + ".item.duplicate");
+                }
+                held.add(identity(step.item()));
+            }
             if (step.atSeconds() != null) {
                 time(step.atSeconds(), duration, field, errors);
+                if (previous != null && step.atSeconds() < previous) {
+                    errors.add(field + ".time.order");
+                }
+                previous = step.atSeconds();
             }
-            if (step.place() == BuildPlace.KEPT && ++kept > INVENTORY_SLOTS) {
-                errors.add(field + ".kept.maximum");
+        }
+
+        long kept = BuildPath.fates(steps).stream().filter(fate -> fate == BuildPath.Fate.HELD).count();
+        if (kept > INVENTORY_SLOTS) {
+            errors.add(path + ".held.maximum");
+        }
+    }
+
+    /** The items sold for a step: each one bought before it and held until then, named once. */
+    private static void buildReplaced(BuildStep step, String path, Set<String> built, Set<String> held,
+            List<String> errors) {
+        if (step.replaces().size() > MAX_BUILD_REPLACED) {
+            errors.add(path + ".maximum");
+            return;
+        }
+
+        var named = new HashSet<String>();
+        for (int index = 0; index < step.replaces().size(); index++) {
+            var gone = step.replaces().get(index);
+            String field = path + "[" + index + "]";
+            if (!present(gone)) {
+                errors.add(field);
+                continue;
+            }
+
+            String key = identity(gone);
+            if (!named.add(key)) {
+                errors.add(field + ".duplicate");
+            } else if (present(step.item()) && key.equals(identity(step.item()))) {
+                errors.add(field + ".same");
+            } else if (!built.contains(key)) {
+                errors.add(field + ".notBuilt");
+            } else if (!held.remove(key)) {
+                errors.add(field + ".gone");
             }
         }
     }
@@ -820,9 +867,7 @@ public final class GameRules {
 
     /** What makes two selections the same one: the id, or the name, in any case, of one recorded without an id. */
     public static String identity(Selection selection) {
-        return selection.id() != null
-                ? selection.id().toString()
-                : Normalizer.normalize(selection.name().trim().toLowerCase(Locale.ROOT), Normalizer.Form.NFKC);
+        return BuildPath.key(selection);
     }
 
     private static void require(boolean valid, String path, List<String> errors) {

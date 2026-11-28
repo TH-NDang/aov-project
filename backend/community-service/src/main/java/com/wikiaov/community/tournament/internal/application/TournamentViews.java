@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.archive.persistence.VersionedRecord;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildRole;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public final class TournamentViews {
@@ -65,6 +67,12 @@ public final class TournamentViews {
             long teams,
             long matches,
             long played
+    ) {
+    }
+
+    /** The role a new step of a build starts with, by item; an item that is absent starts as part of the build. */
+    public record BuildRoles(
+            Map<UUID, BuildRole> items
     ) {
     }
 

@@ -54,29 +54,6 @@
   border-radius: var(--aov-radius-control);
   aspect-ratio: 1;
 }
-/* What is no part of the build: smaller, behind the word for what became of it. */
-.tn-build-more {
-  --build-item: 24px;
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  justify-content: var(--more-pack);
-  gap: 4px 10px;
-  grid-area: more;
-  margin-top: 8px;
-}
-.tn-build-more > span {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-}
-.tn-build-more small {
-  margin-right: 2px;
-  color: var(--hub-muted);
-  font-size: 12px;
-  line-height: 16px;
-}
 @media (max-width: 899.98px) {
   .tn-build[data-blank] {
     font-size: 12px;
