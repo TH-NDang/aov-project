@@ -124,7 +124,8 @@ mỗi địa chỉ một lần.
 
 - V085 thêm mọi `source_url` khác nhau của change set `PATCH_NOTES` vào `patch.variant_source` của variant đó, sau các
   link đã có, theo thứ tự ghi nhận đầu tiên, tối đa 10 link. Nhãn và ngôn ngữ suy từ tên miền (lienquan.garena.vn là
-  Việt Nam, rov.in.th là Thái Lan, máy chủ thử nghiệm ghi thêm "Thử nghiệm"); tên miền khác dùng chính tên miền làm nhãn.
+  Việt Nam, rov.in.th là Thái Lan, máy chủ thử nghiệm ghi thêm "Thử nghiệm"; bài Indonesia có đuôi "en" là bản tiếng
+  Anh nên ngôn ngữ là `en`); tên miền khác dùng chính tên miền làm nhãn.
   Cột `source_url` của change set giữ nguyên, không xóa dữ liệu.
 - Admin không còn ô link riêng cho tướng và không hiện link nguồn trên từng dòng tướng. Patch chưa có link chung thì
   form ghi thay đổi mời thêm link chung trước khi lưu. Change set cũ chưa có link chung giữ link riêng khi sửa.

@@ -35,6 +35,8 @@ SELECT gen_random_uuid(), variant_id, next_position + n - 1, url,
            WHEN host = 'lienquan.garena.vn' OR host LIKE '%.lienquan.garena.vn' THEN 'vi-VN'
            WHEN host = 'rov.in.th' OR host LIKE '%.rov.in.th' THEN 'th-TH'
            WHEN host LIKE '%moba.garena.tw' THEN 'zh-TW'
+           -- Indonesia posts its notes in English too, as an address ending in "en".
+           WHEN host LIKE '%aov.garena.co.id' AND url ~* '(-|[0-9])en/?$' THEN 'en'
            WHEN host LIKE '%aov.garena.co.id' THEN 'id-ID'
        END
 FROM fresh
