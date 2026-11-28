@@ -23,6 +23,8 @@ import { ChangeDisclosure, ChangeKind, ChangeList } from "../../components/chang
 import { ReleaseDate } from "./release-date"
 import { PatchFixes, type FixEntry } from "./patch-fixes"
 import { PatchSourceList } from "./patch-sources"
+import { PatchMarketBoard } from "./patch-markets"
+import { HeroPatchVideoButton, PatchVideoTimeline } from "./patch-videos"
 import { patchSourceLinks } from "../../lib/patch-sources"
 import { FIX_KIND, isCatalogFix, splitHeroFixes } from "../../lib/patch-fixes"
 import {
@@ -299,6 +301,7 @@ function HeroNotes({
               </>
             )}
             {count > 0 && <span>{text(`${count} thay đổi`, count === 1 ? "1 change" : `${count} changes`)}</span>}
+            <HeroPatchVideoButton variantId={variantId} heroId={row.heroId ?? hero?.id} />
           </p>
         </div>
         {page && layout === "wide" && (
@@ -571,7 +574,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
   )
   // One page is a link beside the title; several are named by language in a row of their own under it.
   const links = patchSourceLinks(release.sources, source)
-  const sourceLink = links.length === 1 && (
+  const sourceLink = links.length === 1 && !(release.markets?.length || links[0].region) && (
     <a
       className="wiki-patch-source"
       href={links[0].url}
@@ -583,7 +586,18 @@ function PatchContent({ release }: { release: PatchRelease }) {
       {text("Nguồn công bố", "Publication source")} <WikiIcon name="open" size={16} />
     </a>
   )
-  const sourceList = links.length > 1 && <PatchSourceList links={links} />
+  // Markets with a release or a page of their own get the ledger of when and where; older patches keep the plain row.
+  const marketBoard =
+    (release.markets?.length ?? 0) > 0 || links.some((link) => link.region) ? (
+      <PatchMarketBoard markets={release.markets ?? []} sources={links} />
+    ) : null
+  const sourceList = marketBoard ?? (links.length > 1 && <PatchSourceList links={links} />)
+  const videoMarket =
+    release.markets?.find((market) => market.region === "VN") ??
+    (scope.region === "VN" && release.effectiveAt
+      ? { region: "VN", timeZone: "Asia/Ho_Chi_Minh", effectiveAt: release.effectiveAt }
+      : undefined)
+  const heroNames = new Map(heroes.map((entry) => [entry.row.heroId ?? entry.hero?.id ?? "", entry.name]))
 
   return (
     <>
@@ -621,6 +635,11 @@ function PatchContent({ release }: { release: PatchRelease }) {
             </p>
           )}
           {layout === "compact" && indexed && <PatchStrip groups={groups} title={indexTitle} />}
+          <PatchVideoTimeline
+            variantId={release.variantId}
+            release={videoMarket}
+            heroName={(heroId) => heroNames.get(heroId)}
+          />
 
           {filled.map((section) => (
             <section

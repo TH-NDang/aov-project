@@ -27,6 +27,16 @@ export interface PatchRelease {
   effectiveAt: string | null
   /** The pages of the official notes, each named by its language or market; older answers leave it out. */
   sources?: PatchSourceLink[]
+  /** When each market gets the patch, ordered like the markets; older answers leave it out (ADR-037). */
+  markets?: PatchMarketRelease[]
+}
+
+/** A market's release: an exact moment when the hour is known, else the day on the market's calendar. */
+export interface PatchMarketRelease {
+  region: string
+  timeZone: string
+  effectiveAt?: string | null
+  effectiveOn?: string | null
 }
 
 export type PatchChangeRow = PublishedChange & {
