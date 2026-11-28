@@ -133,7 +133,7 @@ mỗi địa chỉ một lần.
 
 ### Bổ sung ngày 2026-11-28: nguồn theo thị trường
 
-Link nguồn chung ghi thêm thị trường của bài (tùy chọn) và mỗi patch có tối đa 20 link, xem ADR-037.
+Link nguồn chung ghi thêm thị trường của bài (tùy chọn) và mỗi patch có tối đa 20 link, xem ADR-038.
 
 ## Hệ quả
 

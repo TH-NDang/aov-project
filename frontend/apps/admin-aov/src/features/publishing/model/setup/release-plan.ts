@@ -1,7 +1,7 @@
 import type { Market, Release } from "../../api/publication-overview"
 
 /**
- * The release plan of one patch (ADR-037): one moment shared by the markets that update together, a moment of its own
+ * The release plan of one patch (ADR-038): one moment shared by the markets that update together, a moment of its own
  * for a market that does not, or no release where nothing is known. The server keeps one release per market; the shared
  * moment lives only here, read back from the markets that agree most.
  */

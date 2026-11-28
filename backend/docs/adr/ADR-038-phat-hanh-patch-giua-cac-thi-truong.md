@@ -1,4 +1,4 @@
-# ADR-037 — Một thời điểm phát hành cho mọi thị trường, nguồn theo khu vực và video của patch
+# ADR-038 — Một thời điểm phát hành cho mọi thị trường, nguồn theo khu vực và video của patch
 
 **Trạng thái:** Chấp nhận  
 **Ngày:** 2026-11-28
@@ -37,13 +37,13 @@
 
 ### Nguồn theo khu vực và ngôn ngữ
 
-- `patch.variant_source.region_code` (V088) ghi thị trường của bài, tùy chọn, phải là mã thị trường có thật. Mỗi patch
+- `patch.variant_source.region_code` (V090) ghi thị trường của bài, tùy chọn, phải là mã thị trường có thật. Mỗi patch
   tối đa 20 link.
 - Wiki nhóm nguồn theo thị trường, mỗi link ghi ngôn ngữ; link không có thị trường xếp cuối.
 
 ### Video của patch (chỉ VN lúc này)
 
-- Thêm loại đối tượng `PATCH`: `subject_id` là id variant, và `patch_variant_id` luôn bằng nó (ràng buộc trong V089).
+- Thêm loại đối tượng `PATCH`: `subject_id` là id variant, và `patch_variant_id` luôn bằng nó (ràng buộc trong V091).
   Ghi cần `patch:write`, công khai cần thêm `patch:publish`.
 - Ba mục đích mới chỉ dành cho video của patch: `PATCH_PREVIEW` (xem trước, máy chủ thử nghiệm), `PATCH_OVERVIEW`
   (tổng hợp bản chính thức), `PATCH_REVIEW` (trải nghiệm sau cập nhật). Video của patch cũng nhận `OTHER`.

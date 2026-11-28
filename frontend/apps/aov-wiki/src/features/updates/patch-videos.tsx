@@ -19,7 +19,7 @@ export function usePatchVideos(variantId: string) {
 
 /**
  * The patch's videos on one track, oldest first, with the release as a gate between what was said before it and what
- * was played after (ADR-037). A hero's video carries the hero's name; the theater plays the track in order.
+ * was played after (ADR-038). A hero's video carries the hero's name; the theater plays the track in order.
  */
 export function PatchVideoTimeline({
   variantId,

@@ -38,7 +38,7 @@ const MODES: { key: PlanMode; label: string }[] = [
 const shownDay = (moment: PlanMoment) => moment.date.split("-").reverse().join("/")
 
 /**
- * The release of one patch in every market at once (ADR-037): one moment the markets share, written on one market's
+ * The release of one patch in every market at once (ADR-038): one moment the markets share, written on one market's
  * clock and shown on each market's own, and a moment of its own for the market that updates on another day.
  */
 export function ReleasePlanEditor({ variant, data }: { variant: Variant; data: PublicationOverview }) {

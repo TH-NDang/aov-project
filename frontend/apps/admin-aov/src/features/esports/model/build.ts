@@ -1,5 +1,5 @@
 import type {
-  BuildPlace,
+  BuildRole,
   BuildStep,
   EquipmentSnapshot,
   Participant,
@@ -11,8 +11,10 @@ import { nameKey } from "./name-key"
 
 /** The limits of a build, the ones the service refuses a game for: its steps, the six slots and the parts of an item. */
 export const MAX_STEPS = 24
-export const MAX_KEPT = 6
+export const MAX_HELD = 6
 export const MAX_PARTS = 3
+/** Items sold for one item: a full inventory gives one up, rarely two. */
+export const MAX_REPLACED = 2
 /** Items of a lower tier are bought on the way to another and are no step of a build. */
 export const MIN_TIER = 2
 /** An inventory seen this close to the end of a game is the one the player ended it with. */
@@ -20,28 +22,15 @@ const END_SECONDS = 60
 /** No game lasts a day; the bound of a time while the length of the game is unknown. */
 const MAX_GAME_SECOND = 86_400
 
-/** What becomes of an item, in the order the editor shows the three places. */
-export const BUILD_PLACES: { code: BuildPlace; label: string; short: string; hint: string }[] = [
-  {
-    code: "KEPT",
-    label: "Giữ đến cuối ván",
-    short: "Cuối ván",
-    hint: "Các món còn trong sáu ô khi ván kết thúc, theo thứ tự lên",
-  },
-  {
-    code: "REPLACED",
-    label: "Đã đổi",
-    short: "Đã đổi",
-    hint: "Các món đã lên rồi bán đi hoặc thay bằng món khác trước khi ván kết thúc",
-  },
-  {
-    code: "SITUATIONAL",
-    label: "Tình huống",
-    short: "Tình huống",
-    hint: "Các món mua để sống sót qua một lúc, như món hồi sinh, không thuộc bộ chính",
-  },
+/** What an item was bought for. An active effect says nothing of it: some active items are the build itself. */
+export const BUILD_ROLES: { code: BuildRole; label: string; hint: string }[] = [
+  { code: "CORE", label: "Chính", hint: "Món của bộ trang bị, kể cả món có kích hoạt" },
+  { code: "PROTECTIVE", label: "Bảo hộ", hint: "Món mua để sống sót, như hồi sinh hay món cứu một lúc" },
 ]
-export const buildPlace = (code: BuildPlace) => BUILD_PLACES.find((place) => place.code === code)!
+export const buildRole = (code: BuildRole) => BUILD_ROLES.find((role) => role.code === code)!
+
+/** What became of an item: held when the game ended, gone into a later item, or sold. */
+export type Fate = "HELD" | "UPGRADED" | "SOLD"
 
 /** Finds the catalogue's entry of a recorded item by its id, or by its name when it was recorded without one. */
 export type ItemIndex = { items: Reference[]; find: (item: Selection | null | undefined) => Reference | undefined }
@@ -79,6 +68,84 @@ function growsFrom(item: Selection, part: Selection, index: ItemIndex) {
 }
 
 const selectionOf = (item: Selection): Selection => ({ id: item.id ?? null, name: item.name ?? null })
+
+/** A step as the service writes it: what it grew from always, what it replaced and its sale only when there are some. */
+function stepOf(
+  item: Selection,
+  role: BuildRole,
+  atSeconds: number | null,
+  from: Selection[] = [],
+  replaces: Selection[] = [],
+): BuildStep {
+  return {
+    item: selectionOf(item),
+    from: from.map(selectionOf),
+    ...(replaces.length ? { replaces: replaces.map(selectionOf) } : {}),
+    role,
+    atSeconds,
+  }
+}
+
+const names = (selections: Selection[] | undefined, key: string, index: ItemIndex) =>
+  (selections ?? []).some((selection) => present(selection) && itemKey(selection, index) === key)
+
+/** The step whose item a later step grew from or replaced, or -1 while it is held or sold for nothing recorded. */
+export function successor(steps: BuildStep[], at: number, index: ItemIndex): number {
+  const step = steps[at]
+  if (!step || !present(step.item)) return -1
+  const key = itemKey(step.item, index)
+  for (let later = at + 1; later < steps.length; later++) {
+    if (names(steps[later]!.from, key, index) || names(steps[later]!.replaces, key, index)) return later
+  }
+  return -1
+}
+
+/** What became of each step, read from the steps after it, as the service reads it. */
+export function fates(steps: BuildStep[], index: ItemIndex): Fate[] {
+  return steps.map((step, at) => {
+    const next = successor(steps, at, index)
+    if (next >= 0) return names(steps[next]!.from, itemKey(step.item, index), index) ? "UPGRADED" : "SOLD"
+    return step.sold ? "SOLD" : "HELD"
+  })
+}
+
+/** The items held when the game ended, those of the build itself before the protective ones, each in buying order. */
+export function endSlots(steps: BuildStep[], index: ItemIndex): BuildStep[] {
+  const fate = fates(steps, index)
+  const held = steps.filter((_, at) => fate[at] === "HELD")
+  return [...held.filter((step) => step.role !== "PROTECTIVE"), ...held.filter((step) => step.role === "PROTECTIVE")]
+}
+
+const heldCount = (steps: BuildStep[], index: ItemIndex) => fates(steps, index).filter((fate) => fate === "HELD").length
+
+/** The steps before `at` the player still held when it was bought: nothing between grew from or replaced them. */
+export function heldBefore(steps: BuildStep[], at: number, index: ItemIndex): BuildStep[] {
+  const before = steps.slice(0, at)
+  return before.filter((_, earlier) => successor(before, earlier, index) < 0)
+}
+
+/** A step without a field the service leaves out while it is empty. */
+function without(step: BuildStep, field: "replaces" | "sold"): BuildStep {
+  const copy = { ...step }
+  delete copy[field]
+  return copy
+}
+
+/**
+ * A list as it is written now. The first lists (25/11/2026) put each item in a place instead of a role; the service
+ * reads them so and never answers them again, but a list held in the page since then may still have one.
+ */
+function current(steps: BuildStep[], index: ItemIndex): BuildStep[] {
+  const placeOf = (step: BuildStep) => (step as BuildStep & { place?: string }).place
+  if (steps.every((step) => step.role && placeOf(step) == null)) return steps
+  return steps.map((step, at) => {
+    const place = placeOf(step)
+    const copy: BuildStep & { place?: string } = without(step, "sold")
+    delete copy.place
+    const sold = !!step.sold || (place === "REPLACED" && successor(steps, at, index) < 0)
+    return { ...copy, role: step.role ?? (place === "SITUATIONAL" ? "PROTECTIVE" : "CORE"), ...(sold ? { sold } : {}) }
+  })
+}
 
 /**
  * The items of a player. While nobody wrote a list, they are read from the `snapshot` the game ended with, which then
@@ -121,7 +188,7 @@ function readSnapshot(snapshot: EquipmentSnapshot, index: ItemIndex): Build {
       continue
     }
     named.add(key)
-    steps.push({ item: selectionOf(slot.item), from: [], place: "KEPT", atSeconds: null })
+    steps.push(stepOf(slot.item, "CORE", null))
   }
   return { steps, snapshot: steps.length ? snapshot : null, leftOut }
 }
@@ -132,24 +199,26 @@ export function buildOf(
   duration: number | null | undefined,
   index: ItemIndex = NO_ITEMS,
 ): Build {
-  if (participant.build?.length) return { steps: participant.build, snapshot: null, leftOut: 0 }
+  if (participant.build?.length) return { steps: current(participant.build, index), snapshot: null, leftOut: 0 }
   const snapshot = endSnapshot(participant, duration)
   return snapshot ? readSnapshot(snapshot, index) : { steps: [], snapshot: null, leftOut: 0 }
 }
 
-export const stepsAt = (steps: BuildStep[], place: BuildPlace) => steps.filter((step) => step.place === place)
-
 /** Why an edit is refused, or what is wrong with a list written elsewhere. */
-export type BuildRefusal = "STEPS" | "KEPT" | "TWICE" | "TIER" | "PARTS" | "SAME" | "LOWER" | "TIME" | "LAST"
+export type BuildRefusal =
+  "STEPS" | "HELD" | "TWICE" | "TIER" | "PARTS" | "SAME" | "LOWER" | "TIME" | "ORDER" | "REPLACED" | "GONE" | "LAST"
 export const BUILD_REFUSALS: Record<BuildRefusal, string> = {
   STEPS: `Danh sách đã đủ ${MAX_STEPS} món.`,
-  KEPT: "Đã đủ sáu ô giữ đến cuối ván.",
+  HELD: "Đủ sáu ô cuối ván. Chọn món đã bán để lấy món này.",
   TWICE: "Mỗi món chỉ ghi một lần.",
   TIER: "Chỉ ghi trang bị cấp 2 và cấp 3.",
   PARTS: `Một món lên từ nhiều nhất ${MAX_PARTS} món.`,
-  SAME: "Một món không lên từ chính nó.",
+  SAME: "Một món không lên từ hay thay chính nó.",
   LOWER: "Món ghép phải cấp thấp hơn, trừ khi công thức có món đó.",
   TIME: "Thời điểm phải nằm trong ván.",
+  ORDER: "Các món có giờ phải theo thứ tự lên.",
+  REPLACED: `Một món thay nhiều nhất ${MAX_REPLACED} món.`,
+  GONE: "Món bị thay phải lên trước và còn giữ đến lúc đó.",
   LAST: "Danh sách trống sẽ lại đọc từ mốc. Thêm món khác trước khi bỏ món này.",
 }
 
@@ -163,83 +232,158 @@ const positionOf = (steps: BuildStep[], key: string, index: ItemIndex) =>
 const withStep = (steps: BuildStep[], at: number, change: Partial<BuildStep>) =>
   steps.map((step, position) => (position === at ? { ...step, ...change } : step))
 
-/** Moves an item to another place; the list keeps the order in which the items were built. */
-export function moveItem(steps: BuildStep[], key: string, place: BuildPlace, index: ItemIndex): BuildEdit {
-  const at = positionOf(steps, key, index)
-  if (at < 0 || steps[at]!.place === place) return steps
-  if (place === "KEPT" && stepsAt(steps, "KEPT").length >= MAX_KEPT) return "KEPT"
-  return withStep(steps, at, { place })
-}
-
-/** Puts an item where its time belongs, before the first one built later; without a time it is the latest one. */
-function placed(steps: BuildStep[], step: BuildStep): BuildStep[] {
-  const { atSeconds } = step
+/** Where an item bought at that second goes: before the first one built later; without a time it is the latest one. */
+function positionFor(steps: BuildStep[], atSeconds: number | null) {
   const later = atSeconds == null ? -1 : steps.findIndex((entry) => (entry.atSeconds ?? -1) > atSeconds)
-  return later < 0 ? [...steps, step] : [...steps.slice(0, later), step, ...steps.slice(later)]
+  return later < 0 ? steps.length : later
 }
 
-/** Adds an item, in the order of the known times; one that is listed already moves instead of being listed twice. */
+const insert = (steps: BuildStep[], at: number, step: BuildStep) => [...steps.slice(0, at), step, ...steps.slice(at)]
+
+/** Whether the items a list replaces are each bought before and held then, the same check the service makes. */
+const replacesHold = (steps: BuildStep[], index: ItemIndex) =>
+  !buildProblems(steps, null, index).some(({ reason }) => reason === "GONE")
+
+/** The second an item would be bought at goes into the list only in the order of the others. */
+function keepsOrder(steps: BuildStep[], at: number, second: number | null) {
+  if (second == null) return true
+  return steps.every(({ atSeconds }, position) =>
+    atSeconds == null || position === at ? true : position < at ? atSeconds <= second : atSeconds >= second,
+  )
+}
+
+/** Which held items an item bought at that second would grow from: those of its recipe the player had then. */
+export function heldParts(steps: BuildStep[], item: Selection, atSeconds: number | null, index: ItemIndex) {
+  const recipe = index.find(item)?.components ?? []
+  if (!recipe.length) return []
+  return heldBefore(steps, positionFor(steps, atSeconds), index)
+    .filter((step) => recipe.includes(itemKey(step.item, index)))
+    .slice(0, MAX_PARTS)
+    .map((step) => step.item)
+}
+
+/** The items an item bought at that second could be sold for: those held then. */
+export const sellable = (steps: BuildStep[], atSeconds: number | null, index: ItemIndex) =>
+  heldBefore(steps, positionFor(steps, atSeconds), index)
+
+/**
+ * Adds an item at its time, grown from the parts of its recipe the player held then. With six held already it is
+ * refused unless it replaces one of them.
+ */
 export function addItem(
   steps: BuildStep[],
   item: Selection,
-  place: BuildPlace,
+  role: BuildRole,
   index: ItemIndex,
   atSeconds: number | null = null,
+  replaces: Selection[] = [],
 ): BuildEdit {
   const key = itemKey(item, index)
-  if (positionOf(steps, key, index) >= 0) return moveItem(steps, key, place, index)
+  if (positionOf(steps, key, index) >= 0) return "TWICE"
   if (tooLow(item, index)) return "TIER"
   if (steps.length >= MAX_STEPS) return "STEPS"
-  if (place === "KEPT" && stepsAt(steps, "KEPT").length >= MAX_KEPT) return "KEPT"
-  return placed(steps, {
-    item: selectionOf(item.id ? item : (index.find(item) ?? item)),
-    from: [],
-    place,
-    atSeconds,
+  if (replaces.length > MAX_REPLACED) return "REPLACED"
+  const chosen = item.id ? item : (index.find(item) ?? item)
+  const from = heldParts(steps, chosen, atSeconds, index)
+  const gone = replaces.filter((entry) => !from.some((part) => itemKey(part, index) === itemKey(entry, index)))
+  const next = insert(steps, positionFor(steps, atSeconds), stepOf(chosen, role, atSeconds, from, gone))
+  if (!replacesHold(next, index)) return "GONE"
+  return heldCount(next, index) > MAX_HELD ? "HELD" : next
+}
+
+/** Takes an item out, and out of what later items say they replaced; of one listed twice, the later. */
+export function removeItem(steps: BuildStep[], key: string, index: ItemIndex): BuildStep[] {
+  const at = steps.map((step) => itemKey(step.item, index)).lastIndexOf(key)
+  return steps.flatMap((step, position) => {
+    if (position === at) return []
+    if (!names(step.replaces, key, index)) return [step]
+    const replaces = step.replaces!.filter((entry) => itemKey(entry, index) !== key)
+    return [replaces.length ? { ...step, replaces } : without(step, "replaces")]
   })
 }
 
-/** Takes an item out; of one a list written elsewhere names twice, the later. */
-export function removeItem(steps: BuildStep[], key: string, index: ItemIndex): BuildStep[] {
-  const at = steps.map((step) => itemKey(step.item, index)).lastIndexOf(key)
-  return steps.filter((_, position) => position !== at)
-}
-
-/** Puts an item one step earlier or later among those of its place. */
-export function shiftItem(steps: BuildStep[], key: string, by: -1 | 1, index: ItemIndex): BuildStep[] {
+/** Puts an item one step earlier or later in the order it was bought. */
+export function shiftItem(steps: BuildStep[], key: string, by: -1 | 1, index: ItemIndex): BuildEdit {
   const at = positionOf(steps, key, index)
   const step = steps[at]
-  if (!step) return steps
-  let to = at + by
-  while (steps[to] && steps[to]!.place !== step.place) to += by
-  if (!steps[to]) return steps
-  const rest = steps.filter((_, position) => position !== at)
-  return [...rest.slice(0, to), step, ...rest.slice(to)]
+  const to = at + by
+  if (!step || !steps[to]) return steps
+  const next = insert(
+    steps.filter((_, position) => position !== at),
+    to,
+    step,
+  )
+  if (!keepsOrder(next, to, step.atSeconds ?? null)) return "ORDER"
+  return replacesHold(next, index) || !replacesHold(steps, index) ? next : "GONE"
+}
+
+/** What an item was bought for. */
+export function setRole(steps: BuildStep[], key: string, role: BuildRole, index: ItemIndex): BuildStep[] {
+  const at = positionOf(steps, key, index)
+  return at < 0 || steps[at]!.role === role ? steps : withStep(steps, at, { role })
+}
+
+/** Marks an item sold for something nobody recorded, or held again. */
+export function setSold(steps: BuildStep[], key: string, sold: boolean, index: ItemIndex): BuildEdit {
+  const at = positionOf(steps, key, index)
+  if (at < 0 || !!steps[at]!.sold === sold) return steps
+  if (!sold && heldCount(steps, index) >= MAX_HELD) return "HELD"
+  return steps.map((step, position) => (position === at ? (sold ? { ...step, sold } : without(step, "sold")) : step))
 }
 
 /**
- * Replaces an item by the one it went into, which keeps it as a part. An item that was listed on its own takes the
- * part over instead. The time goes: it said when the lower item was held.
+ * Says an item was bought from another one's sale, or takes that back: one bought before it and held until then. An
+ * item taken back is held to the end again, so six held refuse it.
  */
-export function upgradeItem(steps: BuildStep[], key: string, target: Selection, index: ItemIndex): BuildEdit {
-  const step = steps[positionOf(steps, key, index)]
+export function toggleReplaced(steps: BuildStep[], key: string, gone: Selection, index: ItemIndex): BuildEdit {
+  const at = positionOf(steps, key, index)
+  if (at < 0) return steps
+  const goneKey = itemKey(gone, index)
+  const replaces = steps[at]!.replaces ?? []
+  const left = replaces.filter((entry) => itemKey(entry, index) !== goneKey)
+  if (left.length < replaces.length) {
+    const next = steps.map((step, position) =>
+      position === at ? (left.length ? { ...step, replaces: left } : without(step, "replaces")) : step,
+    )
+    return heldCount(next, index) > MAX_HELD ? "HELD" : next
+  }
+  if (goneKey === key) return "SAME"
+  if (replaces.length >= MAX_REPLACED) return "REPLACED"
+  if (!heldBefore(steps, at, index).some((step) => itemKey(step.item, index) === goneKey)) return "GONE"
+  return withStep(steps, at, { replaces: [...replaces, selectionOf(gone)] })
+}
+
+/**
+ * Records that an item went into a later one. One that is listed after it takes it as a part; otherwise the later item
+ * is added, at the second given or else as the latest, with the role of the one it grew from.
+ */
+export function upgradeItem(
+  steps: BuildStep[],
+  key: string,
+  target: Selection,
+  index: ItemIndex,
+  atSeconds: number | null = null,
+): BuildEdit {
+  const at = positionOf(steps, key, index)
+  const step = steps[at]
   const targetKey = itemKey(target, index)
   if (!step || targetKey === key) return steps
   if (tooLow(target, index)) return "TIER"
-  const listed = steps.find((entry) => itemKey(entry.item, index) === targetKey)
-  const parts = new Map(
-    [...(listed?.from ?? []), ...(step.from ?? []), step.item]
-      .map((part) => [itemKey(part, index), part] as const)
-      .filter(([partKey]) => partKey !== targetKey),
-  )
-  if (parts.size > MAX_PARTS) return "PARTS"
-  const from = [...parts.values()].map(selectionOf)
-  if (from.some((part) => !growsFrom(target, part, index))) return "LOWER"
-  if (listed)
-    return steps.flatMap((entry) => (entry === step ? [] : entry === listed ? [{ ...listed, from }] : [entry]))
-  return steps.map((entry) =>
-    entry === step ? { item: selectionOf(target), from, place: step.place, atSeconds: null } : entry,
-  )
+  if (!growsFrom(target, step.item, index)) return "LOWER"
+  const listed = positionOf(steps, targetKey, index)
+  if (listed >= 0) {
+    if (listed < at) return "ORDER"
+    if (names(steps[listed]!.from, key, index)) return steps
+    const from = steps[listed]!.from ?? []
+    if (from.length >= MAX_PARTS) return "PARTS"
+    return withStep(steps, listed, { from: [...from, selectionOf(step.item)] })
+  }
+  if (steps.length >= MAX_STEPS) return "STEPS"
+  if (atSeconds != null && step.atSeconds != null && atSeconds < step.atSeconds) return "ORDER"
+  const chosen = target.id ? target : (index.find(target) ?? target)
+  const place = Math.max(at + 1, positionFor(steps, atSeconds))
+  const next = insert(steps, place, stepOf(chosen, step.role ?? "CORE", atSeconds, [step.item]))
+  return keepsOrder(next, place, atSeconds) ? next : "ORDER"
 }
 
 /** Adds a part to an item, or takes it off. */
@@ -249,7 +393,10 @@ export function togglePart(steps: BuildStep[], key: string, part: Selection, ind
   const partKey = itemKey(part, index)
   const from = steps[at]!.from ?? []
   const left = from.filter((entry) => itemKey(entry, index) !== partKey)
-  if (left.length < from.length) return withStep(steps, at, { from: left })
+  if (left.length < from.length) {
+    const next = withStep(steps, at, { from: left })
+    return heldCount(next, index) > MAX_HELD ? "HELD" : next
+  }
   if (partKey === key) return "SAME"
   if (tooLow(part, index)) return "TIER"
   if (!growsFrom(steps[at]!.item, part, index)) return "LOWER"
@@ -270,16 +417,10 @@ export function setTime(
   const at = positionOf(steps, key, index)
   if (at < 0) return steps
   if (second != null && outside(second, duration)) return "TIME"
-  const inOrder = steps.every(({ atSeconds }, position) =>
-    second == null || atSeconds == null || position === at
-      ? true
-      : position < at
-        ? atSeconds <= second
-        : atSeconds >= second,
-  )
-  if (inOrder) return withStep(steps, at, { atSeconds: second })
+  if (keepsOrder(steps, at, second)) return withStep(steps, at, { atSeconds: second })
   const rest = steps.filter((_, position) => position !== at)
-  return placed(rest, { ...steps[at]!, atSeconds: second })
+  const next = insert(rest, positionFor(rest, second), { ...steps[at]!, atSeconds: second })
+  return replacesHold(next, index) || !replacesHold(steps, index) ? next : "GONE"
 }
 
 /**
@@ -306,24 +447,41 @@ export function editBuild(
 export function buildProblems(steps: BuildStep[], duration: number | null | undefined, index: ItemIndex) {
   const problems: { step: BuildStep; reason: BuildRefusal }[] = []
   const named = new Set<string>()
-  let kept = 0
+  const held = new Set<string>()
+  let previous: number | null = null
   steps.forEach((step, position) => {
     // One step has each reason once: an item listed twice that also names a part twice is said to repeat once.
     const reasons = new Set<BuildRefusal>()
     const key = itemKey(step.item, index)
     const from = step.from ?? []
     const parts = from.map((part) => itemKey(part, index))
+    const gone = (step.replaces ?? []).map((entry) => itemKey(entry, index))
     if (position >= MAX_STEPS) reasons.add("STEPS")
-    if (named.has(key) || new Set(parts).size < parts.length) reasons.add("TWICE")
-    named.add(key)
-    if (step.place === "KEPT" && ++kept > MAX_KEPT) reasons.add("KEPT")
+    if (named.has(key) || new Set(parts).size < parts.length || new Set(gone).size < gone.length) reasons.add("TWICE")
     if ([step.item, ...from].some((item) => tooLow(item, index))) reasons.add("TIER")
     if (parts.length > MAX_PARTS) reasons.add("PARTS")
-    if (parts.includes(key)) reasons.add("SAME")
+    if (parts.includes(key) || gone.includes(key)) reasons.add("SAME")
     if (from.some((part, at) => parts[at] !== key && !growsFrom(step.item, part, index))) reasons.add("LOWER")
-    if (step.atSeconds != null && outside(step.atSeconds, duration)) reasons.add("TIME")
+    if (gone.length > MAX_REPLACED) reasons.add("REPLACED")
+    for (const entry of new Set(gone)) {
+      if (entry !== key && !held.delete(entry)) reasons.add("GONE")
+    }
+    if (step.atSeconds != null) {
+      if (outside(step.atSeconds, duration)) reasons.add("TIME")
+      if (previous != null && step.atSeconds < previous) reasons.add("ORDER")
+      previous = step.atSeconds
+    }
+    for (const part of parts) held.delete(part)
+    named.add(key)
+    held.add(key)
     for (const reason of reasons) problems.push({ step, reason })
   })
+  // The items held to the end past the sixth: the last ones bought are those that do not fit.
+  const fate = fates(steps, index)
+  steps
+    .filter((_, at) => fate[at] === "HELD")
+    .slice(MAX_HELD)
+    .forEach((step) => problems.push({ step, reason: "HELD" }))
   return problems
 }
 

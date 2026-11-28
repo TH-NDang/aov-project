@@ -12,6 +12,7 @@ public record UserProfile(
         String timeZone,
         String dateFormat,
         @Nullable String currency,
+        boolean autoTranslate,
         @Nullable UUID avatarAssetId,
         @Nullable String avatarUrl,
         long version,

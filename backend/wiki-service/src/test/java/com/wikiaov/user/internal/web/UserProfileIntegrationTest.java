@@ -123,6 +123,30 @@ class UserProfileIntegrationTest {
     }
 
     @Test
+    void autoTranslateIsOffUntilChosenAndStaysWhenAClientDoesNotSendIt() throws Exception {
+        String subject = UUID.randomUUID().toString();
+        mvc.perform(get(BASE + "/users/me").with(person(subject))).andExpect(jsonPath("$.autoTranslate").value(false));
+
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
+                .content(profile(0, null))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.autoTranslate").value(false));
+
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json").content("""
+                {"displayName":"Test user","biography":"","locale":"en-US","timeZone":"Asia/Ho_Chi_Minh",
+                 "avatarAssetId":null,"expectedVersion":1,"autoTranslate":true}
+                """)).andExpect(status().isOk()).andExpect(jsonPath("$.autoTranslate").value(true));
+
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
+                .content(profile(2, null))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.autoTranslate").value(true));
+
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json").content("""
+                {"displayName":"Test user","biography":"","locale":"en-US","timeZone":"Asia/Ho_Chi_Minh",
+                 "avatarAssetId":null,"expectedVersion":3,"autoTranslate":false}
+                """)).andExpect(status().isOk()).andExpect(jsonPath("$.autoTranslate").value(false));
+    }
+
+    @Test
     void anUnknownCurrencyIsRejected() throws Exception {
         for (String currency : new String[] {"ZZZ", "vnd", ""}) {
             mvc.perform(put(BASE + "/users/me").with(person(UUID.randomUUID().toString()))

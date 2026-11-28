@@ -1,0 +1,71 @@
+/* ---------- A post read in the reader's language (ADR-037) ---------- */
+.ps-translate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: -6px 0 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+.ps-translate > svg {
+  flex: none;
+}
+.ps-translate[data-error] > span {
+  color: var(--hub-text-soft);
+}
+.ps-translate-ask svg {
+  color: var(--hub-accent-strong);
+}
+
+/* What each picture says: a margin note under the pictures, one line per picture with other words. */
+.ps-image-notes {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--hub-accent-strong);
+  border-radius: 0 var(--aov-radius-control) var(--aov-radius-control) 0;
+  background: var(--hub-accent-soft);
+  list-style: none;
+  font-size: 14px;
+  line-height: 21px;
+}
+.ps-image-notes li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  color: var(--hub-text);
+  overflow-wrap: anywhere;
+}
+.ps-image-note-mark {
+  color: var(--hub-accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+/* On the dark stage of a news post the note sits on the picture's light, not on the page. */
+.ps-news .ps-image-notes {
+  border-left-color: rgb(255 255 255 / 70%);
+  border-radius: 0;
+  background: rgb(0 0 0 / 34%);
+}
+.ps-news .ps-image-notes li {
+  color: rgb(255 255 255 / 90%);
+}
+.ps-news .ps-image-note-mark {
+  color: #fff;
+}
+
+@media (max-width: 520px) {
+  /* A phone keeps the mark above the words, so a long line never squeezes into a narrow column. */
+  .ps-image-notes li {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+}

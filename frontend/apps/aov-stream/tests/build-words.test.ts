@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import type { BuildStep } from "@aov/community-contracts"
 import { buildOf, type LineupRecord } from "../src/lib/build-view.ts"
-import { loadoutWords, recordWords } from "../src/lib/build-words.ts"
+import { loadoutWords, pathNotes, recordWords } from "../src/lib/build-words.ts"
 import { catalogOf, participant as seat, reference } from "./fixtures/loadout.ts"
 
 const vi = (text: string) => text
@@ -14,6 +15,7 @@ const catalog = catalogOf({
     reference("boots", 2, "Giày hộ vệ"),
     reference("spear", 3, "Thương Longinus"),
     reference("armor", 3, "Giáp hộ mệnh"),
+    reference("sword", 2, "Kiếm"),
   ],
 })
 
@@ -22,17 +24,60 @@ test("a loadout is told in words, each kind by its name", () => {
     spell: { id: "flash" },
     enchantments: { status: "PARTIAL", entries: [{ selection: { id: "demon" }, primary: true, tier: 3 }] },
     build: [
-      { item: { id: "boots" }, place: "KEPT" },
-      { item: { id: "spear" }, place: "REPLACED" },
-      { item: { id: "armor" }, place: "SITUATIONAL" },
-      { item: { name: "Món lạ" }, place: "KEPT" },
+      { item: { id: "boots" }, role: "CORE" },
+      { item: { id: "spear" }, role: "CORE", sold: true },
+      { item: { id: "armor" }, role: "PROTECTIVE" },
+      { item: { name: "Món lạ" }, role: "CORE" },
     ],
   })
 
   assert.equal(
     loadoutWords(player, catalog, buildOf(player, catalog), vi),
-    "Phụ trợ: Tốc biến. Phù hiệu: Ma tính. Trang bị: Giày hộ vệ, Món lạ. Đã đổi: Thương Longinus. Tình huống: Giáp hộ mệnh.",
+    "Phụ trợ: Tốc biến. Phù hiệu: Ma tính. Trang bị: Giày hộ vệ, Món lạ. Bảo hộ: Giáp hộ mệnh. Đã bán: Thương Longinus.",
   )
+})
+
+const path = (...build: BuildStep[]) => buildOf(seat({ build }), catalog)!.path
+
+test("a line of the path tells how long a lower item was held and what it went into", () => {
+  const [sword, spear] = path(
+    { item: { id: "sword" }, role: "CORE", atSeconds: 110 },
+    { item: { id: "spear" }, role: "CORE", from: [{ id: "sword" }], atSeconds: 950 },
+  )
+
+  assert.deepEqual(pathNotes(sword!, catalog, vi), {
+    tier: "Cấp 2",
+    fate: "giữ 14 phút, lên Thương Longinus",
+    lineage: null,
+  })
+  assert.deepEqual(pathNotes(spear!, catalog, vi), { tier: null, fate: null, lineage: "từ Kiếm mua lúc 1:50" })
+  assert.equal(pathNotes(sword!, catalog, en).fate, "held 14 min, then built into Thương Longinus")
+})
+
+test("a line of the path tells when an item was sold and for what", () => {
+  const [boots, , armor] = path(
+    { item: { id: "boots" }, role: "CORE", atSeconds: 220 },
+    { item: { id: "spear" }, role: "CORE", sold: true },
+    { item: { id: "armor" }, role: "PROTECTIVE", replaces: [{ id: "boots" }], atSeconds: 1300 },
+  )
+  const notes = path({ item: { id: "spear" }, role: "CORE", sold: true }).map((step) => pathNotes(step, catalog, vi))
+
+  assert.deepEqual(pathNotes(boots!, catalog, vi), {
+    tier: "Cấp 2",
+    fate: "bán lúc 21:40 lấy Giáp hộ mệnh",
+    lineage: null,
+  })
+  assert.equal(pathNotes(armor!, catalog, vi).lineage, "thay Giày hộ vệ")
+  assert.deepEqual(notes, [{ tier: null, fate: "bán trước khi hết ván", lineage: null }])
+})
+
+test("a line without the times of its items tells what became of it without them", () => {
+  const [sword] = path(
+    { item: { id: "sword" }, role: "CORE" },
+    { item: { id: "spear" }, role: "CORE", from: [{ id: "sword" }] },
+  )
+
+  assert.equal(pathNotes(sword!, catalog, vi).fate, "lên Thương Longinus")
 })
 
 test("what nobody saw is left out of the words, and a loadout without anything has none", () => {

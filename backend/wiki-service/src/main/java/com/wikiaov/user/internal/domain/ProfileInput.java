@@ -9,8 +9,9 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Validated profile content; never contains identity or privileges supplied by the client. A null date format or
- * currency keeps the one already saved, so a client that does not know the field cannot erase it.
+ * Validated profile content; never contains identity or privileges supplied by the client. A null date format,
+ * currency or auto-translate choice keeps the one already saved, so a client that does not know the field cannot erase
+ * it.
  */
 public record ProfileInput(
         String displayName,
@@ -20,7 +21,8 @@ public record ProfileInput(
         @Nullable String dateFormat,
         @Nullable UUID avatarAssetId,
         long expectedVersion,
-        @Nullable String currency
+        @Nullable String currency,
+        @Nullable Boolean autoTranslate
 ) {
     public ProfileInput {
         displayName = displayName == null ? "" : displayName.strip();

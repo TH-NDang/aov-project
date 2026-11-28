@@ -10,6 +10,7 @@ import { SpellPicker } from "../../components/game/spell-picker"
 import { usePlayheadValue } from "../../components/game/use-playhead"
 import { LaneIcon } from "../../components/primitives"
 import { useShownGame } from "../../data/pending-turns"
+import { useBuildRoles } from "../../data/use-esports-data"
 import { itemIndex } from "../../model/build"
 import type { GameSeat } from "../../model/game-view"
 import { MAIN_EMBLEM_TIER, type LoadoutPart } from "../../model/loadout"
@@ -162,6 +163,7 @@ function Part({
 }) {
   const now = useSeenNow(desk)
   const items = useMemo(() => itemIndex(catalog.items), [catalog.items])
+  const roles = useBuildRoles(part === "equipment" ? participant.hero?.id : null)
   switch (part) {
     case "spell":
       return (
@@ -216,6 +218,7 @@ function Part({
           <BuildEditor
             participant={participant}
             index={items}
+            roles={roles.data}
             duration={content.durationSeconds}
             nowGame={now}
             stamp={choices.stamp}

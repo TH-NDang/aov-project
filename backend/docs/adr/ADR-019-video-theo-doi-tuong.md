@@ -92,4 +92,4 @@ Chủ dự án thấy mỗi kỹ năng có ô thêm video và chỗ hiện riên
 ## Sửa đổi 28/11/2026: video của patch
 
 Patch variant thành đối tượng `PATCH`, với ba mục đích `PATCH_PREVIEW`, `PATCH_OVERVIEW`, `PATCH_REVIEW`; video thêm
-thời điểm đăng và ngôn ngữ. Video từng tướng sau cập nhật vẫn là video của tướng với `PATCH_CHANGE`. Chi tiết ở ADR-037.
+thời điểm đăng và ngôn ngữ. Video từng tướng sau cập nhật vẫn là video của tướng với `PATCH_CHANGE`. Chi tiết ở ADR-038.

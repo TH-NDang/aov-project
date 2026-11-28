@@ -2,6 +2,7 @@ package com.wikiaov.community.platform;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -31,6 +32,16 @@ public record CommunityActor(
         }
         return new CommunityActor(key(jwt), name == null ? "Member" : name,
                 token.getAuthorities().stream().map(Object::toString).collect(Collectors.toUnmodifiableSet()));
+    }
+
+    /** The key of the person signed in, or null for an anonymous request or a service account. */
+    public static @Nullable String personKey() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof JwtAuthenticationToken token)
+                || token.getToken().hasClaim("client_id") || token.getToken().getSubject() == null) {
+            return null;
+        }
+        return key(token.getToken());
     }
 
     /**

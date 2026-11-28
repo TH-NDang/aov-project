@@ -203,18 +203,20 @@ class CompetitionLineupsApiIntegrationTest {
         var competition = CompetitionFixture.published(api);
         competition.game().pick("RED", 1, FLORENTINO)
                 .seen("RED", 1, Map.of("equipmentSnapshots", List.of(inventory(300, "Early item")), "build",
-                        List.of(Map.of("item", Map.of("name", "Boots"), "place", "REPLACED"),
-                                Map.of("item", BLADE, "place", "KEPT"),
-                                Map.of("item", Map.of("name", "Revive"), "place", "SITUATIONAL"))))
+                        List.of(Map.of("item", Map.of("name", "Boots"), "role", "CORE"),
+                                Map.of("item", BLADE, "role", "CORE"),
+                                Map.of("item", Map.of("name", "Revive"), "role", "PROTECTIVE", "replaces",
+                                        List.of(Map.of("name", "Boots"))))))
                 .publish();
 
         var builds = builds(competition, FLORENTINO);
+        var build = builds.path("builds").get(0);
 
-        assertThat(builds.path("items").findValuesAsString("name")).containsExactly("Blade", "Boots", "Revive");
-        assertThat(builds.path("items").get(0).path("tier").asInt()).isEqualTo(3);
-        assertThat(builds.path("builds").get(0).path("items").get(0).asInt()).isZero();
-        assertThat(builds.path("builds").get(0).path("replaced").get(0).asInt()).isEqualTo(1);
-        assertThat(builds.path("builds").get(0).path("situational").get(0).asInt()).isEqualTo(2);
+        assertThat(builds.path("items").findValuesAsString("name")).containsExactly("Boots", "Blade", "Revive");
+        assertThat(builds.path("items").get(1).path("tier").asInt()).isEqualTo(3);
+        assertThat(build.path("items")).hasToString("[0,1]");
+        assertThat(build.path("protective")).hasToString("[2]");
+        assertThat(build.path("sold")).hasToString("[0]");
     }
 
     @Test

@@ -1,4 +1,5 @@
 import type {
+  BuildRoles,
   Catalog,
   DocumentView,
   GameContent,
@@ -74,6 +75,8 @@ export const tournamentKeys = {
   one: (kind: RecordKind, actorKey: string, id: string | null) => [...all, kind, actorKey, "one", id] as const,
   /** The games of one series, or every game when no series is named. */
   seriesGames: (actorKey: string, seriesId?: string) => [...all, "games", actorKey, seriesId ?? "*"] as const,
+  /** The role last recorded for each item, for one hero first; under "games", so a saved game refreshes it. */
+  buildRoles: (actorKey: string, heroId: string) => [...all, "games", actorKey, "build-roles", heroId] as const,
   /** The season and patch of each game of a tournament; under "games", so a saved game refreshes it. */
   gamePatches: (actorKey: string, tournamentId: string) =>
     [...all, "games", actorKey, "patches", tournamentId] as const,
@@ -300,6 +303,9 @@ export function createTournamentApi(request: Request = communityRequest) {
       request<PageSlice<LinkMention>>(withQuery("/admin/link-review", { kind, page, size: 50 }), { signal }),
     /** How many rows each kind has, those with none included. */
     linkReviewFacets: (signal?: AbortSignal) => request<LinkMentionCount[]>("/admin/link-review/facets", { signal }),
+    /** The role last recorded for each item, for the hero first and else for any hero. */
+    buildRoles: (heroId: string, signal?: AbortSignal) =>
+      request<BuildRoles>(withQuery("/admin/build-roles", { heroId }), { signal }),
     gamePatches: (tournamentId: string, signal?: AbortSignal) =>
       request<GamePatchScope[]>(`/admin/tournaments/${encodeURIComponent(tournamentId)}/game-patches`, { signal }),
     catalog: (

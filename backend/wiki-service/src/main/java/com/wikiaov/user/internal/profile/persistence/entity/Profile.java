@@ -42,6 +42,8 @@ public class Profile implements Persistable<UUID> {
 
     @Column(length = 3)
     private @Nullable String currency;
+    @Column(name = "auto_translate", nullable = false)
+    private boolean autoTranslate;
     @Column(name = "avatar_asset_id")
     private @Nullable UUID avatarAssetId;
     @Version
@@ -75,6 +77,9 @@ public class Profile implements Persistable<UUID> {
         }
         if (input.currency() != null) {
             currency = input.currency();
+        }
+        if (input.autoTranslate() != null) {
+            autoTranslate = input.autoTranslate();
         }
         avatarAssetId = input.avatarAssetId();
         // Every accepted save must dirty the entity, even when a test clock is fixed.

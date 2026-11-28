@@ -22,6 +22,8 @@ export type PublicAccountOptionsProps = {
   onSignIn: () => Promise<void>
   onSignOut?: () => void
   children?: ReactNode
+  /** Rows only this app has, such as a switch, set after the shared settings and before the appearance. */
+  settings?: ReactNode
 }
 type Props = PublicAccountOptionsProps & { triggerClassName?: string }
 /** `sheet` gives the settings and the links the roomier rows of the preferences sheet phones open. */
@@ -130,6 +132,7 @@ export function PublicAccountOptions({
   onSignIn,
   onSignOut,
   children,
+  settings,
 }: PublicAccountOptionsProps) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
@@ -180,6 +183,7 @@ export function PublicAccountOptions({
         languages={languages}
         theme={theme}
         onThemeChange={onThemeChange}
+        settings={settings}
       />
       {signedIn && (
         <button className="public-account-logout" type="button" onClick={onSignOut}>
@@ -247,10 +251,11 @@ export function PublicAccountSettings({
   ],
   theme,
   onThemeChange,
+  settings,
   layout = "menu",
 }: Pick<
   PublicAccountOptionsProps,
-  "product" | "locale" | "onLocaleChange" | "languages" | "theme" | "onThemeChange"
+  "product" | "locale" | "onLocaleChange" | "languages" | "theme" | "onThemeChange" | "settings"
 > & {
   layout?: PublicAccountLayout
 }) {
@@ -329,6 +334,7 @@ export function PublicAccountSettings({
           contentClassName="public-account-theme public-account-language-menu"
         />
       </div>
+      {settings}
       {theme && onThemeChange && (
         <fieldset className="public-account-appearance">
           <legend>
@@ -347,6 +353,42 @@ export function PublicAccountSettings({
           </div>
         </fieldset>
       )}
+    </div>
+  )
+}
+
+/** An on or off setting in the row style of the settings above it. */
+export function PublicAccountSwitch({
+  icon,
+  label,
+  checked,
+  onChange,
+  disabled = false,
+}: {
+  icon: ReactNode
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled?: boolean
+}) {
+  const id = useId()
+  return (
+    <div className="public-account-language public-account-switch">
+      <label htmlFor={id}>
+        {icon}
+        {label}
+      </label>
+      <button
+        id={id}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        className="public-account-switch-control"
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+      >
+        <span aria-hidden="true" />
+      </button>
     </div>
   )
 }

@@ -37,7 +37,7 @@ const momentOf = (video: AdminVideo) =>
 
 /**
  * Videos about one patch in Vietnam, oldest first with the release between them, and suggestions read from the channel
- * around the release for an editor to check (ADR-037).
+ * around the release for an editor to check (ADR-038).
  */
 export function PatchVideos({ variant, data }: { variant: Variant; data: PublicationOverview }) {
   const capabilities = useSession().actor?.capabilities ?? []

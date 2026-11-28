@@ -14,56 +14,49 @@ export interface NavItem {
   capability?: string
 }
 
-export interface NavSection {
-  title: string
-  icon: AovNavIconName
-  items: NavItem[]
-}
+/** The five places of Admin. Each lists its pages in short groups. */
+export type NavAreaKey = "home" | "wiki" | "game" | "competition" | "system"
 
 export interface NavGroup {
-  label: string
+  /** A short heading; a group that is the only one of its area goes without. */
+  title?: string
   items: NavItem[]
-  sections?: NavSection[]
 }
 
-export const NAV_GROUPS: NavGroup[] = [
+export interface NavArea {
+  key: NavAreaKey
+  title: string
+  /** The name under the area's mark on the rail and the phone bar, where the full title does not fit. */
+  short?: string
+  icon: AovNavIconName
+  groups: NavGroup[]
+}
+
+export const NAV_AREAS: NavArea[] = [
   {
-    label: "Tổng quan",
-    items: [
+    key: "home",
+    title: "Tổng quan",
+    icon: "home",
+    groups: [
       {
-        title: "Bảng điều khiển",
-        icon: "dashboard",
-        to: "/",
-        description: "Số liệu và việc cần xử lý",
+        items: [
+          {
+            title: "Bảng điều khiển",
+            icon: "dashboard",
+            to: "/",
+            description: "Số liệu và việc cần xử lý",
+          },
+        ],
       },
     ],
   },
   {
-    label: "Dự án",
-    items: [
-      {
-        title: "Quản lý tệp",
-        icon: "imageLibrary",
-        to: "/files",
-        description: "Ảnh công khai, tệp nguồn riêng tư và dung lượng R2",
-        capability: "catalog:read",
-      },
-      {
-        title: "Người dùng",
-        icon: "users",
-        to: "/users",
-        description: "Quản lý hồ sơ người dùng",
-        capability: "user:read",
-      },
-    ],
-  },
-  {
-    label: "Wiki",
-    items: [],
-    sections: [
+    key: "wiki",
+    title: "Wiki",
+    icon: "wiki",
+    groups: [
       {
         title: "Sổ nhân vật",
-        icon: "characterBook",
         items: [
           {
             title: "Tướng",
@@ -98,7 +91,6 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       {
         title: "Kho trang bị",
-        icon: "armory",
         items: [
           {
             title: "Trang bị",
@@ -132,7 +124,6 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       {
         title: "Lối chơi",
-        icon: "competition",
         items: [
           {
             title: "Chế độ chơi",
@@ -146,54 +137,59 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Quản lý game",
-    items: [
+    key: "game",
+    title: "Quản lý game",
+    short: "Game",
+    icon: "game",
+    groups: [
       {
-        title: "Phiên bản và thị trường",
-        icon: "releases",
-        to: "/game-configuration",
-        description: "Mùa, patch và lịch phát hành",
-        capability: "catalog:read",
-      },
-      {
-        title: "Video",
-        icon: "videos",
-        to: "/videos",
-        description: "Video của tướng, kỹ năng, trang phục, duyệt và nhập dữ liệu thu thập",
-        capability: "catalog:read",
-      },
-      {
-        title: "Theo dõi cập nhật",
-        icon: "patchWatch",
-        to: "/patch-watch",
-        description: "Bài cập nhật mới từ trang chính thức và máy chủ thử nghiệm",
-        badge: "patchNotes",
-        capability: "catalog:read",
-      },
-      {
-        title: "Thuật ngữ & tham chiếu",
-        to: "/terminology",
-        icon: "glossary",
-        description: "Tên gọi khác, cách hiển thị và xem trước tham chiếu",
+        items: [
+          {
+            title: "Phiên bản và thị trường",
+            icon: "releases",
+            to: "/game-configuration",
+            description: "Mùa, patch và lịch phát hành",
+            capability: "catalog:read",
+          },
+          {
+            title: "Theo dõi cập nhật",
+            icon: "patchWatch",
+            to: "/patch-watch",
+            description: "Bài cập nhật mới từ trang chính thức và máy chủ thử nghiệm",
+            badge: "patchNotes",
+            capability: "catalog:read",
+          },
+          {
+            title: "Video",
+            icon: "videos",
+            to: "/videos",
+            description: "Video của tướng, kỹ năng, trang phục, duyệt và nhập dữ liệu thu thập",
+            capability: "catalog:read",
+          },
+          {
+            title: "Thuật ngữ & tham chiếu",
+            to: "/terminology",
+            icon: "glossary",
+            description: "Tên gọi khác, cách hiển thị và xem trước tham chiếu",
+          },
+        ],
       },
     ],
   },
   {
-    label: "Giải đấu & trực tiếp",
-    items: [
+    key: "competition",
+    title: "Giải đấu",
+    icon: "competition",
+    groups: [
       {
-        title: "Livestream",
-        icon: "streams",
-        to: "/streams",
-        description: "Kênh và trạng thái phát trực tiếp",
-        soon: true,
-      },
-    ],
-    sections: [
-      {
-        title: "Quản lý thi đấu",
-        icon: "competition",
+        title: "Thi đấu",
         items: [
+          {
+            title: "Giải đấu",
+            icon: "tournaments",
+            to: "/tournaments",
+            description: "Giải đấu, lịch thi đấu và kết quả",
+          },
           {
             title: "Hồ sơ thi đấu",
             icon: "competitionProfile",
@@ -210,12 +206,11 @@ export const NAV_GROUPS: NavGroup[] = [
               "/pages",
             ],
           },
-          {
-            title: "Giải đấu",
-            icon: "tournaments",
-            to: "/tournaments",
-            description: "Giải đấu, lịch thi đấu và kết quả",
-          },
+        ],
+      },
+      {
+        title: "Kiểm duyệt",
+        items: [
           {
             title: "Liên kết cần xem",
             icon: "page",
@@ -227,6 +222,43 @@ export const NAV_GROUPS: NavGroup[] = [
             icon: "moderation",
             to: "/page-requests",
             description: "Đại diện trang và báo cáo cộng đồng",
+          },
+        ],
+      },
+      {
+        title: "Trực tiếp",
+        items: [
+          {
+            title: "Livestream",
+            icon: "streams",
+            to: "/streams",
+            description: "Kênh và trạng thái phát trực tiếp",
+            soon: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "system",
+    title: "Hệ thống",
+    icon: "system",
+    groups: [
+      {
+        items: [
+          {
+            title: "Quản lý tệp",
+            icon: "imageLibrary",
+            to: "/files",
+            description: "Ảnh công khai, tệp nguồn riêng tư và dung lượng R2",
+            capability: "catalog:read",
+          },
+          {
+            title: "Người dùng",
+            icon: "users",
+            to: "/users",
+            description: "Quản lý hồ sơ người dùng",
+            capability: "user:read",
           },
         ],
       },
@@ -262,7 +294,7 @@ export const MEDIA_NAV: NavItem[] = [
 ]
 
 export const NAV_ITEMS: NavItem[] = [
-  ...NAV_GROUPS.flatMap((group) => [...group.items, ...(group.sections ?? []).flatMap((section) => section.items)]),
+  ...NAV_AREAS.flatMap((area) => area.groups.flatMap((group) => group.items)),
   {
     title: "Hồ sơ của tôi",
     icon: "profile",
@@ -290,6 +322,12 @@ export function activeNavItem(pathname: string, items: NavItem[] = NAV_ITEMS) {
         length = path.length
       }
   return active
+}
+
+/** The area that lists the page being read, if the navigation lists it. */
+export function activeNavArea(pathname: string): NavArea | undefined {
+  const item = activeNavItem(pathname)
+  return item && NAV_AREAS.find((area) => area.groups.some((group) => group.items.includes(item)))
 }
 
 const profilePageIcons: Record<string, AovNavIconName> = {

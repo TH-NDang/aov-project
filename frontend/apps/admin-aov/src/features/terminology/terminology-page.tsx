@@ -52,6 +52,7 @@ import { useSearchParam } from "@/hooks/use-search-param"
 import { NativeSelect } from "@/components/native-select"
 
 const ReferencePreview = memo(EntityRichText)
+const catalogLanguageOrder = languageOptions.map((option) => option.value)
 
 export function TerminologyPage() {
   const [params, setParams] = useSearchParams()
@@ -450,6 +451,8 @@ export function TerminologyPage() {
             availableKeys={availableKeys}
             resolveIcon={catalog.resolveIcon}
             renderAliasAction={renderHeroAliasEditor}
+            languages={catalogLanguageOrder}
+            onLocaleChange={setLocale}
           />
         )}
         <Sheet

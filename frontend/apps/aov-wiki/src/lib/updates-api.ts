@@ -27,7 +27,7 @@ export interface PatchRelease {
   effectiveAt: string | null
   /** The pages of the official notes, each named by its language or market; older answers leave it out. */
   sources?: PatchSourceLink[]
-  /** When each market gets the patch, ordered like the markets; older answers leave it out (ADR-037). */
+  /** When each market gets the patch, ordered like the markets; older answers leave it out (ADR-038). */
   markets?: PatchMarketRelease[]
 }
 

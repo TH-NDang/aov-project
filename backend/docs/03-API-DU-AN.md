@@ -797,7 +797,7 @@ Trả patch families cùng release/effective metadata của region yêu cầu. M
 `{url, label, locale, region}` là link tới ghi chú cập nhật chính thức của variant, theo thứ tự biên tập viên chọn (rỗng
 khi chưa có; `locale`, `region` bỏ khi trống). Chi tiết patch (mục 10) trả cùng trường này.
 
-Từ 28/11/2026 (ADR-037) mỗi patch có thêm `markets`: lịch của variant ở mọi thị trường có lịch không bị hủy, kể cả thị
+Từ 28/11/2026 (ADR-038) mỗi patch có thêm `markets`: lịch của variant ở mọi thị trường có lịch không bị hủy, kể cả thị
 trường đang khóa, theo thứ tự thị trường. Mỗi dòng `{region, timeZone, effectiveAt?, effectiveOn?}`: `effectiveAt` khi
 biết thời điểm chính xác, `effectiveOn` (ngày theo lịch của thị trường) khi chỉ biết ngày, kể cả khi ngày đã được xác
 nhận. Thị trường không có lịch không xuất hiện. Chi tiết patch trả cùng trường này.
@@ -1963,7 +1963,7 @@ Request:
 
 Backend validate ruleset assignment của region tại effective time.
 
-### 42.1 Thay lịch của cả patch (28/11/2026, ADR-037)
+### 42.1 Thay lịch của cả patch (28/11/2026, ADR-038)
 
 ```http
 PUT /api/wiki/v1/admin/patch-variants/{variantId}/releases
@@ -3044,7 +3044,7 @@ change set, sai trả 422 `HERO_INVALID_CONTENT`; change set không tồn tại 
   `PUT` cùng đường dẫn cần `patch:write`, nhận `{sources: [{url, label, locale, region}]}` và thay cả danh sách: tối đa
   20 link (10 trước 28/11/2026), `url` HTTP(S) tối đa 2.048 ký tự và không trùng, `label` không rỗng tối đa 80 ký tự
   (cắt khoảng trắng hai đầu), `locale` bỏ trống hoặc là thẻ BCP 47 chuẩn, `region` bỏ trống hoặc là mã thị trường có
-  thật (`VN`, `TH`, `TW`, `ID`, ...; ADR-037). Sai trả 422 `PATCH_INVALID`, variant không tồn tại trả 404. Lưu khi danh
+  thật (`VN`, `TH`, `TW`, `ID`, ...; ADR-038). Sai trả 422 `PATCH_INVALID`, variant không tồn tại trả 404. Lưu khi danh
   sách đổi thì ghi audit `PATCH_SOURCES_UPDATED` (aggregate PATCH, id variant). Link chung là nguồn của mọi change set
   `PATCH_NOTES` không có `sourceUrl` riêng và hiện trên trang patch công khai. Từ 28/11/2026 Admin chỉ ghi link chung,
   không gửi `sourceUrl` riêng cho change set mới (ADR-016).
@@ -3342,7 +3342,7 @@ GET `/api/wiki/v1/videos` (công khai)
   là video `HERO` với `purpose=SKILL_DEMO`.
 - Trả `{items: [...]}`, tối đa 200 dòng `PUBLISHED`, theo `displayOrder` rồi ngày đăng mới nhất. Mỗi dòng
   không có `status`, `origin`, `version`. Cache: chính sách public của mục 51. Lọc theo patch do client thực hiện.
-- `subjectKind=PATCH` (28/11/2026, ADR-037) nhận id variant và trả video của patch cùng video `PATCH_CHANGE` có
+- `subjectKind=PATCH` (28/11/2026, ADR-038) nhận id variant và trả video của patch cùng video `PATCH_CHANGE` có
   `patchVariantId` là variant đó (thường là video của tướng), theo `publishedOn` rồi `publishedAt` cũ trước, dòng không
   có ngày xếp cuối. Client tự chia trước và sau phát hành theo `markets` của patch.
 - Mỗi dòng có thêm `publishedAt` (thời điểm đăng) và `locale` (ngôn ngữ của video) khi biết.

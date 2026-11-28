@@ -54,7 +54,7 @@ function dayOf(release: PatchMarketRelease) {
 }
 
 /**
- * When each market got the patch and where it published its notes, one row per market (ADR-037). Markets that updated
+ * When each market got the patch and where it published its notes, one row per market (ADR-038). Markets that updated
  * on the same day read alike at a glance; the one that came earlier carries how many days it led by.
  */
 export function PatchMarketBoard({

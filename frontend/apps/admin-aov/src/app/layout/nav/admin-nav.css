@@ -1,0 +1,631 @@
+/*
+ * Admin navigation: a rail of five areas on the night colour, the pages of one area beside it, and on compact screens a
+ * bar of the same areas at the bottom with a sheet of tiles. In the components layer so utilities can still override.
+ */
+@layer components {
+  /* ---------- Shell ---------- */
+  .adm-shell {
+    display: flex;
+    width: 100%;
+    height: 100svh;
+    overflow: hidden;
+    background: var(--background);
+  }
+  .adm-main {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    height: 100svh;
+    overflow: hidden;
+    background: var(--background);
+  }
+
+  /* ---------- Rail ---------- */
+  .adm-rail {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 76px;
+    height: 100svh;
+    padding: 12px 0;
+    border-right: 1px solid var(--aov-wiki-line);
+    background: var(--aov-wiki-night);
+    color: var(--aov-wiki-text-muted);
+  }
+  .adm-rail-brand,
+  .adm-rail-search,
+  .adm-rail-tool,
+  .adm-rail-account,
+  .adm-task-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    border-radius: var(--aov-radius-card);
+    color: inherit;
+    outline: none;
+  }
+  .adm-rail-brand {
+    width: 44px;
+    height: 44px;
+  }
+  .adm-rail-brand svg {
+    width: 32px;
+    height: 32px;
+  }
+  .adm-rail-search,
+  .adm-rail-tool {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--aov-wiki-line-strong);
+    background: var(--aov-wiki-panel-deep);
+    cursor: pointer;
+  }
+  .adm-rail-tool {
+    border-color: transparent;
+    background: none;
+  }
+  .adm-rail-search svg,
+  .adm-rail-tool svg {
+    width: 20px;
+    height: 20px;
+  }
+  .adm-rail-search:hover,
+  .adm-rail-tool:hover {
+    background: var(--aov-wiki-panel);
+    color: var(--aov-wiki-text);
+  }
+  .adm-rail-account {
+    padding: 2px;
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+  }
+  .adm-rail-account:hover,
+  .adm-rail-account[data-state="open"] {
+    border-color: var(--aov-wiki-gold);
+  }
+  .adm-task-mark {
+    width: 40px;
+    height: 40px;
+  }
+  .adm-rail .adm-task-mark:hover {
+    background: var(--aov-wiki-panel);
+  }
+  .adm-rail-brand:focus-visible,
+  .adm-rail-search:focus-visible,
+  .adm-rail-tool:focus-visible,
+  .adm-rail-account:focus-visible,
+  .adm-task-mark:focus-visible,
+  .adm-rail-area:focus-visible .adm-rail-socket {
+    outline: 2px solid var(--aov-wiki-gold);
+    outline-offset: 2px;
+  }
+
+  .adm-rail-areas {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    margin-top: 4px;
+    padding: 10px 4px 0;
+    border-top: 1px solid var(--aov-wiki-line);
+  }
+  .adm-rail-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    padding: 6px 0 8px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: 500 12px/16px var(--aov-font-sans);
+    cursor: pointer;
+    outline: none;
+  }
+  .adm-rail-socket {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 40px;
+    border: 1px solid transparent;
+    border-radius: var(--aov-radius-card);
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+  }
+  .adm-rail-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .adm-rail-area:hover {
+    color: var(--aov-wiki-text);
+  }
+  .adm-rail-area:hover .adm-rail-socket {
+    background: var(--aov-wiki-panel);
+  }
+  .adm-rail-area[data-shown] {
+    color: var(--aov-wiki-text);
+  }
+  .adm-rail-area[data-shown] .adm-rail-socket {
+    border-color: var(--aov-wiki-line-strong);
+    background: var(--aov-wiki-panel-high);
+  }
+  /* The area of the page being read glows in gold, like a selected slot in the game's menus. */
+  .adm-rail-area[data-current] {
+    color: var(--aov-wiki-gold);
+  }
+  .adm-rail-area[data-current] .adm-rail-socket {
+    border-color: var(--aov-wiki-gold);
+    background:
+      radial-gradient(circle at 50% 45%, color-mix(in oklch, var(--aov-wiki-gold) 24%, transparent), transparent 72%),
+      var(--aov-wiki-panel-deep);
+    color: var(--aov-wiki-gold-bright);
+    box-shadow:
+      inset 0 0 0 2px var(--aov-wiki-night),
+      inset 0 0 0 3px color-mix(in oklch, var(--aov-wiki-gold) 40%, transparent),
+      0 0 16px -4px color-mix(in oklch, var(--aov-wiki-gold) 70%, transparent);
+  }
+  .adm-rail-area[data-current]::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: -4px;
+    width: 3px;
+    height: 24px;
+    border-radius: 0 var(--aov-radius-pill) var(--aov-radius-pill) 0;
+    background: var(--aov-wiki-gold);
+    box-shadow: 0 0 8px var(--aov-wiki-gold);
+  }
+  .adm-rail-count {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--aov-wiki-gold);
+    box-shadow: 0 0 0 2px var(--aov-wiki-night);
+    color: var(--aov-wiki-night);
+    font: 700 12px/20px var(--aov-font-sans);
+    text-align: center;
+  }
+  .adm-rail-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  /* ---------- Panel and floating list ---------- */
+  .adm-panel {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    height: 100svh;
+    border-right: 1px solid var(--sidebar-border);
+    background: var(--sidebar);
+    color: var(--sidebar-foreground);
+  }
+  .adm-panel {
+    width: 232px;
+  }
+  .adm-flyout {
+    display: flex;
+    flex-direction: column;
+    max-height: min(560px, calc(100svh - 24px));
+    overflow: hidden;
+    border-radius: var(--aov-radius-card);
+  }
+  .adm-area-head {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 60px;
+    padding: 0 8px 0 16px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--sidebar-border);
+  }
+  .adm-flyout .adm-area-head {
+    min-height: 52px;
+  }
+  /* The area's own mark, large and faint behind its name. */
+  .adm-area-crest {
+    position: absolute;
+    top: 58%;
+    right: 44px;
+    width: 76px;
+    height: 76px;
+    color: var(--aov-accent);
+    opacity: 0.08;
+    pointer-events: none;
+    translate: 0 -50%;
+  }
+  .adm-area-title {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    color: var(--aov-text);
+  }
+  .adm-icon-button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: var(--aov-radius-control);
+    background: none;
+    color: var(--aov-muted);
+    cursor: pointer;
+  }
+  .adm-icon-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  .adm-icon-button:hover {
+    background: var(--sidebar-accent);
+    color: var(--aov-text);
+  }
+  .adm-icon-button:focus-visible {
+    outline: 2px solid var(--sidebar-ring);
+  }
+  .adm-area-pages {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 8px 8px 12px;
+    overflow-y: auto;
+  }
+
+  /* ---------- Rows ---------- */
+  .adm-nav-group + .adm-nav-group {
+    margin-top: 12px;
+  }
+  .adm-nav-group > ul {
+    display: grid;
+    gap: 2px;
+  }
+  .adm-nav-heading {
+    padding: 4px 10px 6px;
+    color: var(--aov-muted);
+    font: 600 12px/16px var(--aov-font-sans);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .adm-nav-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 38px;
+    padding: 0 8px 0 10px;
+    border-radius: var(--aov-radius-control);
+    color: var(--sidebar-foreground);
+    font: 400 14px/20px var(--aov-font-sans);
+    outline: none;
+  }
+  .adm-nav-row > svg {
+    color: var(--aov-muted);
+  }
+  .adm-nav-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .adm-nav-row:hover {
+    background: var(--sidebar-accent);
+    color: var(--aov-text);
+  }
+  .adm-nav-row:hover > svg {
+    color: var(--aov-text-soft);
+  }
+  .adm-nav-row:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--sidebar-ring);
+  }
+  .adm-nav-row[aria-current="page"] {
+    background: var(--aov-accent-soft);
+    color: var(--aov-accent-strong);
+    font-weight: 600;
+  }
+  .adm-nav-row[aria-current="page"] > svg {
+    color: var(--aov-accent);
+  }
+  .adm-nav-row[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    top: 9px;
+    bottom: 9px;
+    left: 0;
+    width: 3px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--aov-accent);
+  }
+  .adm-nav-row[data-soon] {
+    color: var(--aov-muted);
+  }
+  .adm-nav-soon {
+    flex: none;
+    color: var(--aov-muted);
+    font: 400 12px/16px var(--aov-font-sans);
+  }
+  .adm-nav-count {
+    flex: none;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--aov-accent);
+    color: var(--aov-on-accent);
+    font: 700 12px/20px var(--aov-font-sans);
+    text-align: center;
+  }
+
+  /* ---------- Compact: bottom bar ---------- */
+  .adm-tabbar {
+    --adm-tabbar-height: calc(60px + env(safe-area-inset-bottom));
+    position: relative;
+    z-index: 40;
+    display: grid;
+    flex: none;
+    height: var(--adm-tabbar-height);
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--aov-wiki-line);
+    background: var(--aov-wiki-night);
+    transition: transform 200ms ease;
+  }
+  /*
+   * Away while the page is read downwards: the page takes the space at once, under the bar, and the bar slides off
+   * over it, so nothing below jumps while it goes.
+   */
+  .adm-tabbar[data-hidden] {
+    margin-top: calc(-1 * var(--adm-tabbar-height));
+    transform: translateY(100%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .adm-tabbar {
+      transition: none;
+    }
+  }
+  .adm-tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    border: 0;
+    background: none;
+    color: var(--aov-wiki-text-muted);
+    font: 500 12px/16px var(--aov-font-sans);
+    cursor: pointer;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .adm-tab > span:not(.adm-tab-count) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .adm-tab[aria-expanded="true"] {
+    background: var(--aov-wiki-panel);
+    color: var(--aov-wiki-text);
+  }
+  .adm-tab[data-current] {
+    color: var(--aov-wiki-gold);
+  }
+  .adm-tab[data-current] > svg {
+    color: var(--aov-wiki-gold-bright);
+    filter: drop-shadow(0 0 6px color-mix(in oklch, var(--aov-wiki-gold) 60%, transparent));
+  }
+  .adm-tab[data-current]::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 28%;
+    right: 28%;
+    height: 2px;
+    border-radius: 0 0 var(--aov-radius-pill) var(--aov-radius-pill);
+    background: var(--aov-wiki-gold);
+    box-shadow: 0 0 8px var(--aov-wiki-gold);
+  }
+  .adm-tab:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--aov-wiki-gold);
+  }
+  .adm-tab-count {
+    position: absolute;
+    top: 5px;
+    left: calc(50% + 6px);
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--aov-wiki-gold);
+    box-shadow: 0 0 0 2px var(--aov-wiki-night);
+    color: var(--aov-wiki-night);
+    font: 700 12px/20px var(--aov-font-sans);
+    text-align: center;
+  }
+
+  /* ---------- Compact: sheet of tiles ---------- */
+  .adm-sheet-content {
+    min-height: 0;
+  }
+  .adm-sheet {
+    padding: 4px 16px calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+  .adm-sheet-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0 14px;
+  }
+  .adm-sheet-socket {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--aov-wiki-gold);
+    border-radius: var(--aov-radius-card);
+    background:
+      radial-gradient(circle at 50% 45%, color-mix(in oklch, var(--aov-wiki-gold) 24%, transparent), transparent 72%),
+      var(--aov-wiki-night);
+    box-shadow:
+      inset 0 0 0 2px var(--aov-wiki-night),
+      inset 0 0 0 3px color-mix(in oklch, var(--aov-wiki-gold) 40%, transparent);
+    color: var(--aov-wiki-gold-bright);
+  }
+  .adm-sheet-group + .adm-sheet-group {
+    margin-top: 14px;
+  }
+  .adm-sheet-group > .adm-nav-heading {
+    padding: 0 2px 8px;
+  }
+  .adm-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .adm-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    height: 100%;
+    min-height: 78px;
+    padding: 10px 12px;
+    border: 1px solid var(--aov-line);
+    border-radius: var(--aov-radius-card);
+    background: var(--aov-surface);
+    color: var(--aov-text);
+    font: 500 14px/20px var(--aov-font-sans);
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .adm-tile > svg {
+    color: var(--aov-muted);
+  }
+  .adm-tile:active {
+    background: var(--aov-raised);
+  }
+  .adm-tile:focus-visible {
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+  .adm-tile[aria-current="page"] {
+    border-color: var(--aov-accent);
+    background: var(--aov-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--aov-accent);
+    color: var(--aov-accent-strong);
+    font-weight: 600;
+  }
+  .adm-tile[aria-current="page"] > svg {
+    color: var(--aov-accent);
+  }
+  .adm-tile[data-soon] {
+    border-style: dashed;
+    color: var(--aov-muted);
+  }
+  .adm-tile-note {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: var(--aov-muted);
+    font: 400 12px/16px var(--aov-font-sans);
+  }
+  .adm-tile-count {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    min-width: 22px;
+    padding: 0 6px;
+    border-radius: var(--aov-radius-pill);
+    background: var(--aov-accent);
+    color: var(--aov-on-accent);
+    font: 700 12px/22px var(--aov-font-sans);
+    text-align: center;
+  }
+  .adm-sheet-account {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--aov-line);
+    border-radius: var(--aov-radius-card);
+    background: var(--aov-surface);
+    color: var(--aov-text);
+    font: 600 14px/20px var(--aov-font-sans);
+  }
+  .adm-theme-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px;
+    border: 1px solid var(--aov-line);
+    border-radius: var(--aov-radius-card);
+    background: var(--aov-sunken);
+  }
+  .adm-theme-switch button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--aov-radius-control);
+    background: none;
+    color: var(--aov-muted);
+    font: 500 14px/20px var(--aov-font-sans);
+  }
+  .adm-theme-switch svg {
+    width: 16px;
+    height: 16px;
+  }
+  .adm-theme-switch button[aria-checked="true"] {
+    background: var(--aov-surface);
+    box-shadow: var(--aov-shadow);
+    color: var(--aov-text);
+  }
+  .adm-sheet-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .adm-sheet-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 44px;
+    border: 1px solid var(--aov-line);
+    border-radius: var(--aov-radius-card);
+    background: var(--aov-surface);
+    color: var(--aov-text);
+    font: 500 14px/20px var(--aov-font-sans);
+  }
+  .adm-sheet-action svg {
+    width: 16px;
+    height: 16px;
+  }
+}

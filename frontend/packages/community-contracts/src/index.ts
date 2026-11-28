@@ -6,6 +6,7 @@ export * from "./channels"
 export * from "./competition"
 export * from "./match-titles"
 export * from "./references"
+export * from "./translation"
 export type Selection = { id?: string | null; name?: string | null }
 /** `PARTIAL`: the source showed part of a loadout, so entries may be incomplete or lack an exact name. */
 export type ObservationStatus = "UNKNOWN" | "NOT_SHOWN" | "PARTIAL" | "KNOWN"
@@ -256,15 +257,30 @@ export type EquipmentEvent = {
   note?: string
 }
 /**
- * What became of an item a player built: still held when the game ended, given up for another, or bought for a moment
- * of the game, such as a revive, and no part of the build itself.
+ * Where the first lists put an item (25/11/2026). The service reads it into `role` and `sold` and never answers it, so a
+ * client only ever writes the current shape.
  */
 export type BuildPlace = "KEPT" | "REPLACED" | "SITUATIONAL"
 /**
- * An item of tier 2 or 3 a player built, in the order it was built; buying it again is no second step. `from` are the
- * lower-tier items that went into it, `atSeconds` the game second it was held, where one is known.
+ * What an item was bought for: the build itself, or protection, such as a revive or an item that saves its holder for
+ * a moment. An active effect says nothing of it.
  */
-export type BuildStep = { item: Selection; from?: Selection[]; place: BuildPlace; atSeconds?: number | null }
+export type BuildRole = "CORE" | "PROTECTIVE"
+/**
+ * An item of tier 2 or 3 a player built, in the order it was built; buying it again is no second step. `from` are the
+ * items that went into it, `replaces` the earlier steps sold for it, `sold` that it was sold for nothing recorded, and
+ * `atSeconds` the game second it was held, where one is known. What became of each item is read from the later steps.
+ */
+export type BuildStep = {
+  item: Selection
+  from?: Selection[]
+  replaces?: Selection[]
+  role: BuildRole
+  sold?: boolean
+  atSeconds?: number | null
+}
+/** The role last recorded for each item by its id, for the hero first and else for any hero. */
+export type BuildRoles = { items: Record<string, BuildRole> }
 export type Participant = {
   playerId?: string | null
   lane: Lane
@@ -409,6 +425,8 @@ export type Reference = {
   revisionId?: string | null
   /** The items an item is made of, where the wiki has verified its recipe. */
   components?: string[]
+  /** The wiki gives the item an effect its holder activates. */
+  active?: boolean
 }
 export type ResolvedContext = {
   region: string

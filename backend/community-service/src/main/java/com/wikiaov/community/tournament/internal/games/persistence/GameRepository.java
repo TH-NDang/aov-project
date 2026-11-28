@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.games.persistence;
 
+import java.util.List;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -43,4 +44,21 @@ public interface GameRepository extends JpaRepository<GameRecord, UUID> {
           AND (:state='ALL' OR (:state='ACTIVE' AND game.deletedAt IS NULL) OR (:state='DELETED' AND game.deletedAt IS NOT NULL))
         """)
     Page<GameRecord> search(UUID seriesId, UUID tournamentId, String state, Pageable page);
+
+    /**
+     * The role last recorded for each item of the wiki in the builds of games that are not deleted, the builds of the
+     * hero first: [item id, role]. A step of the first lists has no role; its place says it.
+     */
+    @Query(value = """
+        SELECT DISTINCT ON (step->'item'->>'id') step->'item'->>'id',
+               coalesce(step->>'role', CASE step->>'place' WHEN 'SITUATIONAL' THEN 'PROTECTIVE' ELSE 'CORE' END)
+          FROM tournament.game game
+         CROSS JOIN LATERAL jsonb_array_elements(coalesce(game.content->'sides', '[]')) AS side
+         CROSS JOIN LATERAL jsonb_array_elements(coalesce(side->'participants', '[]')) AS seat
+         CROSS JOIN LATERAL jsonb_array_elements(coalesce(seat->'build', '[]')) AS step
+         WHERE game.deleted_at IS NULL AND step->'item'->>'id' IS NOT NULL
+         ORDER BY step->'item'->>'id', (seat->'hero'->>'id' = cast(:heroId as text)) DESC NULLS LAST,
+                  game.updated_at DESC
+        """, nativeQuery = true)
+    List<Object[]> buildRoles(String heroId);
 }

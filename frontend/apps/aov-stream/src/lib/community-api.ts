@@ -9,7 +9,9 @@ import type {
   PageManager,
   PageSlice,
   PageViewer,
+  PostTranslation,
   TeamAffiliation,
+  TranslationStatus,
   YouTubeChannel,
   YouTubeVideoPage,
 } from "@aov/community-contracts"
@@ -105,4 +107,12 @@ export const communityApi = {
   readNotification: (notificationId: string) =>
     communityRequest(`/me/notifications/${notificationId}/read`, { body: {} }),
   readAllNotifications: () => communityRequest("/me/notifications/read-all", { body: {} }),
+  /** Whether posts can be translated now, and into which languages (ADR-037). */
+  translationStatus: () => communityRequest<TranslationStatus>("/translation"),
+  /** A published post in `locale`. A new translation can take a while, more so with images and a second try. */
+  postTranslation: (postId: string, locale: string, signal?: AbortSignal) =>
+    communityRequest<PostTranslation>(list(`/posts/${id(postId)}/translation`, { locale }), {
+      signal,
+      timeoutMs: 90_000,
+    }),
 }

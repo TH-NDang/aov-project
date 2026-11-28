@@ -1,4 +1,7 @@
-/* What a hero was played with: the items over two columns, the enchantment and the spell in a third. */
+/*
+ * What a hero was played with: the items of the build over two columns; what was bought for protection, what was sold,
+ * the enchantment and the spell in a third.
+ */
 .tn-hbuild {
   display: grid;
   min-width: 0;
@@ -75,9 +78,16 @@
   border-radius: 2px;
   background: linear-gradient(
     to right,
-    var(--hub-accent) calc(var(--share) * 100%),
+    var(--hbuild-bar, var(--hub-accent)) calc(var(--share) * 100%),
     color-mix(in srgb, var(--hub-text) 10%, transparent) 0
   );
+}
+/* What was bought for protection keeps the colour it has in a game, and what was sold that of a sale. */
+.tn-hbuild-kind[data-kind="protective"] {
+  --hbuild-bar: var(--hub-blue);
+}
+.tn-hbuild-kind[data-kind="sold"] {
+  --hbuild-bar: var(--aov-warning);
 }
 .tn-hbuild-art {
   --stream-image-size: 100%;

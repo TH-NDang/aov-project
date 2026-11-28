@@ -958,38 +958,56 @@ bản cập nhật, đội, bên và tìm ván ngay trên máy người xem: m�
 
 `GET /competitions/{id}/heroes/{heroId}/builds` trả mọi lần tướng đó được chơi ở giải mà nguồn cho thấy phụ trợ, phù hiệu hay
 trang bị: `{spells,enchantments,items,builds}`. Ba danh sách đầu là `{id?,name,iconUrl?,tier?}`; mỗi `builds` là
-`{gameId,spell?,enchantment?,items,replaced?,situational?}` gọi chúng bằng vị trí.
+`{gameId,spell?,enchantment?,items,protective?,sold?}` gọi chúng bằng vị trí.
 
 - `enchantment` là phù hiệu chính: ô của nhánh chính có cấp cao nhất đã ghi.
-- `items` là trang bị giữ đến cuối ván, `replaced` là trang bị đã đổi, `situational` là trang bị tình huống (xem "Trang bị đã
-  lên"). Ván chưa ghi `build` thì `items` là các ô đã thấy ở ảnh chụp trang bị cuối cùng, chỉ khi ảnh đó nằm trong một phút cuối
-  ván; ảnh giữa ván không nói gì về cuối ván. Ảnh chụp có thể có món cấp 1 và một món hai lần.
+- `items` là trang bị chính, `protective` là trang bị bảo hộ, mỗi món giữ đến cuối ván hoặc đã bán, trừ món đã ghép lên món
+  khác; `sold` là các món của cả hai loại đã bán trước khi hết ván (xem "Trang bị đã lên"). Ván chưa ghi `build` thì `items` là
+  các ô đã thấy ở ảnh chụp trang bị cuối cùng, chỉ khi ảnh đó nằm trong một phút cuối ván; ảnh giữa ván không nói gì về cuối
+  ván. Ảnh chụp có thể có món cấp 1 và một món hai lần.
 - Tướng không ai chơi trả danh sách rỗng, không phải 404. Tên và ảnh lấy ở ván công bố mới nhất có phần đó.
 
 Ba câu trả lời của một giải đi cùng một lần đọc: `Cache-Control`, cách giữ trong bộ nhớ và `ETag` như `statistics`, mỗi loại
 một `ETag` riêng. Đo trên laptop với 2.007 ván đã công bố: lần đọc đầu của một giải 0,8 giây, các lần sau 13 ms.
 
-## Trang bị đã lên (25/11/2026)
+## Trang bị đã lên (25/11/2026, sửa 28/11/2026)
 
 Người dùng muốn ghi những trang bị một tuyển thủ đã lên, không bó theo sáu ô và không đặt nặng thời gian. Mỗi người của ván
-có `build`, danh sách theo thứ tự lên:
+có `build`, danh sách theo thứ tự lên. Ngày 28/11/2026 người dùng thấy ba chỗ "giữ đến cuối / đã đổi / tình huống" chưa đúng:
+món có kích hoạt vẫn có thể là đồ chính (Giáp thống khổ, Liềm đoạt mệnh), Quả cầu băng sương trên tướng vật lý là đồ bảo hộ,
+một món cấp 2 có thể được giữ lấy chỉ số đến cuối trận rồi mới lên cấp 3, và cuối trận tuyển thủ có thể bán món cộng dồn để lấy
+món tốt hơn. Từ đó vai trò của món tách khỏi số phận của nó:
 
 | Trường | Ý nghĩa |
 |---|---|
 | `item` | Trang bị, bắt buộc |
-| `from` | Các trang bị cấp thấp hơn đã ghép vào, cùng cấp chỉ khi công thức có món đó. Nhiều nhất 3, mỗi món ghi một lần, kể cả khi công thức cần hai. Trang bị cấp 2 sau thành cấp 3 thì nằm ở đây; nếu tuyển thủ đã giữ nó một thời gian thì nó còn có thể là một bước riêng với `place` là `REPLACED`, và bước đó chỉ cho biết giây đầu tiên có nó |
-| `place` | `KEPT` giữ đến cuối ván (mặc định), `REPLACED` đã đổi lấy món khác, `SITUATIONAL` mua cho một lúc, như để hồi sinh, không thuộc bộ trang bị chính |
-| `atSeconds` | Giây trong ván khi đã có món đó, chỉ ghi khi biết |
+| `from` | Các trang bị cấp thấp hơn đã ghép vào, cùng cấp chỉ khi công thức có món đó. Nhiều nhất 3, mỗi món ghi một lần, kể cả khi công thức cần hai. Món cấp 2 đã là một bước trước đó thì ghép vào món này lúc này, dù tuyển thủ giữ nó bao lâu |
+| `replaces` | Các bước trước đó đã bán để lấy món này, nhiều nhất 2. Mỗi món phải đã lên và còn giữ đến lúc đó; không thay chính nó. Không có trong JSON khi trống |
+| `role` | `CORE` đồ chính (mặc định) hoặc `PROTECTIVE` đồ bảo hộ, như hồi sinh hay món cứu người giữ nó trong một lúc. Món có kích hoạt không tự là bảo hộ |
+| `sold` | Món đã bán mà không ghi lấy món nào; chỉ có trong JSON khi `true` |
+| `atSeconds` | Giây trong ván khi đã có món đó, chỉ ghi khi biết; các bước có giờ không đi lùi |
 
-- Chỉ ghi trang bị cấp 2 và 3; mua lại đúng món đã ghi thì không ghi thêm. Nhiều nhất 24 bước, 6 bước `KEPT`; một món không
-  ghép từ chính nó. Cấp của trang bị, cấp của món ghép so với trang bị và việc có trong patch của ván được kiểm tra khi công bố.
+- Không ai ghi số phận của món; nó đọc ra từ các bước sau (`BuildPath`): món có bước sau ghép từ nó là đã nâng lên, món có bước
+  sau thay nó hoặc có `sold` là đã bán, còn lại giữ đến cuối ván. Sáu ô cuối ván là các món giữ đến cuối, nên không quá 6
+  (`build.held.maximum`).
+- Chỉ ghi trang bị cấp 2 và 3; mua lại đúng món đã ghi thì không ghi thêm. Nhiều nhất 24 bước; một món không ghép từ chính nó.
+  Cấp của trang bị, cấp của món ghép so với trang bị và việc có trong patch của ván được kiểm tra khi công bố.
 - Danh sách trống là chưa ai ghi và không có trong JSON. Khi đó bộ trang bị của tướng đọc ảnh chụp lúc kết thúc ván, còn trang
   của ván hiện ảnh chụp kèm mốc của nó. Ảnh chụp sáu ô và giao dịch mua bán theo giây vẫn giữ nguyên cho nguồn có chúng.
-- Mục của danh mục trang bị (`Reference`) thêm `components`: các món ghép thành nó theo công thức Wiki đã xác minh, để Admin gợi
-  ý "lên từ" và "nâng lên". Món không có công thức thì bỏ trường. Snapshot của ván không giữ `components`.
+- Danh sách ghi trước 28/11/2026 có `place` thay cho `role`; dịch vụ đọc `KEPT` là `CORE`, `SITUATIONAL` là `PROTECTIVE`, còn
+  `REPLACED` là đã nâng lên khi một bước sau ghép từ nó, ngoài ra là đã bán. Lần lưu sau ghi theo kiểu mới, không có `place`.
+  Lúc đổi, 0 trong 2.007 ván đã công bố có `build`, nên không có migration.
+- Mục của danh mục trang bị (`Reference`) có `components`: các món ghép thành nó theo công thức Wiki đã xác minh, để Admin gợi
+  ý "lên từ" và "nâng lên". Món không có công thức thì bỏ trường. Snapshot của ván không giữ `components`. Từ 28/11/2026 mục còn
+  có `active` khi Wiki ghi món có hiệu ứng kích hoạt (`effects[].activation = ACTIVE`), để Admin và Stream gắn dấu ⚡; snapshot
+  giữ trường này, và không có trong JSON khi `false`.
+- `GET /admin/build-roles?heroId=` (`tournament:read`) trả `{items: {itemId: role}}`: vai trò ghi gần nhất của mỗi món, cho
+  tướng này trước, không có thì cho tướng bất kỳ, trong mọi ván chưa xóa. Admin lấy nó làm vai trò mặc định khi thêm món;
+  món chưa ai ghi là `CORE`.
 - `build` nằm trong jsonb của ván nên không cần migration; ván cũ đọc là danh sách trống.
 - Chỉ khi chưa ván nào có `build` mới quay lui được về bản phát hành chưa biết trường này, vì bản đó từ chối trường lạ và trả
-  500 cho ván có `build`; đã có thì sửa bằng một commit mới.
+  500 cho ván có `build`; đã có thì sửa bằng một commit mới. Bản trước 28/11/2026 không biết `role`, `replaces`, `sold` và
+  `active`, nên cũng không quay lui về đó được khi đã có ván ghi theo kiểu mới.
 
 ## Công bố ván còn thiếu dữ liệu (25/11/2026)
 
@@ -1075,6 +1093,20 @@ video, nút Đăng ký và Mở YouTube, video mới nhất làm thẻ lớn, h�
   API tắt.
 - Service chỉ đọc kênh mà hồ sơ đã công bố đang link tới, và giữ câu trả lời trong bộ nhớ (thông tin kênh 24 giờ, video
   30 phút).
+
+## Dịch bài đăng (28/11/2026)
+
+Bài đăng trên Stream có nút Dịch khi `community-service` có khóa Claude API (ADR-037). Bản dịch thay tiêu đề và nội dung
+tại chỗ, nút "Xem bản gốc" đưa về bài gốc; ảnh có chữ thì có thêm một dòng dịch dưới ảnh nói ảnh ghi gì. Người dùng bật
+"Tự dịch bài đăng" trong tài khoản (khách thì lưu trên trình duyệt) để Stream tự dịch các bài đang hiện sang ngôn ngữ giao
+diện.
+
+- Model Claude Haiku 5.5. Prompt có bảng thuật ngữ của riêng bài, lấy từ bảng thuật ngữ dùng chung và danh mục tướng,
+  trang bị, phép bổ trợ, ngọc, phù hiệu của wiki-service, nên "Trừng trị" thành "Punish", "bùa xanh" thành "blue buff".
+- Mỗi bài dịch một lần cho mỗi ngôn ngữ rồi lưu; sửa bài thì lần đọc sau dịch lại. Bài đã đúng ngôn ngữ người đọc và không
+  có ảnh không cần gọi model.
+- Giới hạn: 30 bản dịch mới mỗi giờ cho một tài khoản hoặc địa chỉ, và ngân sách mỗi tháng (mặc định 5 USD). Hết ngân sách
+  thì nút Dịch ẩn tới tháng sau.
 
 ## Kiểm chứng dữ liệu giải (28/11/2026)
 
@@ -1189,6 +1221,11 @@ V029 phục vụ "Kiểm chứng dữ liệu giải": bảng `tournament.content
 part, content_token, label, note, verified_at, verified_by, verified_by_name), unique(tournament_id, part, content_token),
 index (tournament_id, verified_at DESC). CHECK giữ dạng của `part` và token. Không đổi dữ liệu.
 
+V030 phục vụ "Dịch bài đăng": bảng `community.post_translation` (id, post_id FK bài, xóa theo bài, locale, source_hash,
+source_language, title, body, images jsonb, model, input_tokens, output_tokens, cost_micros, failed_checks jsonb,
+created_at), unique(post_id, locale); bảng `community.translation_usage` (month là ngày đầu tháng UTC, calls,
+input_tokens, output_tokens, cost_micros, updated_at) cộng dồn mỗi lời gọi Claude API. Không đổi dữ liệu.
+
 "Liên kết giữa các bản ghi thi đấu" (19/11/2026) không thêm migration: các trường mới nằm trong tài liệu jsonb, và dữ liệu
 cũ được điền bằng script chạy tay thay vì migration (ADR-032).
 
@@ -1216,6 +1253,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
 | GET /pages/{id}/youtube-channel?url= | Kênh YouTube sau một link của hồ sơ đã công bố (`url` đúng như hồ sơ ghi): {id,title,handle,description,avatarUrl,bannerUrl,subscriberCount,videoCount,url,videos,more}; `videos` là video mới nhất. 404 `CHANNEL_NOT_FOUND` khi hồ sơ không có link đó hoặc link không phải kênh, 503 `CHANNEL_UNAVAILABLE` khi chưa đọc được YouTube (ADR-034) |
 | GET /pages/{id}/youtube-channel/videos?url=&pageToken= | Video cũ hơn của kênh đó, 24 video một lần, mới trước: {videos,nextPageToken}. Không có `pageToken` thì bắt đầu từ video mới nhất; client bỏ video đã hiện |
+| GET /translation | {enabled,locales}: có dịch được không (có khóa và còn ngân sách tháng) và các ngôn ngữ dịch sang (ADR-037) |
+| GET /posts/{id}/translation?locale= | Bài đã công bố trên page công khai, dịch sang `locale`: {postId,locale,sourceLanguage,sameLanguage,title,body,images,model}; `images` mỗi ảnh {index,hasText,language,text}. `Cache-Control: no-store`. 400 `TRANSLATION_UNSUPPORTED_LOCALE`, 429 `TRANSLATION_RATE_LIMITED`, 502 `TRANSLATION_FAILED`, 503 `TRANSLATION_UNAVAILABLE` (`reason` disabled hoặc budget) |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
 | GET /admin/tournaments/facets?q=&alsoRegions=&status=&tier=&region=&year=&level= | {total,statuses,tiers,regions,years}: số giải mỗi giá trị lọc còn lại theo từ khóa và các bộ lọc khác; `level=MAIN` đếm theo giải chính |
 | GET /admin/tournaments/{id}/game-patches | Mùa và patch của từng ván: tự ghi (`GAME`), theo dòng phiên bản của giai đoạn (`STAGE`) hoặc không có (`NONE`) |
@@ -1225,6 +1264,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | POST /admin/players?allowSameName= | Tạo tuyển thủ; 409 `TOURNAMENT_PLAYER_SAME_NAME` khi trùng tên cùng quốc gia (xem "Tuyển thủ trùng tên và gộp hồ sơ") |
 | POST /admin/players/{id}/merge | {version,intoId,intoVersion}: gộp hồ sơ vào `intoId` rồi đưa nó vào thùng rác |
 | GET /admin/reference-catalog?q=&kind= | Khớp tên rồi hoạt động gần nhất; tra theo `ids` không xếp hạng |
+| GET /admin/build-roles?heroId= | {items: {itemId: CORE \| PROTECTIVE}}: vai trò ghi gần nhất của mỗi món, cho tướng này trước rồi tướng bất kỳ (xem "Trang bị đã lên") |
 | GET /admin/series?q=&tournamentId=, /admin/games?tournamentId= | Trận/ván; trong một giải theo lịch, xuyên giải theo độ khớp rồi mới nhất |
 | GET /admin/tournaments/stats | [{tournamentId,teams,matches,played}], không tải từng trận |
 | GET /admin/link-review?kind=&page=&size=, /admin/link-review/facets | Chỗ còn chữ chưa có liên kết / số đếm theo `kind` (xem "Liên kết cần xem") |
@@ -1269,7 +1309,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /competitions/{id} | Snapshot giải |
 | GET /competitions/{id}/statistics | {games,decided,blueWins,withBans,averageSeconds?,longest?,shortest?,heroes:[{id?,code?,name,iconUrl?,picks,wins,bans,bluePicks}],mvps:[{playerId,games}]} đếm trên ván đã công bố (xem "Thống kê tướng của giải") |
 | GET /competitions/{id}/lineups | {heroes:[{id?,code?,name,iconUrl?}],players:[{id,name?}],games:[{id,seriesId,number,winner?,seconds?,mvp?,blue?,red?}]}: cấm chọn của mọi ván đã công bố (xem "Đội hình của mọi ván") |
-| GET /competitions/{id}/heroes/{heroId}/builds | {spells,enchantments,items,builds:[{gameId,spell?,enchantment?,items,replaced?,situational?}]} (xem "Bộ trang bị của một tướng trong giải") |
+| GET /competitions/{id}/heroes/{heroId}/builds | {spells,enchantments,items,builds:[{gameId,spell?,enchantment?,items,protective?,sold?}]} (xem "Bộ trang bị của một tướng trong giải") |
 | GET /games?tournamentId=&seriesId=&heroId=&page=&size= | Ván đã công bố, trận diễn ra sau đứng trước. `heroId` chỉ giữ ván có người chọn tướng đó |
 | GET /references, /references/people | {items:[{id,kind,name,shortName?,aliases?,path,circuitId?,teamIds?}]}: mọi tên văn bản có thể nhắc, không phân trang (xem "Tham chiếu trong văn bản") |
 | GET /references/{kind}/{id} | Thẻ xem trước. `kind`: CIRCUIT, ORGANIZATION, COMPETITION, TEAM, PLAYER, PERSON |

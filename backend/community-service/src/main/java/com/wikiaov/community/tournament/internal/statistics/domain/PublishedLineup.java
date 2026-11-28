@@ -1,6 +1,9 @@
 package com.wikiaov.community.tournament.internal.statistics.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
+import com.wikiaov.community.tournament.internal.domain.BuildPath;
+import com.wikiaov.community.tournament.internal.domain.BuildPath.Fate;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildRole;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftTurn;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
@@ -11,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 
@@ -50,17 +54,36 @@ public record PublishedLineup(
     }
 
     /**
-     * The items of one place in what a seat built. A build nobody wrote down is the inventory the game ended with; one
-     * shown earlier says nothing about the end.
+     * The items a seat built for the build itself, held to the end or sold, without those that went into another. A
+     * build nobody wrote down is the inventory the game ended with; one shown earlier says nothing about the end.
      */
-    public List<Selection> items(Seat seat, BuildPlace place) {
+    public List<Selection> core(Seat seat) {
         if (!seat.build().isEmpty()) {
-            return seat.build().stream().filter(step -> step.place() == place).map(SeatItem::item).toList();
+            return built(seat, BuildRole.CORE);
         }
-        if (place != BuildPlace.KEPT || !shownAtTheEnd(seat.inventory())) {
+        if (!shownAtTheEnd(seat.inventory())) {
             return List.of();
         }
         return seat.inventory().slots().stream().filter(SeatSlot::known).map(SeatSlot::item).toList();
+    }
+
+    /** The items a seat built for protection, held to the end or sold. */
+    public List<Selection> protective(Seat seat) {
+        return built(seat, BuildRole.PROTECTIVE);
+    }
+
+    /** The items a seat built and sold before the end, for another or for something nobody recorded. */
+    public List<Selection> sold(Seat seat) {
+        var fates = BuildPath.fates(seat.build());
+        return IntStream.range(0, fates.size()).filter(index -> fates.get(index) == Fate.SOLD)
+                .mapToObj(index -> seat.build().get(index).item()).toList();
+    }
+
+    private static List<Selection> built(Seat seat, BuildRole role) {
+        var fates = BuildPath.fates(seat.build());
+        return IntStream.range(0, fates.size())
+                .filter(index -> fates.get(index) != Fate.UPGRADED && seat.build().get(index).role() == role)
+                .mapToObj(index -> seat.build().get(index).item()).toList();
     }
 
     private boolean shownAtTheEnd(@Nullable SeatInventory inventory) {
@@ -130,11 +153,11 @@ public record PublishedLineup(
             @Nullable Selection spell,
             List<SeatEnchantment> enchantments,
             @Nullable SeatInventory inventory,
-            List<SeatItem> build
+            List<BuildStep> build
     ) {
         public Seat {
             enchantments = enchantments == null ? List.of() : enchantments;
-            build = build == null ? List.of() : build;
+            build = build == null ? List.of() : BuildPath.current(build);
         }
     }
 
@@ -160,9 +183,4 @@ public record PublishedLineup(
     ) {
     }
 
-    public record SeatItem(
-            @Nullable Selection item,
-            @Nullable BuildPlace place
-    ) {
-    }
 }
