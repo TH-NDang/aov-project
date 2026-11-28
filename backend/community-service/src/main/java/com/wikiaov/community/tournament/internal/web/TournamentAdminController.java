@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.QueryParameters;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.BuildRoles;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Create;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
@@ -291,6 +292,13 @@ public class TournamentAdminController implements TournamentAdminApi {
     @GetMapping(path = ApiPaths.ADMIN + "/games/{id}", version = "1")
     public View<Game> getGame(@PathVariable UUID id) {
         return administration.getGame(id);
+    }
+
+    @Override
+    @GetMapping(path = ApiPaths.ADMIN + "/build-roles", version = "1")
+    public BuildRoles buildRoles(@RequestParam UUID heroId, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("heroId"));
+        return administration.buildRoles(heroId);
     }
 
     @Override

@@ -3,6 +3,8 @@ package com.wikiaov.community.tournament.internal.statistics.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildRole;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildStep;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
@@ -16,7 +18,6 @@ import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLine
 import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.Seat;
 import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.SeatEnchantment;
 import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.SeatInventory;
-import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.SeatItem;
 import com.wikiaov.community.tournament.internal.statistics.domain.PublishedLineup.SeatSlot;
 import java.time.Instant;
 import java.util.List;
@@ -62,7 +63,7 @@ class BuildListTest {
     @Test
     void aBuildThatWasWrittenDownIsReadInsteadOfTheLastInventory() {
         var game = game(Catalog.EMPTY, seat(FLORENTINO, null, List.of(), List.of(slot("Blade"), slot("Boots")),
-                step("Axe", BuildPlace.KEPT), step("Blade", BuildPlace.KEPT)));
+                core("Axe"), core("Blade")));
 
         assertThat(builds(game).items()).extracting(BuildPart::name).containsExactly("Axe", "Blade");
     }
@@ -84,19 +85,34 @@ class BuildListTest {
     }
 
     @Test
-    void itemsGivenUpOrBoughtForAMomentAreKeptApartFromTheOthers() {
-        var game = game(Catalog.EMPTY, seat(FLORENTINO, null, List.of(), List.of(), step("Boots", BuildPlace.REPLACED),
-                step("Axe", BuildPlace.KEPT), step("Revive", BuildPlace.SITUATIONAL)));
+    void protectiveItemsAndSoldOnesAreKeptApartWhileThoseThatWentIntoOthersAreLeftOut() {
+        var game = game(Catalog.EMPTY, seat(FLORENTINO, null, List.of(), List.of(), core("Spear"), core("Boots"),
+                new BuildStep(item("Lance"), List.of(item("Spear")), List.of(), BuildRole.CORE, false, null),
+                new BuildStep(item("Revive"), List.of(), List.of(item("Boots")), BuildRole.PROTECTIVE, false, null),
+                new BuildStep(item("Orb"), List.of(), List.of(), BuildRole.PROTECTIVE, true, null)));
 
-        assertThat(builds(game).items()).extracting(BuildPart::name).containsExactly("Axe", "Boots", "Revive");
+        assertThat(builds(game).items()).extracting(BuildPart::name)
+                .containsExactly("Boots", "Lance", "Revive", "Orb");
         assertThat(builds(game).builds()).containsExactly(
-                new Build(game.id(), null, null, List.of(0), List.of(1), List.of(2)));
+                new Build(game.id(), null, null, List.of(0, 1), List.of(2, 3), List.of(0, 3)));
     }
 
     @Test
-    void aBuildOfNothingButSituationalItemsIsStillABuild() {
-        var game = game(Catalog.EMPTY,
-                seat(FLORENTINO, null, List.of(), List.of(), step("Revive", BuildPlace.SITUATIONAL)));
+    void aBuildOfTheFirstListsIsReadAsItIsWrittenNow() {
+        var game = game(Catalog.EMPTY, seat(FLORENTINO, null, List.of(), List.of(),
+                legacy("Spear", BuildPlace.REPLACED), legacy("Boots", BuildPlace.REPLACED),
+                new BuildStep(item("Lance"), List.of(item("Spear")), null, null, false, null, BuildPlace.KEPT),
+                legacy("Revive", BuildPlace.SITUATIONAL)));
+
+        assertThat(builds(game).items()).extracting(BuildPart::name).containsExactly("Boots", "Lance", "Revive");
+        assertThat(builds(game).builds()).containsExactly(
+                new Build(game.id(), null, null, List.of(0, 1), List.of(2), List.of(0)));
+    }
+
+    @Test
+    void aBuildOfNothingButProtectiveItemsIsStillABuild() {
+        var game = game(Catalog.EMPTY, seat(FLORENTINO, null, List.of(), List.of(),
+                new BuildStep(item("Revive"), List.of(), List.of(), BuildRole.PROTECTIVE, false, null)));
 
         assertThat(builds(game).builds()).hasSize(1);
     }
@@ -140,18 +156,27 @@ class BuildListTest {
     }
 
     private static Seat seat(UUID hero, @Nullable Selection spell, List<SeatEnchantment> enchantments,
-            List<SeatSlot> equipment, SeatItem... build) {
+            List<SeatSlot> equipment, BuildStep... build) {
         return seat(hero, spell, enchantments, new SeatInventory(LENGTH, equipment), build);
     }
 
     private static Seat seat(UUID hero, @Nullable Selection spell, List<SeatEnchantment> enchantments,
-            SeatInventory inventory, SeatItem... build) {
+            SeatInventory inventory, BuildStep... build) {
         return new Seat(new Selection(hero, "Hero " + hero), Lane.TOP, null, spell, enchantments, inventory,
                 List.of(build));
     }
 
-    private static SeatItem step(String name, BuildPlace place) {
-        return new SeatItem(new Selection(null, name), place);
+    private static Selection item(String name) {
+        return new Selection(null, name);
+    }
+
+    private static BuildStep core(String name) {
+        return new BuildStep(item(name), List.of(), List.of(), BuildRole.CORE, false, null);
+    }
+
+    /** A step as the first lists wrote it: a place instead of a role. */
+    private static BuildStep legacy(String name, BuildPlace place) {
+        return new BuildStep(item(name), List.of(), null, null, false, null, place);
     }
 
     private static SeatEnchantment main(String name, int tier) {

@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.registry.application;
 import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.BuildRoles;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
@@ -262,6 +263,12 @@ public class TournamentAdministration {
     @Transactional(readOnly = true)
     public View<Game> getGame(UUID id) {
         return games.get(id);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public BuildRoles buildRoles(UUID heroId) {
+        return new BuildRoles(games.buildRoles(heroId));
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
