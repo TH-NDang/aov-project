@@ -13,6 +13,7 @@ import { QuickTimes } from "../schedule/quick-times"
 import { LinkBracket, ScheduleSetup } from "../schedule/schedule-setup"
 import { NeedFilter, TeamFilter } from "../schedule/schedule-toolbar"
 import { BracketMatches, LeagueMatches } from "../schedule/stage-matches"
+import { CheckMark } from "./content-check"
 import { MatchPeople } from "./match-people"
 import { isLeagueStage, layoutBracket, stageProgress } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
@@ -189,6 +190,9 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
         // start within the first screen.
         <div className="space-y-2.5">
           {stageTabs}
+          <div className="flex justify-end empty:hidden">
+            <CheckMark ws={ws} part={`SCHEDULE:${stage.code}`} />
+          </div>
           {matches.length > 0 && (
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">{teamFilter}</div>
@@ -226,7 +230,10 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
                 <div className="min-w-0 flex-1">{needFilter}</div>
               </>
             )}
-            <div className="ml-auto">{setupButton}</div>
+            <div className="ml-auto flex items-center gap-2">
+              <CheckMark ws={ws} part={`SCHEDULE:${stage.code}`} />
+              {setupButton}
+            </div>
           </div>
         </>
       )}

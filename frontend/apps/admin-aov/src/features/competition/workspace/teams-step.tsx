@@ -37,6 +37,7 @@ import { FillMissingRosters } from "./missing-rosters"
 import { PlayerName, TeamName } from "../peek/competitor-peek"
 import { ENTRY_STATUS_LABELS } from "../peek/peek-model"
 import { rosterBoard, rosterOrder } from "./model"
+import { CheckMark } from "./content-check"
 import { Chip, Panel, type Workspace } from "./parts"
 import { useRosterPlayers } from "./use-roster-players"
 import { NativeSelect } from "@/components/native-select"
@@ -333,6 +334,7 @@ export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                   ws.loaded && <Chip tone="warn">Chưa có đội hình</Chip>
                 )}
                 <span className="ml-auto flex items-center gap-1">
+                  <CheckMark ws={ws} part={`TEAM:${entry.teamId}`} compact />
                   <Button
                     type="button"
                     variant={rows.length ? "ghost" : "outline"}
