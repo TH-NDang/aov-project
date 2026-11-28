@@ -1,4 +1,15 @@
-import { Ellipsis, Gauge, Maximize, Minimize, SkipBack, SkipForward, Volume2, VolumeX, Youtube } from "lucide-react"
+import {
+  Ellipsis,
+  Gauge,
+  Maximize,
+  Minimize,
+  SkipBack,
+  SkipForward,
+  SlidersHorizontal,
+  Volume2,
+  VolumeX,
+  Youtube,
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -17,7 +28,8 @@ import { usePlayheadValue } from "./use-playhead"
 import { isSilent, otherSound, rateLabel, RATES } from "./use-video-settings"
 
 export const YOUTUBE_ROW = "Hàng nút của YouTube"
-export const YOUTUBE_ROW_WHY = `${YOUTUBE_ROW}: chất lượng hình, phụ đề. Khung video tải lại ở đúng giây này.`
+/** Captions are switched in that row, also those a translation extension draws; see `MatchPlayer`. */
+export const YOUTUBE_ROW_WHY = `${YOUTUBE_ROW}: chất lượng, phụ đề và nút của tiện ích dịch. Khung video tải lại ở đúng giây này.`
 export const youtubeLabel = (second: number) => `Mở trên YouTube lúc ${formatClock(second)}`
 
 /** What a narrow row has no room for; the steps and the sound are in it only on the narrowest. */
@@ -65,7 +77,7 @@ export function TransportMenu(props: TransportProps & { steps: boolean }) {
           title={YOUTUBE_ROW_WHY}
           onCheckedChange={(checked) => props.onYoutubeControls(checked)}
         >
-          {YOUTUBE_ROW}
+          <SlidersHorizontal /> {YOUTUBE_ROW}
         </DropdownMenuCheckboxItem>
         <DropdownMenuItem asChild>
           <a href={props.youtubeUrl(second)} target="_blank" rel="noreferrer">
