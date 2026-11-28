@@ -732,12 +732,14 @@ Combat stats dành cho dữ liệu gameplay có giá trị số/cấu trúc th�
 
 Không ép toàn bộ stat vào một object JSON không kiểm soát nếu domain đã ổn định đủ để mô hình hóa rõ ràng.
 
-Giá trị chung có nguồn xác nhận được quản lý theo bộ luật và patch bắt đầu có hiệu lực.
-Chỉ số của tướng không đổi theo cấp tướng: màn Thuộc tính trong game ghi cùng một số từ cấp 1 đến 15, còn trang bị,
-phù hiệu và bảng ngọc cộng thêm khi vào trận. Vì vậy mỗi chỉ số chỉ có một giá trị, không có mức tăng theo cấp. Số đọc
-thủ công từ ảnh trong một patch giữ kèm nguồn; admin hiển thị số quan sát để đối chiếu và lưu giá trị riêng khi biên
-tập viên nhập cho tướng.
-Thay đổi mặc định chung được ghi ở patch. Lịch sử cân bằng của từng tướng chỉ ghi thay đổi riêng.
+Mỗi chỉ số của tướng có giá trị ở cấp 1 (đúng số màn Thuộc tính ghi) và mức tăng mỗi cấp nếu biết: chỉ số có tăng khi
+tướng lên cấp (chủ dự án kiểm tra lại 28/11/2026). Giá trị mọi tướng giống nhau (công phép 0, giáp phép `80 | 0%`, sát
+thương chí mạng 200%...) là mặc định chung, không theo patch, kèm giới hạn trong trận nếu có (tốc đánh cộng thêm 200%,
+giảm hồi chiêu 40%, tốc chạy 800); tướng chỉ ghi giá trị riêng khi khác mặc định (ADR-036).
+Số đọc thủ công từ ảnh trong một patch giữ kèm nguồn và cấp tướng nếu biết. Khi ảnh chưa xác nhận cấp tướng,
+admin hiển thị số quan sát để đối chiếu và chỉ lưu giá trị cơ bản riêng khi biên tập viên nhập cho tướng.
+Lịch sử cân bằng của từng tướng chỉ ghi thay đổi riêng. Mỗi chỉ số có một thuật ngữ giải thích bằng lời dễ hiểu, dẫn tới
+các trang bị đang có chỉ số đó.
 
 Giáp, giáp phép, xuyên giáp và xuyên giáp phép được game hiển thị dạng `số | phần trăm`, ví dụ `150 | 20%`.
 Phần trăm là số đọc từ game và được lưu riêng, không suy ra từ số: ảnh patch 2026-10-30 có đồng thời `137 | 0%`,
