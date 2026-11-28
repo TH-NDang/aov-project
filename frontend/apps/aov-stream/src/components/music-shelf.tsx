@@ -14,6 +14,7 @@ const LIST_WORDS: Record<MusicListCode, { vi: string; en: string; icon: GameIcon
   SONGS: { vi: "Ca khúc", en: "Songs", icon: "microphone" },
   ARENA: { vi: "Giải đấu", en: "Esports", icon: "trophy-cup" },
   HEROES: { vi: "Tướng", en: "Heroes", icon: "samurai-helmet" },
+  GAMING: { vi: "Game", en: "Gaming", icon: "gamepad" },
   MINE: { vi: "Của tôi", en: "Mine", icon: "person" },
 }
 const CODES: readonly MusicListCode[] = [...MUSIC_LISTS.map(({ code }) => code), "MINE"]
@@ -24,7 +25,10 @@ function pick(list: MusicListCode, index: number, compact: boolean) {
   if (compact) music.setShelf(false)
 }
 
-/** One track of a list: picture, title, singer and what it belongs to; the one that plays is marked. */
+/**
+ * One track of a list: picture, title, singer, what it belongs to and whether it has no words; the one that plays is
+ * marked.
+ */
 function TrackRow({
   list,
   index,
@@ -52,7 +56,14 @@ function TrackRow({
           <b>{track.title}</b>
           <span>{track.artist}</span>
         </span>
-        {track.tag && <span className="hub-music-tag">{track.tag}</span>}
+        {(track.instrumental || track.tag) && (
+          <span className="hub-music-tags">
+            {track.instrumental && (
+              <span className="hub-music-tag hub-music-bare">{text("Không lời", "Instrumental")}</span>
+            )}
+            {track.tag && <span className="hub-music-tag">{track.tag}</span>}
+          </span>
+        )}
       </button>
       {mine && (
         <button
@@ -70,7 +81,7 @@ function TrackRow({
 }
 
 /**
- * The lists to choose from, opened over the player: the site's three lists of official songs and the reader's own
+ * The lists to choose from, opened over the player: the site's lists of official songs and the reader's own
  * links. It opens on the list that plays.
  */
 export function MusicShelf({ compact }: { compact: boolean }) {

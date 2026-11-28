@@ -90,7 +90,7 @@ const READING = 1000
 const WRITE = 5
 const HEARD: readonly MusicPlayerState[] = ["OPENING", "WAITING", "PLAYING"]
 const REPEATS: readonly MusicRepeat[] = ["ALL", "ONE", "OFF"]
-const LISTS: readonly MusicListCode[] = ["SONGS", "ARENA", "HEROES", "MINE"]
+const LISTS: readonly MusicListCode[] = ["SONGS", "ARENA", "HEROES", "GAMING", "MINE"]
 
 type MusicMemory = {
   list: MusicListCode

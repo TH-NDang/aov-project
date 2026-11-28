@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { tracksOf } from "../src/lib/music-catalog.ts"
+import { MUSIC_LISTS, tracksOf } from "../src/lib/music-catalog.ts"
 import { createMusic, MINE_MOST, playOrder, readMusicMemory, type MusicPorts } from "../src/lib/music-store.ts"
 
 type Options = Parameters<MusicPorts["open"]>[1]
@@ -198,6 +198,11 @@ test("what the browser kept is read with care", () => {
   assert.equal(read.volume, 100)
   assert.equal(read.repeat, "ALL")
   assert.deepEqual(read.mine, [])
+})
+
+test("every list the site offers is the one that comes back", () => {
+  for (const { code } of MUSIC_LISTS) assert.equal(readMusicMemory(JSON.stringify({ list: code })).list, code)
+  assert.equal(readMusicMemory(JSON.stringify({ list: "MINE" })).list, "MINE")
 })
 
 test("a link of the reader's own comes first, once, and the oldest go past the most kept", () => {
