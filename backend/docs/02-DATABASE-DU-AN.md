@@ -2092,7 +2092,9 @@ Chỉ mục duy nhất một phần `(mode_id) WHERE state = 'DRAFT'` (mỗi b�
 trên `game_mode` trước khi tạo/sửa/xuất bản revision của chế độ đó.
 
 V081 thêm bản đồ xuất bản đầu tiên cho chế độ `5v5` (UUID cố định, người tạo `urn:wikiaov:migration`); bỏ qua khi
-chưa có chế độ `5v5` hoặc chế độ đã có bản đồ.
+chưa có chế độ `5v5` hoặc chế độ đã có bản đồ. V082 xuất bản revision 2 (trụ, gói máu, nhà chính nằm thẳng trên đường;
+tường quanh nhà chính thành cung đều) với `source_revision_id` là revision của V081; chỉ chạy khi bản đồ vẫn chỉ có đúng
+revision đó, tức chưa ai mở nháp hay xuất bản bản khác.
 
 `gamemode.community_lineup` — đội hình cộng đồng:
 

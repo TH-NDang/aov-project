@@ -6,6 +6,7 @@ import {
   clock,
   crossed,
   epicCalls,
+  frameWallPath,
   familyOf,
   inside,
   markers,
@@ -208,4 +209,11 @@ test("big monster calls keep the marks and callouts that name one, never the ope
   assert.deepEqual(epicCalls(content), [
     { seconds: 120, labels: ["Caesar xuất hiện", "Rồng tiến hóa"], glyph: "CAESAR" },
   ])
+})
+
+test("the frame wall is the square's edge with a rounded opening inside it", () => {
+  const frame = frameWallPath(1.5, 2)
+  assert.match(frame, /^M0 0H100V100H0Z/)
+  assert.match(frame.slice("M0 0H100V100H0Z".length), /^M3\.5 1\.5L96\.5 1\.5Q98\.5 1\.5 98\.5 3\.5/)
+  assert.equal((frame.match(/Q/g) ?? []).length, 4)
 })

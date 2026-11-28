@@ -8,6 +8,8 @@
   --marker: 22px;
   --blue: var(--aov-wiki-info);
   --red: var(--aov-wiki-danger);
+  --rock-light: color-mix(in srgb, var(--aov-wiki-text-muted) 62%, var(--aov-wiki-panel-high));
+  --rock-dark: color-mix(in srgb, var(--aov-wiki-text-muted) 26%, var(--aov-wiki-panel-high));
   position: relative;
   width: 100%;
   aspect-ratio: 1;
@@ -24,6 +26,20 @@
   .wiki-map-board {
     --marker: 28px;
   }
+}
+
+/*
+ * With traced terrain the rim is the top of the wall that closes the map in, of the same rock as the walls inside; the
+ * ground's own frame wall (map-board.tsx) carries it down to the floor.
+ */
+.wiki-map-board[data-walled] {
+  background: linear-gradient(160deg, var(--rock-light), var(--rock-dark));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--aov-wiki-bar) 70%, transparent),
+    0 18px 40px -24px rgb(0 0 0 / 0.8);
+}
+.wiki-map-board[data-walled] .wiki-map-field {
+  box-shadow: none;
 }
 
 /* The ground sits inside a dark rim so markers on the edge of the map are never cut. */
@@ -91,10 +107,10 @@
   stroke-width: 0.12;
 }
 .wiki-map-rock-light {
-  stop-color: color-mix(in srgb, var(--aov-wiki-text-muted) 62%, var(--aov-wiki-panel-high));
+  stop-color: var(--rock-light);
 }
 .wiki-map-rock-dark {
-  stop-color: color-mix(in srgb, var(--aov-wiki-text-muted) 26%, var(--aov-wiki-panel-high));
+  stop-color: var(--rock-dark);
 }
 
 /* Areas: always a faint change of ground; outlined when the reader shows them, lit when one is chosen. */
