@@ -2,7 +2,7 @@ import { Link } from "react-router"
 import { Activity, CheckCheck, CheckCircle2, ChevronDown, CircleAlert, LoaderCircle, X } from "lucide-react"
 import { useState } from "react"
 import { useSession } from "../auth/auth-gate"
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@aov/ui/components/sidebar"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { cn } from "@aov/ui/lib/utils"
 import { useBackgroundTasks, type BackgroundTask } from "../background-tasks"
 import {
@@ -13,17 +13,24 @@ import {
 
 type StatusTask = BackgroundTask & { serverJob?: boolean }
 
-/** How many tasks the sidebar lists before folding the rest away, so a busy session never pushes the menu off screen. */
+/** How many tasks the list shows before folding the rest away, so a busy session never pushes the pages off screen. */
 const SHOWN = 3
 const ORDER: Record<BackgroundTask["status"], number> = { running: 0, error: 1, review: 2, completed: 3 }
 
-export function BackgroundTaskStatus() {
-  const { actor } = useSession()
-  const storageKey = `dismissed-imports:${actor?.issuer}:${actor?.subject}`
-  return <TaskStatus key={storageKey} storageKey={storageKey} />
+interface StatusProps {
+  /** `list` names each task; `icon` keeps one mark for all of them, for the rail and the phone bar. */
+  variant?: "list" | "icon"
+  /** Called when a task is opened, so a sheet holding the list can close. */
+  onNavigate?: () => void
 }
 
-function TaskStatus({ storageKey }: { storageKey: string }) {
+export function BackgroundTaskStatus(props: StatusProps) {
+  const { actor } = useSession()
+  const storageKey = `dismissed-imports:${actor?.issuer}:${actor?.subject}`
+  return <TaskStatus key={storageKey} storageKey={storageKey} {...props} />
+}
+
+function TaskStatus({ storageKey, variant = "list", onNavigate }: StatusProps & { storageKey: string }) {
   const [dismissed, setDismissed] = useState<string[]>(() => {
     try {
       const stored: unknown = JSON.parse(localStorage.getItem(storageKey) ?? "[]")
@@ -73,7 +80,6 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
   const tasks = allTasks
     .filter((task) => task.status === "running" || task.serverJob || !dismissed.includes(fingerprint(task)))
     .sort((left, right) => ORDER[left.status] - ORDER[right.status])
-  const { isMobile, setOpenMobile, state } = useSidebar()
   if (!tasks.length) return null
 
   const running = tasks.filter((task) => task.status === "running")
@@ -91,34 +97,39 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
     for (const task of finished.filter((task) => task.serverJob)) dismissal.mutate(task.id)
   }
 
-  // The collapsed rail keeps one icon for all the work, with the summary in its tooltip.
-  if (state === "collapsed" && !isMobile) {
+  // The rail and the phone bar keep one icon for all the work, with the summary in its tooltip.
+  if (variant === "icon") {
     const first = tasks[0]!
     const Icon = running.length ? LoaderCircle : failed ? CircleAlert : CheckCircle2
     return (
-      <SidebarMenu aria-label="Tác vụ dữ liệu">
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip={`Tác vụ dữ liệu: ${summary}`}>
-            <Link to={first.path} aria-label={`Tác vụ dữ liệu: ${summary}`}>
-              <Icon
-                className={cn(
-                  running.length
-                    ? "animate-spin text-primary"
-                    : failed
-                      ? "text-(--aov-warning)"
-                      : "text-muted-foreground",
-                )}
-              />
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            to={first.path}
+            className="adm-task-mark"
+            aria-label={`Tác vụ dữ liệu: ${summary}`}
+            onClick={onNavigate}
+          >
+            <Icon
+              className={cn(
+                "size-5",
+                running.length
+                  ? "animate-spin text-primary"
+                  : failed
+                    ? "text-(--aov-warning)"
+                    : "text-muted-foreground",
+              )}
+            />
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right">Tác vụ dữ liệu: {summary}</TooltipContent>
+      </Tooltip>
     )
   }
 
   const shown = expanded ? tasks : tasks.slice(0, SHOWN)
   return (
-    <div className="grid gap-1 border-t pt-2">
+    <div className="grid gap-1 border-t border-sidebar-border p-2">
       <div className="flex items-center justify-between gap-2 px-2">
         <p className="type-label truncate text-muted-foreground">
           Tác vụ dữ liệu <span className="font-normal">· {summary}</span>
@@ -136,11 +147,11 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
           </button>
         )}
       </div>
-      <SidebarMenu aria-label="Tác vụ dữ liệu" className={cn(expanded && "max-h-60 overflow-y-auto")}>
+      <ul aria-label="Tác vụ dữ liệu" className={cn("grid gap-0.5", expanded && "max-h-60 overflow-y-auto")}>
         {dismissal.isError && !jobs.data?.find((job) => job.id === dismissal.variables)?.notificationDismissed && (
-          <SidebarMenuItem role="alert" className="px-2 py-1 text-xs text-destructive">
+          <li role="alert" className="px-2 py-1 text-xs text-destructive">
             Chưa xác nhận được việc đóng thông báo trên máy chủ. Bấm × để thử lại.
-          </SidebarMenuItem>
+          </li>
         )}
         {shown.map((task) => {
           const active = task.status === "running"
@@ -153,54 +164,52 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
                 : Activity
           const percent = task.total ? Math.min(100, Math.round((task.completed / task.total) * 100)) : 0
           return (
-            <SidebarMenuItem key={task.id}>
-              <SidebarMenuButton
-                asChild
-                className={cn("h-auto items-start py-1.5", active ? "pr-12" : "pr-8")}
-                tooltip={`${task.title}: ${task.description}`}
+            <li key={task.id} className="relative">
+              <Link
+                to={task.path}
+                title={`${task.title}: ${task.description}`}
+                className={cn(
+                  "flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-sidebar-foreground outline-hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+                  active ? "pr-12" : "pr-8",
+                )}
+                onClick={() => {
+                  if (!active && !dismissal.isPending) dismiss(task)
+                  onNavigate?.()
+                }}
               >
-                <Link
-                  to={task.path}
-                  title={`${task.title}: ${task.description}`}
-                  onClick={() => {
-                    if (!active && !dismissal.isPending) dismiss(task)
-                    if (isMobile) setOpenMobile(false)
-                  }}
-                >
-                  <Icon
-                    className={cn(
-                      "mt-0.5 size-4 shrink-0",
-                      active
-                        ? "animate-spin text-primary"
-                        : task.status === "error"
-                          ? "text-(--aov-warning)"
-                          : "text-muted-foreground",
-                    )}
-                  />
-                  <span className="grid min-w-0 flex-1 gap-1">
-                    <span className="truncate text-xs">
-                      <span className="font-medium">{task.title}</span>
-                      {/* A running task shows its count at the end of the row instead. */}
-                      {!active && <span className="text-muted-foreground"> · {task.description}</span>}
-                    </span>
-                    {active && (
-                      <span
-                        role="progressbar"
-                        aria-label={task.title}
-                        aria-valuemin={0}
-                        aria-valuemax={task.total || 1}
-                        aria-valuenow={task.completed}
-                        className="h-1 overflow-hidden rounded-full bg-sidebar-accent"
-                      >
-                        <span
-                          className="block h-full rounded-full bg-primary transition-[width]"
-                          style={{ width: `${percent}%` }}
-                        />
-                      </span>
-                    )}
+                <Icon
+                  className={cn(
+                    "mt-0.5 size-4 shrink-0",
+                    active
+                      ? "animate-spin text-primary"
+                      : task.status === "error"
+                        ? "text-(--aov-warning)"
+                        : "text-muted-foreground",
+                  )}
+                />
+                <span className="grid min-w-0 flex-1 gap-1">
+                  <span className="truncate text-xs">
+                    <span className="font-medium">{task.title}</span>
+                    {/* A running task shows its count at the end of the row instead. */}
+                    {!active && <span className="text-muted-foreground"> · {task.description}</span>}
                   </span>
-                </Link>
-              </SidebarMenuButton>
+                  {active && (
+                    <span
+                      role="progressbar"
+                      aria-label={task.title}
+                      aria-valuemin={0}
+                      aria-valuemax={task.total || 1}
+                      aria-valuenow={task.completed}
+                      className="h-1 overflow-hidden rounded-full bg-sidebar-accent"
+                    >
+                      <span
+                        className="block h-full rounded-full bg-primary transition-[width]"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </span>
+                  )}
+                </span>
+              </Link>
               {active ? (
                 <span className="pointer-events-none absolute top-1.5 right-2 text-xs text-muted-foreground tabular-nums">
                   {task.completed}/{task.total}
@@ -216,10 +225,10 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
                   <X className="size-3.5" />
                 </button>
               )}
-            </SidebarMenuItem>
+            </li>
           )
         })}
-      </SidebarMenu>
+      </ul>
       {tasks.length > SHOWN && (
         <button
           type="button"

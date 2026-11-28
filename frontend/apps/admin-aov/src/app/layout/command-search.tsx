@@ -4,7 +4,7 @@ import { useHotkeys } from "../hotkeys"
 
 const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} })
 
-/** One search for the whole Admin: Ctrl K anywhere, or the search row at the top of the sidebar and the phone bar. */
+/** One search for the whole Admin: Ctrl K anywhere, or the search button on the rail and in the phone header. */
 export function CommandSearchProvider({ children }: { children: ReactNode }) {
   const { enabled } = useHotkeys()
   const [open, setOpen] = useState(false)

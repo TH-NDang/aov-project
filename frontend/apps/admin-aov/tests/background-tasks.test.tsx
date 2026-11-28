@@ -67,7 +67,6 @@ test("server dismissals survive fresh clients and reconcile failures without hid
   openWindow()
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { BackgroundTaskStatus } = await import("../src/app/layout/background-task-status")
-  const { SidebarProvider } = await import("@aov/ui/components/sidebar")
   const { createRoot } = await import("react-dom/client")
   const newCache = () =>
     new QueryClient({
@@ -81,9 +80,7 @@ test("server dismissals survive fresh clients and reconcile failures without hid
         <MemoryRouter>
           <QueryClientProvider client={cache}>
             <BackgroundTasksProvider>
-              <SidebarProvider>
-                <BackgroundTaskStatus />
-              </SidebarProvider>
+              <BackgroundTaskStatus />
             </BackgroundTasksProvider>
           </QueryClientProvider>
         </MemoryRouter>,
@@ -303,7 +300,6 @@ test("many tasks fold into a short list, and finished ones can be hidden togethe
   })
   const restoreGlobals = installWindow(dom.window)
   const { BackgroundTaskStatus } = await import("../src/app/layout/background-task-status")
-  const { SidebarProvider } = await import("@aov/ui/components/sidebar")
   const { createRoot } = await import("react-dom/client")
   function Seed() {
     const { updateTask } = useBackgroundTasks()
@@ -327,10 +323,8 @@ test("many tasks fold into a short list, and finished ones can be hidden togethe
         <MemoryRouter>
           <QueryClientProvider client={new QueryClient()}>
             <BackgroundTasksProvider>
-              <SidebarProvider>
-                <Seed />
-                <BackgroundTaskStatus />
-              </SidebarProvider>
+              <Seed />
+              <BackgroundTaskStatus />
             </BackgroundTasksProvider>
           </QueryClientProvider>
         </MemoryRouter>,
