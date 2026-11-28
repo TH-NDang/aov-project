@@ -6,6 +6,7 @@ import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
 import {
   resolveEntityRoute,
+  managedCommunityReference,
   foldEntitySearch,
   entityKindLabels,
   defaultEntityColor,
@@ -19,12 +20,21 @@ import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { useDebounced } from "@/features/community/directory/directory-api"
 import { formatNumber } from "@/lib/text"
 import { AliasChips } from "./alias-chips"
+import {
+  catalogLanguageCode,
+  catalogLanguageGaps,
+  catalogLanguageName,
+  catalogLanguages,
+  catalogLanguageWord,
+  hasCatalogLanguage,
+} from "./catalog-languages"
 import { CatalogKindFilter, type CatalogKind } from "./catalog-kind-filter"
 import { isRecordKind, recordKinds } from "./record-catalog-api"
 import { RecordCatalogRows } from "./record-catalog-rows"
 import { useRecordCounts } from "./use-record-catalog"
 
 const kinds = entityKindLabels
+const noLanguages: string[] = []
 const fold = foldEntitySearch
 
 export function ReferenceCatalogTable({
@@ -41,6 +51,8 @@ export function ReferenceCatalogTable({
   renderAliasAction,
   loading = false,
   searchSlot,
+  languages = noLanguages,
+  onLocaleChange,
 }: {
   entities: EntityReference[]
   locale: string
@@ -56,6 +68,10 @@ export function ReferenceCatalogTable({
   loading?: boolean
   /** The page header's search slot; without it the search stays in the toolbar. */
   searchSlot?: HTMLElement | null
+  /** Languages in the order the catalog lists them; a language no entry is named in stays out. */
+  languages?: string[]
+  /** Reads the catalog in another language, so a missing name can be written there. */
+  onLocaleChange?: (locale: string) => void
 }) {
   const [search, setSearch] = useState("")
   const [kind, setKind] = useState<CatalogKind>("all")
@@ -100,10 +116,22 @@ export function ReferenceCatalogTable({
     (key) => ownKinds.has(key) || (!termsOnly && isRecordKind(key)),
   )
   const matching = kind === "all" ? found : found.filter((entity) => entity.kind === kind)
-  const missing = matching.filter(
-    (entity) => !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase()),
-  )
+  const missing = matching.filter((entity) => !hasCatalogLanguage(entity, locale))
   const rows = missingTranslation ? missing : matching
+  const kept = useMemo(() => catalogLanguages(own, languages, locale), [own, languages, locale])
+  const isLocale = (code: string) => code.toLowerCase() === locale.toLowerCase()
+  // One toggle per language with gaps; the one being filtered stays even once its gaps are filled.
+  const gaps = catalogLanguageGaps(matching, kept).filter(
+    ({ code, count }) => count > 0 || (missingTranslation && isLocale(code)),
+  )
+  function showMissing(code: string) {
+    if (missingTranslation && isLocale(code)) {
+      setMissingTranslation(false)
+      return
+    }
+    if (!isLocale(code)) onLocaleChange?.(code)
+    setMissingTranslation(true)
+  }
   const revealed = useRevealedRows(rows, JSON.stringify([search, kind, missingTranslation]))
   const filtered = !!search || kind !== "all" || missingTranslation
   // Their names have one language, so the filter for missing translations is about the catalog's own entries.
@@ -144,23 +172,35 @@ export function ReferenceCatalogTable({
           )}
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
-          {(missingTranslation || missing.length > 0) && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className={`h-8 gap-1.5 rounded-lg border px-2.5 text-xs ${missingTranslation ? "border-(--aov-warning)/50 bg-(--aov-warning-soft) text-(--aov-warning)" : "border-border bg-background text-foreground/80"}`}
-              aria-label="Thiếu bản dịch"
-              aria-pressed={missingTranslation}
-              onClick={() => {
-                setMissingTranslation((value) => !value)
-              }}
-            >
-              <Languages className="size-3.5" />
-              Thiếu bản dịch
-              <span aria-hidden className="tabular-nums">
-                {missing.length}
+          {gaps.length > 0 && (
+            <div role="group" aria-label="Lọc mục thiếu tên theo ngôn ngữ" className="flex items-center gap-1">
+              <span className="flex items-center gap-1 pr-0.5 text-xs text-muted-foreground">
+                <Languages aria-hidden className="size-3.5" />
+                Thiếu tên
               </span>
-            </Button>
+              {gaps
+                .filter(({ code }) => onLocaleChange || isLocale(code))
+                .map(({ code, count }) => {
+                  const active = missingTranslation && isLocale(code)
+                  return (
+                    <Button
+                      key={code}
+                      size="sm"
+                      variant="ghost"
+                      className={`h-8 gap-1 rounded-lg border px-2 text-xs ${active ? "border-(--aov-warning)/50 bg-(--aov-warning-soft) text-(--aov-warning)" : "border-border bg-background text-foreground/80"}`}
+                      aria-label={`Thiếu ${catalogLanguageWord(code)}`}
+                      aria-pressed={active}
+                      title={`${formatNumber(count)} mục chưa có tên ${catalogLanguageWord(code)}`}
+                      onClick={() => showMissing(code)}
+                    >
+                      <span className="font-semibold">{catalogLanguageCode(code)}</span>
+                      <span aria-hidden className="tabular-nums">
+                        {formatNumber(count)}
+                      </span>
+                    </Button>
+                  )
+                })}
+            </div>
           )}
           {filtered && (
             <Button size="sm" variant="ghost" className="h-8 gap-1 px-2 text-xs" onClick={resetFilters}>
@@ -180,7 +220,7 @@ export function ReferenceCatalogTable({
           <colgroup className="hidden @xl/catalog:table-column-group">
             <col className={termsOnly ? "w-[35%]" : "w-[38%]"} />
             <col />
-            <col className="w-24" />
+            <col className="w-40" />
             {!termsOnly && <col className="w-12" />}
           </colgroup>
           <caption className="sr-only">
@@ -210,6 +250,7 @@ export function ReferenceCatalogTable({
                   entity.translations[0]
                 const available = availableKeys.has(key)
                 const translated = text?.locale.toLowerCase() === locale.toLowerCase()
+                const writable = !!onLocaleChange && !managedCommunityReference(entity.kind)
                 const manual =
                   entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)
                 const route = available ? resolveEntityRoute(entity, "admin", locale) : undefined
@@ -285,16 +326,47 @@ export function ReferenceCatalogTable({
                       {!termsOnly && renderAliasAction?.(entity)}
                     </td>
                     <td className="mt-2 inline-block @xl/catalog:mt-0 @xl/catalog:table-cell @xl/catalog:px-3 @xl/catalog:py-3">
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1">
                         <span className="mr-1 text-xs text-muted-foreground @xl/catalog:hidden">Bản dịch</span>
-                        {entity.translations.map((copy) => (
-                          <span
-                            key={copy.locale}
-                            className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${copy.locale.toLowerCase() === locale.toLowerCase() ? "border-border bg-muted/60 text-foreground" : "border-transparent text-muted-foreground"}`}
-                          >
-                            {copy.locale}
-                          </span>
-                        ))}
+                        {kept.map((code) => {
+                          const language = catalogLanguageWord(code)
+                          const mark = catalogLanguageCode(code)
+                          if (hasCatalogLanguage(entity, code))
+                            return (
+                              <span
+                                key={code}
+                                title={catalogLanguageName(code)}
+                                className={`min-w-7 rounded-md border px-1 py-0.5 text-center text-xs font-medium ${isLocale(code) ? "border-border bg-muted/60 text-foreground" : "border-transparent text-muted-foreground"}`}
+                              >
+                                {mark}
+                              </span>
+                            )
+                          const label = `Chưa có tên ${language}`
+                          return writable ? (
+                            <button
+                              key={code}
+                              type="button"
+                              title={`${label}. Chọn để thêm.`}
+                              aria-label={`Thêm tên ${language} cho ${text?.name || entity.id}`}
+                              className="min-w-7 cursor-pointer rounded-md border border-dashed border-(--aov-warning)/60 px-1 py-0.5 text-center text-xs font-medium text-(--aov-warning) hover:bg-(--aov-warning-soft) focus-visible:outline-2 focus-visible:outline-ring"
+                              onClick={() => {
+                                onLocaleChange?.(code)
+                                onSelect(key)
+                              }}
+                            >
+                              {mark}
+                            </button>
+                          ) : (
+                            <span
+                              key={code}
+                              title={label}
+                              className="min-w-7 rounded-md border border-dashed border-(--aov-warning)/60 px-1 py-0.5 text-center text-xs font-medium text-(--aov-warning)"
+                            >
+                              <span aria-hidden>{mark}</span>
+                              <span className="sr-only">{label}</span>
+                            </span>
+                          )
+                        })}
                       </div>
                       {!translated && (
                         <span className="mt-1.5 block text-xs text-(--aov-warning)">
