@@ -6,6 +6,7 @@ export * from "./channels"
 export * from "./competition"
 export * from "./match-titles"
 export * from "./references"
+export * from "./translation"
 export type Selection = { id?: string | null; name?: string | null }
 /** `PARTIAL`: the source showed part of a loadout, so entries may be incomplete or lack an exact name. */
 export type ObservationStatus = "UNKNOWN" | "NOT_SHOWN" | "PARTIAL" | "KNOWN"
