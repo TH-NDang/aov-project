@@ -1,6 +1,5 @@
 package com.wikiaov.hero.internal.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -126,15 +125,14 @@ public final class HeroContent {
     }
 
     /**
-     * A hero's own value of one attribute, as the game's attribute screen shows it. The value does not change with the
-     * hero's level; items, arcana and enchantments add to it in a match. {@code growthPerLevel} was retired: import jobs
-     * saved before then still carry it as null, so reading them ignores it.
+     * A hero's own value of one attribute at level 1, as the game's attribute screen shows it, and how much it rises
+     * with each level when recorded. Items, arcana and enchantments add to it in a match.
      */
-    @JsonIgnoreProperties("growthPerLevel")
     public record Stat(
             @NotBlank @Pattern(regexp = "[A-Z][A-Z0-9_]{0,63}") String statKey,
             BigDecimal baseValue,
             BigDecimal percentValue,
+            BigDecimal growthPerLevel,
             @NotBlank @Size(max = 32) String unit
     ) {
     }

@@ -266,6 +266,7 @@ export function HeroPatchTimeline({
                     <tr>
                       <th className="px-3 py-2 font-medium">Chỉ số</th>
                       <th className="px-3 py-2 text-right font-medium">Giá trị</th>
+                      <th className="px-3 py-2 text-right font-medium">Mỗi cấp</th>
                       <th className="px-3 py-2 font-medium">Số này lấy từ đâu</th>
                     </tr>
                   </thead>
@@ -282,6 +283,9 @@ export function HeroPatchTimeline({
                               {stat.baseValue !== null ? (UNIT_LABELS[stat.unit] ?? "") : ""}
                             </>
                           )}
+                        </td>
+                        <td className="px-3 py-1.5 text-right text-muted-foreground tabular-nums">
+                          {stat.growthPerLevel ?? "—"}
                         </td>
                         <td className="px-3 py-1.5">
                           <ProvenanceTag

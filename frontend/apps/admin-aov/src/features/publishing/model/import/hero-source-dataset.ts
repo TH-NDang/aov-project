@@ -59,7 +59,7 @@ export function captureDataset(value: unknown): SourceDataset | null {
       sourceUrl: sourceHttpUrl(provenance.folder_url),
       observedAt: null,
       verificationState: "UNVERIFIED",
-      note: "Mốc dữ liệu do người cung cấp xác nhận khi nhập. Các giá trị thuộc tính là số màn Thuộc tính trong game ghi; chỉ số không đổi theo cấp tướng.",
+      note: "Mốc dữ liệu do người cung cấp xác nhận khi nhập. Chưa xác định cấp tướng trong ảnh; các giá trị thuộc tính là số ghi nhận, không suy ra tăng trưởng mỗi cấp.",
     }
     const ratings = isRecord(hero.overview_ratings) ? hero.overview_ratings : {}
     const bars = records(ratings.bars)
@@ -82,6 +82,7 @@ export function captureDataset(value: unknown): SourceDataset | null {
             {
               statKey: statKeys[key],
               baseValue: item.value,
+              growthPerLevel: null,
               unit: item.unit === "percent" ? "PERCENT" : "UNKNOWN",
             },
           ]

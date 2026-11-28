@@ -14,6 +14,7 @@ export const heroKeys = {
   traits: (region: string) => ["wiki", "hero-traits", region] as const,
   builds: (heroCode: string, region: string) => ["wiki", "hero-builds", heroCode, region] as const,
   shop: (heroId: string, region: string) => ["wiki", "hero-shop", heroId, region] as const,
+  statRules: ["wiki", "hero-stat-rules"] as const,
 }
 
 export interface HeroMedia {
@@ -140,7 +141,14 @@ export interface HeroDetail {
     } | null
     skills?: { skills?: PublicSkill[] } | null
     combatStats?: {
-      values?: { statKey: string; baseValue: number | null; percentValue?: number | null; unit?: string }[]
+      values?: {
+        statKey: string
+        baseValue: number | null
+        percentValue?: number | null
+        /** How much the stat rises with each hero level, when recorded. */
+        growthPerLevel?: number | null
+        unit?: string
+      }[]
     } | null
   }
   /** Each published form of a hero that holds forms, with the same detail as a hero (ADR-024). */
@@ -249,6 +257,25 @@ export function heroRankingBoardQuery(region: string) {
   return queryOptions({
     queryKey: heroKeys.rankings(region),
     queryFn: ({ signal }) => wikiGet<HeroRankingBoard>(`/hero-rankings?region=${encodeURIComponent(region)}`, signal),
+    staleTime: 300_000,
+    retry: false,
+  })
+}
+
+/** What every hero shares for a stat, whatever the patch: the level 1 value, the rise per level and the cap. */
+export interface HeroStatRule {
+  statKey: string
+  unit: "POINT" | "PERCENT"
+  baseValue: number | null
+  percentValue: number | null
+  growthPerLevel: number | null
+  capValue: number | null
+}
+
+export function heroStatRulesQuery() {
+  return queryOptions({
+    queryKey: heroKeys.statRules,
+    queryFn: ({ signal }) => wikiGet<HeroStatRule[]>("/hero-stat-rules", signal),
     staleTime: 300_000,
     retry: false,
   })

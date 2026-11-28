@@ -1365,29 +1365,18 @@
         }
       }
     },
-    "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults": {
+    "/api/wiki/v1/admin/hero-stat-rules": {
       "get": {
-        "operationId": "patchStatDefaults_effective",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "operationId": "heroStatRules_list",
         "responses": {
           "200": {
-            "description": "Effective stat defaults for the selected ruleset and patch",
+            "description": "What every hero shares for each stat, whatever the patch",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/PatchStatDefault"
+                    "$ref": "#/components/schemas/HeroStatRule"
                   }
                 }
               }
@@ -1396,19 +1385,10 @@
         }
       }
     },
-    "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults/{key}": {
+    "/api/wiki/v1/admin/hero-stat-rules/{key}": {
       "put": {
-        "operationId": "patchStatDefaults_set",
+        "operationId": "heroStatRules_set",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
           {
             "name": "key",
             "in": "path",
@@ -1424,20 +1404,62 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SetPatchStatDefault"
+                "$ref": "#/components/schemas/SetHeroStatRule"
               }
             }
           }
         },
         "responses": {
-          "204": {
-            "description": "Default saved"
+          "200": {
+            "description": "Shared stat saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroStatRule"
+                }
+              }
+            }
           },
           "409": {
-            "description": "Stale default version"
+            "description": "Stale shared stat version"
           },
           "422": {
-            "description": "Invalid default or source URL"
+            "description": "Invalid value, cap or source URL"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "heroStatRules_remove",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+            }
+          },
+          {
+            "name": "expectedVersion",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Shared stat removed; heroes keep their own values"
+          },
+          "404": {
+            "description": "No shared values for this stat"
+          },
+          "409": {
+            "description": "Stale shared stat version"
           }
         }
       }
@@ -2948,15 +2970,17 @@
           }
         }
       },
-      "PatchStatDefault": {
+      "HeroStatRule": {
         "type": "object",
+        "description": "What every hero shares for one stat, whatever the patch. A hero keeps its own value only where it differs.",
         "required": [
           "statKey",
-          "baseValue",
           "unit",
+          "baseValue",
+          "percentValue",
+          "growthPerLevel",
+          "capValue",
           "sourceUrl",
-          "variantId",
-          "patchCode",
           "version"
         ],
         "properties": {
@@ -2964,9 +2988,6 @@
             "type": "string",
             "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
           },
-          "baseValue": {
-            "type": "number"
-          },
           "unit": {
             "type": "string",
             "enum": [
@@ -2974,37 +2995,52 @@
               "PERCENT"
             ]
           },
+          "baseValue": {
+            "type": "number",
+            "nullable": true,
+            "description": "The level 1 value every hero starts with; null when heroes differ.",
+            "minimum": 0
+          },
+          "percentValue": {
+            "type": "number",
+            "nullable": true,
+            "description": "For armor, magic defense and both pierces, the percent the game shows after the number.",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "growthPerLevel": {
+            "type": "number",
+            "nullable": true,
+            "description": "How much the stat rises with each level for every hero; null when heroes differ.",
+            "minimum": 0
+          },
+          "capValue": {
+            "type": "number",
+            "nullable": true,
+            "description": "The most the stat can reach in a match; null when it has no cap."
+          },
           "sourceUrl": {
             "type": "string",
             "format": "uri",
-            "maxLength": 2048
-          },
-          "variantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "patchCode": {
-            "type": "string"
+            "maxLength": 2048,
+            "nullable": true,
+            "description": "Where the value or cap was read."
           },
           "version": {
             "type": "integer",
             "format": "int64",
-            "minimum": 0
+            "minimum": 1
           }
         }
       },
-      "SetPatchStatDefault": {
+      "SetHeroStatRule": {
         "type": "object",
+        "description": "Needs at least a level 1 value, a rise per level or a cap.",
         "required": [
-          "baseValue",
           "unit",
-          "sourceUrl",
           "expectedVersion"
         ],
         "properties": {
-          "baseValue": {
-            "type": "number"
-          },
           "unit": {
             "type": "string",
             "enum": [
@@ -3012,15 +3048,42 @@
               "PERCENT"
             ]
           },
+          "baseValue": {
+            "type": "number",
+            "nullable": true,
+            "description": "The level 1 value every hero starts with; null when heroes differ.",
+            "minimum": 0
+          },
+          "percentValue": {
+            "type": "number",
+            "nullable": true,
+            "description": "For armor, magic defense and both pierces, the percent the game shows after the number.",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "growthPerLevel": {
+            "type": "number",
+            "nullable": true,
+            "description": "How much the stat rises with each level for every hero; null when heroes differ.",
+            "minimum": 0
+          },
+          "capValue": {
+            "type": "number",
+            "nullable": true,
+            "description": "The most the stat can reach in a match; null when it has no cap."
+          },
           "sourceUrl": {
             "type": "string",
             "format": "uri",
-            "maxLength": 2048
+            "maxLength": 2048,
+            "nullable": true,
+            "description": "Where the value or cap was read."
           },
           "expectedVersion": {
             "type": "integer",
             "format": "int64",
-            "minimum": 0
+            "minimum": 0,
+            "description": "0 to add a stat that has no shared values yet."
           }
         }
       },
@@ -3052,7 +3115,7 @@
                 "baseValue": {
                   "type": "number",
                   "nullable": true,
-                  "description": "The value the game's attribute screen shows, required to save the stat. It is the same at every hero level; items, arcana and enchantments add to it in a match."
+                  "description": "The value at level 1 as the game's attribute screen shows it, required to save the stat. Items, arcana and enchantments add to it in a match."
                 },
                 "percentValue": {
                   "type": "number",
@@ -3060,6 +3123,12 @@
                   "minimum": 0,
                   "maximum": 100,
                   "description": "The percent the game shows after the bar, as in 150 | 20%. Only ARMOR, MAGIC_DEFENSE, ARMOR_PIERCE and MAGIC_PIERCE have one, and it needs baseValue."
+                },
+                "growthPerLevel": {
+                  "type": "number",
+                  "nullable": true,
+                  "minimum": 0,
+                  "description": "How much the stat rises with each hero level; null when not recorded."
                 }
               }
             }

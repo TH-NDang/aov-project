@@ -26,3 +26,13 @@ export function sourceName(link: PatchSourceLink) {
     return link.url
   }
 }
+
+/** The one link a short mention cites: the page in the reader's language, else the patch's first. */
+export function preferredPatchSource(links: PatchSourceLink[], locale: string) {
+  const language = locale.split("-")[0]
+  return (
+    links.find((link) => link.locale === locale) ??
+    links.find((link) => link.locale?.split("-")[0] === language) ??
+    links[0]
+  )
+}

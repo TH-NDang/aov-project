@@ -239,18 +239,21 @@ test("heroes whose changes only fix bugs are listed apart from the balance chang
   })
 })
 
-test("with links shared by the patch, a rewritten change set can drop its own link for them", async () => {
+test("a patch names its links once: hero rows carry none, and a rewritten change cites the patch's links", async () => {
   await inDom(page, async (dom) => {
     const shared = [{ url: "https://lienquan.garena.vn/patch", label: "Tiếng Việt", locale: "vi-VN" }]
     const { sent } = await openTable(dom, noContent, ["catalog:read", "patch:write"], balanceRows, shared)
 
     const strip = await waitFor(() => document.querySelector('[aria-label="Nguồn ghi chú cập nhật"]'))
     assert.equal(strip.querySelector("a")?.getAttribute("href"), "https://lienquan.garena.vn/patch")
-    await click(await waitFor(() => button("Xem thay đổi Airi")), "hero detail")
+    await waitFor(() => button("Xem thay đổi Airi"))
+    assert.doesNotMatch(document.querySelector("table")?.textContent ?? "", /Từ ghi chú cập nhật/)
+    assert.equal(document.querySelector('table a[href="https://example.org/notes"]'), null)
+
+    await click(button("Xem thay đổi Airi"), "hero detail")
     await click(await waitFor(() => button("Sửa thay đổi")), "edit button")
-    await waitFor(() => document.body.textContent?.includes("Link riêng của tướng"), "The own link is shown")
-    await click(button("Dùng link chung"), "use shared links")
-    assert.match(document.body.textContent ?? "", /Nguồn: 1 link chung của patch\./)
+    await waitFor(() => /Nguồn: 1 link chung của patch\./.test(document.body.textContent ?? ""))
+    assert.doesNotMatch(document.body.textContent ?? "", /Link riêng/)
     await click(button("Lưu thay đổi"), "save")
 
     await waitFor(() => sent.length === 1, "The edit is sent")

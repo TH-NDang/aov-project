@@ -459,14 +459,14 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults": {
+  "/api/wiki/v1/admin/hero-stat-rules": {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    get: operations["patchStatDefaults_effective"]
+    get: operations["heroStatRules_list"]
     put?: never
     post?: never
     delete?: never
@@ -475,7 +475,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults/{key}": {
+  "/api/wiki/v1/admin/hero-stat-rules/{key}": {
     parameters: {
       query?: never
       header?: never
@@ -483,9 +483,9 @@ export interface paths {
       cookie?: never
     }
     get?: never
-    put: operations["patchStatDefaults_set"]
+    put: operations["heroStatRules_set"]
     post?: never
-    delete?: never
+    delete: operations["heroStatRules_remove"]
     options?: never
     head?: never
     patch?: never
@@ -940,36 +940,60 @@ export interface components {
         }
       } | null
     }
-    PatchStatDefault: {
+    /** @description What every hero shares for one stat, whatever the patch. A hero keeps its own value only where it differs. */
+    HeroStatRule: {
       statKey: string
-      baseValue: number
       /** @enum {string} */
       unit: "POINT" | "PERCENT"
-      /** Format: uri */
-      sourceUrl: string
-      /** Format: uuid */
-      variantId: string
-      patchCode: string
+      /** @description The level 1 value every hero starts with; null when heroes differ. */
+      baseValue: number | null
+      /** @description For armor, magic defense and both pierces, the percent the game shows after the number. */
+      percentValue: number | null
+      /** @description How much the stat rises with each level for every hero; null when heroes differ. */
+      growthPerLevel: number | null
+      /** @description The most the stat can reach in a match; null when it has no cap. */
+      capValue: number | null
+      /**
+       * Format: uri
+       * @description Where the value or cap was read.
+       */
+      sourceUrl: string | null
       /** Format: int64 */
       version: number
     }
-    SetPatchStatDefault: {
-      baseValue: number
+    /** @description Needs at least a level 1 value, a rise per level or a cap. */
+    SetHeroStatRule: {
       /** @enum {string} */
       unit: "POINT" | "PERCENT"
-      /** Format: uri */
-      sourceUrl: string
-      /** Format: int64 */
+      /** @description The level 1 value every hero starts with; null when heroes differ. */
+      baseValue?: number | null
+      /** @description For armor, magic defense and both pierces, the percent the game shows after the number. */
+      percentValue?: number | null
+      /** @description How much the stat rises with each level for every hero; null when heroes differ. */
+      growthPerLevel?: number | null
+      /** @description The most the stat can reach in a match; null when it has no cap. */
+      capValue?: number | null
+      /**
+       * Format: uri
+       * @description Where the value or cap was read.
+       */
+      sourceUrl?: string | null
+      /**
+       * Format: int64
+       * @description 0 to add a stat that has no shared values yet.
+       */
       expectedVersion: number
     }
     HeroImportedStats: {
       values: {
         statKey: string
         unit: string
-        /** @description The value the game's attribute screen shows, required to save the stat. It is the same at every hero level; items, arcana and enchantments add to it in a match. */
+        /** @description The value at level 1 as the game's attribute screen shows it, required to save the stat. Items, arcana and enchantments add to it in a match. */
         baseValue?: number | null
         /** @description The percent the game shows after the bar, as in 150 | 20%. Only ARMOR, MAGIC_DEFENSE, ARMOR_PIERCE and MAGIC_PIERCE have one, and it needs baseValue. */
         percentValue?: number | null
+        /** @description How much the stat rises with each hero level; null when not recorded. */
+        growthPerLevel?: number | null
       }[]
       sources: components["schemas"]["HeroSource"][]
     }
@@ -2338,60 +2362,95 @@ export interface operations {
       }
     }
   }
-  patchStatDefaults_effective: {
+  heroStatRules_list: {
     parameters: {
       query?: never
       header?: never
-      path: {
-        id: string
-      }
+      path?: never
       cookie?: never
     }
     requestBody?: never
     responses: {
-      /** @description Effective stat defaults for the selected ruleset and patch */
+      /** @description What every hero shares for each stat, whatever the patch */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["PatchStatDefault"][]
+          "application/json": components["schemas"]["HeroStatRule"][]
         }
       }
     }
   }
-  patchStatDefaults_set: {
+  heroStatRules_set: {
     parameters: {
       query?: never
       header?: never
       path: {
-        id: string
         key: string
       }
       cookie?: never
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["SetPatchStatDefault"]
+        "application/json": components["schemas"]["SetHeroStatRule"]
       }
     }
     responses: {
-      /** @description Default saved */
-      204: {
+      /** @description Shared stat saved */
+      200: {
         headers: {
           [name: string]: unknown
         }
-        content?: never
+        content: {
+          "application/json": components["schemas"]["HeroStatRule"]
+        }
       }
-      /** @description Stale default version */
+      /** @description Stale shared stat version */
       409: {
         headers: {
           [name: string]: unknown
         }
         content?: never
       }
-      /** @description Invalid default or source URL */
+      /** @description Invalid value, cap or source URL */
       422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  heroStatRules_remove: {
+    parameters: {
+      query: {
+        expectedVersion: number
+      }
+      header?: never
+      path: {
+        key: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Shared stat removed; heroes keep their own values */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No shared values for this stat */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Stale shared stat version */
+      409: {
         headers: {
           [name: string]: unknown
         }

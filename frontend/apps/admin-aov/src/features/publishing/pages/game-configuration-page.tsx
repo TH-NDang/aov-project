@@ -1,7 +1,6 @@
 import { activeCatalogScope, catalogScopePatch, resolveCatalogScope } from "@/lib/catalog-scope"
 import { useCatalogScopePreference } from "../components/catalog/catalog-scope-memory"
 import { PatchDataReview } from "../components/setup/patch-data-review"
-import { PatchStatDefaults } from "../components/setup/patch-stat-defaults"
 import { SharedPatchSetup, PatchReleaseForm } from "../components/setup/shared-version-setup"
 import { useState } from "react"
 import { useSearchParams } from "react-router"
@@ -18,9 +17,7 @@ import {
   Globe2,
   Layers,
   Plus,
-  RefreshCw,
   Shapes,
-  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
@@ -125,6 +122,8 @@ export function GameConfigurationPage() {
       toast.error(errorMessage(cause))
     }
   }
+  const canWritePatch = capabilities.includes("patch:write")
+  const canCreateRuleset = capabilities.includes("region:admin") && !!data && !data.rulesets.length
   return (
     <Page>
       <PageHeader
@@ -136,34 +135,29 @@ export function GameConfigurationPage() {
                 <Globe2 aria-hidden /> Thị trường
               </Button>
             )}
-            <PageActionsMenu label="Tạo và thiết lập phiên bản">
-              {capabilities.includes("patch:write") && (
-                <>
-                  <DropdownMenuItem onSelect={() => setSetup("patch")}>
-                    <Plus />
-                    Tạo patch
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSetup("season")}>
-                    <CalendarPlus />
-                    Tạo mùa
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              {capabilities.includes("region:admin") && data && !data.rulesets.length && (
-                <>
+            {(canWritePatch || canCreateRuleset) && (
+              <PageActionsMenu label="Tạo và thiết lập phiên bản">
+                {canWritePatch && (
+                  <>
+                    <DropdownMenuItem onSelect={() => setSetup("patch")}>
+                      <Plus />
+                      Tạo patch
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setSetup("season")}>
+                      <CalendarPlus />
+                      Tạo mùa
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {canWritePatch && canCreateRuleset && <DropdownMenuSeparator />}
+                {canCreateRuleset && (
                   <DropdownMenuItem onSelect={() => void createDefaultRuleset()}>
                     <Shapes />
                     Tạo bộ quy tắc mặc định
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <DropdownMenuItem onSelect={() => void overview.refetch()}>
-                <RefreshCw />
-                Làm mới
-              </DropdownMenuItem>
-            </PageActionsMenu>
+                )}
+              </PageActionsMenu>
+            )}
           </>
         }
       />
@@ -487,7 +481,7 @@ const focusSheet = (event: Event) => {
 }
 
 /** The parts of a patch kept out of the way of its change list: each opens on its own sheet. */
-type PatchTool = "schedule" | "stats" | "review"
+type PatchTool = "schedule" | "review"
 const PATCH_TOOLS: { key: PatchTool; label: string; short: string; icon: LucideIcon; description: string }[] = [
   {
     key: "schedule",
@@ -495,13 +489,6 @@ const PATCH_TOOLS: { key: PatchTool; label: string; short: string; icon: LucideI
     short: "Lịch",
     icon: CalendarClock,
     description: "Ngày patch áp dụng ở từng thị trường.",
-  },
-  {
-    key: "stats",
-    label: "Thuộc tính mặc định",
-    short: "Thuộc tính",
-    icon: SlidersHorizontal,
-    description: "Chỉ số chung của mọi tướng từ patch này.",
   },
   {
     key: "review",
@@ -536,12 +523,11 @@ function PatchDetail({ variant, data, locale }: { variant: Variant; data: Public
           {variant.status === "DRAFT" && <PatchReleaseForm variant={variant} data={data} />}
         </div>
       </header>
-      <VersionMarketCoverage data={data} scope={{ variantId: variant.id }} locale={locale} />
-      {/* A phone gets three even tiles it can reach with a thumb; a wide screen a quiet row of buttons. */}
+      {/* A phone gets even tiles it can reach with a thumb; a wide screen a quiet row of buttons. */}
       <div
         role="group"
         aria-label="Thiết lập patch"
-        className={wide ? "flex flex-wrap items-center gap-2" : "grid grid-cols-3 gap-2"}
+        className={wide ? "flex flex-wrap items-center gap-2" : "grid grid-cols-2 gap-2"}
       >
         {PATCH_TOOLS.map(({ key, label, short, icon: Icon }) => {
           const done = key === "review" && reviewed
@@ -585,7 +571,6 @@ function PatchDetail({ variant, data, locale }: { variant: Variant; data: Public
                 </SheetDescription>
               </SheetHeader>
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pt-3 pb-6">
-                {open.key === "stats" && <PatchStatDefaults variant={variant} />}
                 {open.key === "review" && <PatchDataReview variant={variant} />}
                 {open.key === "schedule" && (
                   <>

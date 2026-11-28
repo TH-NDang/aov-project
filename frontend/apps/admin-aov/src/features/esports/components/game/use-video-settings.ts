@@ -5,7 +5,8 @@ export type Sound = { volume: number; muted: boolean }
 
 const SOUND_KEY = "esports:studio:sound"
 const RATE_KEY = "esports:studio:rate"
-export const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
+/** The speeds offered, fastest first. */
+export const RATES = [2, 1.5, 1.25, 1, 0.75, 0.5]
 
 export const rateLabel = (rate: number) => `${formatNumber(rate)}×`
 export const isSilent = (sound: Sound) => sound.muted || sound.volume === 0

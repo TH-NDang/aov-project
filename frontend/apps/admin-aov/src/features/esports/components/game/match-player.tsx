@@ -26,8 +26,10 @@ function useFocusBack(box: RefObject<HTMLElement | null>) {
  * Another video is loaded into the same player, so choosing a game never takes the frame out of the page.
  *
  * Captions are switched inside YouTube's frame, never from this page: the player API and cc_load_policy changed
- * nothing when tried, and text over the video may also come from a subtitle extension of the viewer's browser,
- * whose button sits in YouTube's control row. `youtubeControls` brings that row back, which only a new player can do.
+ * nothing when tried. Text over the video may also be drawn by a translation extension of the viewer's browser: on
+ * 2026-11-28 the subtitles over a match were Immersive Translate's, which stayed through YouTube's own CC button,
+ * `setOption("captions", "track", {})` and `unloadModule("captions")`; only the extension's button, which sits in
+ * YouTube's control row, turns them off. `youtubeControls` brings that row back, which only a new player can do.
  */
 export const MatchPlayer = forwardRef<
   MatchPlayerHandle,

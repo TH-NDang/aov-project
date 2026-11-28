@@ -49,28 +49,13 @@ export function KindBadge({ kind, className }: { kind: string; className?: strin
   return <ChangeKindBadge kind={kind} className={className} />
 }
 
-export function SourceBadge({ change }: { change: Pick<RecordedChangeSet, "sourceKind" | "sourceUrl"> }) {
-  const notes = change.sourceKind === "PATCH_NOTES"
-  const Icon = notes ? FileText : GitCompareArrows
-  const label = SOURCE_LABELS[change.sourceKind ?? "SNAPSHOT"]
-  if (notes && change.sourceUrl)
-    return (
-      <a
-        href={change.sourceUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-        title="Mở ghi chú cập nhật"
-      >
-        <Icon className="size-3.5" />
-        {label}
-        <ExternalLink className="size-3" />
-      </a>
-    )
+/** How a change was recorded. Patch notes cite the links of their patch, so a hero's change carries none of its own. */
+export function SourceBadge({ change }: { change: Pick<RecordedChangeSet, "sourceKind"> }) {
+  const Icon = change.sourceKind === "PATCH_NOTES" ? FileText : GitCompareArrows
   return (
     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
       <Icon className="size-3.5" />
-      {label}
+      {SOURCE_LABELS[change.sourceKind ?? "SNAPSHOT"]}
     </span>
   )
 }

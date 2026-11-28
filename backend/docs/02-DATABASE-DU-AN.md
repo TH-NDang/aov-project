@@ -369,6 +369,7 @@ created_at
 | stat_key | VARCHAR(64) | canonical key |
 | base_value | NUMERIC NULL | |
 | percent_value | NUMERIC NULL | phần trăm game hiển thị sau dấu `\|`, từ 0 đến 100; cần có `base_value` |
+| growth_per_level | NUMERIC NULL | mức tăng mỗi cấp tướng, không âm (V086 thêm lại sau khi V075 bỏ nhầm) |
 | unit_code | VARCHAR(32) | HP/POINT/PERCENT/... |
 | metadata | JSONB NULL | chỉ metadata mở, không thay canonical columns |
 
@@ -377,14 +378,29 @@ PK `(stats_revision_id, stat_key)`.
 `percent_value` chỉ dùng cho `ARMOR`, `MAGIC_DEFENSE`, `ARMOR_PIERCE` và `MAGIC_PIERCE`. `NULL` nghĩa là chưa ghi, khác
 với `0`. Giá trị là số đọc từ game, không tính từ `base_value`.
 
-Chỉ số của tướng không đổi theo cấp tướng: màn Thuộc tính trong game ghi cùng một số từ cấp 1 đến 15, trang bị, phù
-hiệu và bảng ngọc cộng thêm khi vào trận. Bảng không lưu mức tăng theo cấp; cột `growth_per_level` đã bỏ ở V075 (chưa
-dòng nào ghi giá trị).
+`base_value` là giá trị ở cấp 1 như màn Thuộc tính; `growth_per_level` là mức tăng mỗi cấp, `NULL` khi chưa ghi.
 
-`patch.stat_default` lưu giá trị chung có nguồn theo `(variant_id, stat_key)`, gồm `base_value`,
-`unit`, `source_url` và `version`. Mỗi thuộc tính lấy bản gần nhất theo `ruleset_ordinal` trong
-cùng bộ luật đến patch đích. Chỉ bản đang xem được dùng giá trị còn nháp. Mặc định không được nhân
-bản vào các dòng chỉ số riêng của tướng.
+### `hero.stat_rule` (V086)
+
+Giá trị mọi tướng dùng chung cho một chỉ số, không theo patch. Thay `patch.stat_default` (V042, đã xóa).
+
+| Column | Type | Ghi chú |
+|---|---|---|
+| id | UUID PK | |
+| stat_key | VARCHAR(64) UNIQUE | cùng mã với `hero_combat_stat_value` |
+| unit | VARCHAR(32) | `POINT` hoặc `PERCENT` |
+| base_value | NUMERIC NULL | giá trị cấp 1 mọi tướng có |
+| percent_value | NUMERIC NULL | phần trăm sau dấu `\|`, 0–100, cần `base_value` |
+| growth_per_level | NUMERIC NULL | mức tăng mỗi cấp chung, không âm |
+| cap_value | NUMERIC NULL | giới hạn trong trận, lớn hơn 0 |
+| source_url | TEXT NULL | HTTP(S), tối đa 2.048 ký tự |
+| version | BIGINT | khóa lạc quan, từ 1 |
+| updated_at | TIMESTAMPTZ | |
+
+Phải có ít nhất một trong `base_value`, `growth_per_level`, `cap_value`. V086 chép giá trị mới nhất của mỗi chỉ số từ
+`patch.stat_default` (ưu tiên patch đã xuất bản, rồi `ruleset_ordinal` lớn nhất), thêm các giá trị cả 128 tướng giống
+nhau ngày 28/11/2026 và giới hạn của Học viện Liên Quân (tốc đánh cộng thêm 200%, giảm hồi chiêu 40%, tốc chạy 800, tỷ lệ
+chí mạng 100%). Giá trị chung không được nhân bản vào các dòng chỉ số riêng của tướng (ADR-036).
 
 Canonical stat dictionary table tùy chọn:
 
@@ -1105,7 +1121,9 @@ Ghi chú độc lập với các lần phát hành theo thị trường và vớ
 từ các trang đó: `variant_id`, `position` (thứ tự biên tập viên chọn), `url` HTTP(S) tối đa 2.048 ký tự, `label` (ngôn
 ngữ, thị trường hoặc mô tả ngắn, tối đa 80 ký tự) và `locale` tùy chọn. Mỗi variant tối đa 10 link, không trùng vị trí
 hay URL; danh sách được thay cả cụm. V079 cũng bỏ ràng buộc `hero_patch_change_set_notes_source_check`: change set
-`PATCH_NOTES` có thể không có link riêng khi patch đã có link chung (ứng dụng kiểm tra một trong hai).
+`PATCH_NOTES` có thể không có link riêng khi patch đã có link chung (ứng dụng kiểm tra một trong hai). V085 đưa mọi
+`source_url` khác nhau của change set `PATCH_NOTES` lên `patch.variant_source` của variant (nhãn và ngôn ngữ suy từ
+tên miền, tối đa 10 link); cột `source_url` giữ nguyên.
 
 ## 27. `patch.patch_release`
 
@@ -1912,6 +1930,11 @@ cùng khóa thì bị xóa theo dòng cũ.
 
 
 ## Thuật ngữ dùng chung — V029 (2026-10-20)
+
+V087 (28/11/2026) thêm thuật ngữ cho mọi chỉ số trên màn Thuộc tính (Máu tối đa, Năng lượng, Tầm đánh, Xuyên giáp,
+Xuyên giáp phép, Tỷ lệ chí mạng, Sát thương chí mạng, Hút máu, Hút máu phép, Kháng hiệu ứng, Hồi máu mỗi 5 giây, Hồi năng
+lượng mỗi 5 giây) và viết lại mô tả của các thuật ngữ chỉ số V029 khi mô tả còn đúng câu seed. Tên trang bị trong mô tả
+thành tham chiếu `<ref=item:id>` theo `item.item.code` nếu trang bị có trong DB, không thì để tên thường.
 
 Schema `terminology` gồm:
 

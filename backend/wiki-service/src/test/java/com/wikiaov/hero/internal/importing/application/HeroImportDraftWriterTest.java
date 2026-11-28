@@ -71,7 +71,7 @@ class HeroImportDraftWriterTest {
         var before = content.serializedFields(content.existingFields(existing, "vi-VN"));
         Map<String, Object> after = new LinkedHashMap<>(before);
         after.put("name", "New name");
-        after.put("combatStats", new Stats(List.of(new Stat("HP", BigDecimal.TEN, null, "POINT")), List.of()));
+        after.put("combatStats", new Stats(List.of(new Stat("HP", BigDecimal.TEN, null, null, "POINT")), List.of()));
         after.put("skills", List.of(skill("New skill")));
         after.put("skins", List.of(skin("New skin")));
         var image = UUID.randomUUID();

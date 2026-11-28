@@ -268,8 +268,8 @@ class DomainCoreIntegrationTest {
                 statBody(version, Map.of("statKey", "HP", "baseValue", 3500, "percentValue", 5,
                         "unit", "POINT")),
                 422);
-        send(put(path + "/combat-stats"), statBody(version, Map.of("statKey", "ARMOR", "percentValue", 5,
-                "unit", "POINT")), 422);
+        send(put(path + "/combat-stats"), statBody(version, Map.of("statKey", "ARMOR", "growthPerLevel", 1,
+                "percentValue", 5, "unit", "POINT")), 422);
         send(put(path + "/combat-stats"), statBody(version, Map.of("statKey", "ARMOR", "baseValue", 150,
                 "percentValue", 101, "unit", "POINT")), 422);
 
@@ -377,7 +377,7 @@ class DomainCoreIntegrationTest {
                 Map.of("rulesetId", ruleset, "sourceRevisionId", draftId, "cause", "CONTENT_CORRECTION"), 201);
         UUID c = uuid(correction, "id");
         var statUpdate = Map.of("expectedDraftVersion", 1, "values",
-                List.of(Map.of("statKey", "HP", "baseValue", 3600, "unit", "POINT")));
+                List.of(Map.of("statKey", "HP", "baseValue", 3600, "growthPerLevel", 250, "unit", "POINT")));
         correction = send(put(path(hero, c) + "/combat-stats"), statUpdate, 200);
         mvc.perform(get(ROOT + "/admin/heroes/" + hero + "/revisions/" + c + "/comparison")
                 .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))

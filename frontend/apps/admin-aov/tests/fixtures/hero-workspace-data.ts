@@ -34,8 +34,8 @@ export const fixtureContent: Content = {
   },
   COMBAT_STATS: {
     values: [
-      { statKey: "HP", baseValue: 3300, unit: "HP" },
-      { statKey: "ARMOR", baseValue: 100, unit: "" },
+      { statKey: "HP", baseValue: 3300, growthPerLevel: 250, unit: "HP" },
+      { statKey: "ARMOR", baseValue: 100, growthPerLevel: 15, unit: "" },
     ],
     sources: [],
   },
@@ -138,6 +138,20 @@ export function createHeroFixture(annotations = false, history = false) {
       }
     : null
   const writes: { section: string; body: Record<string, unknown> }[] = []
+  // The values every hero shares; MOVEMENT_SPEED starts with only its cap, as V086 seeds it.
+  const statRules = [
+    {
+      statKey: "MOVEMENT_SPEED",
+      unit: "POINT",
+      baseValue: null,
+      percentValue: null,
+      growthPerLevel: null,
+      capValue: 800,
+      sourceUrl: "https://example.com/academy",
+      version: 1,
+    },
+  ]
+  const statRuleWrites: { key: string; method: string; body?: Record<string, unknown> }[] = []
   const fetcher: typeof fetch = async (input, init) => {
     // Community references (teams, players) live in another service; the hero fixtures have none.
     if (String(input).startsWith("/api/community/v1/admin/reference-catalog"))
@@ -164,6 +178,14 @@ export function createHeroFixture(annotations = false, history = false) {
           },
         ],
       })
+    if (path === "/admin/hero-stat-rules") return Response.json(statRules)
+    const rule = /^\/admin\/hero-stat-rules\/([A-Z_]+)/.exec(path)
+    if (rule) {
+      const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : undefined
+      statRuleWrites.push({ key: rule[1]!, method: init?.method ?? "GET", body })
+      if (init?.method === "DELETE") return new Response(null, { status: 204 })
+      return Response.json({ statKey: rule[1], ...body, version: Number(body?.expectedVersion ?? 0) + 1 })
+    }
     if (/^\/admin\/(items|arcana|enchantments|spells)\?/.test(path))
       return Response.json({ items: [], page: 0, size: 100, totalElements: 0 })
     if (path === "/admin/reference-settings") {
@@ -326,6 +348,7 @@ export function createHeroFixture(annotations = false, history = false) {
   return {
     fetcher,
     writes,
+    statRuleWrites,
     comparisonRequests,
     get content() {
       return content

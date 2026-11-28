@@ -11,7 +11,7 @@ import {
 } from "@/components/section-contents"
 import { SECTIONS, type Content, type Section, type Revision } from "@/lib/hero-types"
 import { HeroOverviewCard, HeroOverviewFacts, type HeroOverviewProps } from "./hero-overview"
-import type { StatDefault } from "../../model/assessment/combat-attributes"
+import type { StatRule } from "../../model/assessment/combat-attributes"
 import { translatedText, sectionTextFields, type TranslationTarget } from "../../model/hero-translation-model"
 import { SubjectVideosPanel } from "../../../videos/subject-videos-panel"
 import { HeroContentSources } from "./hero-content-sources"
@@ -74,7 +74,7 @@ export function HeroContent(props: Parameters<typeof HeroContentBody>[0]) {
 function HeroContentBody({
   content,
   variantId,
-  statDefaults,
+  statRules,
   patchCode,
   referenceError,
   locale,
@@ -109,7 +109,7 @@ function HeroContentBody({
   reviewTarget?: HeroReviewItem | null
   onReviewShown?: () => void
   content: Content
-  statDefaults?: StatDefault[]
+  statRules?: StatRule[]
   variantId?: string
   patchCode?: string
   referenceError?: boolean
@@ -223,7 +223,7 @@ function HeroContentBody({
   const overview: HeroOverviewProps = {
     heroId,
     variantId,
-    statDefaults,
+    statRules,
     patchCode,
     referenceError,
     content,

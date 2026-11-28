@@ -15,7 +15,7 @@ import type { TranslationTarget } from "../../model/hero-translation-model"
 import { HeroCombatAttributes } from "../assessment/hero-combat-attributes"
 import { PatchCaptureLink } from "../captures/patch-capture-panel"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
-import type { StatDefault } from "../../model/assessment/combat-attributes"
+import type { StatRule } from "../../model/assessment/combat-attributes"
 import type { Content, Profile, Section } from "@/lib/hero-types"
 
 // Groups are divided by a line between them; the card's own edge already opens the first one. `admin-section` is not
@@ -26,7 +26,7 @@ export interface HeroOverviewProps {
   content: Content
   heroId?: string
   variantId?: string
-  statDefaults?: StatDefault[]
+  statRules?: StatRule[]
   patchCode?: string
   referenceError?: boolean
   profile: Profile["translations"][number] | undefined
@@ -261,7 +261,7 @@ export function HeroOverviewFacts({
   part = "all",
   ...props
 }: HeroOverviewProps & { part?: "all" | "ratings" | "attributes" }) {
-  const { content, heroId, variantId, statDefaults, patchCode, referenceError, issues = [] } = props
+  const { content, heroId, variantId, statRules, patchCode, referenceError, issues = [] } = props
   const { edit } = useOverviewEditing(props)
   const ratings = content.OVERVIEW_RATINGS
   const scale = heroRatingScale(ratings?.scaleCode ?? "GAME_OVERVIEW_10")
@@ -346,7 +346,7 @@ export function HeroOverviewFacts({
             stats={content.COMBAT_STATS}
             skills={content.SKILLS}
             roles={content.PROFILE?.roles}
-            defaults={statDefaults}
+            rules={statRules}
             patchCode={patchCode}
             referenceError={referenceError}
           />

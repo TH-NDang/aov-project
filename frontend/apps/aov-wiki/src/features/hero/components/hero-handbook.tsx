@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { useLocation, useSearchParams } from "react-router"
+import { Link, useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
@@ -18,12 +18,13 @@ import {
   localizedSkillCost,
   localizedStateName,
 } from "../model/hero-skill-labels"
-import { statText } from "../model/hero-stat-text"
+import { statGrowthText, statText } from "../model/hero-stat-text"
+import { heroStatTerm } from "@aov/ui/lib/hero-stat-terms"
 import { HeroRatings } from "./hero-ratings"
 import { useHeroVideos, useVideoParam, VideoGallery } from "../../../components/videos/subject-videos"
 import { SkillIcon } from "../../../components/hero-skill-icon"
 import { wikiReferencesQuery } from "../../../lib/wiki-references"
-import type { HeroDetail, PublicSkill } from "../../../lib/hero-api"
+import { heroStatRulesQuery, type HeroDetail, type PublicSkill } from "../../../lib/hero-api"
 import "./hero-handbook.css"
 import { HeroSkins } from "./hero-skins"
 import { HeroBuilds } from "./hero-builds"
@@ -129,13 +130,26 @@ function useHandbook(hero: HeroDetail) {
     ? table.rows.filter((row) => row?.label && Array.isArray(row.display_values) && row.display_values.length)
     : []
   const profile = hero.content.profile
+  // A stat the hero has no value of its own for shows the value every hero shares, whatever the patch.
+  const statRules = useQuery(heroStatRulesQuery())
   const facts = baseStats.flatMap(([key, vi, en, Icon]) => {
     const roles = profile?.roles ?? []
     if (key === "ATTACK_DAMAGE" && roles.includes("MAGE") && !roles.includes("MARKSMAN")) return []
     if (key === "ABILITY_POWER" && !roles.includes("MAGE") && roles.includes("MARKSMAN")) return []
-    const stat = hero.content.combatStats?.values?.find((value) => value.statKey === key)
-    if (stat?.baseValue == null) return []
-    return [{ label: text(vi, en), Icon, value: statText(stat) }]
+    const own = hero.content.combatStats?.values?.find((value) => value.statKey === key)
+    const shared = statRules.data?.find((rule) => rule.statKey === key)
+    const stat = own?.baseValue != null ? own : shared?.baseValue != null ? shared : undefined
+    if (!stat) return []
+    const term = heroStatTerm(key)
+    return [
+      {
+        label: text(vi, en),
+        Icon,
+        value: statText(stat),
+        growth: statGrowthText(own?.growthPerLevel ?? shared?.growthPerLevel, text("cấp", "level")),
+        term: term && scope.href(`/terms/${encodeURIComponent(term)}`),
+      },
+    ]
   })
   return {
     scope,
@@ -374,9 +388,12 @@ function OverviewPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handboo
             <div key={fact.label}>
               <dt>
                 <fact.Icon size={18} className="wiki-fact-icon" />
-                {fact.label}
+                {fact.term ? <Link to={fact.term}>{fact.label}</Link> : fact.label}
               </dt>
-              <dd>{fact.value}</dd>
+              <dd>
+                {fact.value}
+                {fact.growth && <small className="wiki-fact-growth">{fact.growth}</small>}
+              </dd>
             </div>
           ))}
         </dl>

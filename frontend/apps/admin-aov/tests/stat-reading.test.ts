@@ -66,9 +66,9 @@ test("the hero's own value shows the percent next to the number and in the readi
   const rows = combatAttributeRows(
     {
       values: [
-        { statKey: "ARMOR", baseValue: 150, percentValue: 20, unit: "POINT" },
-        { statKey: "MAGIC_DEFENSE", baseValue: 80, percentValue: null, unit: "UNKNOWN" },
-        { statKey: "HP", baseValue: 3720, percentValue: null, unit: "HP" },
+        { statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" },
+        { statKey: "MAGIC_DEFENSE", baseValue: 80, percentValue: null, growthPerLevel: null, unit: "UNKNOWN" },
+        { statKey: "HP", baseValue: 3720, percentValue: null, growthPerLevel: null, unit: "HP" },
       ],
       sources: [],
     },
@@ -86,7 +86,7 @@ test("the hero's own value shows the percent next to the number and in the readi
 test("a stat row says where its value comes from with a code and labels it from the table", () => {
   const rows = combatAttributeRows(
     {
-      values: [{ statKey: "HP", baseValue: 3720, percentValue: null, unit: "HP" }],
+      values: [{ statKey: "HP", baseValue: 3720, percentValue: null, growthPerLevel: null, unit: "HP" }],
       sources: [],
     },
     undefined,
@@ -95,8 +95,8 @@ test("a stat row says where its value comes from with a code and labels it from 
   const row = (key: string) => rows.find((item) => item.key === key)!
 
   assert.equal(row("HP").kind, "OWN")
-  assert.equal(row("ARMOR").kind, "PATCH_DEFAULT")
-  assert.equal(ATTRIBUTE_SOURCE_LABELS[row("ARMOR").kind], "Mặc định của patch")
+  assert.equal(row("ARMOR").kind, "SHARED")
+  assert.equal(ATTRIBUTE_SOURCE_LABELS[row("ARMOR").kind], "Mặc định chung")
 })
 
 test("a value at the top of its group stands high, and the label comes from the table", () => {
@@ -108,10 +108,10 @@ test("a value at the top of its group stands high, and the label comes from the 
 })
 
 test("a whole stat row in a comparison reads as one value", () => {
-  const armor = { statKey: "ARMOR", baseValue: 150, percentValue: 20, unit: "POINT" }
+  const armor = { statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" }
   assert.match(comparisonValue(armor), /Giá trị ghi nhận: 150 \| 20%/)
   assert.doesNotMatch(comparisonValue(armor), /Phần trăm/)
-  const health = { statKey: "HP", baseValue: 3500, percentValue: null, unit: "POINT" }
+  const health = { statKey: "HP", baseValue: 3500, percentValue: null, growthPerLevel: null, unit: "POINT" }
   assert.match(comparisonValue(health), /Giá trị ghi nhận: 3500/)
   assert.doesNotMatch(comparisonValue(health), /Phần trăm/)
 })
@@ -169,6 +169,7 @@ test("the draft changes sheet lists a stat with a percent as one reading and oth
     statKey,
     baseValue,
     percentValue,
+    growthPerLevel: null,
     unit: "POINT",
   })
   const before = { values: [row("ARMOR", 150, 0), row("HP", 3500, null), row("MAGIC_DEFENSE", 80, 0)] }
