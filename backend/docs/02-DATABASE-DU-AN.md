@@ -1105,7 +1105,9 @@ Ghi chú độc lập với các lần phát hành theo thị trường và vớ
 từ các trang đó: `variant_id`, `position` (thứ tự biên tập viên chọn), `url` HTTP(S) tối đa 2.048 ký tự, `label` (ngôn
 ngữ, thị trường hoặc mô tả ngắn, tối đa 80 ký tự) và `locale` tùy chọn. Mỗi variant tối đa 10 link, không trùng vị trí
 hay URL; danh sách được thay cả cụm. V079 cũng bỏ ràng buộc `hero_patch_change_set_notes_source_check`: change set
-`PATCH_NOTES` có thể không có link riêng khi patch đã có link chung (ứng dụng kiểm tra một trong hai).
+`PATCH_NOTES` có thể không có link riêng khi patch đã có link chung (ứng dụng kiểm tra một trong hai). V085 đưa mọi
+`source_url` khác nhau của change set `PATCH_NOTES` lên `patch.variant_source` của variant (nhãn và ngôn ngữ suy từ
+tên miền, tối đa 10 link); cột `source_url` giữ nguyên.
 
 ## 27. `patch.patch_release`
 

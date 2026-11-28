@@ -3009,7 +3009,8 @@ change set, sai trả 422 `HERO_INVALID_CONTENT`; change set không tồn tại 
   `url` HTTP(S) tối đa 2.048 ký tự và không trùng, `label` không rỗng tối đa 80 ký tự (cắt khoảng trắng hai đầu),
   `locale` bỏ trống hoặc là thẻ BCP 47 chuẩn. Sai trả 422 `PATCH_INVALID`, variant không tồn tại trả 404. Lưu khi danh
   sách đổi thì ghi audit `PATCH_SOURCES_UPDATED` (aggregate PATCH, id variant). Link chung là nguồn của mọi change set
-  `PATCH_NOTES` không có `sourceUrl` riêng và hiện trên trang patch công khai.
+  `PATCH_NOTES` không có `sourceUrl` riêng và hiện trên trang patch công khai. Từ 28/11/2026 Admin chỉ ghi link chung,
+  không gửi `sourceUrl` riêng cho change set mới (ADR-016).
 
 - `GET /admin/patch-variants/{id}/hero-stat-samples` cần quyền `catalog:read`. Mỗi tướng có tối đa một mẫu,
   lấy revision mới nhất còn hiệu lực gắn trực tiếp với variant và bộ luật. Mẫu có trạng thái nháp, vai trò,
