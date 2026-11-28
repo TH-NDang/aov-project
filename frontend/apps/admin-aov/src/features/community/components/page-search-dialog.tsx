@@ -2,13 +2,14 @@ import { useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { Check, Plus, Search, X } from "lucide-react"
 import { profileKindLabels, type CommunityProfile, type PersonRole, type ProfileKind } from "@aov/community-contracts"
-import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
+import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { NativeSelect } from "@/components/native-select"
+import { ThemedAvatarImage } from "@/components/themed-logo-img"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { pageApi, pageError, pageKeys } from "../api/page-api"
 import { CreateProfileSheet } from "./create-profile-sheet"
@@ -125,7 +126,7 @@ export function PageSearchDialog({
                   className="flex w-full items-center gap-3 rounded-md p-3 text-left hover:bg-muted"
                 >
                   <Avatar className="size-10 rounded-lg border">
-                    <AvatarImage src={profile.content?.avatarUrl || undefined} alt="" className="object-contain" />
+                    <ThemedAvatarImage url={profile.content?.avatarUrl} />
                     <AvatarFallback className="rounded-lg">
                       <ProfileTypeIcon kind={profile.kind} className="size-5" />
                     </AvatarFallback>

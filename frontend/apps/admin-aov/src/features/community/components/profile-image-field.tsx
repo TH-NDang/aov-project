@@ -6,6 +6,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { ApiError, errorMessage } from "@/lib/api/errors"
+import { useThemedLogo } from "@/lib/themed-logo"
 import { RegistryLogoUploadError, uploadRegistryLogo } from "../../tournaments/model/team-logo-upload"
 import { OwnerNameHints, OwnerNameInput } from "../../media/components/owner-name-field"
 import { MediaUploadReferences, type UploadReferences } from "../../media/components/media-upload-references"
@@ -55,6 +56,8 @@ export function ProfileImageField({
   const controller = useRef<AbortController | null>(null)
   useEffect(() => () => controller.current?.abort(), [])
   const showImage = !!value && failedUrl !== value && /^https?:\/\//i.test(value)
+  // A page keeps one logo; the preview puts it on the plate the dark theme shows it on, as the lists do.
+  const plate = useThemedLogo(value, null).plate
 
   function requireOwner() {
     if (owner.trim()) return true
@@ -107,6 +110,7 @@ export function ProfileImageField({
           src={value}
           alt={`${label} ${name}`}
           className={cn("size-full", shape === "cover" ? "object-cover" : "object-contain p-1")}
+          data-logo-plate={shape === "logo" ? plate : undefined}
           onError={() => setFailedUrl(value)}
         />
       ) : (

@@ -3,9 +3,10 @@ import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowUpRight, Link2 } from "lucide-react"
 import { profileKindLabels } from "@aov/community-contracts"
-import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
+import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { ThemedAvatarImage } from "@/components/themed-logo-img"
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { pageApi, pageKeys, publicSite } from "../api/page-api"
 import { ProfileTypeIcon } from "./profile-icons"
@@ -48,7 +49,7 @@ export function PageReference({ id, label = "Xem hồ sơ" }: { id: string; labe
           <>
             <div className="flex items-center gap-3">
               <Avatar className="size-12 rounded-lg border">
-                <AvatarImage src={profile.content.avatarUrl || undefined} alt="" className="object-contain" />
+                <ThemedAvatarImage url={profile.content.avatarUrl} />
                 <AvatarFallback className="rounded-lg">
                   <ProfileTypeIcon kind={profile.kind} className="size-5" />
                 </AvatarFallback>
