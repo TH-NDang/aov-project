@@ -11,6 +11,7 @@ import {
   inside,
   markers,
   momentAt,
+  objectiveIcons,
   objectsIn,
   phases,
   railAt,
@@ -216,4 +217,20 @@ test("the frame wall is the square's edge with a rounded opening inside it", () 
   assert.match(frame, /^M0 0H100V100H0Z/)
   assert.match(frame.slice("M0 0H100V100H0Z".length), /^M3\.5 1\.5L96\.5 1\.5Q98\.5 1\.5 98\.5 3\.5/)
   assert.equal((frame.match(/Q/g) ?? []).length, 4)
+})
+
+test("each recorded objective takes the icon uploaded for its object, and none where the map has none", () => {
+  const content = {
+    objects: [
+      object("caesar", { iconAssetId: "a1" }),
+      object("rong", { iconAssetId: "missing" }),
+      object("tru-ngoai", { category: "STRUCTURE", iconAssetId: "a3" }),
+      object("nha-chinh", { category: "STRUCTURE" }),
+    ],
+  }
+  const images = { a1: { url: "https://img/caesar.png" }, a3: { url: "https://img/tru.png" } }
+  assert.deepEqual(objectiveIcons(content, images), {
+    DARK_SLAYER: "https://img/caesar.png",
+    TURRET: "https://img/tru.png",
+  })
 })

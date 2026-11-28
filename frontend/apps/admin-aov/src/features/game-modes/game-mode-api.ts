@@ -205,6 +205,8 @@ export const gameModeKeys = {
   history: (id: string) => ["admin-game-modes", "history", id] as const,
   guide: (id: string) => ["admin-game-modes", "guide", id] as const,
   map: (id: string) => ["admin-game-modes", "map", id] as const,
+  /** The game icons of the objectives a match records, taken from a mode's map (esports recorder). */
+  objectiveArt: (code: string) => ["admin-game-modes", "objective-art", code] as const,
   community: (id: string, status: string) => ["admin-game-modes", "community", id, status] as const,
   communities: (id: string) => ["admin-game-modes", "community", id] as const,
 }

@@ -7,9 +7,11 @@ import { Skeleton } from "@aov/ui/components/skeleton"
 import { parseClock } from "@/lib/clock"
 import { initialGame } from "@/features/tournaments/model/tournament-model"
 import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { ObjectiveArt } from "../components/game/objective-icon"
 import { EmptyState } from "../components/primitives"
 import { useFullscreen } from "../components/series/use-fullscreen"
 import { withSeats } from "../data/game-seats"
+import { useObjectiveArt } from "../data/objective-art"
 import { useGames, useRecords, useRosters } from "../data/use-esports-data"
 import { useTournamentView } from "../data/use-tournament-view"
 import { byStanding, type RosterOption } from "../model/line-up"
@@ -21,7 +23,12 @@ const linkSecond = (value: string | null) =>
   value === null ? null : /^\d+$/.test(value) ? Number(value) : parseClock(value)
 
 export function MatchPage() {
-  return <AccessGate pending={<StudioSkeleton />}>{(access) => <MatchView access={access} />}</AccessGate>
+  const art = useObjectiveArt()
+  return (
+    <ObjectiveArt value={art}>
+      <AccessGate pending={<StudioSkeleton />}>{(access) => <MatchView access={access} />}</AccessGate>
+    </ObjectiveArt>
+  )
 }
 
 /** The desk before its match is there: everything where it will be. */

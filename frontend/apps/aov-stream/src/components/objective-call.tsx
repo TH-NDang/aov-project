@@ -24,7 +24,7 @@ export function ObjectiveCall(): ReactNode {
   const on = useCallsOn()
   const timed = useWatch((view) => view.match?.story.level === "TIMED")
   const map = useQuery({ ...battleMapQuery(TOURNAMENT_MODE), enabled: on && timed })
-  const calls = useMemo(() => (map.data ? epicCalls(map.data) : []), [map.data])
+  const calls = useMemo(() => (map.data ? epicCalls(map.data.content) : []), [map.data])
   const [call, setCall] = useState<EpicCall | null>(null)
 
   useEffect(() => {

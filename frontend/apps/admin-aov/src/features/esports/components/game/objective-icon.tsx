@@ -1,34 +1,42 @@
+import { createContext, useContext } from "react"
 import type { ObjectiveKind } from "@aov/community-contracts"
 import { Flag } from "lucide-react"
+import { MapGlyph } from "@aov/ui/components/battle-map-glyph"
+import { OBJECTIVE_GLYPHS, type MapObjective } from "@aov/ui/lib/battle-map"
 import { OBJECTIVE_LABELS } from "../../model/timeline"
 
-// Original emblems generated for this project; `new URL` keeps them bundled by Vite and loadable in Node tests.
-const OBJECTIVE_ART: Partial<Record<ObjectiveKind, string>> = {
-  DARK_SLAYER: new URL("../../assets/objectives/dark-slayer.webp", import.meta.url).href,
-  ABYSSAL_DRAGON: new URL("../../assets/objectives/abyssal-dragon.webp", import.meta.url).href,
-  TURRET: new URL("../../assets/objectives/turret.webp", import.meta.url).href,
-  BASE: new URL("../../assets/objectives/base.webp", import.meta.url).href,
-}
+/**
+ * The game's own icon of each objective, as uploaded to the Wiki's battlefield map. The page supplies it, so these
+ * components stay free of app APIs; without it each objective shows the Wiki's drawn symbol.
+ */
+export const ObjectiveArt = createContext<Partial<Record<MapObjective, string>>>({})
 
 export function ObjectiveIcon({ objective, size = 28 }: { objective: ObjectiveKind; size?: number }) {
-  const art = OBJECTIVE_ART[objective]
-  return art ? (
-    <img
-      src={art}
-      alt={OBJECTIVE_LABELS[objective]}
-      title={OBJECTIVE_LABELS[objective]}
-      width={size}
-      height={size}
-      className="shrink-0 rounded-full object-cover"
-      style={{ width: size, height: size }}
-    />
-  ) : (
+  const art = useContext(ObjectiveArt)
+  const label = OBJECTIVE_LABELS[objective]
+  if (objective === "OTHER")
+    return (
+      <span
+        className="grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
+        style={{ width: size, height: size }}
+        title={label}
+      >
+        <Flag size={size * 0.5} />
+      </span>
+    )
+  const icon = art[objective]
+  // Game icons are light, so they sit on a dark disc in both themes.
+  return (
     <span
-      className="grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
+      className="grid shrink-0 place-items-center overflow-hidden rounded-full bg-black/85 text-white/80"
       style={{ width: size, height: size }}
-      title={OBJECTIVE_LABELS[objective]}
+      title={label}
     >
-      <Flag size={size * 0.5} />
+      {icon ? (
+        <img src={icon} alt={label} className="size-[86%] object-contain" />
+      ) : (
+        <MapGlyph glyph={OBJECTIVE_GLYPHS[objective]} size={Math.round(size * 0.62)} />
+      )}
     </span>
   )
 }

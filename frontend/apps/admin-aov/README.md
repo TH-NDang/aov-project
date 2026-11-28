@@ -918,8 +918,9 @@ Sau khi xuất bản, trận vẫn nêu mục còn thiếu để bổ sung rồi
   tạm dừng vào `timeline`; trang bị đã lên vào `build`, mua/bán vào `equipmentEvents` của tuyển thủ; link video, giây
   bắt đầu và thời lượng vào các trường của ván. Các lần lưu được xếp hàng theo phiên bản; xung đột với người sửa khác
   hiện lỗi kèm nút tải bản mới. Ván đã xuất bản chỉ thay đổi bản nháp cho tới khi xuất bản lại.
-- Icon mục tiêu lớn trong `src/features/esports/assets/objectives` là ảnh thiết kế riêng tạo bằng ChatGPT cho dự án,
-  không lấy từ tài nguyên game.
+- Icon mục tiêu lớn (Caesar, Rồng, trụ, nhà chính) là icon game đã tải lên bản đồ chiến trường 5v5 trong Chế độ chơi:
+  trang trận đọc bản đồ đó rồi đưa icon xuống qua `ObjectiveArt`. Chưa đọc được (hoặc không có quyền xem Chế độ chơi) thì
+  hiện ký hiệu vẽ của Wiki. Stream lấy cùng icon từ bản đồ đã xuất bản.
 - Cần chạy community-service bản có trường `timeline`; bản cũ bỏ qua trường lạ và UI sẽ báo cần khởi động lại.
 - Thành phần trong `src/features/esports/components` và `model` không phụ thuộc API/phiên admin để dùng lại cho trang
   công khai; trang chỉ đọc chỉ cần bỏ quyền ghi.

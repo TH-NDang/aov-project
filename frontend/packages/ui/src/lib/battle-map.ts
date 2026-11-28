@@ -348,3 +348,37 @@ export const railTime = (at: number, end: number) => Math.max(0, Math.min(1, at)
 
 /** Where the timeline ends: a while after its last mark, so the last phase has room. */
 export const timelineEnd = (tempo: readonly TempoMoment[]) => Math.max(60, (tempo.at(-1)?.seconds ?? 0) + 300)
+
+/**
+ * The objectives a match records, as the objects of the battlefield map that stand for them. A recorded tower is any
+ * tower, so it takes the outer tower's icon.
+ */
+export const OBJECTIVE_OBJECTS = {
+  DARK_SLAYER: "caesar",
+  ABYSSAL_DRAGON: "rong",
+  TURRET: "tru-ngoai",
+  BASE: "nha-chinh",
+} as const
+export type MapObjective = keyof typeof OBJECTIVE_OBJECTS
+
+/** The Wiki's drawn symbol of each objective, for when the map has no game icon for it or cannot be read. */
+export const OBJECTIVE_GLYPHS: Record<MapObjective, Glyph> = {
+  DARK_SLAYER: "CAESAR",
+  ABYSSAL_DRAGON: "DRAGON",
+  TURRET: "TOWER",
+  BASE: "BASE",
+}
+
+/** The address of the game icon uploaded for each objective's object on a map, where it has one. */
+export function objectiveIcons(
+  content: Pick<MapContent, "objects">,
+  images: Readonly<Record<string, { url: string } | undefined>>,
+): Partial<Record<MapObjective, string>> {
+  const icons: Partial<Record<MapObjective, string>> = {}
+  for (const [objective, code] of Object.entries(OBJECTIVE_OBJECTS) as [MapObjective, string][]) {
+    const asset = content.objects.find((object) => object.code === code)?.iconAssetId
+    const url = asset ? images[asset]?.url : undefined
+    if (url) icons[objective] = url
+  }
+  return icons
+}

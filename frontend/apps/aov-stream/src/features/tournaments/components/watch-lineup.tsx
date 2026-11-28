@@ -1,22 +1,21 @@
 import { useMemo } from "react"
 import type { GameSide, Lane } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
-import { StreamIcon, type StreamIconName } from "../../../components/stream-icon"
+import { ObjectiveMark } from "../../../components/objective-mark"
+import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { useWatch } from "../../../components/use-watch"
 import { laneName } from "../../../lib/feed-words"
 import { clock, LANE_NAMES } from "../../../lib/tournament-model"
 import { countsAt } from "../../../lib/watch-place"
-import type { Chapter, MomentKind, WatchMatch, WatchTeam } from "../../../lib/watch-types"
+import type { Chapter, WatchMatch, WatchTeam } from "../../../lib/watch-types"
 import { KIND_NAMES, shortName } from "../../../lib/watch-words"
-import { OBJECTIVE_ICONS } from "./game-track"
 import { nicknameOf } from "./loadout-names"
 import { ReferenceArt } from "./reference-art"
 import { BanFace, Board, SideHead, useHeroNames } from "./watch-board"
 import "./watch-lineup.css"
 
 const LANES = Object.keys(LANE_NAMES) as Lane[]
-const ICONS: Record<MomentKind, StreamIconName> = { ...OBJECTIVE_ICONS, KILL: "sword", NOTE: "flag" }
 
 const sideOf = ({ game, sides }: Chapter, team: WatchTeam): GameSide | undefined =>
   game.content.sides.find(({ side }) => side === sides[team])
@@ -38,7 +37,11 @@ function Counts({ counts, team }: { counts: ReturnType<typeof countsAt>; team: W
         const name = text(...KIND_NAMES[kind])
         return (
           <span key={kind} title={behind ? `${name}. ${behind}` : name} data-none={count === 0 || undefined}>
-            <StreamIcon name={ICONS[kind]} size={17} />
+            {kind === "KILL" || kind === "NOTE" ? (
+              <StreamIcon name={kind === "KILL" ? "sword" : "flag"} size={17} />
+            ) : (
+              <ObjectiveMark objective={kind} size={17} />
+            )}
             <span className="sr-only">{name}</span> {count}
           </span>
         )

@@ -1,0 +1,17 @@
+/* A game icon is light, so it sits on a dark disc in both themes, like the sockets of the game's own menus. */
+.hub-objective {
+  display: inline-grid;
+  flex: none;
+  width: var(--size);
+  height: var(--size);
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, rgb(52 56 68), rgb(8 9 12) 72%);
+  color: rgb(255 255 255 / 82%);
+}
+.hub-objective > img {
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+}
