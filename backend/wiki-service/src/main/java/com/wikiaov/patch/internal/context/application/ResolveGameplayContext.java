@@ -4,6 +4,7 @@ import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.patch.PatchVariantTitle;
 import com.wikiaov.patch.RulesetReference;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.RegionErrorCode;
@@ -94,6 +95,16 @@ public class ResolveGameplayContext implements GameplayContexts {
     public PatchVariantReference variant(UUID variantId) {
         return variantView(variants.findById(variantId).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant does not exist.")));
+    }
+
+    @Override
+    public Optional<PatchVariantReference> findVariant(UUID variantId) {
+        return variants.findById(variantId).map(this::variantView);
+    }
+
+    @Override
+    public List<PatchVariantTitle> variantTitles() {
+        return variants.titles();
     }
 
     @Override

@@ -45,11 +45,14 @@ public class VideoAdminController implements VideoAdminApi {
             @RequestParam(required = false) UUID subjectId, @RequestParam(required = false) String subjectKey,
             @RequestParam(required = false) VideoStatus status, @RequestParam(required = false) VideoPurpose purpose,
             @RequestParam(required = false) VideoOrigin origin, @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size,
+            @RequestParam(required = false) UUID patchVariantId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request,
-                Set.of("subjectKind", "subjectId", "subjectKey", "status", "purpose", "origin", "q", "page", "size"));
-        return videos.list(new AdminFilter(subjectKind, subjectId, subjectKey, status, purpose, origin, q), page, size);
+                Set.of("subjectKind", "subjectId", "subjectKey", "status", "purpose", "origin", "q", "patchVariantId",
+                        "page", "size"));
+        return videos.list(new AdminFilter(subjectKind, subjectId, subjectKey, status, purpose, origin, q,
+                patchVariantId), page, size);
     }
 
     @Override

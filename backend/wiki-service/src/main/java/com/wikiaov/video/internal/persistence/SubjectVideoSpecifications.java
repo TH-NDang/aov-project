@@ -18,7 +18,8 @@ public final class SubjectVideoSpecifications {
     }
 
     public static Specification<SubjectVideo> matching(Collection<VideoSubjectKind> kinds, UUID subjectId,
-            String subjectKey, VideoStatus status, VideoPurpose purpose, VideoOrigin origin, String q) {
+            String subjectKey, VideoStatus status, VideoPurpose purpose, VideoOrigin origin, String q,
+            UUID patchVariantId) {
         return (root, query, builder) -> {
             var filters = new ArrayList<Predicate>();
             if (!kinds.isEmpty()) {
@@ -29,6 +30,9 @@ public final class SubjectVideoSpecifications {
             }
             if (subjectKey != null) {
                 filters.add(builder.equal(root.get("subjectKey"), subjectKey));
+            }
+            if (patchVariantId != null) {
+                filters.add(builder.equal(root.get("patchVariantId"), patchVariantId));
             }
             if (status != null) {
                 filters.add(builder.equal(root.get("status"), status));

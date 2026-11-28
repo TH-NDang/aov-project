@@ -5,6 +5,7 @@ import com.wikiaov.video.internal.domain.VideoOrigin;
 import com.wikiaov.video.internal.domain.VideoPurpose;
 import com.wikiaov.video.internal.domain.VideoStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,8 @@ public final class VideoCommands {
             @Nullable VideoStatus status,
             @Nullable VideoPurpose purpose,
             @Nullable VideoOrigin origin,
-            @Nullable String q
+            @Nullable String q,
+            @Nullable UUID patchVariantId
     ) {
     }
 
@@ -40,6 +42,8 @@ public final class VideoCommands {
             @Nullable Integer durationSeconds,
             @Nullable String channelName,
             @Nullable LocalDate publishedOn,
+            @Nullable Instant publishedAt,
+            @Nullable String locale,
             @Nullable UUID patchVariantId,
             @Nullable Integer displayOrder,
             VideoStatus status,
@@ -56,7 +60,11 @@ public final class VideoCommands {
             String title,
             String url,
             @Nullable Integer durationSeconds,
+            @Nullable String channelName,
             @Nullable LocalDate publishedOn,
+            @Nullable Instant publishedAt,
+            @Nullable String locale,
+            @Nullable UUID patchVariantId,
             @Nullable Integer displayOrder,
             VideoStatus status
     ) {

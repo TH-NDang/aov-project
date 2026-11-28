@@ -53,6 +53,10 @@ public class SubjectVideo {
 
     private LocalDate publishedOn;
 
+    private Instant publishedAt;
+
+    private String locale;
+
     private UUID patchVariantId;
 
     private int displayOrder;

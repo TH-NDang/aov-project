@@ -225,6 +225,80 @@ class VideoIntegrationTest {
     }
 
     @Test
+    void aPatchShowsItsOwnVideosAndTheChangeVideosThatNameItInOrder() throws Exception {
+        UUID ruleset = UUID.randomUUID();
+        UUID patch = UUID.randomUUID();
+        UUID variant = UUID.randomUUID();
+        jdbc.sql("insert into patch.gameplay_ruleset(id,code,description,lifecycle_state,created_at) "
+                + "values(?,?,'','ACTIVE',now())").params(ruleset, "video-rules-" + ruleset).update();
+        jdbc.sql("""
+                insert into patch.game_patch(id,code,status,created_at,created_by_issuer,created_by_subject)
+                values(?,?,'PUBLISHED',now(),'fixture','editor')
+                """).params(patch, "video-patch-" + patch).update();
+        jdbc.sql("""
+                insert into patch.patch_variant(id,patch_id,ruleset_id,variant_code,ruleset_ordinal,status,
+                    published_at,created_at) values(?,?,?,?,1,'PUBLISHED',now(),now())
+                """).params(variant, patch, ruleset, "variant-" + variant).update();
+        var patchEditor = actor("catalog:read", "patch:write", "patch:publish", "hero:write", "hero:publish");
+        String review = """
+                {"subjectKind":"PATCH","subjectId":"%s","purpose":"PATCH_REVIEW","title":"Trải nghiệm thực tế",
+                 "url":"https://youtu.be/rrrrrrrrrrr","channelName":"Trải Nghiệm Game","publishedOn":"2026-11-18",
+                 "publishedAt":"2026-11-18T05:00:00Z","locale":"vi-VN","status":"PUBLISHED"}""".formatted(variant);
+        String preview = review.replace("PATCH_REVIEW", "PATCH_PREVIEW").replace("rrrrrrrrrrr", "ppppppppppp")
+                .replace("2026-11-18", "2026-11-10");
+
+        send(post(ADMIN), review, editor()).andExpect(status().isForbidden());
+        JsonNode saved = create(review, patchEditor);
+        assertThat(saved.get("patchVariantId").asText()).isEqualTo(variant.toString());
+        assertThat(saved.get("publishedAt").asText()).isEqualTo("2026-11-18T05:00:00Z");
+        create(preview, patchEditor);
+        String heroChange = """
+                {"subjectKind":"HERO","subjectId":"%s","purpose":"PATCH_CHANGE","title":"Phiên bản mới: tướng",
+                 "url":"https://youtu.be/hhhhhhhhhhh","publishedOn":"2026-11-19","patchVariantId":"%s",
+                 "status":"PUBLISHED"}""".formatted(hero, variant);
+        create(heroChange, patchEditor);
+        create(body("HERO", null, "GUIDE_BASIC", "Không thuộc patch", "https://youtu.be/ggggggggggg", "PUBLISHED"),
+                patchEditor);
+
+        mvc.perform(get(PUBLIC).param("subjectKind", "PATCH").param("subjectId", variant.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(3))
+                .andExpect(jsonPath("$.items[0].purpose").value("PATCH_PREVIEW"))
+                .andExpect(jsonPath("$.items[1].purpose").value("PATCH_REVIEW"))
+                .andExpect(jsonPath("$.items[1].locale").value("vi-VN"))
+                .andExpect(jsonPath("$.items[2].subjectKind").value("HERO"));
+        mvc.perform(get(ADMIN).param("patchVariantId", variant.toString()).with(patchEditor))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(3));
+
+        send(post(ADMIN), review.replace("PATCH_REVIEW", "LORE").replace("rrrrrrrrrrr", "xxxxxxxxxxx"), patchEditor)
+                .andExpect(status().isUnprocessableEntity());
+        send(post(ADMIN), body("HERO", null, "PATCH_PREVIEW", "Sai loại", "https://youtu.be/yyyyyyyyyyy", "DRAFT"),
+                patchEditor).andExpect(status().isUnprocessableEntity());
+        send(post(ADMIN), heroChange.replace(variant.toString(), UUID.randomUUID().toString())
+                .replace("hhhhhhhhhhh", "zzzzzzzzzzz"), patchEditor).andExpect(status().isUnprocessableEntity());
+        send(post(ADMIN), review.replace("vi-VN", "vi_vn").replace("rrrrrrrrrrr", "wwwwwwwwwww"), patchEditor)
+                .andExpect(status().isUnprocessableEntity());
+
+        String imported = """
+                {"items":[
+                  {"subjectKind":"PATCH","subjectId":"%1$s","purpose":"PATCH_OVERVIEW","title":"Cập nhật chính thức",
+                   "url":"https://youtu.be/ooooooooooo","channelName":"Trải Nghiệm Game","publishedOn":"2026-11-17",
+                   "publishedAt":"2026-11-17T03:00:00Z","locale":"vi-VN","status":"DRAFT"},
+                  {"subjectKind":"PATCH","subjectId":"%2$s","purpose":"PATCH_OVERVIEW","title":"Không có patch",
+                   "url":"https://youtu.be/nnnnnnnnnnn","status":"DRAFT"}
+                ]}""".formatted(variant, UUID.randomUUID());
+        send(post(ADMIN + "/import"), imported, patchEditor).andExpect(status().isOk())
+                .andExpect(jsonPath("$.created").value(1)).andExpect(jsonPath("$.rejected[0].index").value(1));
+        assertThat(jdbc.sql("select channel_name from video.subject_video where provider_video_id='ooooooooooo'")
+                .query(String.class).single()).isEqualTo("Trải Nghiệm Game");
+
+        JsonNode subjects = json.readTree(mvc.perform(get(ADMIN + "/subjects").with(patchEditor))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("items");
+        assertThat(StreamSupport.stream(subjects.spliterator(), false)
+                .filter(row -> row.get("id").asText().equals(variant.toString())).toList())
+                .singleElement().satisfies(row -> assertThat(row.get("kind").asText()).isEqualTo("PATCH"));
+    }
+
+    @Test
     void listsSubjectsForPickersAndMatching() throws Exception {
         JsonNode subjects = json.readTree(mvc.perform(get(ADMIN + "/subjects").with(editor()))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("items");

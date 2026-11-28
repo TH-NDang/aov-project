@@ -4,7 +4,8 @@ import java.util.Set;
 
 /**
  * What a video is attached to. {@link #SKIN} lives under a hero and needs a subject key. Skills have no videos of their
- * own: a video about a hero's skills belongs to the hero's one list.
+ * own: a video about a hero's skills belongs to the hero's one list. {@link #PATCH} is a patch variant, for videos about
+ * a whole update.
  */
 public enum VideoSubjectKind {
     HERO,
@@ -12,7 +13,8 @@ public enum VideoSubjectKind {
     ITEM,
     ENCHANTMENT,
     ARCANA,
-    SPELL;
+    SPELL,
+    PATCH;
 
     private static final Set<VideoSubjectKind> KEYED = Set.of(SKIN);
 

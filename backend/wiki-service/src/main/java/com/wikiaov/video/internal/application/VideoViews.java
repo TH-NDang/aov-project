@@ -34,6 +34,8 @@ public final class VideoViews {
             @Nullable Integer durationSeconds,
             @Nullable String channelName,
             @Nullable LocalDate publishedOn,
+            @Nullable Instant publishedAt,
+            @Nullable String locale,
             @Nullable UUID patchVariantId
     ) {
     }
@@ -60,6 +62,8 @@ public final class VideoViews {
             @Nullable Integer durationSeconds,
             @Nullable String channelName,
             @Nullable LocalDate publishedOn,
+            @Nullable Instant publishedAt,
+            @Nullable String locale,
             @Nullable UUID patchVariantId,
             int displayOrder,
             VideoStatus status,
