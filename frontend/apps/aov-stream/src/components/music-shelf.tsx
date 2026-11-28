@@ -14,6 +14,7 @@ const LIST_WORDS: Record<MusicListCode, { vi: string; en: string; icon: GameIcon
   SONGS: { vi: "Ca khúc", en: "Songs", icon: "microphone" },
   ARENA: { vi: "Giải đấu", en: "Esports", icon: "trophy-cup" },
   HEROES: { vi: "Tướng", en: "Heroes", icon: "samurai-helmet" },
+  GAMING: { vi: "Game", en: "Gaming", icon: "gamepad" },
   MINE: { vi: "Của tôi", en: "Mine", icon: "person" },
 }
 const CODES: readonly MusicListCode[] = [...MUSIC_LISTS.map(({ code }) => code), "MINE"]
@@ -70,7 +71,7 @@ function TrackRow({
 }
 
 /**
- * The lists to choose from, opened over the player: the site's three lists of official songs and the reader's own
+ * The lists to choose from, opened over the player: the site's lists of official songs and the reader's own
  * links. It opens on the list that plays.
  */
 export function MusicShelf({ compact }: { compact: boolean }) {
