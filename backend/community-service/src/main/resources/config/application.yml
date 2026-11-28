@@ -47,6 +47,27 @@ community:
     history-start: 2016-01-01
     # The units readers can pick, then every other unit tournaments were recorded in so far.
     currencies: VND,THB,TWD,IDR,EUR,TRY,PHP,BDT,JPY,KRW,HKD,SGD,INR,CNY,MYR,AUD,RUB,BRL
+  translation:
+    # Translating Stream posts with the Claude API (ADR-037). The key is set in the environment only; without it the
+    # Translate button stays hidden.
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: ${COMMUNITY_TRANSLATION_MODEL:claude-haiku-5-5}
+    effort: medium
+    max-output-tokens: 8000
+    timeout: PT60S
+    # Stream is written in Vietnamese and English.
+    locales: vi-VN,en-US
+    glossary-locales: vi-VN,en-US,th-TH,zh-TW
+    region: VN
+    glossary-ttl: PT15M
+    image-hosts: ${COMMUNITY_TRANSLATION_IMAGE_HOSTS:img.athahub.com,localhost,127.0.0.1}
+    max-images: 4
+    max-image-bytes: 5000000
+    hourly-per-requester: ${COMMUNITY_TRANSLATION_HOURLY:30}
+    monthly-budget-usd: ${COMMUNITY_TRANSLATION_MONTHLY_BUDGET_USD:5}
+    # Claude Haiku 5.5 prices per million tokens, for the budget.
+    input-usd-per-million: 0.10
+    output-usd-per-million: 0.50
   youtube:
     # The Data API key, set in the environment only. Without it a page's YouTube channel is shown from its feed alone,
     # and only when the page links it by its id (ADR-034).
