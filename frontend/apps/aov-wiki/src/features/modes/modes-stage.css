@@ -1,0 +1,231 @@
+/*
+ * The modes' stage: one mode's art across the whole width, darkest on the left and at the foot, where the page's title
+ * sits at the top and the mode's name, facts and way in sit at the bottom.
+ */
+.wiki-modes-stage {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 90% at 72% 40%, color-mix(in srgb, var(--aov-wiki-gold) 14%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--aov-wiki-panel-deep), var(--aov-wiki-bar));
+}
+.wiki-modes-stage-art {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: grid;
+  place-items: center end;
+  padding-right: 10%;
+  color: color-mix(in srgb, var(--aov-wiki-gold) 25%, transparent);
+}
+.wiki-modes-stage-art > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wiki-modes-stage-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 92%, transparent), transparent 62%),
+    linear-gradient(0deg, color-mix(in srgb, var(--aov-bg) 80%, transparent), transparent 50%);
+}
+.wiki-modes-stage-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-shadow: 0 1px 14px var(--aov-bg);
+}
+.wiki-modes-stage-title {
+  font: var(--wiki-type-page);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: auto;
+  padding-bottom: 32px;
+  color: var(--aov-text);
+  letter-spacing: -0.02em;
+}
+.wiki-modes-stage-title small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+/* A short gold line before the kicker ties it to the name under it. */
+.wiki-modes-stage-kicker {
+  font: 700 0.75rem/1rem var(--wiki-font-reading);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--aov-wiki-gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.wiki-modes-stage-kicker::before {
+  content: "";
+  width: 28px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze));
+}
+.wiki-modes-stage h2 {
+  font: 700 2.5rem/2.875rem var(--wiki-font-display);
+  color: var(--aov-wiki-gold-bright);
+  letter-spacing: -0.015em;
+  text-shadow:
+    0 0 26px color-mix(in srgb, var(--aov-wiki-gold) 35%, transparent),
+    0 2px 12px var(--aov-bg);
+}
+.wiki-modes-stage-meta {
+  font: var(--wiki-type-category);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  color: var(--aov-text-soft);
+}
+.wiki-modes-stage-summary {
+  font: var(--wiki-type-body);
+  max-width: 52ch;
+  margin-top: 4px;
+  color: var(--aov-text-soft);
+}
+.wiki-modes-stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  max-width: 100%;
+  margin-top: 14px;
+}
+.wiki-modes-stage-go {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: var(--aov-radius-pill);
+  background: linear-gradient(180deg, var(--aov-wiki-gold-bright), var(--aov-wiki-gold));
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--aov-wiki-gold) 28%, transparent);
+  color: var(--aov-wiki-bar);
+  text-decoration: none;
+  text-shadow: none;
+  white-space: nowrap;
+}
+.wiki-modes-stage-go:hover {
+  filter: brightness(1.08);
+}
+.wiki-modes-stage-go > svg {
+  transition: transform 0.18s ease;
+}
+.wiki-modes-stage-go:hover > svg {
+  transform: translateX(3px);
+}
+/* The guide's parts: plain text links in a row, a dot between them. */
+.wiki-modes-stage-links {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wiki-modes-stage-links::-webkit-scrollbar {
+  display: none;
+}
+.wiki-modes-stage-links > a {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 8px;
+  color: var(--aov-text-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wiki-modes-stage-links > a + a::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  margin-right: 12px;
+  border-radius: 50%;
+  background: var(--aov-wiki-gold);
+  opacity: 0.6;
+}
+.wiki-modes-stage-links > a:hover {
+  color: var(--aov-wiki-gold-bright);
+}
+
+/* Wide: a tall banner with the page's rounded corners and thin border. */
+.wiki-modes-stage[data-layout="wide"] {
+  min-height: 380px;
+  margin-top: 4px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+}
+.wiki-modes-stage[data-layout="wide"] .wiki-modes-stage-body {
+  max-width: 60%;
+  padding: 28px 34px 30px;
+}
+
+/* Phones: edge to edge and tall, the art running up behind the clear header; the button spans the screen. */
+.wiki-modes-stage[data-layout="compact"] {
+  min-height: calc(var(--wiki-header-height) + 340px);
+  margin: calc(-12px - var(--wiki-header-height)) calc(-1 * var(--wiki-gutter)) 0;
+  align-items: flex-end;
+}
+.wiki-modes-stage[data-layout="compact"] .wiki-modes-stage-art::after {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--aov-bg) 50%, transparent), transparent 24%),
+    linear-gradient(0deg, var(--aov-bg), color-mix(in srgb, var(--aov-bg) 72%, transparent) 38%, transparent 70%);
+}
+.wiki-modes-stage[data-layout="compact"] .wiki-modes-stage-body {
+  width: 100%;
+  padding: calc(var(--wiki-header-height) + 12px) var(--wiki-gutter) 16px;
+}
+.wiki-modes-stage[data-layout="compact"] h2 {
+  font-size: 2rem;
+  line-height: 2.375rem;
+}
+.wiki-modes-stage[data-layout="compact"] .wiki-modes-stage-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  gap: 6px;
+}
+.wiki-modes-stage[data-layout="compact"] .wiki-modes-stage-go {
+  min-height: 48px;
+}
+
+/* While the modes load: the stage's height, a bar where the name will stand. */
+.wiki-modes-stage[data-skeleton] {
+  align-items: flex-end;
+}
+.wiki-modes-stage-bar {
+  width: min(60vw, 320px);
+  height: 40px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+.wiki-modes-stage[data-skeleton][data-layout="wide"] .wiki-modes-stage-body {
+  justify-content: flex-end;
+  min-height: 380px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiki-modes-stage-go > svg {
+    transition: none;
+  }
+}
