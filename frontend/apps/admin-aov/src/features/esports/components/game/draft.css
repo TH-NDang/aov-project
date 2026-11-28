@@ -75,10 +75,11 @@
     z-index: 1;
     box-shadow: 0 0 0 2px var(--foreground);
   }
+  /* The order stands at the top left: the bottom right corner carries the sign of a ban, the top right a warning. */
   .esp-draft-order {
     position: absolute;
     z-index: 1;
-    bottom: 0;
+    top: 0;
     left: 0;
     min-width: 16px;
     padding-inline: 3px;
