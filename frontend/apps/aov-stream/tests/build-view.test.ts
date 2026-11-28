@@ -12,12 +12,12 @@ import {
   banPlaces,
   buildOf,
   enchantmentBranches,
-  inBuiltOrder,
   inventoryAt,
   inventoryTimes,
   isRecorded,
   lineupRecord,
   mainEnchantment,
+  pathChart,
   shownBuild,
   type BuiltItem,
 } from "../src/lib/build-view.ts"
@@ -35,107 +35,121 @@ const catalog = catalogOf({
   ],
 })
 
-const kept = (id: string, extra: Partial<BuildStep> = {}): BuildStep => ({ item: { id }, place: "KEPT", ...extra })
+const step = (id: string, extra: Partial<BuildStep> = {}): BuildStep => ({ item: { id }, role: "CORE", ...extra })
 const ids = (items: BuiltItem[]) => items.map((built) => built.item.id)
+const pathOf = (...steps: BuildStep[]) => buildOf(seat({ build: steps }), catalog)!
 
-test("items written down keep their order and stand by what became of them", () => {
-  const build = buildOf(
-    seat({
-      build: [
-        kept("boots", { atSeconds: 190 }),
-        kept("armor", { place: "REPLACED" }),
-        kept("spear", { atSeconds: 430 }),
-        kept("revive", { place: "SITUATIONAL", atSeconds: 900 }),
-      ],
-    }),
-    catalog,
-  )!
+test("items written down keep their order, and the end holds the build before what was bought for protection", () => {
+  const build = pathOf(
+    step("boots", { atSeconds: 190 }),
+    step("armor", { sold: true }),
+    step("spear", { atSeconds: 430 }),
+    step("revive", { role: "PROTECTIVE", atSeconds: 900 }),
+    step("sword", { atSeconds: 1000 }),
+  )
 
   assert.equal(build.source, "STEPS")
+  assert.deepEqual(ids(build.path), ["boots", "armor", "spear", "revive", "sword"])
   assert.deepEqual(
-    [ids(build.kept), ids(build.replaced), ids(build.situational)],
-    [["boots", "spear"], ["armor"], ["revive"]],
+    build.path.map((built) => built.fate),
+    ["HELD", "SOLD", "HELD", "HELD", "HELD"],
   )
+  assert.deepEqual(ids(build.end), ["boots", "spear", "sword", "revive"])
   assert.deepEqual(
-    build.kept.map((built) => built.atSeconds),
-    [190, 430],
+    build.end.map((built) => built.protective),
+    [false, false, false, true],
   )
 })
 
-test("an item tells the ones it grew from", () => {
-  const build = buildOf(seat({ build: [kept("spear", { from: [{ id: "sword" }, { name: "Kiếm lạ" }] })] }), catalog)!
+test("an item a later one grew from went into it, and is told by it with the time it was bought", () => {
+  const build = pathOf(step("sword", { atSeconds: 180 }), step("spear", { from: [{ id: "sword" }], atSeconds: 420 }))
 
-  assert.deepEqual(build.kept[0]!.from, [
+  assert.deepEqual(
+    build.path.map((built) => built.fate),
+    ["UPGRADED", "HELD"],
+  )
+  assert.deepEqual(build.path[0]!.next, { item: { id: "spear" }, atSeconds: 420, at: 1 })
+  assert.deepEqual(ids(build.end), ["spear"])
+  assert.deepEqual(build.end[0]!.from, [{ item: { id: "sword" }, atSeconds: 180 }])
+})
+
+test("an item a later one replaces was sold for it", () => {
+  const build = pathOf(
+    step("boots", { atSeconds: 190 }),
+    step("spear", { atSeconds: 430 }),
+    step("revive", { role: "PROTECTIVE", replaces: [{ id: "boots" }], atSeconds: 1300 }),
+  )
+
+  assert.deepEqual(
+    build.path.map((built) => built.fate),
+    ["SOLD", "HELD", "HELD"],
+  )
+  assert.equal(build.path[0]!.next?.at, 2)
+  assert.deepEqual(build.path[2]!.replaces, [{ item: { id: "boots" }, atSeconds: 190 }])
+  assert.deepEqual(ids(build.end), ["spear", "revive"])
+})
+
+test("only an earlier step goes into a later one, and a part nobody wrote down has no time", () => {
+  const build = pathOf(step("spear", { from: [{ id: "sword" }, { name: "Kiếm lạ" }] }), step("sword"))
+
+  assert.deepEqual(
+    build.path.map((built) => built.fate),
+    ["HELD", "HELD"],
+  )
+  assert.deepEqual(build.path[0]!.from, [
     { item: { id: "sword" }, atSeconds: null },
     { item: { name: "Kiếm lạ" }, atSeconds: null },
   ])
 })
 
-test("an item given up into a later one is told by that one, with the time it was first held", () => {
-  const build = buildOf(
-    seat({
-      build: [
-        kept("sword", { place: "REPLACED", atSeconds: 180 }),
-        kept("spear", { from: [{ id: "sword" }], atSeconds: 420 }),
-      ],
-    }),
-    catalog,
-  )!
-
-  assert.deepEqual(ids(build.replaced), [])
-  assert.deepEqual(build.kept[0]!.from, [{ item: { id: "sword" }, atSeconds: 180 }])
-})
-
-test("an item that went into two others tells when it was first held with the first of them alone", () => {
-  const build = buildOf(
-    seat({
-      build: [
-        kept("sword", { place: "REPLACED", atSeconds: 180 }),
-        kept("spear", { from: [{ id: "sword" }], atSeconds: 420 }),
-        kept("armor", { from: [{ id: "sword" }], atSeconds: 600 }),
-      ],
-    }),
-    catalog,
-  )!
+test("an item bought again after it went into another is held on its own", () => {
+  const build = pathOf(
+    step("sword", { atSeconds: 180 }),
+    step("spear", { from: [{ id: "sword" }], atSeconds: 420 }),
+    step("sword", { atSeconds: 600 }),
+  )
 
   assert.deepEqual(
-    build.kept.map((built) => built.from[0]!.atSeconds),
-    [180, null],
+    build.path.map((built) => built.fate),
+    ["UPGRADED", "HELD", "HELD"],
   )
-  assert.deepEqual(build.replaced, [])
+  assert.deepEqual(ids(build.end), ["spear", "sword"])
 })
 
-test("an item held to the end stays its own even where another grew from the same", () => {
-  const build = buildOf(
-    seat({ build: [kept("sword", { atSeconds: 600 }), kept("spear", { from: [{ id: "sword" }] })] }),
-    catalog,
-  )!
+test("items known by name alone are the same in any case", () => {
+  const build = pathOf(
+    { item: { name: "Kiếm dài" }, role: "CORE" },
+    { item: { name: "Thương" }, from: [{ name: "kiếm DÀI " }], role: "CORE" },
+  )
 
-  assert.deepEqual(ids(build.kept), ["sword", "spear"])
-  assert.equal(build.kept[1]!.from[0]!.atSeconds, null, "when the second one was bought says nothing of the first")
+  assert.deepEqual(
+    build.path.map((built) => built.fate),
+    ["UPGRADED", "HELD"],
+  )
 })
 
-test("items known by name alone are told apart by it", () => {
-  const build = buildOf(
-    seat({
-      build: [
-        { item: { name: "Kiếm dài" }, place: "REPLACED" },
-        { item: { name: "Thương" }, from: [{ name: "kiếm dài " }], place: "KEPT" },
-      ],
-    }),
-    catalog,
-  )!
+test("a path is drawn over the minutes of a game only where its length and every time are known", () => {
+  const { path } = pathOf(
+    step("sword", { atSeconds: 120 }),
+    step("boots", { atSeconds: 240 }),
+    step("spear", { from: [{ id: "sword" }], atSeconds: 600 }),
+    step("armor", { sold: true, atSeconds: 900 }),
+  )
 
-  assert.deepEqual(build.replaced, [])
-})
-
-test("a list tells its order where the times of at least two items agree with it", () => {
-  const told = (times: (number | null)[]) =>
-    inBuiltOrder(times.map((atSeconds, at) => ({ item: { id: String(at) }, atSeconds, from: [] })))
-  assert.equal(told([200, null, 500]), true)
-  assert.equal(told([500, null, 200]), false)
-  assert.equal(told([null, 200, null]), false)
-  assert.equal(told([null, null]), false)
+  assert.deepEqual(pathChart(path, 1200), {
+    bars: [
+      { from: 0.1, to: 0.5, open: false },
+      { from: 0.2, to: 1, open: false },
+      { from: 0.5, to: 1, open: false },
+      { from: 0.75, to: 1, open: true },
+    ],
+    ticks: [0, 300, 600, 900],
+  })
+  assert.deepEqual(pathChart(path, 1351)?.ticks, [0, 300, 600, 900], "the last mark keeps clear of the end")
+  assert.deepEqual(pathChart(path, 1000)?.ticks, [0, 300, 600], "a mark close to the end gives way to it")
+  assert.equal(pathChart(path, null), null)
+  assert.equal(pathChart(path, 800), null, "an item bought after the end of the game")
+  assert.equal(pathChart([...path, { ...path[0]!, atSeconds: null }], 1200), null)
 })
 
 test("the last inventory stands in for a build nobody wrote down", () => {
@@ -145,38 +159,38 @@ test("the last inventory stands in for a build nobody wrote down", () => {
   )!
 
   assert.deepEqual([build.source, build.atSeconds, build.unread], ["INVENTORY", 800, 4])
-  assert.deepEqual(ids(build.kept), ["boots", "spear"])
+  assert.deepEqual(ids(build.end), ["boots", "spear"])
 })
 
 test("items written down speak instead of any inventory", () => {
-  const build = buildOf(seat({ build: [kept("spear")], equipmentSnapshots: [inventory(800, "boots")] }), catalog)!
+  const build = buildOf(seat({ build: [step("spear")], equipmentSnapshots: [inventory(800, "boots")] }), catalog)!
 
-  assert.deepEqual(ids(build.kept), ["spear"])
+  assert.deepEqual(ids(build.end), ["spear"])
 })
 
 test("items of the lowest tier are left out of an inventory that holds others", () => {
   const build = buildOf(seat({ equipmentSnapshots: [inventory(800, "ring", "boots", "dagger")] }), catalog)!
 
-  assert.deepEqual(ids(build.kept), ["boots"])
+  assert.deepEqual(ids(build.end), ["boots"])
   assert.equal(build.unread, 3, "a slot that was read is not unread")
 })
 
 test("items of the lowest tier stay where an inventory holds nothing else", () => {
   const build = buildOf(seat({ equipmentSnapshots: [inventory(60, "ring", null, "dagger")] }), catalog)!
 
-  assert.deepEqual(ids(build.kept), ["ring", "dagger"])
+  assert.deepEqual(ids(build.end), ["ring", "dagger"])
 })
 
 test("an item whose tier nobody knows is kept", () => {
   const build = buildOf(seat({ equipmentSnapshots: [inventory(800, "unheard", "boots", "ring")] }), catalog)!
 
-  assert.deepEqual(ids(build.kept), ["unheard", "boots"])
+  assert.deepEqual(ids(build.end), ["unheard", "boots"])
 })
 
 test("two of the same item lie in two slots", () => {
   const build = buildOf(seat({ equipmentSnapshots: [inventory(800, "sword", "boots", "sword")] }), catalog)!
 
-  assert.deepEqual(ids(build.kept), ["sword", "boots", "sword"])
+  assert.deepEqual(ids(build.end), ["sword", "boots", "sword"])
 })
 
 test("an inventory nobody could read is no record, and one seen empty is", () => {
@@ -184,21 +198,21 @@ test("an inventory nobody could read is no record, and one seen empty is", () =>
   assert.equal(buildOf(seat(), catalog), null)
 
   const empty = buildOf(seat({ equipmentSnapshots: [inventory(30, null, null, null, null, null, null)] }), catalog)!
-  assert.deepEqual([empty.kept, empty.unread], [[], 0])
+  assert.deepEqual([empty.end, empty.unread], [[], 0])
 })
 
 test("a moment of the game shows the inventory seen last by then, whole", () => {
   const player = seat({ equipmentSnapshots: [inventory(800, "spear"), inventory(300, "ring", "boots")] })
 
-  assert.deepEqual(ids(inventoryAt(player, catalog, 500)!.kept), ["ring", "boots"])
+  assert.deepEqual(ids(inventoryAt(player, catalog, 500)!.end), ["ring", "boots"])
   assert.equal(inventoryAt(player, catalog, 200), null, "nothing was seen yet")
 })
 
 test("a lineup shows what was built until a second of the game is asked for", () => {
-  const player = seat({ build: [kept("spear")], equipmentSnapshots: [inventory(300, "boots")] })
+  const player = seat({ build: [step("spear")], equipmentSnapshots: [inventory(300, "boots")] })
 
-  assert.deepEqual(ids(shownBuild(player, catalog, null)!.kept), ["spear"])
-  assert.deepEqual(ids(shownBuild(player, catalog, 300)!.kept), ["boots"])
+  assert.deepEqual(ids(shownBuild(player, catalog, null)!.end), ["spear"])
+  assert.deepEqual(ids(shownBuild(player, catalog, 300)!.end), ["boots"])
 })
 
 test("the moments of a game are those an inventory was seen at, each once", () => {
@@ -255,7 +269,7 @@ test("a seat is recorded once anything beside its hero is", () => {
   assert.equal(isRecorded(seat(), catalog), false)
   assert.equal(isRecorded(seat({ spell: {} }), catalog), false, "an empty selection names no spell")
   assert.equal(isRecorded(seat({ spell: { name: "Tốc biến" } }), catalog), true)
-  assert.equal(isRecorded(seat({ build: [kept("spear")] }), catalog), true)
+  assert.equal(isRecorded(seat({ build: [step("spear")] }), catalog), true)
 })
 
 const game = (seats: Participant[], durationSeconds: number | null = 800) =>
@@ -274,7 +288,7 @@ const game = (seats: Participant[], durationSeconds: number | null = 800) =>
 test("a game counts the seats each thing is recorded for", () => {
   const record = lineupRecord(
     game([
-      seat({ playerId: "p1", spell: { id: "flash" }, build: [kept("spear")] }),
+      seat({ playerId: "p1", spell: { id: "flash" }, build: [step("spear")] }),
       seat({ playerId: "gone", equipmentSnapshots: [inventory(800, "boots")] }),
       seat({ enchantments: { status: "PARTIAL", entries: [enchantment("a", true, 3)] } }),
     ]),
@@ -299,7 +313,7 @@ test("an inventory seen before the end is not the one a game ended with", () => 
 })
 
 test("at a second of the game only the inventories seen by then count", () => {
-  const early = seat({ build: [kept("spear")], equipmentSnapshots: [inventory(300, "boots")] })
+  const early = seat({ build: [step("spear")], equipmentSnapshots: [inventory(300, "boots")] })
   const late = seat({ equipmentSnapshots: [inventory(700, "boots")] })
   const record = lineupRecord(game([early, late]), 400)
 

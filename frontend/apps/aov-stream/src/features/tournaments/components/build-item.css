@@ -9,28 +9,50 @@
 .tn-build-item > :first-child {
   display: flex;
 }
-/* What it grew from takes a lower corner, parted from the item by the ground they stand on. */
-.tn-build-part {
-  --reference-radius: 4px;
+/* Its marks take a corner each, parted from the item by the ground they stand on. */
+.tn-build-mark {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  width: 42%;
-  border-radius: 4px 0 var(--aov-radius-control);
-  box-shadow: 0 0 0 2px var(--build-ground, var(--hub-surface));
+  display: grid;
+  width: max(12px, 40%);
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--build-ground, var(--hub-surface));
 }
-.tn-build-part + .tn-build-part {
-  right: auto;
-  left: 0;
-  border-radius: 0 4px 0 var(--aov-radius-control);
+.tn-build-mark > svg {
+  width: 66%;
+  fill: currentcolor;
 }
-/* An item given up steps back behind a line. */
-.tn-build-item[data-gone] > * {
+.tn-build-mark[data-mark="active"] {
+  top: -3px;
+  right: -3px;
+  background: var(--aov-game-gold);
+  color: var(--aov-on-medal);
+}
+/* The shield is the mark itself, drawn over a rim of the ground. */
+.tn-build-mark[data-mark="protective"] {
+  bottom: -3px;
+  left: -3px;
+  box-shadow: none;
+  color: var(--hub-blue);
+}
+.tn-build-mark[data-mark="protective"] > svg {
+  width: 100%;
+  stroke: var(--build-ground, var(--hub-surface));
+  stroke-width: 3px;
+  paint-order: stroke;
+}
+/* What was bought for protection keeps a ring of its colour. */
+.tn-build-item[data-protective] > :first-child {
+  border-radius: var(--reference-radius, var(--aov-radius-control));
+  box-shadow: 0 0 0 1.5px var(--hub-blue);
+}
+/* An item that went into another or was sold steps back; a sold one behind a line. */
+.tn-build-item[data-gone] > :first-child {
   filter: grayscale(0.75);
-  opacity: 0.5;
+  opacity: 0.55;
 }
-.tn-build-item[data-gone]::after {
+.tn-build-item[data-gone="sold"]::after {
   content: "";
   position: absolute;
   inset: 0;

@@ -556,7 +556,7 @@ const builds: HeroBuilds = {
   ],
   builds: [
     { gameId: "g1", spell: 0, enchantment: 0, items: [0, 1, 2, 2] },
-    { gameId: "g2", spell: 0, items: [0, 3], situational: [1] },
+    { gameId: "g2", spell: 0, items: [0, 3], protective: [1], sold: [3] },
     { gameId: "g3", spell: 1, enchantment: 0, items: [] },
     { gameId: "g4", spell: 1, items: [0] },
   ],
@@ -601,8 +601,11 @@ test("spells and enchantments are counted among the builds that show one", () =>
   assert.deepEqual(named(enchantments), [2, [["Thánh thuẫn", 2]]])
 })
 
-test("items bought for a moment of the game are counted apart, whatever their tier", () => {
-  assert.deepEqual(named(buildCounts(builds, ["g1", "g2"]).situational), [1, [["Sách phép", 1]]])
+test("items bought for protection and items sold are counted apart, whatever their tier", () => {
+  const { protective, sold } = buildCounts(builds, ["g1", "g2"])
+
+  assert.deepEqual(named(protective), [1, [["Sách phép", 1]]])
+  assert.deepEqual(named(sold), [1, [["Món lạ", 1]]])
 })
 
 test("a hero's mates are the rows the wings are drawn from", () => {

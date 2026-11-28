@@ -39,6 +39,20 @@
   padding: 8px 0;
   border-top: 1px solid var(--hub-border);
 }
+/* Lines as wide as the card stand under their name, which keeps a line of its own. */
+.tn-loadout-card > dl > [data-whole] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+.tn-loadout-card [data-whole] > dt {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tn-loadout-card [data-whole] > dt > small {
+  margin: 0;
+}
 /* The second branch of the enchantments goes on from the first. */
 .tn-loadout-card > dl > [data-continued] {
   padding-top: 0;
@@ -109,31 +123,10 @@
   color: var(--hub-muted);
   font-size: 13px;
 }
-.tn-loadout-card li[data-gone] b {
-  color: var(--hub-muted);
-  font-weight: 500;
-}
 .tn-loadout-card time {
   color: var(--hub-muted);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
-}
-/* What an item grew from, under its name. */
-.tn-loadout-from {
-  --reference-size: 18px;
-  --reference-radius: 4px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 10px;
-  margin-bottom: 4px;
-  color: var(--hub-muted);
-  font-size: 13px;
-  line-height: 18px;
-}
-.tn-loadout-from > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
 }
 /* Under the sheet, the pages a name would open where there is room to press it. */
 .tn-loadout-doors {
