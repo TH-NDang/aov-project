@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { GitBranch, ListOrdered, Settings2 } from "lucide-react"
+import { GitBranch, ListOrdered, Wrench } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { cn } from "@aov/ui/lib/utils"
@@ -13,6 +13,7 @@ import { QuickTimes } from "../schedule/quick-times"
 import { LinkBracket, ScheduleSetup } from "../schedule/schedule-setup"
 import { NeedFilter, TeamFilter } from "../schedule/schedule-toolbar"
 import { BracketMatches, LeagueMatches } from "../schedule/stage-matches"
+import { CheckMark } from "./content-check"
 import { MatchPeople } from "./match-people"
 import { isLeagueStage, layoutBracket, stageProgress } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
@@ -97,7 +98,9 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
   const setFilter = (next: MatchFilter) => ws.keep({ stage: stage.code, show: next === "ALL" ? undefined : next })
   const setMode = (next: Mode) =>
     void leaving().then((ok) => ok && ws.keep({ open: next === "view" ? undefined : next, key: undefined }))
-  const showSetup = ws.canEdit && (setup || !matches.length)
+  // A stage without matches shows its tools for good: there is nothing else to show, so nothing to toggle.
+  const bare = !matches.length
+  const showSetup = ws.canEdit && (setup || bare)
   const waiting = own.filter((row) => matchPasses(row, "NOT_OPEN")).length
   const league = isLeagueStage(stage)
   const loose = !league && matches.length > 2 && !layoutBracket(matches).linked
@@ -157,16 +160,17 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
       })}
     </div>
   )
-  const setupButton = ws.canEdit && (
+  const setupButton = ws.canEdit && !bare && (
     <Button
       type="button"
       variant={showSetup ? "secondary" : "ghost"}
       size={compact ? "icon" : "default"}
-      aria-label={compact ? "Thiết lập lịch" : undefined}
-      title="Thiết lập lịch"
+      aria-label={compact ? "Công cụ lịch" : undefined}
+      aria-expanded={showSetup}
+      title="Tạo lịch, nối nhánh, mở nhập kết quả"
       onClick={() => setSetup(!showSetup)}
     >
-      <Settings2 aria-hidden /> {!compact && "Thiết lập lịch"}
+      <Wrench aria-hidden /> {!compact && "Công cụ lịch"}
     </Button>
   )
   const working = ws.canEdit && matches.length > 0
@@ -189,6 +193,9 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
         // start within the first screen.
         <div className="space-y-2.5">
           {stageTabs}
+          <div className="flex justify-end empty:hidden">
+            <CheckMark ws={ws} part={`SCHEDULE:${stage.code}`} />
+          </div>
           {matches.length > 0 && (
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">{teamFilter}</div>
@@ -210,7 +217,6 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
             </div>
           )}
           {matches.length > 0 && needFilter}
-          {!matches.length && <div className="flex justify-end">{setupButton}</div>}
         </div>
       ) : (
         <>
@@ -226,7 +232,10 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
                 <div className="min-w-0 flex-1">{needFilter}</div>
               </>
             )}
-            <div className="ml-auto">{setupButton}</div>
+            <div className="ml-auto flex items-center gap-2">
+              <CheckMark ws={ws} part={`SCHEDULE:${stage.code}`} />
+              {setupButton}
+            </div>
           </div>
         </>
       )}
@@ -237,7 +246,16 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
           </div>
         </Panel>
       )}
-      {showSetup && <ScheduleSetup key={stage.code} ws={ws} stage={stage} />}
+      {/* These siblings are told apart by their keys, so no two may share one: React would then forget one of them and
+          leave it on the page for good, as the tools once stacked up each time they were closed. */}
+      {showSetup && (
+        <ScheduleSetup
+          key={`tools-${stage.code}`}
+          ws={ws}
+          stage={stage}
+          onClose={bare ? undefined : () => setSetup(false)}
+        />
+      )}
       {loose && !showSetup && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg bg-(--aov-info-soft) px-3.5 py-2.5">
           <span className="type-body">Các trận của {stage.name} chưa nối thành nhánh.</span>
@@ -246,18 +264,18 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
       )}
       {mode === "results" ? (
         <QuickResults
-          key={`${stage.code}-${filter}`}
+          key={`results-${stage.code}-${filter}`}
           ws={ws}
           rows={[...shown].sort(byTime)}
           waiting={waiting}
           onDirtyChange={setUnsaved}
         />
       ) : mode === "times" ? (
-        <QuickTimes key={stage.code} ws={ws} stage={stage} shown={shown.map((row) => row.match)} />
+        <QuickTimes key={`times-${stage.code}`} ws={ws} stage={stage} shown={shown.map((row) => row.match)} />
       ) : league ? (
-        <LeagueMatches key={stage.code} {...props} />
+        <LeagueMatches key={`league-${stage.code}`} {...props} />
       ) : (
-        <BracketMatches key={stage.code} {...props} />
+        <BracketMatches key={`bracket-${stage.code}`} {...props} />
       )}
     </div>
   )

@@ -21,6 +21,7 @@ import {
   type StageTemplate,
 } from "../model/stage-templates"
 import { FORMAT_NAMES, hostOf, isLeagueStage } from "./model"
+import { CheckMark } from "./content-check"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { StageFields, TIE_BREAK_PRESETS } from "./plan-fields"
 import { StageCard } from "./stage-card"
@@ -87,7 +88,10 @@ export function FormatStep({ ws }: { ws: Workspace }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="type-section-title">Các giai đoạn · {plan.stages.length}</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="type-section-title">Các giai đoạn · {plan.stages.length}</h2>
+          <CheckMark ws={ws} part="FORMAT" />
+        </div>
         {ws.canEdit && (
           <div className="flex flex-wrap gap-2">
             {outOfOrder && (

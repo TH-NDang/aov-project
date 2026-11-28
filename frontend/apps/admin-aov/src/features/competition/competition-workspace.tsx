@@ -59,6 +59,7 @@ import {
 import { PublishStep } from "./workspace/publish-step"
 import { ScheduleStep } from "./workspace/schedule-step"
 import { TeamsStep } from "./workspace/teams-step"
+import { useContentChecks } from "./workspace/use-content-checks"
 import { usePlanDraft } from "./workspace/use-plan-draft"
 import { useRosterPlayers } from "./workspace/use-roster-players"
 import { ENTRY_STATUS_LABELS } from "./peek/peek-model"
@@ -267,6 +268,18 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     meta: { silent: true },
   })
   const teams = useMemo(() => ({ ...pickedTeams, ...entry.content.teams }), [pickedTeams, entry.content.teams])
+  const teamName = useCallback((id: string) => teams[id]?.name || "Đội chưa có tên", [teams])
+  // What the person checked by hand, against what is saved: a draft is not what a check names.
+  const verification = useContentChecks({
+    tournamentId: entry.id,
+    access,
+    tournament: tournament.data?.content,
+    plan: baseline,
+    rosters: rosters.data,
+    series: series.data,
+    dirty,
+    teamName,
+  })
   const resolved = useMemo(() => resolvedIndex(entry.content.resolved), [entry.content.resolved])
   const final = useMemo(
     () =>
@@ -326,6 +339,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     keep,
     openCopy: (parts) => setCopying({ parts }),
     run: (action) => mutate.mutate(action),
+    verification,
   }
   const rosterPlayers = useRosterPlayers(entry.id, access.actorKey, !!rosters.data?.length)
   const world: PeekWorld = {

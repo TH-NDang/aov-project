@@ -1094,6 +1094,37 @@ video, nút Đăng ký và Mở YouTube, video mới nhất làm thẻ lớn, h�
 - Service chỉ đọc kênh mà hồ sơ đã công bố đang link tới, và giữ câu trả lời trong bộ nhớ (thông tin kênh 24 giờ, video
   30 phút).
 
+## Kiểm chứng dữ liệu giải (28/11/2026)
+
+Phần lớn dữ liệu giải được nhập hoặc do AI đọc từ nguồn, chưa được chủ dự án tự đối chiếu. Admin cho người có quyền
+`tournament:publish` đánh dấu từng phần của một giải là đã tự kiểm chứng. Dấu chỉ hiện trong Admin: Wiki, Stream, API công
+khai và bản công bố không đọc nó. Trường `verification` của đội hình, kết quả trận và kết quả giải (PRIMARY, SECONDARY_*,
+UNVERIFIED) là độ tin của nguồn, khác với dấu này.
+
+Một giải chia thành các phần theo bước của không gian giải:
+
+| Phần | Gồm | Đánh dấu ở |
+| --- | --- | --- |
+| `INFO` | Tên, khu vực, năm, ngày, nguồn, ghi chú, logo, hạng, thể loại, hình thức, tiền tệ, giải chính, tổ sản xuất; trong kế hoạch: hệ thống giải, đơn vị tổ chức, múi giờ, giải thưởng, nguồn, ghi chú, địa điểm | Tổng quan, thẻ "Thông tin giải" |
+| `TEAM:<id đội>` | Dòng tham dự (hạt giống, trạng thái, ghi chú), mọi dòng đội hình của đội ở giải, nhân sự của đội | Đội & đội hình, dòng của đội |
+| `FORMAT` | Các giai đoạn và hạt giống playoff | Thể thức |
+| `SCHEDULE:<mã giai đoạn>` | Các trận của giai đoạn trong kế hoạch, kèm trận thật đã nối: đội, BO, giờ, nguồn, ghi chú, tỷ số, MVP | Lịch & kết quả, theo giai đoạn đang mở |
+| `FINAL` | Kết quả, thứ hạng, giải cá nhân, liên kết | Chung cuộc |
+
+Giai đoạn chưa có trận và giải chưa có gì ở chung cuộc không có phần để kiểm chứng. Trạng thái giải (sắp diễn ra, đang
+diễn ra…) không thuộc phần nào vì nó đi theo ngày.
+
+**Phiên bản.** Admin lấy dữ liệu đã lưu của phần, bỏ giá trị rỗng (chuỗi rỗng, null, false, danh sách rỗng), xếp khóa theo
+thứ tự chữ cái, chuẩn hóa chữ về NFC và băm thành token `fp1:` cộng 32 chữ số hex. Dấu ghi phần, token, nhãn, người và lúc
+đánh dấu. Một phần là "Đã kiểm chứng" khi có dấu với token hiện tại, "Đã đổi" khi chỉ có dấu của token cũ, còn lại là chưa
+kiểm chứng. Sửa bất kỳ dữ liệu nào trong phần cho token mới, nên phần hiện "Đã đổi" tới khi có người kiểm chứng lại; sửa
+ngược về bản cũ thì dấu cũ có hiệu lực lại. Khi bản nháp kế hoạch có thay đổi chưa lưu, Admin vẫn đọc trạng thái theo bản
+đã lưu nhưng không cho đánh dấu. Bỏ dấu xóa mọi dấu của phần đó.
+
+**Admin.** Tổng quan có bảng "Kiểm chứng của bạn": số phần đã kiểm chứng trên tổng, các phần đã đổi rồi tới phần chưa
+kiểm chứng (sáu dòng đầu, "Xem cả N phần" để mở hết), mỗi dòng mở đúng bước và đội hoặc giai đoạn. Danh sách giải ghi "Kiểm
+chứng N phần" dưới tên giải có dấu, đếm phần có dấu của bất kỳ phiên bản nào.
+
 ## Cơ sở dữ liệu
 
 V006 tạo schema community và các bảng page, page_audit, page_member, page_claim, page_invitation,
@@ -1171,6 +1202,10 @@ V021 phục vụ "Đội trưởng", chạy một lần trên bản nháp và b�
 V022 phục vụ "Đưa danh tính vào thùng rác": view `tournament.trashed_identity` (kind TEAM hoặc PLAYER, id) liệt kê đội
 và tuyển thủ đang ở thùng rác. Danh sách, ô chọn hồ sơ và danh sách đội của thành viên bỏ qua page có `entity_id` nằm
 trong view; view đọc sổ đăng ký lúc truy vấn nên khôi phục danh tính là đủ để page hiện lại. Không đổi dữ liệu.
+
+V029 phục vụ "Kiểm chứng dữ liệu giải": bảng `tournament.content_verification` (id, version, tournament_id FK giải,
+part, content_token, label, note, verified_at, verified_by, verified_by_name), unique(tournament_id, part, content_token),
+index (tournament_id, verified_at DESC). CHECK giữ dạng của `part` và token. Không đổi dữ liệu.
 
 "Liên kết giữa các bản ghi thi đấu" (19/11/2026) không thêm migration: các trường mới nằm trong tài liệu jsonb, và dữ liệu
 cũ được điền bằng script chạy tay thay vì migration (ADR-032).
@@ -1264,6 +1299,10 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /admin/competitions/{id}/revisions?page=&size=, /admin/competitions/{id}/revisions/{revisionId} | Lịch sử kế hoạch mới nhất trước: [{id,action,createdAt,entrants,stages,matches}] / kế hoạch của một bản |
 | POST /admin/roster-memberships/batch | {create,update:[{id,version,content}],remove:[{id,version}]}, tối đa 500 dòng, ghi tất cả hoặc không dòng nào |
 | POST /admin/competitions/{id}/materialize, /publish, /withdraw | {version}; tạo trận thật / chụp snapshot / ẩn công khai |
+| GET /admin/competitions/{id}/verifications | [{id,part,contentToken,label?,note?,verifiedAt,verifiedByName?}] mới nhất trước (xem "Kiểm chứng dữ liệu giải"). Giải không có trả 404 |
+| POST /admin/competitions/{id}/verifications | {part,contentToken,label?,note?}; cần thêm tournament:publish. Ghi dấu, hoặc làm mới dấu đã có của cùng phần và token. Phần hoặc token sai dạng, nhãn quá 200 hay ghi chú quá 1000 ký tự trả 400 |
+| POST /admin/competitions/{id}/verifications/{verificationId}/remove | Cần thêm tournament:publish. Xóa một dấu, trả 204; dấu của giải khác trả 404 |
+| GET /admin/competitions/verifications | [{tournamentId,parts,lastVerifiedAt}] của mọi giải có dấu: số phần có dấu (mọi phiên bản) và lần đánh dấu mới nhất |
 
 Lỗi page: PAGE_NOT_FOUND 404, PAGE_ACTION_FORBIDDEN 403, PAGE_CONFLICT 409, PAGE_INVALID_CONTENT 422.
 Thi đấu dùng bộ TOURNAMENT_* hiện có. Không tin vai trò hoặc tên tác giả do client gửi trong body.

@@ -13,6 +13,7 @@ import type { EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { CompetitionInformationFields } from "../competition-information-fields"
 import { OrganizationPicker } from "../organization-picker"
 import { BroadcastCrew } from "./broadcast-crew"
+import { CheckMark, ContentChecksPanel } from "./content-check"
 import { DataChecksPanel } from "./data-checks-panel"
 import { EventPartsPanel } from "./event-parts"
 import { hasScore, type RecordingTotals, type WorkspaceCheck } from "./model"
@@ -66,18 +67,21 @@ export function OverviewStep({
             title="Thông tin giải"
             icon={Trophy}
             action={
-              ws.canEdit && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Chỉnh sửa thông tin cơ bản"
-                  title="Chỉnh sửa thông tin cơ bản"
-                  onClick={onEditTournament}
-                >
-                  <Pencil size={16} />
-                </Button>
-              )
+              <span className="flex items-center gap-1">
+                <CheckMark ws={ws} part="INFO" compact />
+                {ws.canEdit && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Chỉnh sửa thông tin cơ bản"
+                    title="Chỉnh sửa thông tin cơ bản"
+                    onClick={onEditTournament}
+                  >
+                    <Pencil size={16} />
+                  </Button>
+                )}
+              </span>
             }
           >
             <div className="flex items-start gap-3">
@@ -141,6 +145,7 @@ export function OverviewStep({
 
       <aside className="order-first space-y-5 xl:order-none">
         <DataChecksPanel ws={ws} record={record} />
+        <ContentChecksPanel ws={ws} />
         <Panel title="Việc nên làm tiếp" icon={ListChecks}>
           <ul>
             {next.map((check) => (

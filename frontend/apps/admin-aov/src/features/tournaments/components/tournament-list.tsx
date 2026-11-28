@@ -1,7 +1,8 @@
 import { Fragment } from "react"
 import { Link, useNavigate } from "react-router"
-import { CalendarDays, ChevronDown, ChevronUp, Layers, Shapes, Swords, Trophy, Users } from "lucide-react"
+import { CalendarDays, ChevronDown, ChevronUp, Layers, Shapes, ShieldCheck, Swords, Trophy, Users } from "lucide-react"
 import type {
+  ContentVerificationSummary,
   DocumentView,
   TournamentContent,
   TournamentPart,
@@ -48,6 +49,7 @@ export function TournamentList({
   stats,
   parts,
   published,
+  checked,
   actions,
   selection,
   search = "",
@@ -62,6 +64,8 @@ export function TournamentList({
   parts?: ReadonlyMap<string, TournamentPart[]>
   /** Ids of the tournaments readers see on Stream; missing while that is not known. */
   published?: ReadonlySet<string>
+  /** How far the owner's own checks of each tournament go, by its id; Admin only. */
+  checked?: ReadonlyMap<string, ContentVerificationSummary>
   actions?: TournamentRowActions
   selection?: Pick<RowSelectionState, "ids" | "toggle" | "toggleAll">
   /** What the list was searched for: a part it names moves to the front of its line. */
@@ -80,6 +84,7 @@ export function TournamentList({
       counts={stats && (stats.get(entry.id) ?? { teams: 0, matches: 0, played: 0 })}
       parts={parts?.get(entry.id) ?? NO_PARTS}
       published={published?.has(entry.id)}
+      checked={checked?.get(entry.id)}
       search={search}
       href={href}
       actions={actions}
@@ -216,6 +221,7 @@ function TournamentRow({
   counts,
   parts,
   published,
+  checked,
   search,
   href,
   actions,
@@ -230,6 +236,7 @@ function TournamentRow({
   counts?: TournamentStats
   parts: TournamentPart[]
   published?: boolean
+  checked?: ContentVerificationSummary
   search: string
   href: (id: string) => string
   actions?: TournamentRowActions
@@ -313,6 +320,15 @@ function TournamentRow({
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap @4xl:hidden">
                   <Swords className="size-3.5 shrink-0" aria-hidden="true" />
                   {counts.played}/{counts.matches} trận đã đấu
+                </span>
+              )}
+              {checked && (
+                <span
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap text-(--aov-success)"
+                  title="Số phần bạn đã tự kiểm chứng; mở giải để xem phần nào đã đổi sau đó"
+                >
+                  <ShieldCheck className="size-3.5 shrink-0" aria-hidden="true" />
+                  Kiểm chứng {checked.parts} phần
                 </span>
               )}
             </span>

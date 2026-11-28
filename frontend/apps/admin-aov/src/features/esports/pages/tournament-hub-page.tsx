@@ -118,6 +118,16 @@ function Hub({ access }: { access: Access }) {
     queryKey: competitionKeys.summaries(access.actorKey),
     queryFn: competitionApi.summaries,
   })
+  // How far the owner's own checks of each tournament go; only Admin shows them.
+  const verifications = useQuery({
+    queryKey: competitionKeys.verificationSummaries(access.actorKey),
+    queryFn: competitionApi.verificationSummaries,
+    staleTime: 30_000,
+  })
+  const checked = useMemo(
+    () => verifications.data && new Map(verifications.data.map((row) => [row.tournamentId, row])),
+    [verifications.data],
+  )
 
   const stats = useMemo(() => {
     const result = new Map<string, TournamentStats>()
@@ -250,6 +260,7 @@ function Hub({ access }: { access: Access }) {
               stats={counters.isSuccess && !plans.isPending ? stats : undefined}
               parts={partsByEvent}
               published={published}
+              checked={checked}
               actions={actions}
               selection={access.canWrite ? selection : undefined}
               search={settled}

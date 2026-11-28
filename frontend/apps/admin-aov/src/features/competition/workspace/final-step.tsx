@@ -3,6 +3,7 @@ import { TournamentAwards } from "@/features/esports/components/tournament-award
 import { CompetitionStatistics } from "../competition-statistics"
 import { FinalPlaces } from "./final-places"
 import type { FinalOutcome } from "./final-state"
+import { CheckMark } from "./content-check"
 import type { Workspace } from "./parts"
 
 /** The result and the final places first, checked against the matches, then the awards and the recorded games. */
@@ -20,6 +21,9 @@ export function FinalStep({
   const content = tournament?.content ?? entry.content.tournament
   return (
     <div className="space-y-8">
+      <div className="flex justify-end empty:hidden">
+        <CheckMark ws={ws} part="FINAL" />
+      </div>
       <FinalPlaces ws={ws} tournament={tournament} content={content} outcome={outcome} />
       <div className="@container">
         <TournamentAwards

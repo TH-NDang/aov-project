@@ -248,6 +248,22 @@ export type CompetitionRevision = {
   matches: number
 }
 /**
+ * A person's own check of one version of one part of a competition (spec 04, tournament data verification): `INFO`,
+ * `TEAM:<team id>`, `FORMAT`, `SCHEDULE:<stage code>` or `FINAL`. The token names the version Admin showed. Only Admin
+ * reads these; neither Stream nor a published snapshot carries them.
+ */
+export type ContentVerification = {
+  id: string
+  part: string
+  contentToken: string
+  label?: string | null
+  note?: string | null
+  verifiedAt: string
+  verifiedByName?: string | null
+}
+/** How far the checks of one competition go: parts with a check of any version, and the newest check. */
+export type ContentVerificationSummary = { tournamentId: string; parts: number; lastVerifiedAt: string }
+/**
  * How a bracket is drawn: the seeds it holds, whether the losing semifinalists play for third place, and the seed that
  * seed one chose to meet in the AOG playoffs (a double elimination of six).
  */
