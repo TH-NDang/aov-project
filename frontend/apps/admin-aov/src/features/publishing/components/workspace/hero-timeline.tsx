@@ -1,6 +1,7 @@
 import { useQueries } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
-import { CatalogTimeline, type TimelineCount } from "../catalog/catalog-timeline"
+import { CatalogTimeline } from "../catalog/catalog-timeline"
+import type { TimelineCount } from "../catalog/timeline-model"
 import type { PublicationOverview } from "../../api/publication-overview"
 import { activeCatalogScope, type CatalogFilter } from "@/lib/catalog-scope"
 import { publishingKeys } from "@/lib/api/publishing-api"

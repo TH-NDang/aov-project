@@ -82,6 +82,27 @@ là hàng thứ hai dính ở đầu màn hình. Trang nằm trong cột `--aov-
 
 Admin vẫn dùng một bố cục, co giãn bằng container query theo độ rộng khung nội dung, vì khung này đổi theo thanh bên và bảng ảnh gốc. Ngoại lệ là màn xem và ghi trận: hai bố cục ở mốc 900px như Wiki và Stream, bên trong mỗi bố cục vẫn đo theo khung.
 
+### Đầu trang và dòng thời gian patch
+
+Các trang danh mục (Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ) và Phiên bản và thị trường có đầu trang `PageHeader`
+rồi dòng thời gian patch `CatalogTimeline` ngay dưới.
+
+- **Đầu trang.** Tiêu đề và nhóm nút chung một hàng. Thiếu chỗ thì tiêu đề xuống dòng trước (cắt cân hai dòng), chỉ khi
+  tiêu đề còn hẹp hơn 10rem thì cả nhóm nút xuống hàng dưới. Trang có ô tìm: khung từ 48rem đặt ô tìm giữa tiêu đề và
+  nút, hẹp hơn thì ô tìm là một nút kính lúp mở ô nhập đè lên hàng tiêu đề.
+- **Dòng thời gian.** Mỗi mùa là một mốc trên một đường kẻ, cũ bên trái, mới bên phải. Chỉ mùa đang xem mở ra thành một
+  khung chứa các patch của mùa; các mùa khác chỉ còn tên và số patch, mùa không có patch nào thay đổi thì mờ đi. Mùa
+  đang chứa patch hiện tại giữ patch đó cạnh tên để một chạm là quay về. Chưa chọn gì thì mọi mùa đều mở.
+- Patch đặt tên bằng ngày hiện ngày/tháng (`17/11`), năm đã có ở tên mùa; mã đầy đủ nằm trong tooltip và nhãn đọc màn
+  hình. Nhóm patch chưa gắn mùa mang tên các năm nó trải qua (`2021–2024`), bấm vào thì mở ở patch mới nhất của nhóm, và
+  trong nhóm này mỗi lần sang năm mới có một mốc năm nhỏ.
+- Tên mùa dính ở mép trái khung khi vuốt qua các patch. Khi chọn đổi, hoặc khi số liệu về muộn làm ẩn hiện patch, hàng
+  tự cuộn để cả khung mùa nằm trong màn hình (khung dài hơn màn hình thì đưa patch đang chọn vào giữa). Mép còn nội
+  dung thì mờ dần; không có thanh cuộn và nút mũi tên.
+- **Điện thoại (dưới 768px):** dòng thời gian tràn hai mép màn hình để vuốt bằng ngón cái, nút Tùy chọn chỉ còn icon
+  và mở bảng trượt từ dưới. **Từ 768px:** dòng thời gian nằm trong khung viền dưới tiêu đề; từ 640px nút Tùy chọn có chữ
+  và mở popover.
+
 ### Màn xem và ghi trận
 
 Trận đấu (`/tournaments/:id/matches/:seriesId`) là một bàn làm việc lấp đầy vùng nội dung, không lề trang, không thẻ, không gì nổi đè lên hình. Khung nằm trong `apps/admin-aov/src/features/esports/components/series/studio.css`; kích thước tính bằng `cqw`, `cqh` của vùng nội dung nên gập thanh bên là hình lớn ra ngay.

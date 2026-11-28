@@ -477,3 +477,78 @@ test("timeline preserves catalog display mode across patches and hides data filt
     assert.match(status(), /S4 2026 · 15\/11 · Nháp · Chỉ thay đổi/)
   })
 })
+
+test("the track opens only the season being read and keeps the others as stops", async () => {
+  await withDocument(async (root, dom) => {
+    const { MemoryRouter } = await import("react-router")
+    const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
+    const variant = (id: string, patchCode: string, seasonId: string | null, rulesetOrdinal: number) => ({
+      id,
+      patchId: id,
+      patchCode,
+      seasonId,
+      rulesetId: "rules",
+      rulesetOrdinal,
+      status: "PUBLISHED" as const,
+    })
+    const data: PublicationOverview = {
+      asOf: "2026-11-28T00:00:00Z",
+      rulesets: [{ id: "rules", code: "standard", description: null }],
+      markets: [],
+      assignments: [],
+      seasonSchedules: [],
+      releases: [],
+      seasons: [
+        { id: "s3", code: "s3", displayName: "S3 2026", ordinal: 3 },
+        { id: "s4", code: "s4", displayName: "S4 2026", ordinal: 4 },
+      ],
+      variants: [
+        variant("old-a", "2023-12-20", null, 1),
+        variant("old-b", "2024-01-24", null, 2),
+        variant("summer", "2026-08-26", "s3", 3),
+        variant("autumn", "2026-10-30", "s4", 4),
+        variant("now", "2026-11-17", "s4", 5),
+      ],
+    }
+    let selected: CatalogFilter | undefined
+    const render = (value: CatalogFilter) =>
+      act(async () =>
+        root.render(
+          <MemoryRouter>
+            <CatalogTimeline
+              data={data}
+              value={value}
+              showCounts={false}
+              currentFilter={{ seasonId: "s4", variantId: "now" }}
+              onChange={(next) => {
+                selected = next
+              }}
+            />
+          </MemoryRouter>,
+        ),
+      )
+    const document = dom.window.document
+    const patch = (code: string) => document.querySelector<HTMLButtonElement>(`[aria-label="Lọc patch ${code}"]`)
+    const chapter = () => document.querySelector("[data-chapter]")!
+
+    await render({ seasonId: "s3", variantId: "summer" })
+    assert.equal(document.querySelectorAll("[data-chapter]").length, 1)
+    assert.match(chapter().textContent!, /S3 2026.*26\/08/)
+    assert.equal(patch("2026-10-30"), null, "A closed season hides its patches")
+    assert.ok(patch("2026-11-17"), "but keeps the current one beside its name")
+    const older = document.querySelector<HTMLButtonElement>('[aria-label="Mở patch chưa gắn mùa"]')!
+    assert.equal(older.textContent, "2023–2024")
+    await act(async () => older.click())
+    assert.deepEqual(selected, { seasonId: "", variantId: "old-b" })
+
+    await render({ seasonId: "", variantId: "old-a" })
+    assert.match(chapter().textContent!, /2023–2024.*20\/12.*2024.*24\/01/, "A group over years marks each new year")
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Lọc mùa S4 2026"]')!.click())
+    assert.deepEqual(selected, { seasonId: "s4", variantId: "" })
+
+    await render({ seasonId: "s4", variantId: "" })
+    assert.equal(document.querySelector('[aria-label="Lọc mùa S4 2026"]')!.getAttribute("aria-pressed"), "true")
+    assert.ok(patch("2026-10-30"))
+    assert.equal(patch("2026-08-26"), null)
+  })
+})

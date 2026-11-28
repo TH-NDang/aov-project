@@ -1,41 +1,19 @@
 import { CatalogViewMode } from "./catalog-view-mode"
 import { useSearchParams } from "react-router"
 import { useEffect, useRef, useState } from "react"
-import { Bookmark, Database, Settings2, RotateCcw } from "lucide-react"
-import { PatchTimelineRail } from "@aov/ui/components/patch-timeline-rail"
+import { Settings2, RotateCcw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@aov/ui/components/sheet"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@aov/ui/lib/utils"
-import { type PublicationOverview, type Variant } from "../../api/publication-overview"
-import { dateLabel } from "@/lib/schedule-date"
-import { type CatalogFilter } from "@/lib/catalog-scope"
+import { SeasonTrack } from "./season-track"
+import { pinnedSelection, seasonGroups, type TimelineProps } from "./timeline-model"
 
-export interface TimelineCount {
-  changes: number
-  baseline: number
-}
-
-interface TimelineProps {
-  data: PublicationOverview
-  value: CatalogFilter
-  onChange: (value: CatalogFilter) => void
-  counts?: Map<string, TimelineCount>
-  loading?: boolean
-  showCounts?: boolean
-  allLabel?: string
-  currentFilter?: CatalogFilter
-}
-
-interface SeasonGroup {
-  id: string
-  name: string
-  current: boolean
-  variants: Variant[]
-}
-
-/** The same horizontal timeline is available at every viewport width. */
+/**
+ * Which moment of the catalog the page shows: one row of seasons in which only the season being read opens into its
+ * patches. On a phone the row runs edge to edge so a thumb can swipe it; wider screens frame it under the page title.
+ */
 export function CatalogTimeline(props: TimelineProps) {
   const { value, onChange } = props
   const [params, setParams] = useSearchParams()
@@ -67,9 +45,9 @@ export function CatalogTimeline(props: TimelineProps) {
   return (
     <section aria-label="Dòng thời gian thay đổi" className="min-w-0 space-y-1">
       {groups.length ? (
-        <div className="flex min-w-0 items-center gap-1 rounded-lg bg-muted/40 px-1 py-0.5 sm:py-1">
+        <div className="flex min-w-0 items-center gap-1 rounded-lg border bg-muted/30 p-1 max-md:-mx-4 max-md:rounded-none max-md:border-x-0 max-md:px-2">
           <div className="min-w-0 flex-1">
-            <TimelineRail {...props} groups={groups} />
+            <SeasonTrack {...props} groups={groups} />
           </div>
           {(props.currentFilter?.variantId || canHideEmpty) && (
             <div className="shrink-0 border-l pl-1">
@@ -232,10 +210,6 @@ function TimelineOptions({
   )
 }
 
-function pinnedSelection({ value, counts, currentFilter, allLabel }: TimelineProps, id: string) {
-  return !!allLabel && id === value.variantId && id !== currentFilter?.variantId && counts?.get(id)?.changes === 0
-}
-
 function ScopeSummary({ data, value, allLabel }: TimelineProps) {
   const [params] = useSearchParams()
   const variant = data.variants.find((item) => item.id === value.variantId)
@@ -251,154 +225,5 @@ function ScopeSummary({ data, value, allLabel }: TimelineProps) {
         .filter(Boolean)
         .join(" · ")}
     </p>
-  )
-}
-
-function seasonGroups(props: TimelineProps, hideEmpty: boolean): SeasonGroup[] {
-  const { data } = props
-  const seasons = [...data.seasons].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
-  const groups: SeasonGroup[] = seasons.map((season) => ({
-    id: season.id,
-    name: season.displayName,
-    current: data.markets.some((m) => m.currentSeasonId === season.id),
-    variants: [],
-  }))
-  const unscoped: SeasonGroup = { id: "", name: "Chưa gắn mùa", current: false, variants: [] }
-  for (const variant of data.variants) {
-    if (
-      hideEmpty &&
-      variant.id !== props.value.variantId &&
-      variant.id !== props.currentFilter?.variantId &&
-      props.counts?.get(variant.id)?.changes === 0
-    )
-      continue
-    const group = groups.find((group) => group.id === variant.seasonId) ?? unscoped
-    group.variants.push(variant)
-  }
-  for (const group of [...groups, unscoped])
-    group.variants.sort((a, b) => a.rulesetId.localeCompare(b.rulesetId) || a.rulesetOrdinal - b.rulesetOrdinal)
-  return unscoped.variants.length ? [unscoped, ...groups] : groups
-}
-
-function isCurrent(data: PublicationOverview, variant: Variant) {
-  return data.releases.some((r) => r.variantId === variant.id && data.markets.some((m) => m.currentReleaseId === r.id))
-}
-
-function countText({ counts, loading = false, showCounts = true }: TimelineProps, variant: Variant) {
-  if (!showCounts) return ""
-  if (loading) return "Đang tải…"
-  const count = counts?.get(variant.id)
-  if (!count) return "Chưa tải thống kê"
-  const parts = [count.changes > 0 ? `${count.changes} mục thay đổi` : "Chưa ghi nhận thay đổi"]
-  if (count.baseline > 0) parts.push(`${count.baseline} mục nhập dữ liệu`)
-  return parts.join(" · ")
-}
-
-function releaseText(data: PublicationOverview, variant: Variant) {
-  const dates = data.releases
-    .filter((r) => r.variantId === variant.id && r.status !== "CANCELLED")
-    .map((r) => r.effectiveOn ?? r.effectiveAt)
-    .filter((date): date is string => !!date)
-    .sort()
-  if (!dates.length) return "Chưa có lịch thị trường"
-  return `Áp dụng ${dateLabel(dates[0], "vi-VN")}${new Set(dates).size > 1 ? " · theo thị trường" : ""}`
-}
-
-function CountBadge({ props, variant }: { props: TimelineProps; variant: Variant }) {
-  const count = props.counts?.get(variant.id)
-  if (props.showCounts === false) return null
-  if (!count || (!count.changes && !count.baseline)) return null
-  if (!count.changes) return <Database className="size-3 text-muted-foreground" aria-hidden />
-  return (
-    <span
-      className={cn(
-        "rounded-full px-1.5 text-xs leading-4 tabular-nums",
-        count.changes ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
-      )}
-      aria-hidden
-    >
-      {count.changes}
-    </span>
-  )
-}
-
-function TimelineRail(props: TimelineProps & { groups: SeasonGroup[] }) {
-  const { data, value, onChange, groups } = props
-  return (
-    <PatchTimelineRail selection={value.variantId || value.seasonId} label="Chọn patch">
-      {groups.map((group) => (
-        <div key={group.id || "unscoped"} className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            data-season
-            aria-label={`Lọc mùa ${group.name}`}
-            title={group.current ? `${group.name} · Đang áp dụng` : group.name}
-            aria-pressed={!!group.id && value.seasonId === group.id && !value.variantId}
-            disabled={!group.id}
-            onClick={() => onChange({ seasonId: group.id, variantId: "" })}
-            className={cn(
-              "type-label h-8 shrink-0 rounded-md px-1.5 whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-7 sm:px-2",
-              "bg-muted text-muted-foreground enabled:hover:bg-accent",
-              value.seasonId === group.id &&
-                !value.variantId &&
-                "bg-accent text-accent-foreground ring-1 ring-inset ring-primary/50",
-            )}
-          >
-            {group.name}
-          </button>
-          <div className="flex items-center gap-1 sm:gap-1.5">
-            {group.variants.map((variant) => {
-              if (
-                props.allLabel &&
-                value.seasonId &&
-                group.id &&
-                value.seasonId !== group.id &&
-                variant.id !== props.currentFilter?.variantId
-              )
-                return null
-              const pressed = value.variantId === variant.id
-              const pinned = pinnedSelection(props, variant.id)
-              const current = isCurrent(data, variant)
-              const counts = countText(props, variant)
-              return (
-                <button
-                  key={variant.id}
-                  type="button"
-                  data-patch
-                  aria-pressed={pressed}
-                  aria-label={`Lọc patch ${variant.patchCode}`}
-                  title={[
-                    `${group.name} · ${variant.patchCode}${variant.status === "DRAFT" ? " · Nháp" : ""}`,
-                    current ? "Đang áp dụng" : releaseText(data, variant),
-                    pinned ? "Đang xem · Giữ trên thanh khi chưa có thay đổi" : null,
-                    counts,
-                  ]
-                    .filter(Boolean)
-                    .join("\n")}
-                  onClick={() => onChange({ seasonId: variant.seasonId ?? "", variantId: variant.id })}
-                  className={cn(
-                    "inline-flex max-w-52 shrink-0 cursor-pointer items-center gap-1 border text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:gap-1.5",
-                    "h-8 rounded-md px-1.5 sm:h-7 sm:px-2",
-                    pressed ? "border-primary bg-background font-medium text-primary" : "bg-background hover:bg-accent",
-                    variant.status === "DRAFT" && "border-dashed",
-                    pinned && "border-dashed border-(--aov-info)/60 bg-(--aov-info-soft) text-(--aov-info)",
-                  )}
-                >
-                  {current && <span className="size-1.5 shrink-0 rounded-full bg-(--aov-success)" aria-hidden />}
-                  {pinned && <Bookmark className="size-3" aria-label="Mốc đã chọn" />}
-                  <span className="truncate">{variant.patchCode}</span>
-                  {variant.status === "DRAFT" && <span className="type-meta text-(--aov-warning)">Nháp</span>}
-                  <CountBadge props={props} variant={variant} />
-                  <span className="sr-only">
-                    {current ? " · Đang áp dụng" : ""}
-                    {counts ? ` · ${counts}` : ""}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ))}
-    </PatchTimelineRail>
   )
 }
