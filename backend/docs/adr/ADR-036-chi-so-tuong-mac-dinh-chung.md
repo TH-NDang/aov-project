@@ -33,11 +33,11 @@
   khóa lạc quan bằng `version`), `GET /hero-stat-rules` công khai. Ghi audit `HERO_STAT_RULE_SET` và
   `HERO_STAT_RULE_REMOVED`.
 - Admin sửa mặc định chung trong ngăn "Sửa mặc định chung" ở phần Thông số của tướng; trang patch không còn công cụ này.
-- Mỗi chỉ số có một thuật ngữ trong bảng thuật ngữ dùng chung (V087, 19 thuật ngữ), viết bằng lời dễ hiểu, không chép câu
-  của nguồn, nêu giới hạn và các trang bị đang bán có chỉ số đó (link tới trang bị). Thuật ngữ cũ chỉ được thay mô tả khi
-  còn đúng câu seed của V029. Bảng `HERO_STAT_TERMS` (`@aov/ui/lib/hero-stat-terms`) nối mã chỉ số với thuật ngữ cho Admin
-  và Wiki; `TERM_ITEM_FILTERS` nối thuật ngữ với bộ lọc chỉ số của Kho đồ, nên trang thuật ngữ luôn dẫn tới danh sách
-  trang bị hiện tại thay vì một danh sách viết cố định.
+- Mỗi chỉ số có một thuật ngữ trong bảng thuật ngữ dùng chung (V087, 20 thuật ngữ, 12 mới), viết bằng lời dễ hiểu, không
+  chép câu của nguồn, nêu giới hạn và các trang bị đang bán có chỉ số đó (link tới trang bị). Thuật ngữ cũ chỉ được thay
+  mô tả khi còn đúng câu seed của V029. Bảng `HERO_STAT_TERMS` (`@aov/ui/lib/hero-stat-terms`) nối mã chỉ số với thuật
+  ngữ cho Admin và Wiki; `TERM_ITEM_FILTERS` nối thuật ngữ với bộ lọc chỉ số của Kho đồ, nên trang thuật ngữ luôn dẫn
+  tới danh sách trang bị hiện tại thay vì một danh sách viết cố định.
 
 ## Hệ quả
 
