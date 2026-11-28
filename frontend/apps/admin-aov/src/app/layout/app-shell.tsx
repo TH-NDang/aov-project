@@ -1,4 +1,4 @@
-import { useRef, type CSSProperties } from "react"
+import { useRef } from "react"
 import { useContentScrollMemory } from "./use-content-scroll-memory"
 import { Outlet, useLocation } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -8,19 +8,14 @@ import { useAccountCurrency } from "@aov/ui/lib/currency"
 import { useAccountDateFormat, useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { BackgroundTasksProvider } from "../background-tasks"
 import { ImportWorkspaceHost } from "./import-workspace-host"
-import { SidebarInset, SidebarProvider } from "@aov/ui/components/sidebar"
-import { AppSidebar } from "./app-sidebar"
 import { SiteHeader } from "./site-header"
+import { AdminNavProvider } from "./nav/admin-nav"
+import { CompactNavigation, SideNavigation } from "./nav/navigation"
+import "./nav/admin-nav.css"
 import { AdminBreadcrumb } from "./admin-breadcrumb"
 import { CommandSearchProvider } from "./command-search"
-import { useHotkeys } from "../hotkeys"
 
-function readSidebarCookie(): boolean {
-  const match = document.cookie.match(/(?:^|;\s*)sidebar_state=(true|false)/)
-  return match ? match[1] === "true" : true
-}
-
-/** Lives in the shell because the sidebar and its account menu are not mounted on phones until opened. */
+/** Lives in the shell because the account menu is not mounted on phones until its sheet opens. */
 function AccountPreferences() {
   const { actor } = useSession()
   const profile = useQuery({
@@ -35,9 +30,8 @@ function AccountPreferences() {
   return null
 }
 
-/** Navigation sidebar docked on the left edge, content on the right. */
+/** Navigation on the left edge (wide) or along the bottom (compact), content in between. */
 export function AppShell() {
-  const { enabled } = useHotkeys()
   const importing = useLocation().pathname === "/hero/import"
   const content = useRef<HTMLDivElement>(null)
   useContentScrollMemory(content)
@@ -45,25 +39,24 @@ export function AppShell() {
     <BackgroundTasksProvider>
       <AccountPreferences />
       <CommandSearchProvider>
-        <SidebarProvider
-          defaultOpen={readSidebarCookie()}
-          keyboardShortcutEnabled={enabled}
-          style={{ "--sidebar-width": "15rem" } as CSSProperties}
-        >
-          <AppSidebar />
-          <SidebarInset className="h-svh min-w-0 overflow-hidden">
-            <SiteHeader content={content} />
-            {/* One page at a time; its own scroll region sits under the phone bar and remembers where each visit was. */}
-            <div
-              ref={content}
-              className={`${importing ? "hidden" : "flex"} min-h-0 min-w-0 flex-1 flex-col overflow-auto`}
-            >
-              <AdminBreadcrumb />
-              <Outlet />
-            </div>
-            <ImportWorkspaceHost />
-          </SidebarInset>
-        </SidebarProvider>
+        <AdminNavProvider>
+          <div className="adm-shell">
+            <SideNavigation />
+            <main className="adm-main">
+              <SiteHeader content={content} />
+              {/* One page at a time; its own scroll region sits under the phone bar and remembers each visit. */}
+              <div
+                ref={content}
+                className={`${importing ? "hidden" : "flex"} min-h-0 min-w-0 flex-1 flex-col overflow-auto`}
+              >
+                <AdminBreadcrumb />
+                <Outlet />
+              </div>
+              <ImportWorkspaceHost />
+              <CompactNavigation content={content} />
+            </main>
+          </div>
+        </AdminNavProvider>
       </CommandSearchProvider>
     </BackgroundTasksProvider>
   )

@@ -145,7 +145,8 @@ lục của điện thoại, bảng tìm kiếm và ô mục trên trang chủ q
 riêng trong cùng bộ. Ba mục chính của Stream (`stream-shell.tsx`): Bảng tin `newspaper`, Giải đấu `trophy-cup`, Khám phá
 `compass`. Loại trang hồ sơ, ở danh bạ Stream và Admin: Hệ thống giải `laurels`, Tổ chức `castle`, Đội `meeple-group`,
 Tuyển thủ `swordman`, Ban huấn luyện `teacher`. Hình lấy màu chữ (`currentColor`). Chân trang Wiki, chân trang Stream và
-chân sidebar Admin ghi công Game Icons theo giấy phép; giữ các dòng đó khi còn dùng bộ này.
+menu tài khoản của Admin (trên điện thoại là tấm Hệ thống) ghi công Game Icons theo giấy phép; giữ các dòng đó khi còn
+dùng bộ này.
 
 Vị trí, vai trò và độ khó của tướng dùng chung một bộ dấu trong `packages/ui/src/components/hero-marks.tsx` (`HeroMark`,
 `HeroLaneIcon`, `HeroRoleIcon`), khung 48×48, lấy màu chữ. Wiki, Admin và Stream đều vẽ bằng bộ này.
@@ -180,8 +181,10 @@ Trạng thái trống và không tìm thấy dùng linh vật kèm một câu n�
 
 ## Admin
 
-Thanh điều hướng nằm bên trái. Để đổi lại bên phải, thêm `side="right"` cho `Sidebar` trong `app-sidebar.tsx` và đặt
-`AppSidebar` sau `SidebarInset` trong `app-shell.tsx`.
+Điều hướng nằm trong `src/app/layout/nav/`, khu vực và trang khai báo ở `NAV_AREAS` trong `src/app/nav.ts`. Thanh biểu
+tượng bên trái luôn dùng màu đêm và viền vàng của Wiki (`--aov-wiki-*`) ở cả hai theme, như cột menu trong game; khu vực
+của trang đang đọc có ổ biểu tượng viền vàng sáng. Danh sách trang và tấm trượt trên điện thoại theo theme
+(`--sidebar*`, `--aov-accent*`). Kiểu dáng ở `admin-nav.css`, class có tiền tố `adm-`.
 
 ## Trang đăng nhập
 

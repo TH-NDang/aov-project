@@ -40,14 +40,14 @@ export function breadcrumbTrail(pathname: string): Step[] {
 
 /**
  * A thin trail above a page that sits under another one (a tournament's match, a hero's translations): the pages above
- * it as links, then its own name. A first-level page and any page the sidebar lists show nothing, since the title and
- * the sidebar already say where the reader is.
+ * it as links, then its own name. A first-level page and any page the navigation lists show nothing, since the title
+ * and the navigation already say where the reader is.
  */
 export function AdminBreadcrumb() {
   const { pathname } = useLocation()
   // The dashboard is every page's root, so it is left out of the trail.
   const steps = useMemo(() => breadcrumbTrail(pathname).filter((step) => step.to !== "/"), [pathname])
-  // A page the sidebar lists (the image workspace under Heroes, say) is reached from there, not from a parent page.
+  // A page the navigation lists (the image workspace under Heroes, say) is reached from there, not from a parent page.
   const navItem = activeNavItem(pathname)
   const ownTrail = (matchRoutes(breadcrumbRoutes(), pathname)?.at(-1)?.route.handle as RouteHandle | undefined)
     ?.ownTrail

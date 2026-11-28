@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode, type RefObject } from "react"
 import { Link, useLocation, type UIMatch } from "react-router"
-import { PanelRight, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { AovMark, AovWordmark } from "@aov/ui/components/aov-brand"
-import { useSidebar } from "@aov/ui/components/sidebar"
 import { cn } from "@aov/ui/lib/utils"
 import { breadcrumbTrail } from "./admin-breadcrumb"
 import { useCommandSearch } from "./command-search"
+import { BackgroundTaskStatus } from "./background-task-status"
+import { useAdminNav } from "./nav/admin-nav"
 
 export interface RouteHandle {
   crumb?: (match: UIMatch) => ReactNode
@@ -44,26 +45,23 @@ function useTitleScrolledAway(content: RefObject<HTMLElement | null>, active: bo
 }
 
 /**
- * Phones only: the sidebar is hidden there, so a slim bar holds the menu and search. It shows the brand while the page's
- * own title is on screen and takes the page's name once that title scrolls away, so the name is never shown twice.
- * Wide screens have no bar at all; the sidebar carries search and each page its own title.
+ * Compact screens only: the areas sit in the bar at the bottom, so this slim bar holds the brand and search. It shows
+ * the brand while the page's own title is on screen and takes the page's name once that title scrolls away, so the name
+ * is never shown twice. Wide screens have no bar at all; the rail carries search and each page its own title.
  */
 export function SiteHeader({ content }: { content: RefObject<HTMLElement | null> }) {
-  const { toggleSidebar, isMobile, setOpenMobile } = useSidebar()
+  const { layout } = useAdminNav()
+  const compact = layout === "compact"
   const { open } = useCommandSearch()
   const { pathname } = useLocation()
   const name = useMemo(() => breadcrumbTrail(pathname).at(-1)?.label ?? "AOV Admin", [pathname])
-  const away = useTitleScrolledAway(content, isMobile)
-  if (!isMobile) return null
+  const away = useTitleScrolledAway(content, compact)
+  if (!compact) return null
   return (
-    <div className="sticky top-0 z-30 flex h-12 min-w-0 shrink-0 items-center gap-1 border-b bg-background px-1.5">
-      <Button variant="ghost" size="icon" className="size-10" onClick={toggleSidebar} aria-label="Mở menu">
-        <PanelRight className="size-5" />
-      </Button>
+    <div className="sticky top-0 z-30 flex h-12 min-w-0 shrink-0 items-center gap-1 border-b bg-background pr-1.5 pl-3">
       <div className="relative h-full min-w-0 flex-1">
         <Link
           to="/"
-          onClick={() => setOpenMobile(false)}
           aria-hidden={away}
           tabIndex={away ? -1 : undefined}
           className={cn(
@@ -86,6 +84,7 @@ export function SiteHeader({ content }: { content: RefObject<HTMLElement | null>
           <span className="truncate">{name}</span>
         </p>
       </div>
+      <BackgroundTaskStatus variant="icon" />
       <Button variant="ghost" size="icon" className="size-10" onClick={open} aria-label="Tìm kiếm">
         <Search className="size-5" />
       </Button>

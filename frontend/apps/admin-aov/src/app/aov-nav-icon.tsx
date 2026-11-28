@@ -6,11 +6,14 @@ import { cn } from "@aov/ui/lib/utils"
  * icon there and here. The names are those of the navigation, so the pages that pick an icon by name stay as they are.
  */
 export const NAV_ICONS = {
+  home: gameIcon("family-house"),
+  wiki: gameIcon("book-cover"),
+  game: gameIcon("world"),
+  system: gameIcon("stack"),
   dashboard: gameIcon("speedometer"),
   imageLibrary: gameIcon("wood-frame"),
   profile: gameIcon("person"),
   users: gameIcon("three-friends"),
-  characterBook: gameIcon("book-cover"),
   heroes: gameIcon("samurai-helmet"),
   skins: gameIcon("robe"),
   heroMedia: gameIcon("mona-lisa"),
@@ -20,7 +23,6 @@ export const NAV_ICONS = {
   badges: gameIcon("rank-3"),
   builds: gameIcon("anvil-impact"),
   ranking: gameIcon("podium-winner"),
-  armory: gameIcon("open-treasure-chest"),
   items: gameIcon("battle-gear"),
   enchantments: gameIcon("winged-emblem"),
   arcana: gameIcon("gem-pendant"),

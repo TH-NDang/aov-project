@@ -80,7 +80,24 @@ là hàng thứ hai dính ở đầu màn hình. Trang nằm trong cột `--aov-
 
 ## Admin
 
-Admin vẫn dùng một bố cục, co giãn bằng container query theo độ rộng khung nội dung, vì khung này đổi theo thanh bên và bảng ảnh gốc. Ngoại lệ là màn xem và ghi trận: hai bố cục ở mốc 900px như Wiki và Stream, bên trong mỗi bố cục vẫn đo theo khung.
+Trang Admin dùng một bố cục, co giãn bằng container query theo độ rộng khung nội dung, vì khung này đổi theo danh sách trang bên cạnh và bảng ảnh gốc. Ngoại lệ là điều hướng và màn xem và ghi trận: hai bố cục ở mốc 900px như Wiki và Stream, bên trong mỗi bố cục vẫn đo theo khung.
+
+### Điều hướng
+
+- **Năm khu vực:** Tổng quan, Wiki, Quản lý game, Giải đấu, Hệ thống (`NAV_AREAS` trong `src/app/nav.ts`). Mỗi trang
+  thuộc đúng một khu vực. Trang người đọc không có quyền mở thì ẩn, khu vực không còn trang nào cũng ẩn. Số bài cập
+  nhật mới hiện cạnh trang và cộng lên dấu của khu vực.
+- **Từ 1200px:** thanh biểu tượng 76px ở mép trái, cạnh đó là danh sách trang 232px của khu vực đang chọn. Bấm khu vực
+  trên thanh để xem trang của nó; khu vực của trang đang đọc luôn giữ khung vàng. Ctrl B hoặc nút thu gọn cất danh
+  sách, lựa chọn nhớ trong cookie `sidebar_state`.
+- **900–1199px, hoặc khi đã cất danh sách:** chỉ còn thanh biểu tượng. Bấm khu vực mở danh sách trang nổi bên cạnh, mở
+  một trang thì danh sách đóng.
+- **Dưới 900px:** năm khu vực nằm ở thanh đáy, trong tầm ngón cái. Chạm khu vực mở tấm trượt các ô trang; kéo xuống
+  hoặc chạm ra ngoài để đóng, không có nút X. Tài khoản, giao diện, Cài đặt và Đăng xuất nằm trong tấm Hệ thống.
+  Thanh trượt xuống khi người đọc cuộn trang xuống, hiện lại khi kéo lên một chút (32px), khi về gần đầu trang, khi
+  sang trang khác hoặc khi bàn phím đi tới nó. Trang tự cuộn (như quay lại đúng chỗ cũ) không làm thanh ẩn.
+- **Gần đây:** khu vực Tổng quan thêm năm trang mở gần nhất, lưu trong trình duyệt theo từng tài khoản.
+- Tìm kiếm (Ctrl K) ở đầu thanh biểu tượng; trên điện thoại ở thanh mỏng trên cùng, cạnh dấu tác vụ dữ liệu.
 
 ### Đầu trang và dòng thời gian patch
 
