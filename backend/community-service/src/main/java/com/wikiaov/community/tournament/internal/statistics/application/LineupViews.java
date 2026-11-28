@@ -107,8 +107,10 @@ public final class LineupViews {
     }
 
     /**
-     * {@code enchantment} is the main one. {@code items} are those held to the end, {@code replaced} those given up on
-     * the way and {@code situational} those bought for a moment of the game.
+     * {@code enchantment} is the main one. {@code items} are those built for the build itself and {@code protective}
+     * those built for protection, each held to the end or sold, but none that went into another; {@code sold} are the
+     * ones of either kind sold before the end. A build nobody wrote down has the inventory the game ended with as its
+     * items.
      */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public record Build(
@@ -116,8 +118,8 @@ public final class LineupViews {
             @Nullable Integer spell,
             @Nullable Integer enchantment,
             @JsonInclude List<Integer> items,
-            List<Integer> replaced,
-            List<Integer> situational
+            List<Integer> protective,
+            List<Integer> sold
     ) {
     }
 }

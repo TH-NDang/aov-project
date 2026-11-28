@@ -1,6 +1,5 @@
 package com.wikiaov.community.tournament.internal.statistics.application;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.BuildPlace;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
 import com.wikiaov.community.tournament.internal.games.domain.GameRules;
 import com.wikiaov.community.tournament.internal.statistics.application.LineupViews.Build;
@@ -58,18 +57,18 @@ final class BuildList {
         var enchantment = seat.enchantments().stream().filter(entry -> entry.primary() && present(entry.selection()))
                 .max(MAIN_FIRST).map(entry -> enchantments.place(catalog.enchantments(), entry.selection()))
                 .orElse(null);
-        var build = new Build(game.id(), spell, enchantment, items(game, seat, BuildPlace.KEPT),
-                items(game, seat, BuildPlace.REPLACED), items(game, seat, BuildPlace.SITUATIONAL));
+        var build = new Build(game.id(), spell, enchantment, items(game, game.core(seat)),
+                items(game, game.protective(seat)), items(game, game.sold(seat)));
         boolean shown = spell != null || enchantment != null
-                || Stream.of(build.items(), build.replaced(), build.situational()).anyMatch(list -> !list.isEmpty());
+                || Stream.of(build.items(), build.protective(), build.sold()).anyMatch(list -> !list.isEmpty());
 
         if (shown) {
             builds.add(build);
         }
     }
 
-    private List<Integer> items(PublishedLineup game, Seat seat, BuildPlace place) {
-        return game.items(seat, place).stream().filter(BuildList::present)
+    private List<Integer> items(PublishedLineup game, List<Selection> selections) {
+        return selections.stream().filter(BuildList::present)
                 .map(item -> items.place(game.catalog().items(), item)).toList();
     }
 

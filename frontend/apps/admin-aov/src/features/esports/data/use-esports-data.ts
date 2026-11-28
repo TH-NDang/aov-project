@@ -124,3 +124,14 @@ export function useGameCatalog(content?: GameContent, scope?: GamePatchScope) {
     retry: 1,
   })
 }
+
+/** The role last recorded for each item, for this hero first, so an item added again keeps the role it had. */
+export function useBuildRoles(heroId: string | null | undefined) {
+  const actorKey = useActorKey()
+  return useQuery({
+    queryKey: tournamentKeys.buildRoles(actorKey, heroId ?? ""),
+    queryFn: ({ signal }) => tournamentApi.buildRoles(heroId!, signal),
+    enabled: !!heroId,
+    staleTime: 60_000,
+  })
+}

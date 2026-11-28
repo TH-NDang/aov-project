@@ -11,18 +11,16 @@
   --seat-row: 6;
   --seat-gap: 4px;
   --build-pack: start;
-  --more-pack: start;
   --seat-items: calc(var(--seat-row) * (var(--seat-item) + var(--seat-gap)) - var(--seat-gap));
   position: relative;
   isolation: isolate;
   display: grid;
   min-width: 0;
   grid-template-columns: var(--seat-art) var(--seat-kit) minmax(0, 1fr) var(--seat-items);
-  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
   grid-template-areas:
     "art kit who ."
     "art kit who items"
-    "art kit who more"
     "art kit who .";
   column-gap: 8px;
   padding: 12px 20px 12px 8px;
@@ -35,7 +33,6 @@
   grid-template-areas:
     ".     who kit art"
     "items who kit art"
-    "more  who kit art"
     ".     who kit art";
   padding: 12px 8px 12px 20px;
   text-align: right;
@@ -107,6 +104,10 @@ button.tn-loadout-open:is(:hover, [data-state="open"])::before {
 .tn-loadout-who a {
   pointer-events: auto;
 }
+/* A card with a chart of the path needs room for the minutes. */
+.tn-loadout-panel:has(.tn-path-chart) {
+  width: 600px;
+}
 .tn-loadout-panel {
   width: 392px;
   max-width: calc(100vw - 32px);
@@ -114,25 +115,21 @@ button.tn-loadout-open:is(:hover, [data-state="open"])::before {
   padding: 0;
   overflow-y: auto;
 }
-/* Six items in a row leave no room for a name: two rows of three, and what was given up runs on under the names. */
+/* Six items in a row leave no room for a name: two rows of three. */
 @media (max-width: 1159.98px) {
   .tn-loadout-seat {
     --seat-kit: 38px;
     --seat-item: 38px;
     --seat-row: 3;
-    --more-pack: end;
     grid-template-areas:
       "art kit .    ."
       "art kit who  items"
-      "art kit more more"
       "art kit .    .";
   }
   .tn-loadout-seat[data-slot="a"] {
-    --more-pack: start;
     grid-template-areas:
       ".     .    kit art"
       "items who  kit art"
-      "more  more kit art"
       ".     .    kit art";
   }
 }
@@ -212,24 +209,20 @@ button.tn-loadout-open:is(:hover, [data-state="open"])::before {
     --seat-item: minmax(0, 36px);
     --seat-gap: 2px;
     --build-apart: 0 0 0 6px;
-    --more-pack: start;
     grid-template-columns: var(--seat-art) minmax(0, calc(118px - var(--seat-foot))) var(--seat-foot) minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     grid-template-areas:
       "art items items ."
-      "who who kit ."
-      "more more more more";
+      "who who kit .";
     column-gap: 0;
   }
   .tn-loadout-seat[data-shown="ITEMS"][data-slot="a"] {
     --build-pack: end;
     --build-apart: 0 6px 0 0;
-    --more-pack: end;
     grid-template-columns: minmax(0, 1fr) var(--seat-foot) minmax(0, calc(118px - var(--seat-foot))) var(--seat-art);
     grid-template-areas:
       ". items items art"
-      ". kit who who"
-      "more more more more";
+      ". kit who who";
   }
   .tn-loadout-seat[data-shown="ITEMS"] > .tn-loadout-who {
     align-self: start;

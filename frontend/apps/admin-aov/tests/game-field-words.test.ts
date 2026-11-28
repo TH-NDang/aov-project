@@ -62,6 +62,11 @@ test("the items of a build and what they grew from are counted from one", () => 
     "Đội đỏ, đường giữa, trang bị đã lên, món 2, món ghép 1: phải cấp thấp hơn, trừ khi công thức có món đó",
   )
   assert.equal(words(`${build}[1].from.maximum`), "Đội đỏ, đường giữa, trang bị đã lên, món 2: lên từ nhiều nhất 3 món")
+  assert.equal(words(`${build}.held.maximum`), "Đội đỏ, đường giữa: giữ đến cuối nhiều nhất 6 món")
+  assert.equal(
+    words(`${build}[3].replaces[0].gone`),
+    "Đội đỏ, đường giữa, trang bị đã lên, món 4, món bán để lấy 1: đã không còn giữ lúc đó",
+  )
 })
 
 test("a field of the game as a whole is a sentence of its own", () => {
@@ -123,7 +128,9 @@ const SERVICE_FIELDS = [
   ...["", ".name.length", ".unavailableInPatch", ".tier", ".duplicate", ".same", ".notLower"].map(
     (rule) => `${seat}.build[5].from[1]${rule}`,
   ),
-  ...[`${seat}.build[5].atSeconds.range`, `${seat}.build[5].kept.maximum`],
+  ...[`${seat}.build[5].atSeconds.range`, `${seat}.build[5].time.order`, `${seat}.build.held.maximum`],
+  ...["", ".duplicate", ".same", ".notBuilt", ".gone"].map((rule) => `${seat}.build[5].replaces[1]${rule}`),
+  `${seat}.build[5].replaces.maximum`,
   "sides.hero.alreadyBanned",
   "timeline.maximum",
   ...["atSeconds.range", "time.order", "durationSeconds.range"].map((rule) => `timeline.pauses[1].${rule}`),
@@ -155,7 +162,7 @@ test("every field the service can report is told in words, with nothing of its c
     const left = steps.filter((step) => new RegExp(`(^|[^\\p{L}])${step}([^\\p{L}]|$)`, "iu").test(text))
     return left.length || /[.[\]]|[a-z][A-Z]/.test(text) ? [`${field}: ${text}`] : []
   })
-  assert.deepEqual([SERVICE_FIELDS.length, raw], [145, []])
+  assert.deepEqual([SERVICE_FIELDS.length, raw], [152, []])
 })
 
 test("a game the service finds without content says so", () => {

@@ -398,9 +398,12 @@ export type PartCounts = { of: number; parts: PartCount[] }
 export type BuildCounts = {
   /** Games whose builds show anything. */
   games: number
+  /** Items of the build itself, held to the end or sold. */
   items: PartCounts
-  /** Items bought for a moment of the game and given up again. */
-  situational: PartCounts
+  /** Items bought for protection, held to the end or sold. */
+  protective: PartCounts
+  /** Items of either kind sold before the end of the game. */
+  sold: PartCounts
   enchantments: PartCounts
   spells: PartCounts
 }
@@ -429,7 +432,8 @@ export function buildCounts({ builds, items, spells, enchantments }: HeroBuilds,
   return {
     games: new Set(own.map((build) => build.gameId)).size,
     items: partCounts(own, items, (build) => build.items, false),
-    situational: partCounts(own, items, (build) => build.situational ?? []),
+    protective: partCounts(own, items, (build) => build.protective ?? []),
+    sold: partCounts(own, items, (build) => build.sold ?? []),
     enchantments: partCounts(own, enchantments, (build) => one(build.enchantment)),
     spells: partCounts(own, spells, (build) => one(build.spell)),
   }
