@@ -223,14 +223,18 @@ export type LineupGame = {
 /** Every published game of a competition in short: who picked and banned what, and how it ended. */
 export type CompetitionLineups = { heroes: LineupHero[]; players: LineupPlayer[]; games: LineupGame[] }
 export type BuildPart = { id?: string | null; name: string; iconUrl?: string | null; tier?: number | null }
-/** Parts are places in the lists of the answer. `items` were held to the end; the other two lists may be absent. */
+/**
+ * Parts are places in the lists of the answer. `items` were built for the build itself and `protective` for
+ * protection, each held to the end or sold but none that went into another; `sold` are those of either kind sold
+ * before the end. The other two lists may be absent.
+ */
 export type HeroBuild = {
   gameId: string
   spell?: number | null
   enchantment?: number | null
   items: number[]
-  replaced?: number[]
-  situational?: number[]
+  protective?: number[]
+  sold?: number[]
 }
 /** What a hero was played with in the published games of a competition. */
 export type HeroBuilds = { spells: BuildPart[]; enchantments: BuildPart[]; items: BuildPart[]; builds: HeroBuild[] }
