@@ -8,7 +8,11 @@
   display: flex;
   width: 100%;
   max-width: none;
-  /* As tall as its content, at most 85% of the screen, so the page always shows above it and a tap there closes it. */
+  /*
+   * As tall as its content, at most 85% of the screen, so the page always shows above it and a tap there closes it.
+   * The base drawer's half-screen floor would leave a menu of one item hanging over an empty sheet.
+   */
+  min-height: 0;
   max-height: min(85dvh, calc(100dvh - 48px));
   margin: 0;
   gap: 0;
