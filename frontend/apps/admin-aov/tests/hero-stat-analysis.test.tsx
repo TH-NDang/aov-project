@@ -60,14 +60,14 @@ test("stat comparisons keep recorded source, patch, level, resource type and arm
     1,
   )
   const own = combatAttributeRows(
-    { values: [{ statKey: "ARMOR", baseValue: 999, unit: "POINT" }], sources: [] },
+    { values: [{ statKey: "ARMOR", baseValue: 999, unit: "POINT", growthPerLevel: null }], sources: [] },
     undefined,
     [],
   )[0]
   peers[0].baseStats.ARMOR.unit = "PERCENT"
   assert.equal(analyzeStat(own, peers, "s4", null)?.primary?.matches, 4)
   const resourceStats = {
-    values: [{ statKey: "MAX_RESOURCE", baseValue: 460, unit: "POINT" }],
+    values: [{ statKey: "MAX_RESOURCE", baseValue: 460, unit: "POINT", growthPerLevel: null }],
     sources: [],
   }
   const resource = combatAttributeRows(resourceStats, { ...capture, image: undefined }, []).find(
@@ -79,9 +79,10 @@ test("stat comparisons keep recorded source, patch, level, resource type and arm
     {
       statKey: "ARMOR",
       baseValue: 140,
+      percentValue: null,
+      growthPerLevel: null,
+      capValue: null,
       unit: "POINT",
-      variantId: "v",
-      patchCode: "s4",
       sourceUrl: "https://example.com/source",
       version: 1,
     },
@@ -108,7 +109,7 @@ test("hero analysis opens on demand and excludes the selected hero from both rol
         ...Array.from({ length: 5 }, (_, i) => sample(String(i), ["MAGE", "SUPPORT"])),
       ],
     )
-    const stats = { values: [{ statKey: "HP", baseValue: 3500, unit: "POINT" }], sources: [] }
+    const stats = { values: [{ statKey: "HP", baseValue: 3500, unit: "POINT", growthPerLevel: null }], sources: [] }
     await render(
       <HeroCombatAttributes
         stats={stats}
@@ -117,7 +118,7 @@ test("hero analysis opens on demand and excludes the selected hero from both rol
         heroId="view-hero"
         variantId="s4"
         patchCode="s4"
-        defaults={[]}
+        rules={[]}
       />,
     )
     assert.doesNotMatch(document.body.textContent!, /Đồng mức/)
@@ -128,6 +129,6 @@ test("hero analysis opens on demand and excludes the selected hero from both rol
     await waitFor(() => document.body.textContent!.includes("Đồng mức · 6 mẫu"))
     await click(Array.from(document.querySelectorAll("button")).find((b) => b.textContent === "Cùng vai trò")!)
     assert.match(document.body.textContent!, /Đồng mức · 5 mẫu/)
-    assert.match(document.body.textContent!, /Chưa có mặc định được xác nhận/)
+    assert.match(document.body.textContent!, /Mỗi tướng một giá trị/)
   })
 })

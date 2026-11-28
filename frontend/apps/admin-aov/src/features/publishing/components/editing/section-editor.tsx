@@ -4,7 +4,7 @@ import { AdminReferenceProvider } from "../../../terminology/catalog"
 import type { HeroSkillsLayout } from "../skills/hero-skills-view"
 import { HeroProfileEditor, type ProfileEditorPart } from "./hero-profile-editor"
 import { HeroStatsEditor } from "./hero-stats-editor"
-import type { StatDefault } from "../../model/assessment/combat-attributes"
+import type { StatRule } from "../../model/assessment/combat-attributes"
 import { AssetPicker } from "../assets/asset-picker"
 import { retainImageOptions } from "../../model/assets/image-options"
 import { heroRatingScale } from "@aov/ui/lib/hero-rating-scale"
@@ -65,7 +65,7 @@ export function SectionEditor({
   reviewOpen,
   onReviewOpenChange,
   profilePart = "information",
-  statDefaults,
+  statRules,
   skills,
   patchCode,
   referenceError,
@@ -89,7 +89,7 @@ export function SectionEditor({
   reviewOpen?: boolean
   onReviewOpenChange?: (open: boolean) => void
   profilePart?: ProfileEditorPart
-  statDefaults?: StatDefault[]
+  statRules?: StatRule[]
   skills?: Skills | null
   patchCode?: string
   referenceError?: boolean
@@ -154,7 +154,7 @@ export function SectionEditor({
       <HeroStatsEditor
         value={data as Stats}
         onChange={onChange}
-        defaults={statDefaults}
+        rules={statRules}
         skills={skills}
         patchCode={patchCode}
         referenceError={referenceError}

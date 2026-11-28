@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react"
 import { Link } from "react-router"
+import { useQuery } from "@tanstack/react-query"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../../components/wiki-icon"
 import { useWikiContext, useWikiText } from "../../../context/wiki-context"
@@ -9,6 +10,8 @@ import type { HeroDetail } from "../../../lib/hero-api"
 import { PatchName } from "../../../components/hero-patch-name"
 import { BackToChanges, CHANGE_TONES, usePatchOpener, type HeroVersion } from "./hero-version-changes"
 import { ChangeTag } from "../../../components/change-tag"
+import { patchReleasesQuery } from "../../../lib/updates-api"
+import { patchSourceLinks, preferredPatchSource } from "../../../lib/patch-sources"
 
 /**
  * What the version being read changed for the hero, from its published notes: one band marked on its side with the tone
@@ -25,9 +28,11 @@ export function HeroVersionChanges({
   version: HeroVersion
   onOpenSkill: (skillKey: string) => void
 }) {
-  const { locale, href } = useWikiContext()
+  const scope = useWikiContext()
+  const { locale, href } = scope
   const text = useWikiText()
   const openPatch = usePatchOpener()
+  const releases = useQuery(patchReleasesQuery(scope))
   const compact = usePageLayout() === "compact"
   const panel = useRef<HTMLElement>(null)
   const heading = useRef<HTMLDivElement>(null)
@@ -43,9 +48,12 @@ export function HeroVersionChanges({
   const skillName = (key: string) => skills.get(key)?.name || changeSkillLabel(key, locale)
   const changes = notes.flatMap((row) => row.changes ?? [])
   const summaries = notes.map((row) => parseChangeSummary(row.summary))
-  const source =
+  // The patch's own links come first; a link written with the hero's change only stands in for a patch without any.
+  const recorded =
     notes.map((row) => row.sourceUrl).find((url) => url && /^https:\/\//i.test(url)) ??
     summaries.map((summary) => summary.source).find(Boolean)
+  const shared = releases.data?.find((release) => release.variantId === selected.id)?.sources
+  const source = preferredPatchSource(patchSourceLinks(shared, recorded), locale)?.url
   const overall = notes.map((row) => changeSetKind(row)).find(Boolean)
   const open = !compact || unfolded
   const title = (

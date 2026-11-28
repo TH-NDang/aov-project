@@ -588,7 +588,9 @@ export function applyHeroAiAnswer(content: Content, answer: HeroAiAnswer): HeroA
       const reading = typeof raw === "object" && raw !== null ? raw : { value: raw, percent: undefined }
       const index = values.findIndex((row) => row.statKey === key)
       const row =
-        index >= 0 ? values[index]! : { statKey: key, baseValue: null, percentValue: null, unit: statUnit(key) }
+        index >= 0
+          ? values[index]!
+          : { statKey: key, baseValue: null, percentValue: null, growthPerLevel: null, unit: statUnit(key) }
       const value = number(reading.value) ? reading.value : row.baseValue
       const percent = hasStatPercent(key) && number(reading.percent) ? reading.percent : (row.percentValue ?? null)
       if (value === row.baseValue && percent === (row.percentValue ?? null)) continue

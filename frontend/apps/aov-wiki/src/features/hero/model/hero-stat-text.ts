@@ -8,3 +8,8 @@ export function statText(stat: { baseValue: number | null; percentValue?: number
   const number = stat.baseValue == null ? "" : formatGameNumber(stat.baseValue)
   return stat.percentValue == null ? number : `${number} | ${formatGameNumber(stat.percentValue)}%`
 }
+
+/** The rise per hero level, such as "+90/level"; nothing when it is not recorded or the stat does not rise. */
+export function statGrowthText(growth: number | null | undefined, perLevel: string) {
+  return growth ? `+${formatGameNumber(growth)}/${perLevel}` : undefined
+}

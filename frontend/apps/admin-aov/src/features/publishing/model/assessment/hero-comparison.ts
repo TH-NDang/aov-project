@@ -119,6 +119,7 @@ export const comparisonFieldLabels: Record<string, string> = {
   statKey: "Chỉ số",
   baseValue: "Giá trị ghi nhận",
   percentValue: "Phần trăm",
+  growthPerLevel: "Tăng mỗi cấp",
   unit: "Đơn vị",
   kind: "Loại",
   formKey: "Dạng tướng",

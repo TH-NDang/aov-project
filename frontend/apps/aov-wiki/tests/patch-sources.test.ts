@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { patchSourceLinks, sourceName } from "../src/lib/patch-sources.ts"
+import { patchSourceLinks, preferredPatchSource, sourceName } from "../src/lib/patch-sources.ts"
 
 const vietnamese = { url: "https://lienquan.garena.vn/patch", label: "Tiếng Việt", locale: "vi-VN" }
 const thai = { url: "https://rov.in.th/patch", label: "Thái Lan", locale: "th-TH" }
@@ -23,4 +23,12 @@ test("an address that is not a web page is left out", () => {
 test("a link without a label is named by its site", () => {
   assert.equal(sourceName(thai), "Thái Lan")
   assert.equal(sourceName({ url: "https://lienquan.garena.vn/a", label: " ", locale: null }), "lienquan.garena.vn")
+})
+
+test("a hero's change cites the patch page in the reader's language, else the patch's first page", () => {
+  const english = { url: "https://example.org/en", label: "English", locale: "en-US" }
+  assert.equal(preferredPatchSource([thai, vietnamese], "vi-VN"), vietnamese)
+  assert.equal(preferredPatchSource([thai, english], "en"), english)
+  assert.equal(preferredPatchSource([thai, vietnamese], "id-ID"), thai)
+  assert.equal(preferredPatchSource([], "vi-VN"), undefined)
 })

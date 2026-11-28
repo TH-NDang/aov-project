@@ -145,9 +145,12 @@ function HeroContentCell({ change }: { change: ChangeSet }) {
         {change.changes.length} thay đổi
         <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
       </button>
-      <div>
-        <SourceBadge change={change} />
-      </div>
+      {/* Patch notes name their links once, above the table; only a change read from two snapshots says so. */}
+      {change.sourceKind !== "PATCH_NOTES" && (
+        <div>
+          <SourceBadge change={change} />
+        </div>
+      )}
       {change.actualLocale && change.actualLocale !== locale && (
         <span className="block text-xs text-muted-foreground">Ngôn ngữ dự phòng: {change.actualLocale}</span>
       )}

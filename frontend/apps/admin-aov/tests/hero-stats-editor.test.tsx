@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
 import { fixtureContent } from "./fixtures/hero-workspace-data"
-import type { StatDefault } from "../src/features/publishing/model/assessment/combat-attributes"
+import type { StatRule } from "../src/features/publishing/model/assessment/combat-attributes"
 import { withView } from "./fixtures/hero-skills-view"
 
 test("armor is typed the way the game shows it and a malformed value cannot be saved", async () => {
@@ -10,8 +10,8 @@ test("armor is typed the way the game shows it and a malformed value cannot be s
     const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
       values: [
-        { statKey: "ARMOR", baseValue: null, unit: "POINT" },
-        { statKey: "HP", baseValue: 3720, percentValue: null, unit: "HP" },
+        { statKey: "ARMOR", baseValue: null, growthPerLevel: null, unit: "POINT" },
+        { statKey: "HP", baseValue: 3720, percentValue: null, growthPerLevel: null, unit: "HP" },
       ],
       sources: [],
     }
@@ -43,6 +43,7 @@ test("armor is typed the way the game shows it and a malformed value cannot be s
       statKey: "ARMOR",
       baseValue: 150,
       percentValue: 20,
+      growthPerLevel: null,
       unit: "POINT",
     })
     assert.equal(input.validationMessage, "")
@@ -66,7 +67,7 @@ test("a stat without a percent in the game drops one when the row switches to it
   await withView(async ({ document, render, dom }) => {
     const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
-      values: [{ statKey: "ARMOR", baseValue: 150, percentValue: 20, unit: "POINT" }],
+      values: [{ statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" }],
       sources: [],
     }
     const mount = () =>
@@ -93,21 +94,24 @@ test("a stat without a percent in the game drops one when the row switches to it
 test("a hero can override a shared stat and switch back without storing a copy", async () => {
   await withView(async ({ document, render, click }) => {
     const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
-    const rule: StatDefault = {
+    const rule: StatRule = {
       statKey: "CRITICAL_DAMAGE",
       baseValue: 200,
+      percentValue: null,
+      growthPerLevel: null,
+      capValue: null,
       unit: "PERCENT",
-      sourceUrl: "https://example.com/patch",
-      variantId: "variant",
-      patchCode: "s4",
+      sourceUrl: "https://example.com/source",
       version: 1,
     }
+    // A stat with only a cap is no value to inherit: each hero keeps its own.
+    const capOnly: StatRule = { ...rule, statKey: "MOVEMENT_SPEED", unit: "POINT", baseValue: null, capValue: 800 }
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = { values: [], sources: [] }
     const mount = () =>
       render(
         <HeroStatsEditor
           value={stats}
-          defaults={[rule]}
+          rules={[rule, capOnly]}
           onChange={(v) => {
             stats = v
           }}
@@ -117,12 +121,16 @@ test("a hero can override a shared stat and switch back without storing a copy",
     await click(
       Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Đặt giá trị riêng"))!,
     )
-    assert.deepEqual(stats.values, [{ statKey: "CRITICAL_DAMAGE", baseValue: null, unit: "PERCENT" }])
+    assert.deepEqual(stats.values, [
+      { statKey: "CRITICAL_DAMAGE", baseValue: null, growthPerLevel: null, unit: "PERCENT" },
+    ])
     await mount()
-    await click(document.querySelector<HTMLButtonElement>('[aria-label="Dùng mặc định của patch"]')!)
+    assert.match(document.body.textContent!, /Sát thương chí mạng/)
+    await click(document.querySelector<HTMLButtonElement>('[aria-label="Dùng mặc định chung"]')!)
     assert.deepEqual(stats.values, [])
     await mount()
-    assert.match(document.body.textContent!, /Mặc định của patch.*200%/)
+    assert.match(document.body.textContent!, /Mặc định chung.*Sát thương chí mạng 200%.*Đặt giá trị riêng/)
+    assert.doesNotMatch(document.body.textContent!, /Tốc chạy/)
   })
 })
 
@@ -130,7 +138,7 @@ test("stat choices and calendar inputs preserve unknown data, zero and missing v
   await withView(async ({ dom, document, render, click }) => {
     const { SectionEditor } = await import("../src/features/publishing/components/editing/section-editor")
     let value = structuredClone(fixtureContent.COMBAT_STATS!)
-    value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, unit: "custom-unit" })
+    value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, growthPerLevel: null, unit: "custom-unit" })
     value.sources = [
       {
         label: "Source",
@@ -179,6 +187,7 @@ test("stat choices and calendar inputs preserve unknown data, zero and missing v
     assert.deepEqual(value.values[2], {
       statKey: "CUSTOM_STAT",
       baseValue: 17,
+      growthPerLevel: null,
       unit: "custom-unit",
     })
     const openSources = () => click(document.querySelector<HTMLButtonElement>('[aria-label="Nguồn tham khảo (1)"]')!)
@@ -199,5 +208,48 @@ test("stat choices and calendar inputs preserve unknown data, zero and missing v
     await type(document.querySelector<HTMLInputElement>('input[type="datetime-local"]')!, "")
     await applySources()
     assert.equal(value.sources[0].observedAt, null)
+  })
+})
+
+test("the values every hero shares are edited in a sheet, with the rise per level and the cap", async () => {
+  await withView(async ({ document, render, click, dom, fixture, waitFor }) => {
+    const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
+    await render(<HeroStatsEditor value={{ values: [], sources: [] }} onChange={() => {}} />)
+    await click(
+      Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Sửa mặc định chung"))!,
+    )
+    await waitFor(() => !!document.querySelector('[data-stat-rule="MOVEMENT_SPEED"]'))
+    const movement = document.querySelector('[data-stat-rule="MOVEMENT_SPEED"]')!
+    assert.match(movement.textContent!, /Tốc chạy.*Tối đa 800/)
+    assert.match(document.querySelector('[data-stat-rule="HP"]')!.textContent!, /Mỗi tướng một giá trị/)
+
+    await click(document.querySelector<HTMLButtonElement>('[aria-label="Sửa mặc định Giảm hồi chiêu"]')!)
+    const field = (label: string) =>
+      Array.from(document.querySelectorAll("label"))
+        .find((node) => node.textContent?.startsWith(label))!
+        .querySelector("input")!
+    const type = async (label: string, next: string) =>
+      act(async () => {
+        const node = field(label)
+        Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(node, next)
+        node.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+      })
+    await type("Cấp 1 (%)", "0")
+    await type("Tối đa (%)", "40")
+    await click(Array.from(document.querySelectorAll("button")).find((b) => b.textContent === "Lưu")!)
+    await waitFor(() => fixture.statRuleWrites.length > 0)
+    assert.deepEqual(fixture.statRuleWrites[0], {
+      key: "COOLDOWN_REDUCTION",
+      method: "PUT",
+      body: {
+        unit: "PERCENT",
+        baseValue: 0,
+        percentValue: null,
+        growthPerLevel: null,
+        capValue: 40,
+        sourceUrl: null,
+        expectedVersion: 0,
+      },
+    })
   })
 })

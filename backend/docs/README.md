@@ -53,6 +53,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [031](adr/ADR-031-ma-dung-chung-cua-bon-kho.md) | Mã thuần giống hệt ở bốn module kho (giới hạn trang, cắt trang, thứ tự patch) vào `platform` hoặc contract của `patch`; luồng nghiệp vụ giữ riêng (bổ sung ADR-013) |
 | [032](adr/ADR-032-lien-ket-ban-ghi-thi-dau.md) | Liên kết giữa các bản ghi thi đấu: ê-kíp phát sóng, ban huấn luyện, MVP, đội của giải thưởng, giải của mốc lịch sử, tổ chức chủ quản; kiểm tra id khi lưu, chặn xóa, điền ngược bằng script có duyệt |
 | [035](adr/ADR-035-theo-doi-ghi-chu-cap-nhat.md) | Theo dõi bài cập nhật chính thức và máy chủ thử nghiệm của các nhà phát hành: lịch theo nguồn (mặc định 08:00 mỗi ngày), hộp bài trong Admin, `page-reader` cho trang tin Indonesia |
+| [036](adr/ADR-036-chi-so-tuong-mac-dinh-chung.md) | Chỉ số tướng: mặc định chung không theo patch (`hero.stat_rule`, có giới hạn), tăng theo cấp trở lại, một thuật ngữ cho mỗi chỉ số |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
 đã hoàn thành một tính năng hoặc một lượt kiểm thử chưa thực hiện.

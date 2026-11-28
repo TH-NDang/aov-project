@@ -50,6 +50,9 @@ export const STAT_LABELS: Record<string, string> = {
   PHYSICAL_LIFESTEAL: "Hút máu vật lý",
   MAGIC_LIFESTEAL: "Hút máu phép",
   COOLDOWN_REDUCTION: "Giảm hồi chiêu",
+  TENACITY: "Kháng hiệu ứng",
+  HP_REGEN: "Hồi máu mỗi 5 giây",
+  RESOURCE_REGEN: "Hồi năng lượng mỗi 5 giây",
 }
 
 export const UNIT_LABELS: Record<string, string> = { PERCENT: "%", UNKNOWN: "", POINT: "" }
@@ -310,6 +313,7 @@ export interface HeroPatchView {
     unit: string
     baseValue: number | null
     percentValue?: number | null
+    growthPerLevel: number | null
     provenance: Provenance
     changeSetId: string | null
     patchVariantId: string | null

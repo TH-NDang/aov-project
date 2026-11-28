@@ -1,10 +1,10 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { fixtureContent } from "./fixtures/hero-workspace-data"
-import type { StatDefault } from "../src/features/publishing/model/assessment/combat-attributes"
+import type { StatRule } from "../src/features/publishing/model/assessment/combat-attributes"
 import { withView } from "./fixtures/hero-skills-view"
 
-test("combat attributes keep observed crit damage, patch defaults and explicit overrides distinct", async () => {
+test("combat attributes keep observed crit damage, shared values, caps and explicit overrides distinct", async () => {
   await withView(async ({ document, render }) => {
     const { HeroCombatAttributes } =
       await import("../src/features/publishing/components/assessment/hero-combat-attributes")
@@ -26,15 +26,17 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
         },
       },
     })
-    const rule: StatDefault = {
+    const rule: StatRule = {
       statKey: "CRITICAL_DAMAGE",
       baseValue: 200,
+      percentValue: null,
+      growthPerLevel: null,
+      capValue: null,
       unit: "PERCENT",
       sourceUrl: "https://example.com/source",
-      variantId: "v",
-      patchCode: "s4",
       version: 1,
     }
+    const capped: StatRule = { ...rule, statKey: "CRITICAL_CHANCE", baseValue: 0, capValue: 100 }
     const mount = (patchCode: string, baseValue?: number) =>
       render(
         <HeroCombatAttributes
@@ -43,11 +45,11 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
             baseValue === undefined
               ? null
               : {
-                  values: [{ statKey: "CRITICAL_DAMAGE", unit: "PERCENT", baseValue }],
+                  values: [{ statKey: "CRITICAL_DAMAGE", unit: "PERCENT", baseValue, growthPerLevel: null }],
                   sources: [],
                 }
           }
-          defaults={patchCode === "s4" ? [rule] : []}
+          rules={patchCode === "s4" ? [rule, capped] : []}
           patchCode={patchCode}
         />,
       )
@@ -57,7 +59,7 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
 
     await mount("s4")
     assert.match(valueOf("Giáp")!, /140 \| 0%/)
-    assert.match(valueOf("Tỷ lệ chí mạng")!, /^0%/)
+    assert.match(valueOf("Tỷ lệ chí mạng")!, /^0%.*Khớp mặc định.*Tối đa 100%/)
     assert.match(valueOf("Sát thương chí mạng")!, /200%.*Khớp mặc định/)
     assert.match(valueOf("Công vật lý")!, /Chưa ghi nhận/)
     values.criticalDamagePercent = 175
@@ -86,8 +88,8 @@ test("attack summary follows roles and active skill scaling while full details k
     }
     const stats = {
       values: [
-        { statKey: "ATTACK_DAMAGE", baseValue: 176, unit: "POINT" },
-        { statKey: "ABILITY_POWER", baseValue: 0, unit: "POINT" },
+        { statKey: "ATTACK_DAMAGE", baseValue: 176, growthPerLevel: null, unit: "POINT" },
+        { statKey: "ABILITY_POWER", baseValue: 0, growthPerLevel: null, unit: "POINT" },
       ],
       sources: [],
     }
