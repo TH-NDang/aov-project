@@ -16,11 +16,10 @@ import { useVideoActions, useVideoSubjects } from "../../../videos/use-video-act
 import { PURPOSE_LABELS, type AdminVideo, type VideoSubject } from "../../../videos/video-model"
 import type { PublicationOverview, Variant } from "../../api/publication-overview"
 import {
-  classifyPatchVideo,
   releaseInstant,
   SUGGESTION_WINDOW,
+  suggestPatchVideos,
   type ChannelVideo,
-  type PatchVideoGuess,
 } from "../../model/setup/patch-video-model"
 
 /** The channel suggestions come from; its page lists the YouTube link the reader follows (ADR-034). */
@@ -55,13 +54,12 @@ export function PatchVideos({ variant, data }: { variant: Variant; data: Publica
   )
   const own = vnReleases.find((release) => release.variantId === variant.id)
   const releaseAt = own ? releaseInstant(own, VN_OFFSET_HOURS) : null
-  const nextReleaseAt =
-    releaseAt === null
-      ? null
-      : (vnReleases
-          .map((release) => releaseInstant(release, VN_OFFSET_HOURS))
-          .filter((at): at is number => at !== null && at > releaseAt)
-          .sort((a, b) => a - b)[0] ?? null)
+  const otherReleases = vnReleases
+    .map((release) => releaseInstant(release, VN_OFFSET_HOURS))
+    .filter((at): at is number => at !== null && at !== releaseAt)
+    .sort((a, b) => a - b)
+  const nextReleaseAt = releaseAt === null ? null : (otherReleases.find((at) => at > releaseAt) ?? null)
+  const previousReleaseAt = releaseAt === null ? null : (otherReleases.filter((at) => at < releaseAt).at(-1) ?? null)
 
   const videos = useMemo(
     () =>
@@ -162,6 +160,7 @@ export function PatchVideos({ variant, data }: { variant: Variant; data: Publica
           variantId={variant.id}
           releaseAt={releaseAt}
           nextReleaseAt={nextReleaseAt}
+          previousReleaseAt={previousReleaseAt}
           attached={new Set(videos.map((video) => video.providerVideoId).filter(Boolean) as string[])}
           heroes={(directory.data ?? []).filter((subject) => subject.kind === "HERO")}
         />
@@ -204,12 +203,14 @@ function ChannelSuggestions({
   variantId,
   releaseAt,
   nextReleaseAt,
+  previousReleaseAt,
   attached,
   heroes,
 }: {
   variantId: string
   releaseAt: number
   nextReleaseAt: number | null
+  previousReleaseAt: number | null
   attached: Set<string>
   heroes: VideoSubject[]
 }) {
@@ -221,17 +222,16 @@ function ChannelSuggestions({
   const scan = useMutation({
     mutationFn: () => readChannel(releaseAt, setRead),
     onSuccess: (videos) => {
-      const guesses = videos
-        .map((video) => classifyPatchVideo(video, releaseAt, names, nextReleaseAt))
-        .filter((guess): guess is PatchVideoGuess => !!guess && !attached.has(guess.video.id))
+      const guesses = suggestPatchVideos(videos, releaseAt, names, nextReleaseAt, previousReleaseAt).filter(
+        (guess) => !attached.has(guess.video.id),
+      )
       setPicked(new Set(guesses.map((guess) => guess.video.id)))
     },
     meta: { silent: true },
   })
-  const guesses = (scan.data ?? [])
-    .map((video) => classifyPatchVideo(video, releaseAt, names, nextReleaseAt))
-    .filter((guess): guess is PatchVideoGuess => !!guess && !attached.has(guess.video.id))
-    .sort((a, b) => Date.parse(a.video.publishedAt) - Date.parse(b.video.publishedAt))
+  const guesses = suggestPatchVideos(scan.data ?? [], releaseAt, names, nextReleaseAt, previousReleaseAt).filter(
+    (guess) => !attached.has(guess.video.id),
+  )
   const save = useMutation({
     mutationFn: (status: "DRAFT" | "PUBLISHED") =>
       videoApi.importBatch(
