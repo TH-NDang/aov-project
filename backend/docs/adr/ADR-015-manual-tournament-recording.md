@@ -40,7 +40,9 @@ ranh giới đó, không thêm một dịch vụ cho từng nhóm dữ liệu ga
   hay chưa quan sát được. Các giao dịch mua/bán/ghép/chuyển ô chỉ ghi như sự kiện khi có chứng
   cứ rõ; không tự suy ra mua/bán từ hai ảnh chụp khác nhau. Cho phép ghi trang bị cấp thấp từ đầu
   và lưu nhiều mốc trong cùng ván, thay vì chỉ có một bộ “đồ cuối”. Từ 25/11/2026 ván ghi thêm các trang bị đã lên, không theo
-  mốc (04, "Trang bị đã lên").
+  mốc (04, "Trang bị đã lên"). Từ 28/11/2026 mỗi món ghi vai trò (đồ chính hay bảo hộ), món ghép vào và món bán để lấy
+  nó; món đã nâng lên, đã bán hay giữ đến cuối được đọc ra từ các bước sau, không ai ghi tay, nên sáu ô cuối ván không
+  thể nói khác với lộ trình.
 - Dữ liệu tham chiếu game đi qua HTTP public API wiki với timeout/cache có giới hạn. Không giữ
   transaction database mở trong lúc gọi wiki. Snapshot công khai chỉ lưu metadata của đối tượng
   thực sự dùng; không sao chép toàn bộ catalog vào mỗi ván.
