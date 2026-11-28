@@ -31,24 +31,38 @@ const DAY = 86_400_000
 /** How far around a release a channel's videos are read: test-server previews come days ahead, reviews weeks after. */
 export const SUGGESTION_WINDOW = { beforeDays: 14, afterDays: 21 }
 
+/** The channel signs every title with its own name, which says nothing about the video. */
+const CHANNEL_TAG = /\b(trai nghiem game|tng)\b/g
 const PREVIEW = /\b(mctn|may chu thu nghiem|thu nghiem|sap ra mat|sap tang|sap giam|du kien|leak|xem truoc)\b/
+const TEST_SERVER = /\b(mctn|may chu thu nghiem|thu nghiem|ban test)\b/
 const OVERVIEW =
-  /\b(cap nhat chinh thuc|cap nhat bo sung|chi tiet (ban )?cap nhat|thay doi meta|ban cap nhat|tong hop|chinh thuc)\b/
+  /\b(cap nhat chinh thuc|cap nhat bo sung|chi tiet (ban )?cap nhat|thay doi meta mua|ban cap nhat (chinh thuc|bo sung)|\d+ (chinh sua|thay doi|sua) (tuong|bug))\b/
 const REVIEW = /\b(review|trai nghiem|thuc te|danh gia)\b/
 const HERO_PREFIX = /^(phien ban moi|cap nhat moi|chinh sua|buff|nerf|lam lai|rework)\s*[:\-–]\s*/
+/** A title counting changes ("11 changes", "8 buffs") is about many heroes, not the one it names first. */
+const MANY_HEROES = /\b(\d+\s*(tuong|chinh sua|buff|nerf)|hang chuc tuong)\b/
+const SKIN = /\b(skin|trang phuc)\b/
+const CHANGE_WORD = /\b(buff|nerf|sua|chinh sua|rework|lam lai|tang|giam|xoa|cai tien|dai tu|tro lai|hoan thien)\b/
 
-/** Longest names first, so "Kil'Groth" is not read as a shorter name hidden inside it. */
-function heroIn(text: string, heroes: HeroName[]) {
+/**
+ * The heroes a title names, longest names first so "Kil'Groth" is not read as a shorter name hidden inside it. A name
+ * found is blanked out before the next is looked for.
+ */
+function heroesIn(text: string, heroes: HeroName[]) {
   const names = heroes
     .flatMap((hero) => hero.names.map((name) => ({ hero, name: foldSearchText(name).trim() })))
     .filter((entry) => entry.name.length > 1)
     .sort((a, b) => b.name.length - a.name.length)
+  const found: { id: string; name: string }[] = []
+  let rest = text
   for (const entry of names) {
     const escaped = entry.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    if (new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}($|[^\\p{L}\\p{N}])`, "u").test(text))
-      return { id: entry.hero.id, name: entry.hero.names[0] }
+    const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}($|[^\\p{L}\\p{N}])`, "u")
+    if (!pattern.test(rest)) continue
+    rest = rest.replace(pattern, "$1 $2")
+    if (!found.some((hero) => hero.id === entry.hero.id)) found.push({ id: entry.hero.id, name: entry.hero.names[0] })
   }
-  return null
+  return found
 }
 
 /**
@@ -66,16 +80,22 @@ export function classifyPatchVideo(
   const until = Math.min(releaseAt + SUGGESTION_WINDOW.afterDays * DAY, nextReleaseAt ?? Number.POSITIVE_INFINITY)
   if (Number.isNaN(at) || at < releaseAt - SUGGESTION_WINDOW.beforeDays * DAY || at >= until) return null
 
-  const title = foldSearchText(video.title).replace(/\s+/g, " ").trim()
+  const title = foldSearchText(video.title).replace(CHANNEL_TAG, " ").replace(/\s+/g, " ").trim()
   const side = at < releaseAt ? "before" : "after"
+  const testServer = TEST_SERVER.test(title)
+  const aboutSkins = SKIN.test(title) && !CHANGE_WORD.test(title)
   const prefix = title.match(HERO_PREFIX)
-  if (prefix && side === "after") {
-    const hero = heroIn(title.slice(prefix[0].length), heroes)
-    if (hero) return { video, purpose: "PATCH_CHANGE", heroId: hero.id, heroName: hero.name, side }
+  if (prefix && side === "after" && !testServer && !aboutSkins && !MANY_HEROES.test(title)) {
+    const named = heroesIn(title.slice(prefix[0].length), heroes)
+    // A title naming two heroes is about something they share, such as an item, not one hero's change.
+    if (named.length === 1)
+      return { video, purpose: "PATCH_CHANGE", heroId: named[0].id, heroName: named[0].name, side }
   }
-  if (side === "before" && PREVIEW.test(title)) return { video, purpose: "PATCH_PREVIEW", side }
+  if (side === "before" && PREVIEW.test(title) && (testServer || !SKIN.test(title)))
+    return { video, purpose: "PATCH_PREVIEW", side }
+  if (side === "after" && !testServer && !aboutSkins && REVIEW.test(title))
+    return { video, purpose: "PATCH_REVIEW", side }
   if (OVERVIEW.test(title) && Math.abs(at - releaseAt) <= 3 * DAY) return { video, purpose: "PATCH_OVERVIEW", side }
-  if (side === "after" && REVIEW.test(title)) return { video, purpose: "PATCH_REVIEW", side }
   return null
 }
 

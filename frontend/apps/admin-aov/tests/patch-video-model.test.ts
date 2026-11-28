@@ -58,6 +58,51 @@ test("shorts, videos outside the window and titles that say nothing are left out
   assert.equal(classifyPatchVideo(video("Review Phiên Bản Mới", "2026-11-27T00:00:00Z"), release, heroes, next), null)
 })
 
+test("the channel's own name, skins and videos about many heroes do not make a guess", () => {
+  assert.equal(
+    classifyPatchVideo(
+      video("Liên Quân Top 5 Tướng Khắc Chế Veera | Trải Nghiệm Game", "2026-11-19T03:00:00Z"),
+      release,
+      heroes,
+    ),
+    null,
+  )
+  assert.equal(
+    classifyPatchVideo(
+      video("PHIÊN BẢN MỚI: Nâng Cấp Skin Dirak Bị Hoãn | TNG", "2026-11-20T03:00:00Z"),
+      release,
+      heroes,
+    ),
+    null,
+  )
+  const many = classifyPatchVideo(
+    video("PHIÊN BẢN MỚI: 11 Chỉnh Sửa Tướng, Dirak 4 Nút | TNG", "2026-11-17T09:00:00Z"),
+    release,
+    heroes,
+  )
+  assert.equal(many?.purpose, "PATCH_OVERVIEW")
+  assert.equal(
+    classifyPatchVideo(
+      video("PHIÊN BẢN MỚI: Đồ Mới Buff Gián Tiếp Yan Và Dirak", "2026-11-20T03:00:00Z"),
+      release,
+      heroes,
+    ),
+    null,
+  )
+  assert.equal(
+    classifyPatchVideo(video("Liên Quân Review Chê 8 Trang Phục Mới", "2026-11-20T03:00:00Z"), release, heroes),
+    null,
+  )
+  assert.equal(
+    classifyPatchVideo(
+      video("Yan Buff Khủng Dọn Đường Cho Skin Mới Sắp Ra Mắt?", "2026-11-12T03:00:00Z"),
+      release,
+      heroes,
+    ),
+    null,
+  )
+})
+
 test("a day-only release starts at midnight on the market's clock", () => {
   assert.equal(releaseInstant({ effectiveAt: null, effectiveOn: "2026-11-26" }, 7), Date.parse("2026-11-25T17:00:00Z"))
   assert.equal(
