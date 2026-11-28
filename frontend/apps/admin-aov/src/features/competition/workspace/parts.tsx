@@ -15,6 +15,7 @@ import { initials, type TeamView } from "@/features/esports/model/game-view"
 import type { Access } from "@/features/esports/pages/esports-shell"
 import type { CopyPart } from "../model/copy-setup"
 import type { WorkspaceStep } from "./model"
+import type { ContentChecks } from "./use-content-checks"
 
 /**
  * The place inside a step a link opens: a team, a stage, a match by its series or its key in the plan, or a list of
@@ -73,6 +74,8 @@ export type Workspace = {
   keep: (patch: WorkspaceFocus) => void
   openCopy: (parts?: CopyPart[]) => void
   run: (action: WorkspaceAction) => void
+  /** The owner's own checks of each part, shown only in Admin; absent where a step is drawn on its own. */
+  verification?: ContentChecks
 }
 
 export const teamViewOf = (id: string, content?: TeamContent): TeamView =>
