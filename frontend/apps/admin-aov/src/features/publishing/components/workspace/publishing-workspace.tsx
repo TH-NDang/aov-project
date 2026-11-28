@@ -69,7 +69,7 @@ import { languageOptions } from "@/features/users/profile-preference-picker"
 import { PatchChangeForm } from "@/features/publishing/components/patch-changes/patch-change-form"
 import { SectionEditor, emptySection } from "@/features/publishing/components/editing/section-editor"
 import { statPatchContext } from "@/features/publishing/model/assessment/combat-attributes"
-import { useStatDefaults } from "@/features/publishing/components/setup/patch-stat-defaults"
+import { useHeroStatRules } from "@/features/publishing/components/setup/hero-stat-rules"
 import {
   replaceProfilePart,
   type ProfileEditorPart,
@@ -250,7 +250,7 @@ export function PublishingWorkspace({
     heroLocationId(urlParams.get("atPatch")) || filter.variantId || null,
     preview?.content,
   )
-  const statDefaults = useStatDefaults(statPatch?.id)
+  const statRules = useHeroStatRules()
   const writable = canWrite && revision?.state === "DRAFT"
   const savedChanges = useQuery({
     queryKey: publishingKeys.draftChange(heroId, revision?.id, revision?.version),
@@ -1016,8 +1016,8 @@ export function PublishingWorkspace({
                   savedSkillKeys={new Set(read.data?.content.SKILLS?.skills.map((skill) => skill.skillKey) ?? [])}
                   savedSkinKeys={new Set(read.data?.content.SKINS?.skins.map((skin) => skin.skinKey) ?? [])}
                   focusSkinKey={skinFocus}
-                  statDefaults={statDefaults.data}
-                  referenceError={statDefaults.isError}
+                  statRules={statRules.data}
+                  referenceError={statRules.isError}
                   skills={preview.content.SKILLS}
                   patchCode={statPatch?.patchCode}
                   section={section}
@@ -1295,8 +1295,8 @@ export function PublishingWorkspace({
                     sharedTitle={!!formHolder}
                     editing={editing && editorPanel ? { section, title: editorTitle, node: editorPanel } : null}
                     variantId={statPatch?.id}
-                    statDefaults={statDefaults.data}
-                    referenceError={statDefaults.isError}
+                    statRules={statRules.data}
+                    referenceError={statRules.isError}
                     patchCode={statPatch?.patchCode}
                     reviewTarget={reviewTarget}
                     onReviewShown={() => setReviewTarget(null)}

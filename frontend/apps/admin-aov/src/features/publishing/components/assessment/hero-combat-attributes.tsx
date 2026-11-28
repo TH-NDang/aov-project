@@ -8,11 +8,11 @@ import { HeroStatAnalysisPanel } from "./hero-stat-analysis-panel"
 import {
   ATTRIBUTE_SOURCE_LABELS,
   combatAttributeRows,
-  formatStat,
   observedAttributes,
   overviewAttackStats,
+  sharedStatText,
   type AttributeRow,
-  type StatDefault,
+  type StatRule,
 } from "../../model/assessment/combat-attributes"
 import type { Role, Skills, Stats } from "@/lib/hero-types"
 
@@ -54,7 +54,7 @@ function ObservationNote({ observation }: { observation: ReturnType<typeof obser
   )
 }
 
-/** Every attribute by group, with where its value comes from, its growth and the patch default it is checked against. */
+/** Every attribute by group, with where its value comes from, its growth, the shared value and the cap. */
 function AttributeList({ rows, columns = false }: { rows: AttributeRow[]; columns?: boolean }) {
   return (
     <div className={columns ? "gap-8 sm:columns-2" : "space-y-4"}>
@@ -79,22 +79,21 @@ function AttributeList({ rows, columns = false }: { rows: AttributeRow[]; column
                       {(row.kind !== "CAPTURED" || row.reference) && (
                         <span className="type-meta block">{ATTRIBUTE_SOURCE_LABELS[row.kind]}</span>
                       )}
+                      {row.growth != null && (
+                        <span className="type-meta block">
+                          {row.growth > 0 ? "+" : ""}
+                          {row.growth} / cấp
+                        </span>
+                      )}
                       {row.kind === "OWN" && row.observed && row.observed !== row.value && (
                         <span className="type-meta block">Ảnh ghi {row.observed}</span>
                       )}
-                      {row.reference && (
-                        <a
-                          className="type-meta block underline underline-offset-2"
-                          href={row.reference.sourceUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {row.matchesDefault
-                            ? "Khớp mặc định"
-                            : `Mặc định ${formatStat(row.reference.baseValue, row.reference.unit)}`}{" "}
-                          · {row.reference.patchCode}
-                        </a>
+                      {row.kind !== "SHARED" && sharedStatText(row.reference) && (
+                        <span className="type-meta block">
+                          {row.matchesDefault ? "Khớp mặc định" : `Mặc định ${sharedStatText(row.reference)}`}
+                        </span>
                       )}
+                      {row.cap && <span className="type-meta block">{row.cap}</span>}
                     </dd>
                   </div>
                 ))}
@@ -121,7 +120,7 @@ export function HeroCombatAttributes({
   stats,
   skills,
   roles = [],
-  defaults,
+  rules,
   heroId,
   variantId,
   patchCode,
@@ -130,7 +129,7 @@ export function HeroCombatAttributes({
   stats: Stats | null
   skills: Skills | null
   roles?: Role[]
-  defaults?: StatDefault[]
+  rules?: StatRule[]
   heroId?: string
   variantId?: string
   patchCode?: string
@@ -139,7 +138,7 @@ export function HeroCombatAttributes({
   const [view, setView] = useState<AttributeView | null>(null)
   const snapshot = observedAttributes(skills)
   const observation = patchCode && snapshot?.patchCode !== patchCode ? observedAttributes(skills, patchCode) : snapshot
-  const rows = combatAttributeRows(stats, observation, defaults ?? [])
+  const rows = combatAttributeRows(stats, observation, rules ?? [])
   const summary = ["HP", ...overviewAttackStats(roles, skills), "MOVEMENT_SPEED", "ATTACK_RANGE_TYPE"]
     .map((key) => rows.find((r) => r.key === key && r.value !== "—"))
     .filter((r) => !!r)
@@ -198,7 +197,7 @@ export function HeroCombatAttributes({
       )}
       {referenceError && (
         <p role="status" className="type-meta">
-          Chưa tải được mặc định của patch.
+          Chưa tải được mặc định chung.
         </p>
       )}
       <Dialog open={view !== null} onOpenChange={(open) => !open && setView(null)}>
@@ -231,7 +230,7 @@ export function HeroCombatAttributes({
                     patchCode={patchCode}
                     roles={roles}
                     level={observation?.level ?? null}
-                    defaultsReady={defaults !== undefined}
+                    defaultsReady={rules !== undefined}
                     referenceError={referenceError}
                   />
                 ) : (

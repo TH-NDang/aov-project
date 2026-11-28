@@ -73,8 +73,8 @@ const content = (
   OVERVIEW_RATINGS: null,
   COMBAT_STATS: {
     values: [
-      { statKey: "HP", baseValue: hp, unit: "UNKNOWN" },
-      { statKey: "CRITICAL_CHANCE", baseValue: 0, unit: "PERCENT" },
+      { statKey: "HP", baseValue: hp, growthPerLevel: 120, unit: "UNKNOWN" },
+      { statKey: "CRITICAL_CHANCE", baseValue: 0, growthPerLevel: null, unit: "PERCENT" },
     ],
     sources: [],
   },

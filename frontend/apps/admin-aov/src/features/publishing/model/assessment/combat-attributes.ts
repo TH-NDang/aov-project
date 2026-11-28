@@ -5,7 +5,8 @@ import { formatStatNumber, formatStatReading } from "./stat-reading"
 import type { components } from "../../generated/hero-api"
 import type { Content, Role, Skills, Stats } from "@/lib/hero-types"
 
-export type StatDefault = components["schemas"]["PatchStatDefault"]
+/** What every hero shares for a stat, whatever the patch: the level 1 value, the rise per level and the cap. */
+export type StatRule = components["schemas"]["HeroStatRule"]
 export type StatSample = components["schemas"]["HeroStatSample"]
 
 type Group = "Cơ bản" | "Tấn công"
@@ -35,7 +36,7 @@ const fields = new Map(attributes.map((a) => [a.key, a]))
 export const combatAttributeKeys = attributes.map((a) => a.key)
 
 export function statUnit(key: string) {
-  return fields.get(key)?.field.endsWith("Percent") ? "PERCENT" : "POINT"
+  return fields.get(key)?.field.endsWith("Percent") || key === "TENACITY" ? "PERCENT" : "POINT"
 }
 
 export interface StatReading {
@@ -71,6 +72,19 @@ export function normalizedUnit(key: string, unit: string) {
 export function formatStat(value: number, unit: string) {
   const suffix = { POINT: "", HP: "", UNKNOWN: "", PERCENT: "%", percent: "%" }[unit] ?? (unit ? " " + unit : "")
   return formatStatNumber(value) + suffix
+}
+
+/** The level 1 value every hero shares, as the game shows it ("80 | 0%"); none when heroes differ. */
+export function sharedStatText(rule: StatRule | undefined) {
+  if (rule?.baseValue == null) return
+  return rule.percentValue != null
+    ? formatStatReading(rule.baseValue, rule.percentValue)
+    : formatStat(rule.baseValue, rule.unit)
+}
+
+/** The most a stat reaches in a match, as a short label. */
+export function statCapText(rule: StatRule | undefined) {
+  return rule?.capValue == null ? undefined : `Tối đa ${formatStat(rule.capValue, rule.unit)}`
 }
 
 export function overviewAttackStats(roles: Role[], skills: Skills | null) {
@@ -119,13 +133,13 @@ export function observedAttributes(skills?: Skills | null, patchCode?: string) {
   }
 }
 
-/** Where a hero's value comes from: its own record, a capture, the patch default, or nowhere yet. */
-export type AttributeSource = "OWN" | "CAPTURED" | "PATCH_DEFAULT" | "UNRECORDED"
+/** Where a hero's value comes from: its own record, a capture, the value every hero shares, or nowhere yet. */
+export type AttributeSource = "OWN" | "CAPTURED" | "SHARED" | "UNRECORDED"
 
 export const ATTRIBUTE_SOURCE_LABELS: Record<AttributeSource, string> = {
   OWN: "Giá trị riêng",
   CAPTURED: "Ghi nhận từ ảnh",
-  PATCH_DEFAULT: "Mặc định của patch",
+  SHARED: "Mặc định chung",
   UNRECORDED: "Chưa ghi nhận",
 }
 
@@ -135,8 +149,12 @@ export interface AttributeRow {
   group: Group | "Khác"
   value: string
   kind: AttributeSource
+  growth?: number | null
   observed?: string
-  reference?: StatDefault
+  /** What every hero shares for this stat, when it is recorded. */
+  reference?: StatRule
+  /** The most the stat reaches in a match, as a short label. */
+  cap?: string
   matchesDefault: boolean
   reading?: StatReading
 }
@@ -144,10 +162,10 @@ export interface AttributeRow {
 export function combatAttributeRows(
   stats: Stats | null,
   observation: ReturnType<typeof observedAttributes>,
-  defaults: StatDefault[],
+  rules: StatRule[],
 ): AttributeRow[] {
   const heroes = new Map(stats?.values.map((v) => [v.statKey, v]))
-  const shared = new Map(defaults.map((v) => [v.statKey, v]))
+  const shared = new Map(rules.map((v) => [v.statKey, v]))
   const keys = new Set([...fields.keys(), ...heroes.keys(), ...shared.keys()])
   return Array.from(keys).flatMap<AttributeRow>((key) => {
     const definition = fields.get(key)
@@ -168,13 +186,13 @@ export function combatAttributeRows(
         : own.percentValue != null
           ? formatStatReading(own.baseValue, own.percentValue)
           : formatStat(own.baseValue, own.unit)
-    const fallback = reference && formatStat(reference.baseValue, reference.unit)
+    const fallback = sharedStatText(reference)
     const reading =
       own?.baseValue != null
         ? { value: own.baseValue, unit: own.unit, percent: own.percentValue ?? undefined, resource: capture?.resource }
         : capture
     const kind: AttributeSource =
-      ownValue != null ? "OWN" : observed != null ? "CAPTURED" : reference ? "PATCH_DEFAULT" : "UNRECORDED"
+      ownValue != null ? "OWN" : observed != null ? "CAPTURED" : fallback ? "SHARED" : "UNRECORDED"
     const label =
       key === "ATTACK_RANGE_TYPE"
         ? "Tầm đánh"
@@ -188,10 +206,15 @@ export function combatAttributeRows(
         group: definition?.group ?? "Khác",
         value: ownValue ?? observed ?? fallback ?? "—",
         kind,
+        growth: own?.growthPerLevel ?? reference?.growthPerLevel,
         observed,
         reference,
+        cap: statCapText(reference),
         matchesDefault:
-          !!reference && reading?.value === reference.baseValue && normalizedUnit(key, reading.unit) === reference.unit,
+          reference?.baseValue != null &&
+          reading?.value === reference.baseValue &&
+          (reference.percentValue == null || reading.percent === reference.percentValue) &&
+          normalizedUnit(key, reading.unit) === reference.unit,
         reading,
       },
     ]

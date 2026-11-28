@@ -8,6 +8,7 @@ import {
   ATTRIBUTE_SOURCE_LABELS,
   formatStat,
   normalizedUnit,
+  sharedStatText,
   type AttributeRow,
   type StatSample,
 } from "../../model/assessment/combat-attributes"
@@ -15,13 +16,13 @@ import { ROLES, type Role } from "@/lib/hero-types"
 import { publishingKeys } from "@/lib/api/publishing-api"
 
 function defaultStatus(row: AttributeRow, ready: boolean, error?: boolean) {
-  if (!row.reference) {
+  if (!sharedStatText(row.reference)) {
     if (error) return "Chưa tải được mặc định"
-    return ready ? "Chưa có mặc định được xác nhận" : "Đang tải mặc định…"
+    return ready ? "Mỗi tướng một giá trị" : "Đang tải mặc định…"
   }
-  if (row.kind === "PATCH_DEFAULT") return "Dùng mặc định"
+  if (row.kind === "SHARED") return "Dùng mặc định"
   if (row.matchesDefault) return "Khớp mặc định"
-  if (typeof row.reading?.value === "number" && normalizedUnit(row.key, row.reading.unit) === row.reference.unit)
+  if (typeof row.reading?.value === "number" && normalizedUnit(row.key, row.reading.unit) === row.reference?.unit)
     return "Khác mặc định"
   return "Có mặc định đối chiếu"
 }
@@ -120,7 +121,7 @@ export function HeroStatAnalysisPanel({
         {rows.map((row) => {
           const analysis = query.data && !query.isError ? analyzeStat(row, peers, patchCode, level) : undefined
           const score = analysis?.primary ?? analysis?.secondary
-          const rule = row.reference
+          const rule = sharedStatText(row.reference)
           const defaultText = defaultStatus(row, defaultsReady, referenceError)
           return (
             <details key={row.key} className="py-1">
@@ -145,15 +146,8 @@ export function HeroStatAnalysisPanel({
               <div className="space-y-1.5 pb-2 pl-4">
                 <p className="type-meta">
                   {defaultText}
-                  {rule && (
-                    <>
-                      {" "}
-                      ·{" "}
-                      <a href={rule.sourceUrl} target="_blank" rel="noreferrer" className="underline">
-                        {formatStat(rule.baseValue, rule.unit)} từ patch {rule.patchCode}
-                      </a>
-                    </>
-                  )}
+                  {rule && <> · Mặc định chung {rule}</>}
+                  {row.cap && <> · {row.cap}</>}
                 </p>
                 {row.reading ? (
                   <p className="type-meta">
@@ -183,7 +177,8 @@ export function HeroStatAnalysisPanel({
         </p>
         <p className="mt-2">
           Từ 5 mẫu, mức thấp và cao tương ứng với 25% dưới và 25% trên, các giá trị bằng nhau cùng hạng. Hơn nửa nhóm có
-          cùng giá trị được ghi là phổ biến, cả nhóm giống nhau là đồng mức. Mặc định của patch cần có nguồn xác nhận.
+          cùng giá trị được ghi là phổ biến, cả nhóm giống nhau là đồng mức. Mặc định chung là giá trị mọi tướng giống
+          nhau, không theo patch.
         </p>
       </details>
     </div>

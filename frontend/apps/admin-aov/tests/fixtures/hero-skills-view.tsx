@@ -95,6 +95,7 @@ async function createView() {
     document: dom.window.document,
     client,
     requests,
+    fixture,
     HeroSkillsView,
     SkillArtwork,
     skillImageMatch,
