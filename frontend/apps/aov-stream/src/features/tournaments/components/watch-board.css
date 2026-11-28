@@ -89,25 +89,11 @@
   flex: none;
   border-radius: var(--aov-radius-control);
 }
-.tn-room-ban > * {
-  filter: var(--hub-ban-filter);
-}
+/* A ban wears the shared look (BAN_FACE); one nobody saw or made is a plate under a faint sign. */
 .tn-room-ban > i {
   width: 100%;
   border-radius: inherit;
   background: var(--hub-plate);
-}
-/* A ban wears the "no" sign on its corner. */
-.tn-room-ban::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--hub-ban-mark);
-  forced-color-adjust: none;
-}
-.tn-room-ban:has(> i)::after {
-  opacity: 0.4;
 }
 /* Drawn small, pressed at the size of every button. */
 button.tn-room-ban::before {

@@ -358,20 +358,12 @@
   .esp-mark > * {
     pointer-events: none;
   }
-  .esp-mark:is([data-kind="ITEM"], [data-kind="BAN"], [data-kind="PICK"]) {
+  .esp-mark[data-kind="ITEM"] {
     border-radius: var(--aov-radius-control);
     box-shadow: 0 0 0 1.5px var(--side);
   }
-  .esp-mark[data-kind="BAN"] img {
-    filter: grayscale(1);
-    opacity: 0.5;
-  }
   .esp-mark[data-past="false"] {
     opacity: 0.45;
-  }
-  /* A ban to come would all but vanish under both. */
-  .esp-mark[data-kind="BAN"][data-past="false"] img {
-    opacity: 0.9;
   }
   .esp-mark:is(:hover, :focus-visible, [data-active], [data-dragging]) {
     z-index: 3;

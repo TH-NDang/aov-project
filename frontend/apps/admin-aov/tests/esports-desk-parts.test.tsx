@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { beforeEach, test } from "node:test"
 import { act, useState } from "react"
 import type { DraftTurn, GameContent, Participant } from "@aov/community-contracts"
-import { DRAFT_ORDER, moveTurn } from "../src/features/esports/model/draft"
+import { DRAFT_ORDER, setDraftTimes } from "../src/features/esports/model/draft"
 import type { GameDesk } from "../src/features/esports/pages/game-desk"
 import { button, click, flush, render, type, withDom } from "./fixtures/dom"
 import { catalog, deskOf, emptyGame, recordedGame, selection } from "./fixtures/esports-desk"
@@ -21,7 +21,6 @@ const turns = (...names: string[]): DraftTurn[] =>
     ...DRAFT_ORDER[index]!,
     order: index + 1,
     hero: selection(name),
-    atSecond: 100 + index,
   }))
 /** Every player of the game without a name, as a game recorded before its line-ups. */
 const unnamed = (content: GameContent): GameContent => ({
@@ -32,7 +31,7 @@ const unnamed = (content: GameContent): GameContent => ({
   })),
 })
 
-test("a turn typed while a drag of another turn is being saved keeps the drag", async () => {
+test("a turn typed while a drag of the draft start is being saved keeps the drag", async () => {
   const desk = deskOf({
     content: emptyGame({
       draft: { startSecond: 90, lockedSecond: null, turns: turns("Aoi", "Elsu", "Keera", "Omen", "Yena", "Ryoma") },
@@ -49,7 +48,11 @@ test("a turn typed while a drag of another turn is being saved keeps the drag", 
     </desk.kept.Host>,
   )
   const release = desk.kept.hold()
-  const dragged = shown.record({ text: "Đã dời lượt 5", apply: (content) => moveTurn(content, 5, 140)!, revert: null })
+  const dragged = shown.record({
+    text: "Đã dời lúc bắt đầu cấm chọn",
+    apply: (content) => setDraftTimes(content, { startSecond: 80 }),
+    revert: null,
+  })
   const search = document.querySelector<HTMLInputElement>("[data-hero-search]")!
   await type(search, "biron")
   await act(async () =>
@@ -58,8 +61,8 @@ test("a turn typed while a drag of another turn is being saved keeps the drag", 
   release()
   await act(async () => void (await dragged))
   await flush()
-  const saved = desk.kept.content().draft!.turns
-  assert.deepEqual([saved[4]?.atSecond, saved[6]?.hero?.name], [140, "Biron"])
+  const saved = desk.kept.content().draft!
+  assert.deepEqual([saved.startSecond, saved.turns[6]?.hero?.name], [80, "Biron"])
 })
 
 test("a seat of a team without a registered line-up says why nobody can be chosen", async () => {

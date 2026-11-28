@@ -1,0 +1,47 @@
+/*
+ * A banned hero is greyed and dimmed and wears a small red "no" sign on its corner, a third of its size; the sign has a
+ * dark rim, so it shows on a pale picture too. A place may set a lighter filter where the hero is pointed at.
+ */
+:root {
+  --aov-ban-filter: grayscale(1) brightness(0.72);
+  --aov-ban-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23e5484d' stroke='%23000' stroke-opacity='.35' stroke-width='1.5'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='5.6'/%3E%3Cpath d='M8 8l8 8'/%3E%3C/g%3E%3C/svg%3E")
+    right 6% bottom 6% / max(10px, 34%) no-repeat;
+}
+.aov-ban {
+  position: relative;
+}
+.aov-ban > * {
+  filter: var(--aov-ban-filter);
+  transition: filter 160ms;
+}
+.aov-ban::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--aov-ban-mark);
+  forced-color-adjust: none;
+  pointer-events: none;
+}
+/* A ban nobody made or nobody saw keeps its place and a faint sign. */
+.aov-ban[data-empty]::after {
+  opacity: 0.4;
+}
+@media (hover: hover) {
+  .aov-ban:hover > * {
+    filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aov-ban > * {
+    transition: none;
+  }
+}
+
+/* The side on the right is mirrored, as a broadcast shows it: its first turn stands at the outer edge. */
+.aov-draft-row[data-mirrored] {
+  direction: rtl;
+}
+.aov-draft-row[data-mirrored] > * {
+  direction: ltr;
+}

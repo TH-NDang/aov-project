@@ -129,11 +129,11 @@ test("the edges of a game and the loadout marks move only where the service acce
   const edge = (kind: "draftStart" | "draftLock" | "gameStart" | "gameEnd"): RetimeTarget => ({ kind, gameId: "g1" })
   assert.deepEqual(
     retimeRange(drafted, edge("draftStart"), 5000, { previousEnd: 900 }),
-    { min: 901, max: 1050 },
-    "the phase starts after the previous game and before its first turn",
+    { min: 901, max: 1250 },
+    "the phase starts after the previous game and before the lock, whatever seconds older turns hold",
   )
-  assert.deepEqual(retimeRange(drafted, edge("draftStart"), 5000), { min: 0, max: 1050 })
-  assert.deepEqual(retimeRange(drafted, edge("draftLock"), 5000), { min: 1200, max: 1300 }, "last turn to game start")
+  assert.deepEqual(retimeRange(drafted, edge("draftStart"), 5000), { min: 0, max: 1250 })
+  assert.deepEqual(retimeRange(drafted, edge("draftLock"), 5000), { min: 1000, max: 1300 }, "draft start to game start")
   assert.deepEqual(
     retimeRange(drafted, edge("gameStart"), 5000, { nextFrom: 2500 }),
     { min: 1250, max: 1599 },
@@ -163,7 +163,7 @@ test("the edges of a game and the loadout marks move only where the service acce
   assert.equal(retimeRange(waiting, edge("gameStart"), 5000), null, "no game start to move before the game is live")
   assert.equal(retimeRange(waiting, edge("gameEnd"), 5000), null)
   assert.equal(retimeRange(waiting, mark, 5000), null)
-  assert.deepEqual(retimeRange(waiting, edge("draftLock"), 5000), { min: 1200, max: 5000 })
+  assert.deepEqual(retimeRange(waiting, edge("draftLock"), 5000), { min: 1000, max: 5000 })
   const open = { ...drafted, draft: { ...drafted.draft!, locked: null } }
   assert.equal(retimeRange(open, edge("draftLock"), 5000), null)
   assert.deepEqual(retimeRange({ ...drafted, draft: null }, edge("gameStart"), 5000, { previousEnd: 900 }), {

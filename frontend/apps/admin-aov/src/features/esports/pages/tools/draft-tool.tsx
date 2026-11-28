@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import type { GameContent, Side } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
-import { cn } from "@aov/ui/lib/utils"
+import { BAN_FACE } from "@aov/ui/components/draft-marks"
 import { confirmAction } from "@/components/confirm-dialog"
 import { DraftBoard, UsedHeroes, turnWords, type BoardSlot } from "../../components/game/draft-board"
 import { HeroIcon } from "../../components/primitives"
@@ -86,7 +86,6 @@ const turnSlots = (draft: DraftRecorder["draft"], icon: ReturnType<typeof refere
     side: slot.side,
     hero: icon(slot.hero),
     recorded: slot.recorded,
-    atSecond: slot.atSecond ?? null,
   }))
 
 const recordedSlots = (content: GameContent, icon: ReturnType<typeof referenceIndex>): BoardSlot[] =>
@@ -95,7 +94,7 @@ const recordedSlots = (content: GameContent, icon: ReturnType<typeof referenceIn
       ...bans.map((hero) => ({ side, kind: "BAN" as const, hero: icon(hero) })),
       ...participants.map(({ hero }) => ({ side, kind: "PICK" as const, hero: icon(hero) })),
     ])
-    .map((slot, index) => ({ ...slot, index, order: null, recorded: !!slot.hero, atSecond: null }))
+    .map((slot, index) => ({ ...slot, index, order: null, recorded: !!slot.hero }))
 
 const SIDES: readonly Side[] = ["BLUE", "RED"]
 
@@ -156,13 +155,12 @@ function Collecting({
               <span key={side} className="inline-flex flex-wrap items-center gap-1">
                 <b className="font-semibold text-foreground">{desk.view.sides[side].team.shortName}</b>
                 {own.map((entry) => (
-                  <HeroIcon
+                  <span
                     key={`${entry.kind}-${heroKeys(entry.hero)[0]}`}
-                    hero={icon(entry.hero)}
-                    size={22}
-                    title={heroWords(entry, desk)}
-                    className={cn("rounded-md", entry.kind === "BAN" && "opacity-60 grayscale")}
-                  />
+                    className={entry.kind === "BAN" ? `inline-flex rounded-md ${BAN_FACE}` : "inline-flex rounded-md"}
+                  >
+                    <HeroIcon hero={icon(entry.hero)} size={22} title={heroWords(entry, desk)} className="rounded-md" />
+                  </span>
                 ))}
               </span>
             )

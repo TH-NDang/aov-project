@@ -60,28 +60,12 @@
 .tn-order-phase[data-kind="BAN"] .tn-order-turn {
   --reference-size: 38px;
 }
-.tn-order-phase[data-kind="BAN"] .tn-order-turn > * > * {
-  filter: var(--hub-ban-filter);
-}
-/* A ban nobody saw or nobody made: the place and its sign, without a hero. */
+/* A ban wears the shared look (BAN_FACE). One nobody saw or nobody made is the place and a faint sign, no hero. */
 .tn-order-open {
   width: var(--reference-size);
   border-radius: var(--reference-radius);
   background: var(--hub-sunken);
   aspect-ratio: 1;
-}
-/* The sign of a ban lies on its picture, inside the room of the turn. */
-.tn-order-phase[data-kind="BAN"] .tn-order-turn::after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border-radius: var(--reference-radius);
-  background: var(--hub-ban-mark);
-  forced-color-adjust: none;
-  pointer-events: none;
-}
-.tn-order-turn:has(> .tn-order-open)::after {
-  opacity: 0.4;
 }
 /* A turn that can be watched says so when it is pointed at, where its picture would only name the hero. */
 a.tn-order-turn > * {

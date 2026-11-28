@@ -43,11 +43,9 @@ type Nudge = Drag
 export const keyOf = (target: RetimeTarget) =>
   target.kind === "event"
     ? `event:${target.gameId}|${target.id}`
-    : target.kind === "turn"
-      ? `turn:${target.gameId}|${target.order}`
-      : target.kind === "mark"
-        ? `mark:${target.gameId}|${target.side}|${target.part}|${target.at}`
-        : `${target.kind}:${target.gameId}`
+    : target.kind === "mark"
+      ? `mark:${target.gameId}|${target.side}|${target.part}|${target.at}`
+      : `${target.kind}:${target.gameId}`
 
 const within = (second: number, range: Span) => Math.min(range.max, Math.max(range.min, Math.round(second)))
 

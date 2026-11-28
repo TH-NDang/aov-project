@@ -37,6 +37,13 @@ export const DRAFT_ORDER: readonly { kind: DraftKind; side: Side }[] = [
 
 export const readDraft = (content: Pick<GameContent, "draft">): GameDraft => content.draft ?? EMPTY_DRAFT
 
+/**
+ * The turns as Admin writes them: in their order and without a second of the video. Only the start of the draft and
+ * the lock are marked on the video; a second an older turn still holds goes with the next write of the draft.
+ */
+const unmarked = (turns: DraftTurn[]): DraftTurn[] =>
+  turns.map(({ atSecond: _second, ...turn }, index) => ({ ...turn, order: index + 1 }))
+
 /** Recorded turns followed by the template's remaining turns, which are still empty. */
 export function draftSlots(draft: GameDraft): (DraftTurn & { recorded: boolean })[] {
   const recorded = draft.turns.map((turn) => ({ ...turn, recorded: true }))
@@ -44,7 +51,6 @@ export function draftSlots(draft: GameDraft): (DraftTurn & { recorded: boolean }
     ...turn,
     order: recorded.length + index + 1,
     hero: null,
-    atSecond: null,
     recorded: false,
   }))
   return [...recorded, ...rest]
@@ -56,7 +62,7 @@ export function draftSlots(draft: GameDraft): (DraftTurn & { recorded: boolean }
  * afterwards with `assignHero`.
  */
 export function withTurns(content: GameContent, turns: DraftTurn[]): GameContent {
-  const ordered = turns.map((turn, index) => ({ ...turn, order: index + 1 }))
+  const ordered = unmarked(turns)
   const sides = content.sides.map((side) => {
     const own = (kind: DraftKind) => ordered.filter((turn) => turn.side === side.side && turn.kind === kind)
     const bans = own("BAN").map((turn) => turn.hero ?? empty())
@@ -108,16 +114,9 @@ export function assignHero(content: GameContent, side: Side, lane: number, hero:
 export const setDraftTimes = (
   content: GameContent,
   change: Partial<Pick<GameDraft, "startSecond" | "lockedSecond">>,
-): GameContent => ({ ...content, draft: { ...readDraft(content), ...change } })
-
-/** The game with one ban/pick turn moved to another video second; null when the turn is not recorded. */
-export function moveTurn(content: GameContent, order: number, videoSecond: number): GameContent | null {
+): GameContent => {
   const draft = readDraft(content)
-  if (!draft.turns.some((turn) => turn.order === order)) return null
-  const turns = draft.turns.map((turn) =>
-    turn.order === order ? { ...turn, atSecond: Math.max(0, Math.round(videoSecond)) } : turn,
-  )
-  return { ...content, draft: { ...draft, turns } }
+  return { ...content, draft: { ...draft, turns: unmarked(draft.turns), ...change } }
 }
 
 /** Picked heroes of one team, in pick order. */
@@ -218,24 +217,3 @@ export const restoreDraft =
       }
     }),
   })
-
-/**
- * The video second a turn takes when it is recorded at `wanted`: after the draft start and the turns before it, before
- * the turns after it, the lock and the game's 0:00, which is what the service accepts. Null without a draft start.
- */
-export function turnSecond(
-  content: GameContent,
-  wanted: number,
-  index = readDraft(content).turns.length,
-): number | null {
-  const draft = readDraft(content)
-  if (draft.startSecond == null) return null
-  const timed = (turns: DraftTurn[]) => turns.flatMap((turn) => (turn.atSecond == null ? [] : [turn.atSecond]))
-  const min = Math.max(draft.startSecond, ...timed(draft.turns.slice(0, index)))
-  const max = Math.min(
-    draft.lockedSecond ?? Infinity,
-    content.sourceTimestampSeconds ?? Infinity,
-    ...timed(draft.turns.slice(index + 1)),
-  )
-  return max < min ? null : Math.min(max, Math.max(min, Math.floor(wanted)))
-}

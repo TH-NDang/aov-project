@@ -180,7 +180,6 @@ test("ban/pick turns are recorded per team in order and only suggest heroes the 
       kind: "PICK",
       side: "BLUE",
       hero: selection("Murad"),
-      atSecond: 130,
     })
     assert.deepEqual(
       next.sides[0]!.bans.map((ban) => ban.name),

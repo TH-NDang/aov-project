@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { PublishedGame, Selection } from "@aov/community-contracts"
+import { BAN_FACE } from "@aov/ui/components/draft-marks"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { present, referenceName } from "../../../lib/tournament-model"
 import type { Chapter, WatchMatch, WatchTeam } from "../../../lib/watch-types"
@@ -37,6 +38,12 @@ export function SideHead({
     </div>
   )
 }
+
+/** The class and state of the place of a ban: the shared look of a ban, faint where nobody saw or made one. */
+export const banPlace = (hero: Selection | null | undefined) => ({
+  className: `tn-room-ban ${BAN_FACE}`,
+  "data-empty": !present(hero) || undefined,
+})
 
 /** A banned hero, greyed under the "no" sign; a ban nobody saw or nobody made keeps its place and its sign. */
 export function BanFace({ game, hero }: { game: PublishedGame; hero: Selection | null | undefined }) {

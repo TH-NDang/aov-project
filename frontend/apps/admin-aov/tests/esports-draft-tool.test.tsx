@@ -37,26 +37,22 @@ const turns = (...names: string[]): DraftTurn[] =>
     ...DRAFT_ORDER[index]!,
     order: index + 1,
     hero: selection(name),
-    atSecond: 100 + index,
   }))
 
-test("Enter takes the first hero typed, at the second of the first key", async () => {
+test("Enter takes the first hero typed; a turn keeps its order and no second of the video", async () => {
   const kept = await tool({ content: started(), at: 130 })
-  await type(search(), "k")
-  await act(async () => kept.play(137))
   await type(search(), "kee")
   await press("Enter")
-  assert.deepEqual(kept.content().draft!.turns, [
-    { order: 1, kind: "BAN", side: "BLUE", hero: selection("Keera"), atSecond: 130 },
-  ])
-  assert.equal(kept.changes.at(-1)?.text, "Đã ghi lượt 1, AZU cấm Keera lúc ▸2:10")
+  assert.deepEqual(kept.content().draft!.turns, [{ order: 1, kind: "BAN", side: "BLUE", hero: selection("Keera") }])
+  assert.equal(kept.changes.at(-1)?.text, "Đã ghi lượt 1, AZU cấm Keera")
   assert.equal(search().value, "", "the field is ready for the next turn")
+  for (const gone of ["Tới", "Lấy mốc ở đây", "Bỏ mốc"]) assert.equal(button(gone), undefined, gone)
 })
 
-test("a face pressed is a turn at the second of the press", async () => {
+test("a face pressed is a turn", async () => {
   const kept = await tool({ content: started(), at: 141.7 })
   await click(face("Omen"))
-  assert.equal(kept.content().draft!.turns[0]?.atSecond, 141)
+  assert.deepEqual(taken(kept.content()), ["Omen"])
 })
 
 test("turns typed faster than they are saved follow one another", async () => {
@@ -72,7 +68,7 @@ test("turns typed faster than they are saved follow one another", async () => {
   await take("omen")
   assert.deepEqual(
     [slot(1), slot(2)].map((entry) => entry.getAttribute("aria-label")),
-    ["Lượt 1, AZU cấm Keera, ▸2:10", "Lượt 2, CRI cấm Omen, ▸2:10"],
+    ["Lượt 1, AZU cấm Keera", "Lượt 2, CRI cấm Omen"],
   )
   for (const answer of waiting) await act(async () => answer())
   await flush()
@@ -123,25 +119,23 @@ test("a team may ban nobody, and the last turn can be dropped", async () => {
   assert.deepEqual(taken(kept.content()), [])
 })
 
-test("the second of a turn stays inside what the service accepts, and is none without a draft start", async () => {
-  const inside = await tool({ content: started(turns("Aoi", "Elsu")), at: 5 })
+test("the seconds older turns held go with the next write of the draft", async () => {
+  const marked = turns("Aoi", "Elsu").map((turn, index) => ({ ...turn, atSecond: 110 + index }))
+  const kept = await tool({ content: started(marked), at: 5 })
   await take("keera")
-  assert.equal(inside.content().draft!.turns[2]?.atSecond, 101, "not before the turn it follows")
-  await inside.unmount()
-  const unstarted = await tool({ content: emptyGame(), at: 130 })
-  await take("keera")
-  assert.equal(unstarted.content().draft!.turns[0]?.atSecond, null)
+  assert.deepEqual(
+    kept.content().draft!.turns.map((turn) => [turn.hero?.name, "atSecond" in turn]),
+    [
+      ["Aoi", false],
+      ["Elsu", false],
+      ["Keera", false],
+    ],
+  )
 })
 
-test("a recorded turn is changed where it stands, and its second with it", async () => {
+test("a recorded turn is changed where it stands", async () => {
   const kept = await tool({ content: started(turns("Aoi", "Elsu", "Keera")), at: 102 })
   await click(slot(2))
-  await click(button("Tới"))
-  assert.deepEqual(kept.seeks, [101])
-  await click(button("Lấy mốc ở đây"))
-  assert.equal(kept.content().draft!.turns[1]?.atSecond, 102)
-  await click(button("Bỏ mốc"))
-  assert.equal(kept.content().draft!.turns[1]?.atSecond, null)
   await take("omen")
   assert.deepEqual(taken(kept.content()), ["Aoi", "Omen", "Keera"])
   assert.match(document.querySelector(".esp-draft-ask")?.textContent ?? "", /Lượt 4/, "the next turn is ready again")
@@ -182,12 +176,34 @@ test("a hero a team played earlier in the match is warned about on the board", a
   assert.match(document.querySelector("summary")?.textContent ?? "", /Đã dùng ở ván trước: 1 tướng/)
 })
 
-test("viewing shows the turns, and a press goes to one", async () => {
-  const kept = await tool({ content: started(turns("Aoi", "Elsu")), editable: false })
+test("viewing shows the turns in their order, with nothing that goes to the video", async () => {
+  await tool({ content: started(turns("Aoi", "Elsu")), editable: false })
   assert.equal(search(), null)
   assert.equal(button("Đổi bên"), undefined)
-  await click(document.querySelector(".esp-turn-row"))
-  assert.deepEqual(kept.seeks, [100])
+  assert.deepEqual(
+    [...document.querySelectorAll(".esp-turn-row")].map((row) => [row.tagName, row.getAttribute("aria-label")]),
+    [
+      ["SPAN", "Lượt 1, AZU cấm Aoi"],
+      ["SPAN", "Lượt 2, CRI cấm Elsu"],
+    ],
+  )
+})
+
+test("the board mirrors the team on the right and gives a ban the shared look", async () => {
+  await tool({ content: started(turns("Aoi")) })
+  const lines = [...document.querySelectorAll(".esp-draft-line")]
+  assert.deepEqual(
+    lines.map((line) => [line.closest("[data-side]")?.getAttribute("data-side"), line.hasAttribute("data-mirrored")]),
+    [
+      ["BLUE", false],
+      ["BLUE", false],
+      ["RED", true],
+      ["RED", true],
+    ],
+  )
+  assert.ok(lines.every((line) => line.classList.contains("aov-draft-row")))
+  assert.ok(slot(1).querySelector(".esp-draft-face.aov-ban"), "a recorded ban is grey under the sign")
+  assert.equal(slot(2).querySelector(".aov-ban"), null, "a ban still to come is an empty place")
 })
 
 test("without the catalog the picker waits, and says when it could not be read", async () => {

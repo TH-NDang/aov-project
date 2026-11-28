@@ -1,4 +1,5 @@
 import type { DraftTurn, PublishedGame, Side } from "@aov/community-contracts"
+import { BAN_FACE } from "@aov/ui/components/draft-marks"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { WatchLink } from "../../../components/watch-link"
 import { draftPhases } from "../../../lib/series-model"
@@ -17,11 +18,16 @@ const PHASES = {
 function Turn({ game, turn, name, at }: { game: PublishedGame; turn: DraftTurn; name: string; at: number | null }) {
   const { text } = useStreamLocale()
   const known = present(turn.hero)
+  const ban = turn.kind === "BAN"
   const hero = referenceName(game.catalog, "heroes", turn.hero, text("không cấm hoặc chưa rõ", "no ban, or not seen"))
   const art = known ? (
-    <ReferenceArt catalog={game.catalog} kind="heroes" selection={turn.hero} />
+    <ReferenceArt catalog={game.catalog} kind="heroes" selection={turn.hero} className={ban ? BAN_FACE : ""} />
   ) : (
-    <span className="tn-order-open" aria-hidden="true" />
+    <span
+      className={ban ? `tn-order-open ${BAN_FACE}` : "tn-order-open"}
+      data-empty={ban || undefined}
+      aria-hidden="true"
+    />
   )
   if (at == null)
     return (
@@ -32,7 +38,6 @@ function Turn({ game, turn, name, at }: { game: PublishedGame; turn: DraftTurn; 
         </span>
       </span>
     )
-  const ban = turn.kind === "BAN"
   const unseen = ban
     ? text(`Xem lượt cấm của ${name}`, `Watch a ban of ${name}`)
     : text(`Xem lượt chọn của ${name}`, `Watch a pick of ${name}`)
