@@ -56,6 +56,10 @@ export const communityKeys = {
   notificationAll: ["notifications"] as const,
   notifications: (revision: number, page: number, size: number) => ["notifications", revision, page, size] as const,
   inbox: (revision: number, size: number) => ["notifications", revision, "inbox", size] as const,
+  translationStatus: ["translation-status"] as const,
+  /** A post's text changes its version, so an edited post is translated again. */
+  postTranslation: (postId: string, version: number, locale: string) =>
+    ["post-translation", postId, version, locale] as const,
 }
 
 /**

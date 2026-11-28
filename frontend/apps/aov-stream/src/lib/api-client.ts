@@ -29,6 +29,8 @@ export interface ApiRequest {
   /** Sent as JSON. */
   body?: unknown
   signal?: AbortSignal
+  /** How long to wait for the answer, for the few calls that take longer than most. */
+  timeoutMs?: number
 }
 
 export interface ApiClient {
@@ -42,8 +44,8 @@ export interface ApiClient {
 }
 
 export function createApiRequest({ root, token, describe, fetcher }: ApiClient) {
-  return async function request<T>(path: string, { method, body, signal }: ApiRequest = {}): Promise<T> {
-    const timeout = AbortSignal.timeout(TIMEOUT_MS)
+  return async function request<T>(path: string, { method, body, signal, timeoutMs }: ApiRequest = {}): Promise<T> {
+    const timeout = AbortSignal.timeout(timeoutMs ?? TIMEOUT_MS)
     const bearer = await token(path)
     const headers: Record<string, string> = {}
     if (body !== undefined) headers["Content-Type"] = "application/json"

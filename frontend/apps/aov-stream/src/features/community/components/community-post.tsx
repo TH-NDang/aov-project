@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react"
 import { Link } from "react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import type { CommunityPost, PageCard, PageRole } from "@aov/community-contracts"
+import type { CommunityPost, PageCard, PageRole, PostTranslation } from "@aov/community-contracts"
 import { profileKindLabels } from "@aov/community-contracts"
 import {
   DropdownMenu,
@@ -25,9 +25,11 @@ import { useFollowPage } from "../../../lib/community-queries"
 import { useSignedInAction } from "../../../components/community-signin"
 import { profileKindEnglish, timeAgo, TimeAgo } from "../../../components/community-ui"
 import { foldsBody, postForm } from "../model/post-form"
+import { replacesWords } from "../model/post-translation"
 import { PostImages, PostVideo } from "./post-media"
 import { AuthorMark, PostComments } from "./post-comments"
 import { PostEditForm, PostReportForm } from "./post-forms"
+import { PostImageNotes, PostTranslationBar, usePostTranslationState } from "./post-translation"
 import "./community-post.css"
 
 /**
@@ -55,6 +57,7 @@ export function PostCard({
   const signedIn = useSignedInAction()
   const client = useQueryClient()
   const { text, languageTag } = useStreamLocale()
+  const translation = usePostTranslationState(post)
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
   // The report being written; the counter starts a fresh form each time a report is asked for.
@@ -95,7 +98,7 @@ export function PostCard({
     )
   const error = pin.error || hide.error || like.error
   return (
-    <article className="ps-post" data-form={form}>
+    <article className="ps-post" data-form={form} ref={translation.watch}>
       <header className="ps-margin">
         {page && !journal ? (
           <PostAuthor post={post} page={page} following={following} />
@@ -116,7 +119,8 @@ export function PostCard({
           </span>
         )}
         {!post.asPage && <PostMember name={post.authorName} />}
-        <PostContent post={post} page={page} />
+        <PostContent post={post} page={page} translation={editing ? null : translation.shown} />
+        {!editing && <PostTranslationBar state={translation} post={post} />}
         {editing && <PostEditForm post={post} onClose={() => setEditing(false)} />}
         <div className="ps-actions">
           {published && (
@@ -175,6 +179,14 @@ export function PostCard({
                     {post.pinned ? text("Bỏ ghim", "Unpin") : text("Ghim lên đầu trang", "Pin to the top of the page")}
                   </DropdownMenuItem>
                 )}
+                {translation.offer && !translation.shown && !translation.loading && (
+                  <DropdownMenuItem className="hub-menu-item" onSelect={translation.translate}>
+                    <StreamIcon name="globe" size={16} />
+                    {translation.offer === "images"
+                      ? text("Dịch chữ trong ảnh", "Translate image text")
+                      : text("Dịch bài viết", "Translate post")}
+                  </DropdownMenuItem>
+                )}
                 {published && (
                   <DropdownMenuItem className="hub-menu-item" onSelect={() => startReport()}>
                     <StreamIcon name="flag" size={16} />
@@ -212,11 +224,31 @@ export function PostCard({
   )
 }
 
-/** What the post says, in the order its form gives it: pictures first, words after. News stands on the page's stage. */
-function PostContent({ post, page }: { post: CommunityPost; page?: PageCard }) {
-  const { text } = useStreamLocale()
+/**
+ * What the post says, in the order its form gives it: pictures first, words after. News stands on the page's stage.
+ * A `translation` replaces the words and adds what the pictures say.
+ */
+function PostContent({
+  post,
+  page,
+  translation,
+}: {
+  post: CommunityPost
+  page?: PageCard
+  translation: PostTranslation | null
+}) {
+  const { text, languageTag } = useStreamLocale()
   const news = postForm(post) === "news"
-  const title = post.title && <h3 className="ps-title">{post.title}</h3>
+  const replaced = translation && replacesWords(translation, post) ? translation : null
+  const lang = replaced ? languageTag : undefined
+  const shownTitle = replaced ? (replaced.title ?? post.title) : post.title
+  const shownBody = replaced ? replaced.body : post.body
+  const images = post.imageUrls || []
+  const title = shownTitle && (
+    <h3 className="ps-title" lang={lang}>
+      {shownTitle}
+    </h3>
+  )
   const media = (
     <>
       {post.videoUrl && (
@@ -225,10 +257,11 @@ function PostContent({ post, page }: { post: CommunityPost; page?: PageCard }) {
           title={post.title || text(`Video của ${post.authorName}`, `Video by ${post.authorName}`)}
         />
       )}
-      <PostImages urls={post.imageUrls || []} alt={post.title || post.authorName} />
+      <PostImages urls={images} alt={post.title || post.authorName} />
+      {translation && <PostImageNotes translation={translation} count={Math.min(images.length, 4)} />}
     </>
   )
-  const words = post.body && <PostBody body={post.body} />
+  const words = shownBody && <PostBody body={shownBody} lang={lang} />
   if (news)
     return (
       <Stage tint={page?.name ?? post.authorName} lights={[{ src: page?.avatarUrl, at: "left" }]} className="ps-news">
@@ -249,7 +282,7 @@ function PostContent({ post, page }: { post: CommunityPost; page?: PageCard }) {
 }
 
 /** The words of a post. Long ones fold, and open for a keyboard that reaches a link inside. */
-function PostBody({ body }: { body: string }) {
+function PostBody({ body, lang }: { body: string; lang?: string }) {
   const { text } = useStreamLocale()
   const [unfolded, setUnfolded] = useState(false)
   const long = foldsBody(body)
@@ -257,6 +290,7 @@ function PostBody({ body }: { body: string }) {
     <>
       <p
         className="cp-prose ps-body"
+        lang={lang}
         data-folded={(long && !unfolded) || undefined}
         onFocus={(event) => {
           if (long && focusesFoldedLink(event)) setUnfolded(true)
