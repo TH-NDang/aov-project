@@ -144,7 +144,10 @@ function VideoForm({
         durationSeconds: video?.durationSeconds ?? null,
         channelName: channelName.trim() || null,
         publishedOn: video?.publishedOn ?? null,
-        patchVariantId: patchVariantId === NO_PATCH ? null : patchVariantId,
+        publishedAt: video?.publishedAt ?? null,
+        locale: video?.locale ?? null,
+        // A patch's own video always names that patch.
+        patchVariantId: subject!.kind === "PATCH" ? subject!.id : patchVariantId === NO_PATCH ? null : patchVariantId,
         displayOrder: video?.displayOrder ?? null,
         status: publish && canPublish ? "PUBLISHED" : video?.status === "HIDDEN" ? "HIDDEN" : "DRAFT",
         expectedVersion: video?.version ?? null,

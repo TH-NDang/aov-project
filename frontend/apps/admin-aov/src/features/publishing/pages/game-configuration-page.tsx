@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
   CalendarClock,
+  Clapperboard,
   CalendarCog,
   CalendarPlus,
   ChevronRight,
@@ -44,6 +45,8 @@ import { invalidateReferenceCatalog } from "../../terminology/reference-api"
 import { SeasonSetup } from "../components/setup/season-setup"
 import { CreateRegion } from "../components/setup/context-setup"
 import { VersionMarketCoverage } from "../components/setup/version-market-coverage"
+import { ReleasePlanEditor } from "../components/setup/release-plan"
+import { PatchVideos } from "../components/setup/patch-videos"
 import { PatchChangesTable } from "../components/patch-changes/patch-changes-table"
 import { PatchTitle } from "../components/setup/patch-title"
 import { MarketBadge } from "../components/setup/market-badge"
@@ -481,14 +484,21 @@ const focusSheet = (event: Event) => {
 }
 
 /** The parts of a patch kept out of the way of its change list: each opens on its own sheet. */
-type PatchTool = "schedule" | "review"
+type PatchTool = "schedule" | "videos" | "review"
 const PATCH_TOOLS: { key: PatchTool; label: string; short: string; icon: LucideIcon; description: string }[] = [
   {
     key: "schedule",
     label: "Lịch phát hành",
     short: "Lịch",
     icon: CalendarClock,
-    description: "Ngày patch áp dụng ở từng thị trường.",
+    description: "Một thời điểm chung, theo giờ từng thị trường.",
+  },
+  {
+    key: "videos",
+    label: "Video",
+    short: "Video",
+    icon: Clapperboard,
+    description: "Video trước và sau phát hành tại Việt Nam.",
   },
   {
     key: "review",
@@ -506,6 +516,11 @@ function PatchDetail({ variant, data, locale }: { variant: Variant; data: Public
   const rule = data.rulesets.length > 1 && data.rulesets.find((r) => r.id === variant.rulesetId)
   const reviewed = variant.dataReviewState === "COMPLETE"
   const open = PATCH_TOOLS.find((entry) => entry.key === tool)
+  const canPublish = !!useSession().actor?.capabilities.includes("patch:publish")
+  const planKey = data.releases
+    .filter((release) => release.variantId === variant.id)
+    .map((release) => [release.id, release.status, release.effectiveAt, release.effectiveOn].join(":"))
+    .join("|")
   return (
     <section className="min-w-0 space-y-3">
       <header className="flex flex-wrap items-center justify-between gap-2">
@@ -572,23 +587,14 @@ function PatchDetail({ variant, data, locale }: { variant: Variant; data: Public
               </SheetHeader>
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pt-3 pb-6">
                 {open.key === "review" && <PatchDataReview variant={variant} />}
-                {open.key === "schedule" && (
-                  <>
+                {open.key === "videos" && <PatchVideos variant={variant} data={data} />}
+                {open.key === "schedule" &&
+                  (canPublish && variant.status === "PUBLISHED" ? (
+                    // Saved releases re-key the plan, so it reads back what the server kept.
+                    <ReleasePlanEditor key={planKey} variant={variant} data={data} />
+                  ) : (
                     <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
-                    {/* A published patch, older ones included, gets its market dates here instead of only from a market. */}
-                    {variant.status === "PUBLISHED" &&
-                      data.markets.some(
-                        (market) =>
-                          market.available &&
-                          !data.releases.some(
-                            (release) =>
-                              release.variantId === variant.id &&
-                              release.regionId === market.id &&
-                              release.status !== "CANCELLED",
-                          ),
-                      ) && <PatchReleaseForm variant={variant} data={data} />}
-                  </>
-                )}
+                  ))}
               </div>
             </>
           )}

@@ -244,6 +244,8 @@ export interface PatchSource {
   label: string
   /** BCP 47 tag of the page's language, when the editor gave one. */
   locale: string | null
+  /** Code of the market that published the page, when the editor gave one. */
+  region?: string | null
 }
 
 export function createPublishingApi(request: Request) {

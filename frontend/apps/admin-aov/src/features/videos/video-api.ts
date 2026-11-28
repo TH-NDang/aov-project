@@ -19,6 +19,8 @@ export interface VideoFilter {
   purpose?: VideoPurpose
   origin?: VideoOrigin
   q?: string
+  /** The patch the videos name: its own videos and the change videos tied to it. */
+  patchVariantId?: string
   page?: number
   size?: number
 }

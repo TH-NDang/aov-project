@@ -20,6 +20,7 @@ import { usePatchNotePosts } from "../../../patch-watch/use-patch-watch"
 import {
   MAX_PATCH_SOURCES,
   SOURCE_LANGUAGES,
+  SOURCE_MARKETS,
   sourceFromPost,
   sourceLanguage,
   sourceProblem,
@@ -61,6 +62,11 @@ export function PatchSourceStrip({ variantId, canEdit }: { variantId: string; ca
             title={source.url}
             className="type-body inline-flex min-h-8 items-center gap-1.5 rounded-full border bg-background px-3 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
           >
+            {source.region && (
+              <span className="type-label text-foreground" title={source.region}>
+                {source.region}
+              </span>
+            )}
             {source.label}
             {language && language !== source.label && <span className="text-muted-foreground">· {language}</span>}
             <ExternalLink aria-hidden className="size-3.5 text-muted-foreground" />
@@ -91,6 +97,8 @@ export function PatchSourceStrip({ variantId, canEdit }: { variantId: string; ca
 }
 
 const toRow = (source: PatchSource): SourceRow => ({ ...source, key: randomId() })
+const MARKET_LANGUAGE: Record<string, string> = { VN: "vi-VN", TH: "th-TH", TW: "zh-TW", ID: "id-ID" }
+const emptyRow = () => toRow({ url: "", label: "", locale: null, region: null })
 
 function PatchSourcesForm({
   variantId,
@@ -102,9 +110,7 @@ function PatchSourcesForm({
   onClose: () => void
 }) {
   const cache = useQueryClient()
-  const [rows, setRows] = useState<SourceRow[]>(() =>
-    saved.length ? saved.map(toRow) : [toRow({ url: "", label: "", locale: null })],
-  )
+  const [rows, setRows] = useState<SourceRow[]>(() => (saved.length ? saved.map(toRow) : [emptyRow()]))
   const [checked, setChecked] = useState(false)
   const posts = usePatchNotePosts(null)
   const save = useMutation({
@@ -141,7 +147,7 @@ function PatchSourcesForm({
       <DialogHeader>
         <DialogTitle>Link nguồn của patch</DialogTitle>
         <DialogDescription>
-          Dùng chung cho mọi thay đổi ghi từ ghi chú cập nhật. Ghi nhãn theo ngôn ngữ hoặc thị trường của trang.
+          Dùng chung cho mọi thay đổi ghi từ ghi chú cập nhật. Chọn thị trường đăng bài để Wiki xếp nguồn theo khu vực.
         </DialogDescription>
       </DialogHeader>
 
@@ -151,28 +157,49 @@ function PatchSourcesForm({
           const label = `Link ${index + 1}`
           return (
             <li key={row.key} aria-label={label} className="grid gap-2 rounded-lg border p-3">
-              <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem]">
+              <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_19rem]">
                 <Input
                   aria-label={`${label}: nhãn`}
-                  placeholder="Nhãn, ví dụ Tiếng Việt"
+                  placeholder="Nhãn, ví dụ Chi tiết cập nhật"
                   maxLength={80}
                   value={row.label}
                   aria-invalid={!!problem && !row.label.trim()}
                   onChange={(event) => update(row.key, { label: event.target.value })}
                 />
-                <NativeSelect
-                  aria-label={`${label}: ngôn ngữ`}
-                  className="w-full"
-                  value={row.locale ?? ""}
-                  onChange={(event) => update(row.key, { locale: event.target.value || null })}
-                >
-                  <option value="">Không ghi ngôn ngữ</option>
-                  {SOURCE_LANGUAGES.map((language) => (
-                    <option key={language.code} value={language.code}>
-                      {language.label}
-                    </option>
-                  ))}
-                </NativeSelect>
+                <div className="grid grid-cols-2 gap-2">
+                  <NativeSelect
+                    aria-label={`${label}: thị trường`}
+                    className="w-full"
+                    value={row.region ?? ""}
+                    onChange={(event) => {
+                      const region = event.target.value || null
+                      update(row.key, {
+                        region,
+                        locale: row.locale || (region ? (MARKET_LANGUAGE[region] ?? null) : null),
+                      })
+                    }}
+                  >
+                    <option value="">Không rõ khu vực</option>
+                    {SOURCE_MARKETS.map((market) => (
+                      <option key={market.code} value={market.code}>
+                        {market.label}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <NativeSelect
+                    aria-label={`${label}: ngôn ngữ`}
+                    className="w-full"
+                    value={row.locale ?? ""}
+                    onChange={(event) => update(row.key, { locale: event.target.value || null })}
+                  >
+                    <option value="">Không ghi ngôn ngữ</option>
+                    {SOURCE_LANGUAGES.map((language) => (
+                      <option key={language.code} value={language.code}>
+                        {language.label}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
               </div>
               <div className="flex items-center gap-1">
                 <Input
@@ -229,7 +256,7 @@ function PatchSourcesForm({
         variant="outline"
         size="sm"
         disabled={full}
-        onClick={() => setRows((current) => [...current, toRow({ url: "", label: "", locale: null })])}
+        onClick={() => setRows((current) => [...current, emptyRow()])}
       >
         <Plus aria-hidden className="size-4" /> Thêm link
       </Button>

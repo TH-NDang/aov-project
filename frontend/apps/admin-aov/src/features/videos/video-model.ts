@@ -7,7 +7,7 @@ import {
 } from "@aov/ui/lib/video-playback"
 import { matchesQuery } from "@/lib/text"
 
-export type VideoSubjectKind = "HERO" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL"
+export type VideoSubjectKind = "HERO" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL" | "PATCH"
 export type VideoPurpose =
   | "INTRO"
   | "GUIDE_BASIC"
@@ -17,6 +17,9 @@ export type VideoPurpose =
   | "SKIN_TRAILER"
   | "LORE"
   | "PATCH_CHANGE"
+  | "PATCH_PREVIEW"
+  | "PATCH_OVERVIEW"
+  | "PATCH_REVIEW"
   | "OTHER"
 export type VideoStatus = "PUBLISHED" | "DRAFT" | "HIDDEN"
 export type VideoOrigin = "MANUAL" | "IMPORT"
@@ -36,6 +39,10 @@ export interface AdminVideo {
   durationSeconds: number | null
   channelName: string | null
   publishedOn: string | null
+  /** When the video went up, which places it before or after a release; older rows only have the day. */
+  publishedAt?: string | null
+  /** BCP 47 tag of the language spoken in the video. */
+  locale?: string | null
   patchVariantId: string | null
   displayOrder: number
   status: VideoStatus
@@ -70,6 +77,8 @@ export interface SaveVideo {
   durationSeconds: number | null
   channelName: string | null
   publishedOn: string | null
+  publishedAt?: string | null
+  locale?: string | null
   patchVariantId: string | null
   displayOrder: number | null
   status: VideoStatus
@@ -85,6 +94,9 @@ export const PURPOSE_LABELS: Record<VideoPurpose, string> = {
   SKIN_TRAILER: "Trailer trang phục",
   LORE: "Cốt truyện",
   PATCH_CHANGE: "Thay đổi theo bản",
+  PATCH_PREVIEW: "Xem trước",
+  PATCH_OVERVIEW: "Tổng hợp",
+  PATCH_REVIEW: "Trải nghiệm",
   OTHER: "Khác",
 }
 
@@ -101,6 +113,7 @@ export const KIND_LABELS: Record<VideoSubjectKind, string> = {
   ENCHANTMENT: "Phù hiệu",
   ARCANA: "Bảng ngọc",
   SPELL: "Phụ trợ",
+  PATCH: "Bản cập nhật",
 }
 
 /** The purposes an editor is most likely to want, in the order they are offered for each kind of subject. */
@@ -111,6 +124,7 @@ const PURPOSES_BY_KIND: Record<VideoSubjectKind, readonly VideoPurpose[]> = {
   ENCHANTMENT: ["GUIDE_BASIC", "GUIDE_ADVANCED", "PATCH_CHANGE", "OTHER"],
   ARCANA: ["GUIDE_BASIC", "GUIDE_ADVANCED", "PATCH_CHANGE", "OTHER"],
   SPELL: ["GUIDE_BASIC", "GUIDE_ADVANCED", "PATCH_CHANGE", "OTHER"],
+  PATCH: ["PATCH_PREVIEW", "PATCH_OVERVIEW", "PATCH_REVIEW", "OTHER"],
 }
 
 /** Keeps a purpose set on another kind of subject selectable when the video is moved or opened for editing. */
@@ -129,7 +143,9 @@ export function capabilityFor(kind: VideoSubjectKind, action: "write" | "publish
           ? "enchantment"
           : kind === "ARCANA"
             ? "arcana"
-            : "spell"
+            : kind === "PATCH"
+              ? "patch"
+              : "spell"
   return `${domain}:${action}`
 }
 
@@ -185,6 +201,8 @@ export function saveBody(video: AdminVideo, changes: Partial<SaveVideo> = {}): S
     durationSeconds: video.durationSeconds,
     channelName: video.channelName,
     publishedOn: video.publishedOn,
+    publishedAt: video.publishedAt ?? null,
+    locale: video.locale ?? null,
     patchVariantId: video.patchVariantId,
     displayOrder: video.displayOrder,
     status: video.status,
