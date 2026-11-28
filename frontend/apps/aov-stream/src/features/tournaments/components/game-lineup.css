@@ -117,36 +117,12 @@
 .tn-bans-label > svg {
   color: var(--hub-red);
 }
-/* A ban is greyed with the sign on its corner; pointed at, the hero comes back to colour and its card opens. */
-.tn-ban {
-  position: relative;
-}
-.tn-ban > * {
-  filter: var(--hub-ban-filter);
-  transition: filter 160ms;
-}
-.tn-ban::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--hub-ban-mark);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
-  forced-color-adjust: none;
-  pointer-events: none;
-}
-.tn-ban:hover > * {
-  filter: none;
-}
-/* A ban nobody saw: an empty place, its outline dashed, its sign faint. */
-.tn-ban[data-unseen] {
+/* A ban wears the shared look (BAN_FACE); pointed at, its card opens. One nobody saw is an empty place, dashed. */
+.tn-ban[data-empty] {
   width: var(--reference-size);
   border: 1px dashed var(--hub-border-strong);
   border-radius: var(--reference-radius);
   aspect-ratio: 1;
-}
-.tn-ban[data-unseen]::after {
-  opacity: 0.35;
 }
 .tn-lane-duel {
   position: relative;

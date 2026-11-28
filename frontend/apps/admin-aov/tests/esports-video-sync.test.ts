@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { broadcastChapters, retimeRange, videoTimelineEvents } from "../src/features/esports/model/broadcast-timeline"
-import { moveTurn } from "../src/features/esports/model/draft"
 import {
   axisLength,
   broadcastEvents,
@@ -276,22 +275,24 @@ test("a marker can only be dragged where the service would accept it", () => {
   }
   const [live] = layoutChapters([doc], "R5rCsGqDJIg")
   const item = live!.events.find((event) => event.kind === "ITEM")!
-  const target = (order: number) => ({ kind: "turn" as const, gameId: "g1", order })
+  const start = { kind: "draftStart" as const, gameId: "g1" }
+  const lock = { kind: "draftLock" as const, gameId: "g1" }
 
   assert.deepEqual(retimeRange(live!, { kind: "event", gameId: "g1", id: "k1" }, 5000), { min: 400, max: 1300 })
   assert.equal(retimeRange(live!, { kind: "event", gameId: "g1", id: item.id }, 5000), null, "equipment has its form")
   assert.equal(retimeRange(live!, { kind: "event", gameId: "g1", id: "gone" }, 5000), null)
-  assert.deepEqual(retimeRange(live!, target(2), 5000), { min: 120, max: 200 }, "between its neighbours")
-  assert.deepEqual(retimeRange(live!, target(4), 5000), { min: 150, max: 380 }, "the turn without a second is skipped")
-  assert.deepEqual(retimeRange(live!, target(1), 5000), { min: 100, max: 150 }, "not before the draft starts")
-  assert.equal(retimeRange(live!, target(3), 5000), null, "a turn without a second has no marker to drag")
+  // The seconds older turns hold bound neither edge of the draft: the write that moves an edge drops them.
+  assert.deepEqual(retimeRange(live!, start, 5000), { min: 0, max: 380 }, "not after the lock")
+  assert.deepEqual(retimeRange(live!, lock, 5000), { min: 100, max: 400 }, "between the start and 0:00")
 
   // Without a lock the game start bounds the draft; before the game is live only the video does.
   const unlocked = { ...doc, content: { ...doc.content, draft: { ...doc.content.draft, lockedSecond: null } } }
-  assert.deepEqual(retimeRange(layoutChapters([unlocked], "R5rCsGqDJIg")[0]!, target(4), 5000), { min: 150, max: 400 })
+  const [free] = layoutChapters([unlocked], "R5rCsGqDJIg")
+  assert.deepEqual(retimeRange(free!, start, 5000), { min: 0, max: 400 })
+  assert.equal(retimeRange(free!, lock, 5000), null, "no lock, nothing to drag")
   const pending = { ...unlocked, content: { ...unlocked.content, sourceTimestampSeconds: undefined } }
   const [open] = layoutChapters([pending], "R5rCsGqDJIg")
-  assert.deepEqual(retimeRange(open!, target(4), 5000), { min: 150, max: 5000 })
+  assert.deepEqual(retimeRange(open!, start, 5000), { min: 0, max: 5000 })
   assert.equal(retimeRange(open!, { kind: "event", gameId: "g1", id: "k1" }, 5000), null, "no game clock yet")
 
   const moved = moveEvent(doc.content, "k1", 420.4)!
@@ -305,14 +306,6 @@ test("a marker can only be dragged where the service would accept it", () => {
     "equipment keeps its own seconds",
   )
   assert.equal(moveEvent(doc.content, "gone", 10), null)
-
-  const turned = moveTurn(doc.content, 2, 171.6)!
-  assert.deepEqual(
-    turned.draft!.turns.map((entry) => entry.atSecond),
-    [120, 172, null, 200],
-  )
-  assert.equal(turned.sides, doc.content.sides, "line-ups and bans are not rebuilt by a change of second")
-  assert.equal(moveTurn(doc.content, 9, 10), null)
 })
 
 test("a game whose length is not recorded lasts a minute past its last moment, and at least fifteen minutes", () => {
@@ -348,9 +341,9 @@ test("the ban/pick marks of a game that is not live yet stay before the next gam
     return layoutChapters([game("g1", 1, { sourceUrl: url, draft })], "R5rCsGqDJIg")[0]!
   }
   const next = { nextFrom: 3000 }
-  assert.deepEqual(retimeRange(drafting(380), { kind: "draftLock", gameId: "g1" }, 5000, next), { min: 150, max: 2999 })
-  assert.deepEqual(retimeRange(drafting(null), { kind: "turn", gameId: "g1", order: 2 }, 5000, next), {
-    min: 120,
+  assert.deepEqual(retimeRange(drafting(380), { kind: "draftLock", gameId: "g1" }, 5000, next), { min: 100, max: 2999 })
+  assert.deepEqual(retimeRange(drafting(null), { kind: "draftStart", gameId: "g1" }, 5000, next), {
+    min: 0,
     max: 2999,
   })
 })

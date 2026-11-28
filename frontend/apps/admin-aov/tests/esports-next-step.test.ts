@@ -132,8 +132,9 @@ test("eighteen turns lead to the lock", () => {
   assert.deepEqual(words(step({ games: [drafted], shown: 1, at: 900, tool: "draft" })), ["Chốt đội hình ▸900"])
 })
 
-test("the lock is refused before the last turn, and the button says why", () => {
-  assert.match(refusals(step({ games: [drafted], shown: 1, at: 700 }))?.[0] ?? "", /sau lượt 18/)
+test("the lock is refused before the draft starts, and the button says why", () => {
+  assert.match(refusals(step({ games: [drafted], shown: 1, at: 590 }))?.[0] ?? "", /sau lúc bắt đầu cấm chọn/)
+  assert.equal(refusals(step({ games: [drafted], shown: 1, at: 700 }))?.[0], null)
 })
 
 test("a locked draft leads to 0:00, refused before the lock", () => {

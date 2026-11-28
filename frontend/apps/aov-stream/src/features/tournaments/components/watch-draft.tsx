@@ -7,7 +7,7 @@ import { turnStart } from "../../../lib/watch-rows"
 import type { Chapter, WatchMatch, WatchTeam, WatchTurn } from "../../../lib/watch-types"
 import { shortName } from "../../../lib/watch-words"
 import { ReferenceArt } from "./reference-art"
-import { BanFace, Board, SEATS, SideHead, useHeroNames } from "./watch-board"
+import { BanFace, banPlace, Board, SEATS, SideHead, useHeroNames } from "./watch-board"
 
 type Turn = ReturnType<typeof draftAt>[number] & { source: WatchTurn }
 
@@ -50,7 +50,7 @@ export function DraftBoard({ match, chapter, names }: { match: WatchMatch; chapt
                 {turn.made ? (
                   <button
                     type="button"
-                    className="tn-room-ban"
+                    {...banPlace(turn.hero)}
                     title={heroes.ban(turn.hero)}
                     aria-label={label(turn)}
                     onClick={() => replay(turn)}

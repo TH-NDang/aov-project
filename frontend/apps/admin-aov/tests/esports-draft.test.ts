@@ -247,8 +247,8 @@ test("turns saved together keep every hero in its lane and give it the id its tu
   assert.equal(next.draft?.turns[0]?.order, 1)
 })
 
-test("a turn's second stays inside the phase and between the turns around it", async () => {
-  const { turnSecond } = await import("../src/features/esports/model/draft")
+test("turns are written in their order without a second of the video, whatever older turns held", async () => {
+  const { setDraftTimes, withTurns } = await import("../src/features/esports/model/draft")
   const content: GameContent = {
     ...imported(),
     sourceTimestampSeconds: 200,
@@ -258,13 +258,22 @@ test("a turn's second stays inside the phase and between the turns around it", a
       turns: [turnOf(1, "BAN", "BLUE", "Aoi", 110), turnOf(2, "BAN", "RED", "Elsu", 130)],
     },
   }
-  assert.equal(turnSecond(content, 140.9), 140)
-  assert.equal(turnSecond(content, 90), 130, "not before the turn it follows")
-  assert.equal(turnSecond(content, 500), 160, "not after the lock")
-  assert.equal(turnSecond(content, 150, 0), 130, "a recorded turn stays before the next one")
-  const unlocked = { ...content, draft: { ...content.draft!, lockedSecond: null } }
-  assert.equal(turnSecond(unlocked, 500), 200, "not after 0:00")
-  assert.equal(turnSecond(imported(), 140), null, "a draft without a start has no seconds")
+  const turns = content.draft!.turns
+  const written = withTurns(content, [...turns, turnOf(3, "BAN", "BLUE", "Omen", 150)]).draft!
+  assert.deepEqual(
+    written.turns.map((turn) => [turn.order, turn.hero?.name, "atSecond" in turn]),
+    [
+      [1, "Aoi", false],
+      [2, "Elsu", false],
+      [3, "Omen", false],
+    ],
+  )
+  const moved = setDraftTimes(content, { startSecond: 120 }).draft!
+  assert.deepEqual([moved.startSecond, moved.lockedSecond], [120, 160])
+  assert.ok(
+    moved.turns.every((turn) => !("atSecond" in turn)),
+    "moving the start drops the seconds of older turns",
+  )
 })
 
 test("restoring a draft puts turns, bans and lanes back and leaves the rest of the game", async () => {

@@ -1,6 +1,6 @@
 /* In the components layer so Tailwind utilities on the same elements can still override. */
 @layer components {
-  /* The board as a broadcast shows it: blue on the left, red mirrored on the right. */
+  /* The board as a broadcast shows it: blue on the left, red mirrored on the right (DRAFT_ROW), first turns outside. */
   .esp-draft-board {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -39,9 +39,6 @@
   .esp-draft-line + .esp-draft-line {
     margin-top: 5px;
   }
-  .esp-draft-side[data-side="RED"] .esp-draft-line {
-    justify-content: end;
-  }
   .esp-draft-line[data-kind="BAN"] {
     grid-template-columns: repeat(4, minmax(0, 52px));
     width: 80%;
@@ -56,10 +53,15 @@
     border-radius: var(--aov-radius-control);
     background: var(--muted);
   }
-  /* The trigger of a hero card stands between the slot and its face, which fills the slot either way. */
-  .esp-draft-slot > [role="button"] > span {
-    flex: 1 1 0;
+  /* The face fills the slot; a ban wears the look Stream gives it (BAN_FACE). */
+  .esp-draft-face {
+    display: grid;
     min-width: 0;
+    border-radius: inherit;
+  }
+  /* The trigger of a hero card stands between the slot and its face. */
+  .esp-draft-slot > [role="button"] > .esp-draft-face {
+    flex: 1 1 0;
   }
   button.esp-draft-slot:hover {
     box-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 40%, transparent);
@@ -72,24 +74,6 @@
   .esp-draft-slot[aria-pressed="true"] {
     z-index: 1;
     box-shadow: 0 0 0 2px var(--foreground);
-  }
-  /* A ban is grey and struck; an empty one is only struck. */
-  .esp-draft-slot[data-kind="BAN"][data-recorded]::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-      to top right,
-      transparent calc(50% - 1px),
-      color-mix(in oklch, var(--foreground) 70%, transparent) calc(50% - 1px) calc(50% + 1px),
-      transparent calc(50% + 1px)
-    );
-    pointer-events: none;
-  }
-  .esp-draft-slot[data-kind="BAN"] img {
-    opacity: 0.55;
-    filter: grayscale(1);
   }
   .esp-draft-order {
     position: absolute;
@@ -173,11 +157,6 @@
   .esp-draft-ask > b {
     font-weight: 600;
   }
-  .esp-draft-second {
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-    color: var(--muted-foreground);
-  }
   .esp-draft-asks {
     display: flex;
     flex-wrap: wrap;
@@ -230,14 +209,14 @@
     white-space: nowrap;
   }
 
-  /* The turns of a recorded draft, mirrored around their time. */
+  /* The turns of a recorded draft, mirrored around their order. */
   .esp-turns {
     padding-block: 4px;
     border-top: 1px solid var(--border);
   }
   .esp-turn-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
     align-items: center;
     width: 100%;
     min-height: 34px;
@@ -245,16 +224,6 @@
     font-size: 14px;
     line-height: 18px;
     text-align: left;
-  }
-  button.esp-turn-row:hover {
-    background: color-mix(in oklch, var(--foreground) 5%, transparent);
-  }
-  .esp-turn-row:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: -2px;
-  }
-  .esp-turn-row[data-later] {
-    color: var(--muted-foreground);
   }
   .esp-turn-time {
     grid-column: 2;
@@ -281,9 +250,10 @@
   .esp-turn-what[data-kind="BAN"] {
     color: var(--muted-foreground);
   }
-  .esp-turn-what[data-kind="BAN"] img {
-    opacity: 0.55;
-    filter: grayscale(1);
+  .esp-turn-face {
+    display: inline-flex;
+    flex: none;
+    border-radius: var(--aov-radius-control);
   }
   .esp-turn-name {
     min-width: 0;

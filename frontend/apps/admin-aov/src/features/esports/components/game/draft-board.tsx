@@ -1,7 +1,8 @@
 import type { DraftKind, Side } from "@aov/community-contracts"
 import { ArrowLeftRight, ChevronRight, TriangleAlert } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { formatClock } from "@/lib/clock"
+import { BAN_FACE, DRAFT_ROW } from "@aov/ui/components/draft-marks"
+import { cn } from "@aov/ui/lib/utils"
 import type { GameView, IconRef } from "../../model/game-view"
 import { heroKeys, type HeroLocks, type HeroUse } from "../../model/series-rules"
 import { HeroIcon } from "../primitives"
@@ -16,7 +17,6 @@ export type BoardSlot = {
   side: Side
   hero: IconRef | null
   recorded: boolean
-  atSecond: number | null
 }
 
 const SIDES: readonly Side[] = ["BLUE", "RED"]
@@ -36,13 +36,13 @@ export const earlierUse = (locks: HeroLocks, teamId: string, hero: IconRef | nul
 function slotLabel(slot: BoardSlot, team: string) {
   const turn = slot.order === null ? "" : `Lượt ${slot.order}, `
   const hero = slot.hero?.name ?? (slot.recorded && slot.kind === "BAN" ? "không cấm" : "")
-  const at = slot.atSecond === null ? "" : `, ▸${formatClock(slot.atSecond)}`
-  return `${turn}${team} ${turnWords(slot.kind)}${hero && ` ${hero}`}${at}`
+  return `${turn}${team} ${turnWords(slot.kind)}${hero && ` ${hero}`}`
 }
 
 /**
- * The bans and picks of both teams where a broadcast shows them. Recording, a recorded turn is pressed to change it and
- * the next one is ringed; viewing, the faces open the cards of their heroes.
+ * The bans and picks of both teams where a broadcast shows them: the team on the left reads from left to right, the
+ * team on the right is mirrored, and a ban wears the look Stream gives it. Recording, a recorded turn is pressed to
+ * change it and the next one is ringed; viewing, the faces open the cards of their heroes.
  */
 export function DraftBoard({
   game,
@@ -68,8 +68,14 @@ export function DraftBoard({
     const used = entry.kind === "PICK" ? earlierUse(locks, team.id, entry.hero) : undefined
     const warning = used ? `${team.shortName} đã dùng ${used.hero.name} ở ván ${used.gameNumber}` : null
     const label = [slotLabel(entry, team.shortName), warning].filter(Boolean).join(". ")
-    const face = entry.hero && (
+    const banned = entry.kind === "BAN" && entry.recorded
+    const picture = entry.hero && (
       <HeroIcon hero={entry.hero} size={52} title="" className="aspect-square h-auto! w-full! rounded-md" />
+    )
+    const face = (
+      <span className={cn("esp-draft-face", banned && BAN_FACE)} data-empty={(banned && !entry.hero) || undefined}>
+        {picture}
+      </span>
     )
     const marks = (
       <>
@@ -136,7 +142,12 @@ export function DraftBoard({
       {SIDES.map((side) => (
         <div key={side} className="esp-draft-side" data-side={side}>
           {KINDS.map((kind) => (
-            <div key={kind} className="esp-draft-line" data-kind={kind}>
+            <div
+              key={kind}
+              className={`esp-draft-line ${DRAFT_ROW}`}
+              data-kind={kind}
+              data-mirrored={side === "RED" || undefined}
+            >
               {slots.filter((entry) => entry.side === side && entry.kind === kind).map(slot)}
             </div>
           ))}

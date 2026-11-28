@@ -31,19 +31,18 @@ const drafted = recordedGame({
   draft: { startSecond: 3154, lockedSecond: 3490, turns: [turn(1, 3166), turn(2, null), turn(3, 3193)] },
 })
 
-test("the draft starts before its first timed turn, the lock and the game", () => {
+test("the draft starts before the lock and the game; an older second on a turn does not hold it", () => {
   assert.equal(refusal(drafted, "draftStart", 3166), null)
-  assert.equal(refusal(drafted, "draftStart", 3167), "Cấm chọn phải bắt đầu trước lượt 1 (▸52:46).")
+  assert.equal(refusal(drafted, "draftStart", 3200), null)
   const untimed = recordedGame()
   assert.match(refusal(untimed, "draftStart", 3491)!, /trước lúc chốt đội hình \(▸58:10\)/)
   const unlocked = recordedGame({ draft: { startSecond: 3154, lockedSecond: null, turns: [] } })
   assert.match(refusal(unlocked, "draftStart", 3719)!, /trước lúc vào trận \(▸1:01:58\)/)
 })
 
-test("the lock needs a draft start and lies between the last turn and the game", () => {
+test("the lock needs a draft start and lies between it and the game", () => {
   assert.equal(refusal(emptyGame(), "lock", 10), "Đặt lúc bắt đầu cấm chọn trước.")
-  assert.match(refusal(drafted, "lock", 3192)!, /sau lượt 3 \(▸53:13\)/)
-  assert.equal(refusal(drafted, "lock", 3193), null)
+  assert.equal(refusal(drafted, "lock", 3192), null)
   assert.match(refusal(drafted, "lock", 3719)!, /trước lúc vào trận/)
 })
 
@@ -173,10 +172,10 @@ test("a winner can be set, taken off and put back", () => {
   assert.equal(off.apply(content).winner, null)
 })
 
-test("the draft start stays while the lock or a turn hangs on it", () => {
+test("the draft start stays while the lock hangs on it", () => {
   assert.equal(clearRefusal(drafted, "draftStart"), "Bỏ mốc chốt đội hình trước.")
   const unlocked = { ...drafted, draft: { ...drafted.draft!, lockedSecond: null } }
-  assert.equal(clearRefusal(unlocked, "draftStart"), "Các lượt cấm chọn còn mốc trên video.")
+  assert.equal(clearRefusal(unlocked, "draftStart"), null)
   assert.equal(
     clearRefusal(recordedGame({ draft: { startSecond: 5, lockedSecond: null, turns: [] } }), "draftStart"),
     null,

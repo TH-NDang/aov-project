@@ -12,7 +12,7 @@ import { KIND_NAMES, shortName } from "../../../lib/watch-words"
 import { OBJECTIVE_ICONS } from "./game-track"
 import { nicknameOf } from "./loadout-names"
 import { ReferenceArt } from "./reference-art"
-import { BanFace, Board, SideHead, useHeroNames } from "./watch-board"
+import { BanFace, banPlace, Board, SideHead, useHeroNames } from "./watch-board"
 import "./watch-lineup.css"
 
 const LANES = Object.keys(LANE_NAMES) as Lane[]
@@ -56,7 +56,7 @@ function Bans({ chapter, team, name }: { chapter: Chapter; team: WatchTeam; name
     <ol className="tn-room-bans" aria-label={text(`${name} cấm`, `Bans of ${name}`)}>
       {bans.map((hero, index) => (
         <li key={index}>
-          <span className="tn-room-ban" title={heroes.ban(hero)}>
+          <span {...banPlace(hero)} title={heroes.ban(hero)}>
             <BanFace game={chapter.game} hero={hero} />
           </span>
         </li>

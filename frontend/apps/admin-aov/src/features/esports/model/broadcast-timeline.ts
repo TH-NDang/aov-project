@@ -72,13 +72,12 @@ export function spanLabel(span: number, duration: number) {
 }
 
 /**
- * A marker of one game that an editor may drag along the video axis: a recorded moment, a ban/pick turn, an edge of
- * the ban/pick phase (its start, the line-up lock, the game start that ends it), the end of the game or the moment the
- * broadcast showed a part of a team's loadouts.
+ * A marker of one game that an editor may drag along the video axis: a recorded moment, an edge of the ban/pick phase
+ * (its start, the line-up lock, the game start that ends it), the end of the game or the moment the broadcast showed a
+ * part of a team's loadouts. The turns of the draft have an order and no place on the video.
  */
 export type RetimeTarget =
   | { kind: "event"; gameId: string; id: string }
-  | { kind: "turn"; gameId: string; order: number }
   | { kind: "draftStart"; gameId: string }
   | { kind: "draftLock"; gameId: string }
   | { kind: "gameStart"; gameId: string }
@@ -101,10 +100,10 @@ export function neighboursOf(chapters: GameChapter[], gameId: string): Neighbour
 
 /**
  * Video seconds between which a marker may be dropped, or null when it cannot move. A moment stays inside its game,
- * which reaches to the next game until its end is recorded. A ban/pick turn stays between its neighbours, inside the
- * draft phase. The start of the phase stays before its first mark, the lock between the last turn and the game start,
- * the game start after every draft mark with the game still clear of the next one, and the end after everything
- * recorded in the game. Those are the positions the service accepts.
+ * which reaches to the next game until its end is recorded. The start of the draft stays before the lock, the lock
+ * between the start and the game start, the game start after every draft mark with the game still clear of the next
+ * one, and the end after everything recorded in the game. Those are the positions the service accepts; a second an
+ * older turn holds goes with the write that moves the start or the lock.
  */
 export function retimeRange(
   chapter: GameChapter,
@@ -148,12 +147,6 @@ export function retimeRange(
   // A game that is not live yet ends nowhere, so nothing of its draft may go past the start of the next game.
   const open = chapter.live ? chapter.start : before
   if (target.kind === "draftStart")
-    return range(Math.min(after, draft.start), Math.min(before, draft.locked ?? before, open, ...timed(draft.turns)))
-  if (target.kind === "draftLock")
-    return draft.locked == null ? null : range(Math.max(draft.start, ...timed(draft.turns)), open)
-  const index = draft.turns.findIndex((turn) => turn.order === target.order)
-  if (index < 0 || draft.turns[index]!.atSecond == null) return null
-  const min = Math.max(draft.start, ...timed(draft.turns.slice(0, index)))
-  const max = Math.min(before, draft.locked ?? before, open, ...timed(draft.turns.slice(index + 1)))
-  return max >= min ? { min, max } : null
+    return range(Math.min(after, draft.start), Math.min(before, draft.locked ?? before, open))
+  return draft.locked == null ? null : range(draft.start, open)
 }
