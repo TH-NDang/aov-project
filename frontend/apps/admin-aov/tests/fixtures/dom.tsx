@@ -130,10 +130,36 @@ export const parseHtml = (markup: string) => new JSDOM(markup).window.document
 /** The document of an SVG file, read as XML the way a browser reads an image; nothing is installed as a global. */
 export const parseSvg = (markup: string) => new JSDOM(markup, { contentType: "image/svg+xml" }).window.document
 
+/**
+ * Children of one parent that share a key, as React reports them while a page renders. React may then forget one of
+ * them and leave it on the page for good, as the schedule tools of a tournament once stacked up, so a test fails on it.
+ */
+const sharedKeys: string[] = []
+
+/** Records React's report of children sharing a key, for the test that drew them to fail; returns the undo. */
+function watchSharedKeys() {
+  const original = console.error
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === "string" && args[0].includes("Encountered two children with the same key"))
+      sharedKeys.push(args.map(String).join(" "))
+    original.apply(console, args)
+  }
+  return () => {
+    console.error = original
+  }
+}
+
+/** Fails when React reported children sharing a key since the last check. */
+export function assertNoSharedKeys() {
+  const found = sharedKeys.splice(0)
+  assert.deepEqual(found, [], "React drew children of one parent with the same key")
+}
+
 /** Installs a window as the global browser now; `close` puts the previous globals back. */
 export function openDom({ url, html, globals }: DomOptions = {}): Dom {
   const dom = createWindow(url, html)
   const restore = installWindow(dom.window, globals?.(dom.window))
+  const unwatch = watchSharedKeys()
 
   let closed = false
   return {
@@ -142,6 +168,7 @@ export function openDom({ url, html, globals }: DomOptions = {}): Dom {
     close() {
       if (closed) return
       closed = true
+      unwatch()
       dom.window.close()
       restore()
     },
@@ -173,6 +200,7 @@ async function unmountAll() {
 export function withDom(options: DomOptions = {}): Dom {
   const dom = openDom(options)
   afterEach(unmountAll)
+  afterEach(assertNoSharedKeys)
   after(() => tearDown(dom))
   return dom
 }
@@ -182,6 +210,8 @@ export async function inDom(options: DomOptions, run: (dom: Dom) => Promise<void
   const dom = openDom(options)
   try {
     await run(dom)
+    await unmountAll()
+    assertNoSharedKeys()
   } finally {
     await tearDown(dom)
   }
