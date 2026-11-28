@@ -707,7 +707,7 @@ URL chuẩn: /hero, /hero/new, /hero/import, /hero/:id, /hero/:id/translations; 
 Thuật ngữ và tham chiếu có tab và biên tập bên phải/bottom. Cấu hình tooltip dùng backend chung; JSON cũ chỉ dùng để chuyển đổi
 của môi trường phát triển, không thay thế snapshot gameplay trong backend.
 
-Timeline danh mục gộp bộ chọn mùa và nút tạo mùa ở hàng đầu, các patch và nút tạo patch bên dưới. `show=all` giữ chế độ toàn bộ dữ liệu tại mốc trong URL; bỏ tham số để chỉ xem thay đổi. Mục kế thừa có nhãn riêng, chỉ ghi không thay đổi khi patch đã hoàn tất rà soát.
+Timeline danh mục là một hàng các mùa, chỉ mùa đang xem mở ra thành các patch của nó (xem "Đầu trang và dòng thời gian patch" trong `frontend/docs/RESPONSIVE.md`). `show=all` giữ chế độ toàn bộ dữ liệu tại mốc trong URL; bỏ tham số để chỉ xem thay đổi. Mục kế thừa có nhãn riêng, chỉ ghi không thay đổi khi patch đã hoàn tất rà soát.
 
 ### Chèn tham chiếu theo nhóm (tiếng Việt)
 

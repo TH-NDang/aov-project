@@ -30,14 +30,16 @@ export function PageHeader({ title, description, actions, search, className, chi
         {children}
       </div>
     )
+  // The title gives way first: it wraps onto a second line beside the buttons, and only when it would be narrower than
+  // 10rem do the buttons move under it, together.
   return (
     <div className={cn("flex flex-col gap-3", className)}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0 space-y-0.5">
-          <h1 className="type-page-title">{title}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-[1_1_10rem] space-y-0.5 py-0.5">
+          <h1 className="type-page-title text-balance">{title}</h1>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>
       {children}
     </div>
