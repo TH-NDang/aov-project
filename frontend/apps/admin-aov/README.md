@@ -891,14 +891,15 @@ Sau khi xuất bản, trận vẫn nêu mục còn thiếu để bổ sung rồi
   chứa cả ngày đấu được cắt theo trận; nút "Trận này" đổi sang "Cả video". Nút khoảng ("14 phút") đổi giữa giai đoạn của
   ván và cả video, − và + đổi từng nấc.
 - **Đường thời gian** có làn của đội bên xanh và bên đỏ của ván đang chọn, trục giữa mang bốn mốc của ván (bắt đầu cấm
-  chọn, chốt đội hình, vào trận, kết thúc) và các đoạn tạm dừng. Mốc trên làn là mục tiêu, hạ gục, trang bị cấp 3 và lượt
-  cấm chọn, xếp nhiều hàng khi chật. Bấm để tua, bấm đúp vào làn để ghi cho đội đó, kéo mốc để đổi giây (video chạy theo,
+  chọn, chốt đội hình, vào trận, kết thúc) và các đoạn tạm dừng. Mốc trên làn là mục tiêu, hạ gục và trang bị cấp 3, xếp
+  nhiều hàng khi chật. Bấm để tua, bấm đúp vào làn để ghi cho đội đó, kéo mốc để đổi giây (video chạy theo,
   Esc trả lại), Ctrl và lăn chuột để phóng. Khoảng xem tự theo giai đoạn của ván cho tới khi người ghi phóng tay.
 - **Khung ghi** mở phần hợp với điều video đang chiếu (cấm chọn, chờ vào trận, đang đấu) cho tới khi người ghi chọn một
   phần; chấm vàng là phần còn thiếu. Dấu trên số ván: tam giác là đã sửa sau khi xuất bản hoặc mốc chồng ván khác, máy ảnh
   gạch là chưa đặt mốc, vòng là đang ghi, chấm đặc là đủ dữ liệu chờ xuất bản. `+N` là ván tỷ số nói có mà chưa ghi.
-  - Cấm chọn: bàn cấm chọn và ô chọn tướng luôn mở, chỉ có tướng được phép; Enter lấy tướng đầu tiên, giây của lượt là
-    giây lúc gõ phím đầu. Ván có mười tướng mà chưa có thứ tự lượt thì các lượt gom trong trình duyệt
+  - Cấm chọn: bàn cấm chọn và ô chọn tướng luôn mở, chỉ có tướng được phép; Enter lấy tướng đầu tiên. Lượt chỉ giữ thứ
+    tự, không có giây video riêng; video chỉ đánh dấu lúc bắt đầu cấm chọn và lúc chốt. Đội bên phải đọc từ phải sang
+    trái, tướng bị cấm mang cùng dấu cấm với Stream (`BAN_FACE`, `DRAFT_ROW` trong `@aov/ui/components/draft-marks`). Ván có mười tướng mà chưa có thứ tự lượt thì các lượt gom trong trình duyệt
     (`esports:pending-turns:<gameId>`) và lưu một lần khi đã gọi tên đủ các tướng đã ghi, vì lưu từng lượt sẽ bỏ chúng.
   - Đội hình: hai đội đối mặt theo đường. Chỗ tên là ô chọn tuyển thủ; bấm ảnh để đổi tướng trong đội; bấm phụ trợ, phù
     hiệu, ngọc hoặc trang bị mở phần sửa của tuyển thủ đó thay chỗ bảng, dải mười khuôn mặt chuyển sang người khác và giữ
@@ -918,8 +919,9 @@ Sau khi xuất bản, trận vẫn nêu mục còn thiếu để bổ sung rồi
   tạm dừng vào `timeline`; trang bị đã lên vào `build`, mua/bán vào `equipmentEvents` của tuyển thủ; link video, giây
   bắt đầu và thời lượng vào các trường của ván. Các lần lưu được xếp hàng theo phiên bản; xung đột với người sửa khác
   hiện lỗi kèm nút tải bản mới. Ván đã xuất bản chỉ thay đổi bản nháp cho tới khi xuất bản lại.
-- Icon mục tiêu lớn trong `src/features/esports/assets/objectives` là ảnh thiết kế riêng tạo bằng ChatGPT cho dự án,
-  không lấy từ tài nguyên game.
+- Icon mục tiêu lớn (Caesar, Rồng, trụ, nhà chính) là icon game đã tải lên bản đồ chiến trường 5v5 trong Chế độ chơi:
+  trang trận đọc bản đồ đó rồi đưa icon xuống qua `ObjectiveArt`. Chưa đọc được (hoặc không có quyền xem Chế độ chơi) thì
+  hiện ký hiệu vẽ của Wiki. Stream lấy cùng icon từ bản đồ đã xuất bản.
 - Cần chạy community-service bản có trường `timeline`; bản cũ bỏ qua trường lạ và UI sẽ báo cần khởi động lại.
 - Thành phần trong `src/features/esports/components` và `model` không phụ thuộc API/phiên admin để dùng lại cho trang
   công khai; trang chỉ đọc chỉ cần bỏ quyền ghi.

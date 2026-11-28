@@ -2,8 +2,9 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link2, Pencil, Plus } from "lucide-react"
 import type { CommunityProfile, ProfileKind } from "@aov/community-contracts"
-import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
+import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
+import { ThemedAvatarImage } from "@/components/themed-logo-img"
 import { pageApi, pageKeys } from "../api/page-api"
 import { PageReference } from "./page-reference"
 import { PageSearchDialog } from "./page-search-dialog"
@@ -38,7 +39,7 @@ export function PageReferencePicker({
     <div className="space-y-2">
       <div className="flex items-center gap-3 rounded-lg border p-3">
         <Avatar className="size-10 shrink-0 rounded-lg border bg-background">
-          <AvatarImage src={selected.data?.content?.avatarUrl || undefined} alt="" className="object-contain" />
+          <ThemedAvatarImage url={selected.data?.content?.avatarUrl} />
           <AvatarFallback className="rounded-lg">
             {kind ? <ProfileTypeIcon kind={kind} className="size-5" /> : <Link2 className="size-4" />}
           </AvatarFallback>

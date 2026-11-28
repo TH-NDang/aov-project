@@ -23,7 +23,6 @@ export function HeroPicker({
   catalog,
   whyNot,
   keepFocus,
-  onTyping,
   onPick,
   onEscape,
 }: {
@@ -39,8 +38,6 @@ export function HeroPicker({
   catalog: Reference[]
   whyNot: (hero: Selection) => string | null
   keepFocus: boolean
-  /** The first key of a search was pressed, or its last one taken back. */
-  onTyping: (typing: boolean) => void
   onPick: (hero: Selection) => void
   /** Esc on an empty field; true when it was used up here. */
   onEscape: () => boolean
@@ -101,8 +98,6 @@ export function HeroPicker({
   }, [query, walked])
 
   const search = (text: string) => {
-    if (!query && text) onTyping(true)
-    if (query && !text) onTyping(false)
     setQuery(text)
     setWalked(null)
   }

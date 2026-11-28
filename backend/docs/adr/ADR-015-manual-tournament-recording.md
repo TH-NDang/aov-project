@@ -131,6 +131,15 @@ Cấm/chọn cuối cùng trong `sides` vẫn là dữ liệu dùng cho xuất b
 cuối cùng phải lấy từ các lượt đó. Khi lưu, dịch vụ áp luật của loạt BO: ngoài ván cuối cùng có thể, một đội không chọn
 lại tướng mình đã chọn ở ván khác của loạt. Không cần migration; ván cũ đọc thành giai đoạn cấm chọn rỗng.
 
+Bổ sung 2026-11-28, theo góp ý của người dùng: các lượt đã có thứ tự nên Admin không ghi, không hiện và không kéo giây
+video của từng lượt nữa; chỉ còn mốc bắt đầu cấm chọn và mốc chốt đội hình (vùng cấm chọn trên thanh thời gian). Mỗi
+lần Admin lưu `draft` (thêm, sửa, bỏ lượt hay dời hai mốc trên) đều bỏ `atSecond` cũ của các lượt, để giây cũ không
+còn chặn việc dời mốc theo điều kiện của dịch vụ. Trường `atSecond` của lượt vẫn là tùy chọn trong API, không cần
+migration. Các ý ở phần dưới về kéo lượt cấm chọn trên thanh, "bắt đầu cấm chọn không sau lượt đầu" và "mốc chốt
+nằm giữa lượt cuối và cờ vào trận" không còn áp dụng cho Admin: mốc bắt đầu chỉ cần trước mốc chốt và cờ vào trận,
+mốc chốt chỉ cần sau mốc bắt đầu và trước cờ vào trận. Stream coi lượt không có giây như diễn ra ở mốc chốt và không
+gắn link tua cho lượt đó.
+
 ## Thao tác ngay trên thanh thời gian khi ghi
 
 Bổ sung 2026-11-12, theo góp ý của người dùng khi ghi Đấu Trường Danh Vọng Mùa Đông 2026: màn ghi khó biết bấm vào

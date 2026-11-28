@@ -1,18 +1,12 @@
-import { formatClock } from "@/lib/clock"
+import { BAN_FACE } from "@aov/ui/components/draft-marks"
+import { cn } from "@aov/ui/lib/utils"
 import { turnWords, type BoardSlot } from "../../components/game/draft-board"
-import { usePlayheadValue } from "../../components/game/use-playhead"
 import { HeroIcon } from "../../components/primitives"
-import { atVideo } from "../../model/game-times"
 import type { IconRef } from "../../model/game-view"
-import { placeAt } from "../../model/playback-place"
 import type { GameDesk } from "../game-desk"
 
-/** Viewing: every turn at its second of the video, blue on the left and red on the right. */
+/** Viewing: every turn in its order, blue on the left and red on the right; a ban wears the look Stream gives it. */
 export function TurnList({ desk, slots }: { desk: GameDesk; slots: BoardSlot[] }) {
-  const now = usePlayheadValue(desk.playhead, (second) => {
-    const place = placeAt([desk.chapter], second)
-    return place.kind === "draft" ? Math.floor(second) : null
-  })
   const turns = slots.filter((slot) => slot.order !== null && slot.recorded)
   if (!turns.length)
     return (
@@ -24,45 +18,34 @@ export function TurnList({ desk, slots }: { desk: GameDesk; slots: BoardSlot[] }
     <ol className="esp-turns" aria-label="Các lượt cấm chọn">
       {turns.map((turn) => (
         <li key={turn.index}>
-          <TurnRow desk={desk} turn={turn} later={now !== null && turn.atSecond !== null && turn.atSecond > now} />
+          <TurnRow desk={desk} turn={turn} />
         </li>
       ))}
     </ol>
   )
 }
 
-function TurnRow({ desk, turn, later }: { desk: GameDesk; turn: BoardSlot; later: boolean }) {
+function TurnRow({ desk, turn }: { desk: GameDesk; turn: BoardSlot }) {
   const team = desk.view.sides[turn.side].team
   const hero: IconRef | null = turn.hero
-  const words = `${turnWords(turn.kind)} ${hero?.name ?? ""}`
-  const body = (
-    <>
-      <span className="esp-turn-time">
-        {turn.order}
-        {turn.atSecond !== null && ` ${atVideo(turn.atSecond)}`}
-      </span>
+  const ban = turn.kind === "BAN"
+  return (
+    <span
+      className="esp-turn-row"
+      role="img"
+      aria-label={`Lượt ${turn.order}, ${team.shortName} ${turnWords(turn.kind)} ${hero?.name ?? "không cấm"}`}
+    >
+      <span className="esp-turn-time">{turn.order}</span>
       <span className="esp-turn-what" data-side={turn.side} data-kind={turn.kind}>
-        <HeroIcon hero={hero} size={24} title="" className="rounded-md ring-2 ring-[var(--side)]" />
+        {/* The ring of the side stays in colour on a ban: it is drawn by the frame, outside the greyed picture. */}
+        <span
+          className={cn("esp-turn-face ring-2 ring-[var(--side)]", ban && BAN_FACE)}
+          data-empty={(ban && !hero) || undefined}
+        >
+          <HeroIcon hero={hero} size={24} title="" className="rounded-md" />
+        </span>
         <span className="esp-turn-name">{hero?.name ?? "Không cấm"}</span>
       </span>
-    </>
-  )
-  const label = `Lượt ${turn.order}, ${team.shortName} ${words}`
-  if (turn.atSecond === null)
-    return (
-      <span className="esp-turn-row" data-later={later || undefined} role="img" aria-label={label}>
-        {body}
-      </span>
-    )
-  return (
-    <button
-      type="button"
-      className="esp-turn-row"
-      data-later={later || undefined}
-      aria-label={`${label} lúc ${formatClock(turn.atSecond)} của video`}
-      onClick={() => desk.seekVideo(turn.atSecond!)}
-    >
-      {body}
-    </button>
+    </span>
   )
 }

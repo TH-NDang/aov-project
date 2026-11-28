@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { ArrowUpRight, UsersRound } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
+import { ThemedLogoImg } from "@/components/themed-logo-img"
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { pageApi, pageKeys } from "../api/page-api"
 import { Section } from "./profile-form-primitives"
@@ -40,11 +41,11 @@ export function ProfileTeams({ pageId }: { pageId: string }) {
           {query.data.map((team, index) => (
             <div key={`${team.teamPageId}:${index}`} className="flex items-center gap-3 p-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                {team.teamAvatarUrl ? (
-                  <img alt="" src={team.teamAvatarUrl} className="size-full object-contain" />
-                ) : (
-                  <UsersRound className="size-5" />
-                )}
+                <ThemedLogoImg
+                  url={team.teamAvatarUrl}
+                  className="size-full object-contain"
+                  fallback={<UsersRound className="size-5" />}
+                />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="type-body">{team.teamName}</p>

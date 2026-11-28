@@ -205,7 +205,6 @@ export function StudioWatch({
         issues={studio.issues}
         lookups={studio.lookups}
         label={focused ? `Dòng thời gian ván ${focused.number}` : "Dòng thời gian video"}
-        heroIcon={studio.heroIcon}
         playing={recording.playing}
         foldable={compact && narrow}
         fit={studio.fit}

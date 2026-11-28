@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { GameSide, PublishedGame } from "@aov/community-contracts"
+import { BAN_FACE, DRAFT_ROW } from "@aov/ui/components/draft-marks"
 import { HeroLaneIcon } from "@aov/ui/components/hero-marks"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { EntityPageLink } from "../../../components/go-link"
@@ -23,15 +24,30 @@ type Slot = "a" | "b"
 
 /**
  * The heroes a side banned, in the order the record lists them, in a tray of their own; a ban nobody saw leaves its
- * place empty. Each hero shows its card when pointed at.
+ * place empty. Each hero shows its card when pointed at. The tray of the side on the right is `mirrored`.
  */
-function Bans({ game, side, places }: { game: PublishedGame; side: GameSide; places: number }) {
+function Bans({
+  game,
+  side,
+  places,
+  mirrored,
+}: {
+  game: PublishedGame
+  side: GameSide
+  places: number
+  mirrored: boolean
+}) {
   const { text } = useStreamLocale()
   if (!places) return null
   const unseen = text("Chưa rõ tướng bị cấm", "Banned hero not known")
   return (
     <p className="tn-bans">
-      <span className="tn-bans-tray" role="group" aria-label={text("Cấm", "Bans")}>
+      <span
+        className={`tn-bans-tray ${DRAFT_ROW}`}
+        data-mirrored={mirrored || undefined}
+        role="group"
+        aria-label={text("Cấm", "Bans")}
+      >
         <span className="tn-bans-label" aria-hidden="true">
           <StreamIcon name="ban" size={13} />
           <span>{text("Cấm", "Bans")}</span>
@@ -39,10 +55,16 @@ function Bans({ game, side, places }: { game: PublishedGame; side: GameSide; pla
         {Array.from({ length: places }, (_, index) => {
           const ban = side.bans[index]
           return present(ban) ? (
-            <ReferenceArt key={index} catalog={game.catalog} kind="heroes" selection={ban} className="tn-ban" />
+            <ReferenceArt
+              key={index}
+              catalog={game.catalog}
+              kind="heroes"
+              selection={ban}
+              className={`tn-ban ${BAN_FACE}`}
+            />
           ) : (
             <Tip key={index} label={unseen}>
-              <span className="tn-ban" data-unseen="" role="img" aria-label={unseen} />
+              <span className={`tn-ban ${BAN_FACE}`} data-empty="" role="img" aria-label={unseen} />
             </Tip>
           )
         })}
@@ -53,7 +75,7 @@ function Bans({ game, side, places }: { game: PublishedGame; side: GameSide; pla
 
 /**
  * The head of one side: its team, the side of the map it played on, whether it won and what it banned. `told` says once
- * that no player of the side is known.
+ * that no player of the side is known; `facing` that the heads stand side by side, which mirrors the bans of the second.
  */
 function SideHead({
   game,
@@ -61,12 +83,14 @@ function SideHead({
   slot,
   places,
   told,
+  facing,
 }: {
   game: PublishedGame
   side: GameSide
   slot: Slot
   places: number
   told: boolean
+  facing: boolean
 }) {
   const { text } = useStreamLocale()
   const { winner } = game.content
@@ -103,7 +127,7 @@ function SideHead({
           {told && <span>{text("Chưa rõ tuyển thủ", "Players not known")}</span>}
         </p>
       </div>
-      <Bans game={game} side={side} places={places} />
+      <Bans game={game} side={side} places={places} mirrored={facing && slot === "b"} />
     </div>
   )
 }
@@ -132,8 +156,8 @@ export function GameLineup({ game }: { game: PublishedGame }) {
   const told = { a: !record.players || unnamed(a), b: !record.players || unnamed(b) }
   const words = recordWords(at == null ? record : lineupRecord(game, at), text, at)
   const heads = {
-    a: <SideHead game={game} side={a} slot="a" places={places} told={unnamed(a)} />,
-    b: <SideHead game={game} side={b} slot="b" places={places} told={unnamed(b)} />,
+    a: <SideHead game={game} side={a} slot="a" places={places} told={unnamed(a)} facing={!board} />,
+    b: <SideHead game={game} side={b} slot="b" places={places} told={unnamed(b)} facing={!board} />,
   }
   return (
     <section className="tn-block" aria-labelledby="game-lineup">

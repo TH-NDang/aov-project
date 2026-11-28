@@ -6,11 +6,10 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react"
-import type { DraftKind, Selection, Side } from "@aov/community-contracts"
+import type { Side } from "@aov/community-contracts"
 import { Skull, Sparkles, Swords } from "lucide-react"
 import { formatClock } from "@/lib/clock"
 import type { RetimeTarget } from "../../../model/broadcast-timeline"
-import { atVideo } from "../../../model/game-times"
 import type { GameView } from "../../../model/game-view"
 import type { ItemLookups } from "../../../model/item-lookups"
 import { MARK_LABELS } from "../../../model/observation-marks"
@@ -35,16 +34,15 @@ const LANES = ["BLUE", "RED"] as const
 /** What the band says while something on the track is pointed at. */
 export type Point = { second: number; text: string }
 
-/** A moment or a turn as it stands on the track. */
+/** A moment as it stands on the track. */
 export type Mark = {
   key: string
   row: TimelineRow
   second: number
-  kind: TimelineKind | DraftKind
+  kind: TimelineKind
   side: Side | null
   target: RetimeTarget
-  /** The moment; a turn has none. */
-  event: TimelineEvent | null
+  event: TimelineEvent
   /** Name for screen readers. */
   label: string
   /** The same in the band, and the time that stands after it. */
@@ -90,19 +88,17 @@ function eventArt(event: TimelineEvent, view: GameView, lookups: ItemLookups, si
   }
 }
 
-/** Every mark of the lanes and the spine in time order. */
+/** Every mark of the lanes and the spine in time order. The turns of the draft have no place on the video. */
 export function trackMarks({
   chapters,
   events,
   views,
   lookups,
-  heroIcon,
 }: {
   chapters: GameChapter[]
   events: TimelineEvent[]
   views: Record<string, GameView>
   lookups: ItemLookups
-  heroIcon?: (hero: Selection) => string | null | undefined
 }): Mark[] {
   const moments = events.flatMap((event): Mark[] => {
     const { gameId, id } = sourceOf(event.id)
@@ -129,33 +125,7 @@ export function trackMarks({
       },
     ]
   })
-  // Turns belong to teams, not players: teammates still swap heroes until the lock.
-  const turns = chapters.flatMap((chapter) =>
-    (chapter.draft?.turns ?? []).flatMap((turn): Mark[] => {
-      const { hero, atSecond, side } = turn
-      if (atSecond == null || !hero || (!hero.id && !hero.name)) return []
-      const team = views[chapter.gameId]?.sides[side].team.shortName
-      const name = `lượt ${turn.order}, ${team ? `${team} ` : ""}${turn.kind === "BAN" ? "cấm" : "chọn"} ${hero.name ?? ""}`
-      const target: RetimeTarget = { kind: "turn", gameId: chapter.gameId, order: turn.order }
-      const icon = { id: hero.id, name: hero.name ?? "", iconUrl: heroIcon?.(hero) }
-      return [
-        {
-          key: keyOf(target),
-          row: side,
-          second: atSecond,
-          kind: turn.kind,
-          side,
-          target,
-          event: null,
-          label: `Ván ${chapter.number}, ${name}, ${atVideo(atSecond)}`,
-          name: sentence(name),
-          time: atVideo(atSecond),
-          art: (size) => <HeroIcon hero={icon} size={size} title="" className="rounded-md" />,
-        },
-      ]
-    }),
-  )
-  return [...moments, ...turns].sort((a, b) => a.second - b.second)
+  return moments.sort((a, b) => a.second - b.second)
 }
 
 /** Every moment a broadcast showed loadouts, of the games whose 0:00 is known. */
@@ -282,7 +252,7 @@ export function TrackMarks({
     const { key, event } = mark
     const at = retime.shownAt(key, mark.second)
     const x = push && !retime.isMoved(key) ? `calc(${pct(at)} + ${push.toFixed(1)}px)` : pct(at)
-    const active = activeId !== null && [mark, ...merged].some((held) => held.event?.id === activeId)
+    const active = activeId !== null && [mark, ...merged].some((held) => held.event.id === activeId)
     const press = () => (event ? onSelect(event) : shared.onSeek(mark.second))
     return (
       <button

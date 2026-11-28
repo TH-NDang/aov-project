@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 import { flushSync } from "react-dom"
-import type { DocumentView, GameContent, Reference, Selection, SeriesContent } from "@aov/community-contracts"
+import type { DocumentView, GameContent, Reference, SeriesContent } from "@aov/community-contracts"
 import type { MatchPlayerHandle, VideoProblem } from "../components/game/match-video"
 import { useMatchPlayhead, usePlayheadValue } from "../components/game/use-playhead"
 import { broadcastChapters } from "../model/broadcast-timeline"
-import { buildGameView, referenceIndex } from "../model/game-view"
+import { buildGameView } from "../model/game-view"
 import { isMajorMoment, itemLookups } from "../model/item-lookups"
 import { recordingProgress } from "../model/recording-progress"
 import {
@@ -335,10 +335,6 @@ export function useMatchViews({
     [games, teams, players, catalog.data],
   )
   const events = useMemo(() => broadcastEvents(chapters, isMajorMoment(lookups)), [chapters, lookups])
-  const heroIcon = useMemo(() => {
-    const icons = referenceIndex(catalog.data?.heroes)
-    return (hero: Selection) => icons(hero)?.iconUrl
-  }, [catalog.data?.heroes])
   const progressOf = useMemo(() => Object.fromEntries(games.map((game) => [game.id, recordingProgress(game)])), [games])
   const issues = useMemo(() => timingIssues(chapters, videoDuration), [chapters, videoDuration])
   return {
@@ -349,7 +345,6 @@ export function useMatchViews({
     lookups,
     views,
     events,
-    heroIcon,
     progressOf,
     issues,
   }

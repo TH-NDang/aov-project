@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react"
-import type { Selection } from "@aov/community-contracts"
 import type { BroadcastChapter, RetimeTarget } from "../../../model/broadcast-timeline"
 import type { GameView } from "../../../model/game-view"
 import type { ItemLookups } from "../../../model/item-lookups"
@@ -48,7 +47,6 @@ export function MatchTimeline({
   issues = NO_ISSUES,
   lookups,
   label = "Dòng thời gian video",
-  heroIcon,
   playing = false,
   foldable = false,
   fit = 0,
@@ -68,8 +66,6 @@ export function MatchTimeline({
   issues?: TimingIssue[]
   lookups: ItemLookups
   label?: string
-  /** Icon of a hero taken in a ban/pick turn. */
-  heroIcon?: (hero: Selection) => string | null | undefined
   playing?: boolean
   /** The track stands behind a button, where there is no room to keep it on screen. */
   foldable?: boolean
@@ -93,10 +89,7 @@ export function MatchTimeline({
   )
   const retime = useRetime({ playhead, duration, chapters, events, editing, secondAt, onSeek, onHold: view.hold })
 
-  const marks = useMemo(
-    () => trackMarks({ chapters, events, views, lookups, heroIcon }),
-    [chapters, events, views, lookups, heroIcon],
-  )
+  const marks = useMemo(() => trackMarks({ chapters, events, views, lookups }), [chapters, events, views, lookups])
   const rings = useMemo(() => trackRings(chapters, views), [chapters, views])
 
   return (

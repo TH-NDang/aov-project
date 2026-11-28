@@ -39,7 +39,6 @@ async function desk(keepFocus = true) {
         catalog={catalog.heroes}
         whyNot={() => null}
         keepFocus={keepFocus}
-        onTyping={() => {}}
         onPick={(hero) => picked.push(hero.name ?? "")}
         onEscape={() => false}
       />

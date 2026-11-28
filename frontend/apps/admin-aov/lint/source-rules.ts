@@ -283,6 +283,20 @@ const rules: Rule[] = [
       text.split("\n").flatMap((line, index) => (/["'`]\/images\//.test(line) ? [`:${index + 1}`] : [])),
   },
   {
+    name: "admin shows a logo through the themed logo helpers",
+    hint: "Use ThemedLogoImg or ThemedAvatarImage from components/themed-logo-img, or Monogram: they pick the logo for the theme and put a one-theme logo on its plate.",
+    // Account pictures are photos of people, not logos.
+    files: files(source, /\.tsx$/).filter(
+      (path) => !path.includes(join("features", "users")) && !path.endsWith(join("layout", "user-menu.tsx")),
+    ),
+    offenders: (text) =>
+      ["img", "AvatarImage"].flatMap((name) =>
+        tags(text, name)
+          .filter(({ tag }) => /\bsrc=\{[^}]*(logo|avatar)Url/i.test(tag) && !tag.includes("data-logo-plate"))
+          .map(({ line }) => `:${line} <${name}>`),
+      ),
+  },
+  {
     name: "esports viewer components and models stay free of admin-only modules",
     hint: "The public site reuses these folders; keep the admin API and session out of them.",
     files: ["components", "model"].flatMap((folder) => files(join(source, "features", "esports", folder), /\.tsx?$/)),

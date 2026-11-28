@@ -40,9 +40,7 @@ export function lengthRefusal(content: GameContent, seconds: number): string | n
 
 function draftStartRefusal(content: GameContent, second: number) {
   const draft = readDraft(content)
-  const first = draft.turns.find((turn) => turn.atSecond != null)
   const limits: [number | null | undefined, string][] = [
-    [first?.atSecond, `lượt ${first?.order}`],
     [draft.lockedSecond, "lúc chốt đội hình"],
     [content.sourceTimestampSeconds, "lúc vào trận"],
   ]
@@ -53,8 +51,6 @@ function draftStartRefusal(content: GameContent, second: number) {
 function lockRefusal(content: GameContent, second: number) {
   const draft = readDraft(content)
   if (draft.startSecond == null) return "Đặt lúc bắt đầu cấm chọn trước."
-  const last = draft.turns.filter((turn) => turn.atSecond != null).at(-1)
-  if (last && second < last.atSecond!) return `Chốt đội hình phải sau lượt ${last.order} (${atVideo(last.atSecond!)}).`
   if (second < draft.startSecond) return `Chốt đội hình phải sau lúc bắt đầu cấm chọn (${atVideo(draft.startSecond)}).`
   const live = content.sourceTimestampSeconds
   return live != null && second > live ? `Chốt đội hình phải trước lúc vào trận (${atVideo(live)}).` : null
@@ -204,9 +200,7 @@ export function winnerChange(content: GameContent, winner: Side | null, name: Si
 /** Why a mark cannot be taken away: other marks hang on it. */
 export function clearRefusal(content: GameContent, time: GameTime): string | null {
   if (time !== "draftStart") return null
-  const draft = readDraft(content)
-  if (draft.lockedSecond != null) return "Bỏ mốc chốt đội hình trước."
-  return draft.turns.some((turn) => turn.atSecond != null) ? "Các lượt cấm chọn còn mốc trên video." : null
+  return readDraft(content).lockedSecond != null ? "Bỏ mốc chốt đội hình trước." : null
 }
 
 const CLEARED: Record<GameTime, string> = {

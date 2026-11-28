@@ -2,7 +2,7 @@ import type { GameContent, Side } from "@aov/community-contracts"
 import { formatClock } from "@/lib/clock"
 import type { RetimeTarget } from "./broadcast-timeline"
 import type { RecordedChange } from "./desk"
-import { moveTurn, setDraftTimes } from "./draft"
+import { setDraftTimes } from "./draft"
 import { atVideo } from "./game-times"
 import type { GameView } from "./game-view"
 import { MARK_LABELS, moveMark } from "./observation-marks"
@@ -35,18 +35,6 @@ export function retimeChange(
   const onClock = (before: number, after: number) => `${formatClock(before)} → ${formatClock(after)}`
 
   switch (target.kind) {
-    case "turn": {
-      const turn = chapter.draft?.turns.find((candidate) => candidate.order === target.order)
-      const before = turn?.atSecond
-      if (!turn || before == null || before === second) return null
-      const took = turn.kind === "BAN" ? "cấm" : "chọn"
-      const what = `lượt ${turn.order}, ${team(turn.side)} ${turn.hero?.name ? `${took} ${turn.hero.name}` : took}`
-      return recorded(
-        `Đã dời ${what}: ${onVideo(before)}`,
-        (content) => moveTurn(content, target.order, second),
-        (content) => moveTurn(content, target.order, before),
-      )
-    }
     case "draftStart":
     case "draftLock": {
       const start = target.kind === "draftStart"

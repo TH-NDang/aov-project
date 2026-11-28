@@ -3,7 +3,7 @@ import type { PublishedGame, Seat, Side, TimelineEvent } from "@aov/community-co
 import { GameIcon } from "@aov/ui/components/game-icons"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { FoldButton } from "../../../components/fold-button"
-import { StreamIcon } from "../../../components/stream-icon"
+import { ObjectiveMark } from "../../../components/objective-mark"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { WatchLink } from "../../../components/watch-link"
 import { timelineRows, type TimelineRow } from "../../../lib/series-model"
@@ -11,7 +11,7 @@ import { clock, referenceName } from "../../../lib/tournament-model"
 import { useFold } from "../../../lib/use-fold"
 import { momentAt } from "../../../lib/watch-rows"
 import { timedGame } from "../../../lib/watch-story"
-import { GameTrack, OBJECTIVE_ICONS, OBJECTIVE_NAMES } from "./game-track"
+import { GameTrack, OBJECTIVE_NAMES } from "./game-track"
 import { ReferenceArt } from "./reference-art"
 import "./game-timeline.css"
 
@@ -72,7 +72,7 @@ function Moment({ game, event }: { game: PublishedGame; event: TimelineEvent }) 
       <>
         <SeatArt game={game} seat={event.by} />
         <b className="tn-moment-taken">
-          <StreamIcon name={OBJECTIVE_ICONS[event.objective ?? "OTHER"]} size={16} />
+          <ObjectiveMark objective={event.objective ?? "OTHER"} size={16} />
           {text(...OBJECTIVE_NAMES[event.objective ?? "OTHER"])}
         </b>
       </>

@@ -59,17 +59,18 @@ test("a dragged moment is told with both its game times and can be put back", ()
   assert.equal(back.timeline!.events[0]!.atSeconds, 381)
 })
 
-test("a dragged turn is told with its hero and both its video times", () => {
-  const { text, after, back } = applied({ kind: "turn", gameId: "g1", order: 2 }, 630)
-  assert.equal(text, "Đã dời lượt 2, CRI chọn Yue: ▸10:20 → ▸10:30")
-  assert.equal(after.draft!.turns[1]!.atSecond, 630)
-  assert.equal(back.draft!.turns[1]!.atSecond, 620)
-})
-
 test("the edges of the ban/pick phase move on the video", () => {
   const start = applied({ kind: "draftStart", gameId: "g1" }, 590)
   assert.equal(start.text, "Đã dời lúc bắt đầu cấm chọn: ▸10:00 → ▸9:50")
   assert.deepEqual([start.after.draft!.startSecond, start.back.draft!.startSecond], [590, 600])
+  assert.deepEqual(
+    start.after.draft!.turns.map((turn) => [turn.order, turn.atSecond]),
+    [
+      [1, undefined],
+      [2, undefined],
+    ],
+    "the seconds older turns held go with the move: turns keep their order only",
+  )
 
   const lock = applied({ kind: "draftLock", gameId: "g1" }, 810)
   assert.equal(lock.text, "Đã dời lúc chốt đội hình: ▸13:20 → ▸13:30")
@@ -100,11 +101,9 @@ test("a mark of what the video showed moves for every player it stands for", () 
 test("a mark dropped where it was, or one that is gone, changes nothing", () => {
   assert.equal(change({ kind: "draftLock", gameId: "g1" }, 800), null)
   assert.equal(change({ kind: "event", gameId: "g1", id: "gone" }, 1200), null)
-  assert.equal(change({ kind: "turn", gameId: "g1", order: 9 }, 640), null)
 })
 
-test("a turn or a moment dropped on its own second changes nothing", () => {
-  assert.equal(change({ kind: "turn", gameId: "g1", order: 2 }, 620), null)
+test("a moment dropped on its own second changes nothing", () => {
   assert.equal(change({ kind: "event", gameId: "g1", id: "o1" }, 1441.3), null, "6:21 lies at ▸24:01 after the pause")
 })
 

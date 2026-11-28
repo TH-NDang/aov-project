@@ -64,7 +64,9 @@ test("pauses and the end of a game are entered as broadcast positions", async ()
       </MemoryRouter>,
     )
     const pauses = document.querySelector('[role="group"][aria-label="Tạm dừng"]')!
-    await act(async () => [...pauses.querySelectorAll("button")].find((entry) => entry.textContent === "Lấy")!.click())
+    await act(async () =>
+      [...pauses.querySelectorAll("button")].find((entry) => entry.textContent === "Lấy lúc dừng")!.click(),
+    )
     assert.equal(document.querySelector<HTMLInputElement>('[aria-label="Mốc video bắt đầu tạm dừng"]')!.value, "35:00")
     type(document.querySelector<HTMLInputElement>('[aria-label="Mốc video tiếp tục ván"]')!, "36:30")
     await settle()
@@ -178,7 +180,6 @@ test("ban/pick turns are recorded per team in order and only suggest heroes the 
       kind: "PICK",
       side: "BLUE",
       hero: selection("Murad"),
-      atSecond: 130,
     })
     assert.deepEqual(
       next.sides[0]!.bans.map((ban) => ban.name),
