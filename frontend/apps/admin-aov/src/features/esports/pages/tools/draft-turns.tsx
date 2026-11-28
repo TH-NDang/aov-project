@@ -1,4 +1,5 @@
 import { BAN_FACE } from "@aov/ui/components/draft-marks"
+import { cn } from "@aov/ui/lib/utils"
 import { turnWords, type BoardSlot } from "../../components/game/draft-board"
 import { HeroIcon } from "../../components/primitives"
 import type { IconRef } from "../../model/game-view"
@@ -36,8 +37,12 @@ function TurnRow({ desk, turn }: { desk: GameDesk; turn: BoardSlot }) {
     >
       <span className="esp-turn-time">{turn.order}</span>
       <span className="esp-turn-what" data-side={turn.side} data-kind={turn.kind}>
-        <span className={ban ? `esp-turn-face ${BAN_FACE}` : "esp-turn-face"} data-empty={(ban && !hero) || undefined}>
-          <HeroIcon hero={hero} size={24} title="" className="rounded-md ring-2 ring-[var(--side)]" />
+        {/* The ring of the side stays in colour on a ban: it is drawn by the frame, outside the greyed picture. */}
+        <span
+          className={cn("esp-turn-face ring-2 ring-[var(--side)]", ban && BAN_FACE)}
+          data-empty={(ban && !hero) || undefined}
+        >
+          <HeroIcon hero={hero} size={24} title="" className="rounded-md" />
         </span>
         <span className="esp-turn-name">{hero?.name ?? "Không cấm"}</span>
       </span>
