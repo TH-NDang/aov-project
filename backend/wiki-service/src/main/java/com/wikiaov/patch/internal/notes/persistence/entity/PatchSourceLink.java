@@ -19,4 +19,5 @@ public class PatchSourceLink {
     private String url;
     private String label;
     private String locale;
+    private String regionCode;
 }

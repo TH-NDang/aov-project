@@ -7,10 +7,12 @@ import org.jspecify.annotations.Nullable;
  *
  * @param label what the page is, such as its language or market, as editors wrote it
  * @param locale the language of the page as a BCP 47 tag, when editors gave one
+ * @param region the code of the market that published the page, when editors gave one
  */
 public record PatchSource(
         String url,
         String label,
-        @Nullable String locale
+        @Nullable String locale,
+        @Nullable String region
 ) {
 }
