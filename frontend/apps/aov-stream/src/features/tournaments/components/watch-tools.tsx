@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import { useCallsOn } from "../../../components/objective-call"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { useWatch } from "../../../components/use-watch"
 import { watch } from "../../../components/watch-session"
 import { clock } from "../../../lib/tournament-model"
+import { callSwitch } from "../../../lib/objective-calls"
 import { leftOf } from "../../../lib/watch-cuts"
 import { shareOf, watchHref } from "../../../lib/watch-routes"
 import type { WatchMatch } from "../../../lib/watch-types"
@@ -110,6 +112,21 @@ function Length({ match, button }: { match: WatchMatch; button: RefObject<HTMLBu
   )
 }
 
+/** Turns the big monster reminders over the video on or off; only a timed match has a clock to call them by. */
+function CallSwitch({ words }: { words: boolean }) {
+  const { text } = useStreamLocale()
+  const on = useCallsOn()
+  return (
+    <RoomIcon
+      icon={on ? "bell" : "bellOff"}
+      label={text("Nhắc mục tiêu lớn", "Big monster reminders")}
+      words={words}
+      aria-pressed={on}
+      onClick={() => callSwitch.set(!on)}
+    />
+  )
+}
+
 /** How the match is watched: how much of it, a link to this place, the keys. Their panels open over the companion. */
 export function WatchTools({ match, stacked, bare }: { match: WatchMatch; stacked: boolean; bare: boolean }) {
   const { text } = useStreamLocale()
@@ -118,11 +135,13 @@ export function WatchTools({ match, stacked, bare }: { match: WatchMatch; stacke
   const length = useRef<HTMLButtonElement>(null)
   const keys = useRef<HTMLButtonElement>(null)
   const offered = !failed && lengthRows(match, text).length > 0
+  const timed = match.story.level === "TIMED"
   return (
     <div className="tn-room-tools" data-bare={bare || undefined} data-stacked={stacked || undefined}>
       {!bare && offered && <Length match={match} button={length} />}
       {!bare && (
         <span className="tn-room-tools-end">
+          {timed && <CallSwitch words={stacked} />}
           <CopyLink match={match} words={stacked} />
           <RoomIcon
             ref={keys}

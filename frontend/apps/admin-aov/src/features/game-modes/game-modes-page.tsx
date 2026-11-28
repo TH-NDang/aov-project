@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router"
-import { BookOpen, Download, ImageIcon, Plus, Search } from "lucide-react"
+import { BookOpen, Download, ImageIcon, Map as MapIcon, Plus, Search } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { Input } from "@aov/ui/components/input"
@@ -176,6 +176,12 @@ function ModeRow({ mode }: { mode: AdminSummary }) {
             <span className="type-meta inline-flex items-center gap-1 text-muted-foreground">
               <BookOpen className="size-3.5" aria-hidden="true" />
               {mode.guide?.published ? "Cẩm nang đã xuất bản" : "Cẩm nang nháp"}
+            </span>
+          )}
+          {(mode.map?.published || mode.map?.draft) && (
+            <span className="type-meta inline-flex items-center gap-1 text-muted-foreground">
+              <MapIcon className="size-3.5" aria-hidden="true" />
+              {mode.map.published ? "Có bản đồ" : "Bản đồ nháp"}
             </span>
           )}
         </span>

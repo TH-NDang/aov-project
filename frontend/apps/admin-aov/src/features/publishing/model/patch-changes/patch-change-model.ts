@@ -85,6 +85,67 @@ export function emptyRow(type: ChangeRowType = "STAT"): ChangeRow {
   }
 }
 
+const RECORDED_TYPES: Record<string, ChangeRowType> = {
+  HERO_STAT_CHANGE: "STAT",
+  HERO_SKILL_CHANGE: "SKILL",
+  HERO_ROLE_CHANGE: "ROLE",
+  HERO_VISUAL_CHANGE: "VISUAL",
+  HERO_MECHANIC_CHANGE: "MECHANIC",
+  HERO_OTHER_CHANGE: "OTHER",
+}
+
+/** A line of a recorded change set as the API sends it. */
+export interface RecordedLine {
+  type: string
+  changeKind: string
+  sortOrder?: number
+  [key: string]: unknown
+}
+
+/** The editor rows of a recorded change set, in its order, so an editor can rewrite it. */
+export function rowsFromRecorded(lines: RecordedLine[]): ChangeRow[] {
+  const text = (value: unknown) => (value === null || value === undefined ? "" : String(value))
+  return [...lines]
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .flatMap((line): ChangeRow[] => {
+      const type = RECORDED_TYPES[line.type]
+      if (!type) return []
+      const row = { ...emptyRow(type), kind: line.changeKind as ChangeKind }
+      switch (type) {
+        case "STAT":
+          return [
+            {
+              ...row,
+              key: text(line.statKey),
+              unit: text(line.unitCode),
+              oldValue: text(line.oldValue),
+              newValue: text(line.newValue),
+            },
+          ]
+        case "SKILL":
+          return [
+            {
+              ...row,
+              key: text(line.skillKey),
+              field: text(line.fieldKey),
+              oldValue: text(line.oldValue),
+              newValue: text(line.newValue),
+            },
+          ]
+        case "ROLE":
+          return [{ ...row, key: text(line.roleCode), added: line.added !== false }]
+        case "VISUAL":
+          return [
+            { ...row, key: text(line.mediaRole), oldValue: text(line.oldAssetId), newValue: text(line.newAssetId) },
+          ]
+        case "MECHANIC":
+          return [{ ...row, key: text(line.mechanicKey), description: text(line.description) }]
+        case "OTHER":
+          return [{ ...row, description: text(line.description) }]
+      }
+    })
+}
+
 export interface StatOption {
   key: string
   label: string
@@ -299,4 +360,14 @@ export function provenanceText(
   return direction === "BACKWARD"
     ? `Trước thay đổi ở ${changePatch ?? "patch sau"}`
     : `Theo thay đổi ở ${changePatch ?? "patch trước"}`
+}
+
+/**
+ * A change set that only fixes bugs or smooths play. Admin lists these apart from the balance changes, as the official
+ * notes print them; a set with any other line stays with the balance changes so it is edited in one place.
+ */
+export function isFixOnly(change: { overallKind?: string | null; changes: { changeKind: string }[] }) {
+  return change.changes.length
+    ? change.changes.every((line) => line.changeKind === "FIX")
+    : change.overallKind === "FIX"
 }

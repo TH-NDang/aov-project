@@ -15,6 +15,7 @@ import { streamText, useStreamLocale } from "./stream-locale"
 import { useWatch } from "./use-watch"
 import { useWatchKeys } from "./use-watch-keys"
 import { VideoMini } from "./video-mini"
+import { ObjectiveCall } from "./objective-call"
 import { enterRoom, onPlace, placeNow, type VideoSpot } from "./video-place"
 import { watch } from "./watch-session"
 import "./video-frame.css"
@@ -180,6 +181,7 @@ export function VideoFrame(): ReactNode {
       >
         <div className="hub-video-box">
           <div ref={host} className="hub-video-host" />
+          {(form === "room" || form === "pinned") && <ObjectiveCall />}
         </div>
         {mini && <VideoMini />}
         {(form === "room" || form === "pinned") && (

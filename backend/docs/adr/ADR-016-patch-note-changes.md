@@ -93,6 +93,30 @@ khi đổi, nhưng change set đã ghi thì bất biến.
 - Nguồn bên ngoài có giấy phép riêng (Liquipedia dùng CC BY-SA): người biên tập viết lại bằng lời của mình, không chép
   nguyên văn, và luôn ghi nguồn; giao diện hiện link nguồn cạnh mô tả.
 
+### Bổ sung ngày 2026-11-27: sửa tại chỗ change set đã ghi
+
+Dữ liệu patch hiện vẫn đang được nhập và chưa công bố chính thức; người biên tập cần sửa lỗi gõ hoặc dòng ghi sai mà
+không phải ghi lại từ đầu. Chủ dự án chọn cách dễ thao tác trước: sửa ghi đè tại chỗ, không giữ lịch sử từng lần sửa.
+
+- PUT `admin/hero-changes/{changeSetId}` (quyền `patch:write`) thay dòng thay đổi, tóm tắt của các locale được gửi và
+  link nguồn; tướng, patch, nguồn, revision, cờ ra mắt, đánh giá tổng thể và vị trí trong patch giữ nguyên.
+- Trigger `hero.guard_change_history` vẫn chặn mọi UPDATE/DELETE, trừ transaction đã bật cờ
+  `hero.change_history_rewrite`; chỉ lần sửa này bật cờ. Mỗi lần sửa có audit `HERO_PATCH_CHANGE_EDITED`.
+- Công tắc `wiki.hero.change-edits` (biến môi trường `HERO_CHANGE_EDITS`, mặc định `true`). Khi dữ liệu công bố chính
+  thức, đặt `false` để khóa lại: lần sửa trả 409 `HERO_PATCH_CHANGE_LOCKED`, change set trở lại bất biến như quyết
+  định gốc. Nếu sau này cần sửa có lịch sử, thêm phiên bản change set thay cho công tắc này.
+
+### Bổ sung ngày 2026-11-27: link nguồn dùng chung của patch
+
+Trang ghi chú cập nhật chính thức liệt kê mọi thay đổi của patch trên một trang, nên dán cùng một link cho từng tướng
+là thừa. Một patch cũng thường có nhiều trang nguồn: bản tiếng Việt, bản của thị trường khác, bản máy chủ thử nghiệm.
+
+- Mỗi variant có tối đa 10 link nguồn chung, mỗi link có nhãn (ngôn ngữ, thị trường hoặc mô tả ngắn) và ngôn ngữ tùy
+  chọn, theo thứ tự biên tập viên chọn. Danh sách được thay cả cụm.
+- Change set `PATCH_NOTES` vẫn cần nguồn, nhưng là link riêng hoặc link chung của patch. Link riêng chỉ dùng khi một
+  thay đổi đến từ trang khác các trang chung.
+- Trang patch công khai hiện các link chung thay cho một link suy ra từ change set.
+
 ## Hệ quả
 
 - Ghi được thay đổi của các patch đã qua mà không cần thu thập lại toàn bộ dữ liệu tướng.

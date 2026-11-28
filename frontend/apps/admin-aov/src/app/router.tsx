@@ -208,6 +208,13 @@ const routes: RouteObject[] = [
             }),
           },
           {
+            path: "game-modes/:modeId/map",
+            handle: title("Bản đồ chiến trường"),
+            lazy: async () => ({
+              Component: (await import("@/features/game-modes/map/map-editor-page")).MapEditorPage,
+            }),
+          },
+          {
             path: "spells",
             handle: title("Phụ trợ"),
             lazy: async () => ({

@@ -42,6 +42,12 @@ export const wikiSections = [
     group: "play",
   },
   {
+    key: "map",
+    icon: "map",
+    path: "/map",
+    group: "play",
+  },
+  {
     key: "updates",
     icon: "updates",
     path: "/updates",

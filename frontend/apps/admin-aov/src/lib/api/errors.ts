@@ -58,6 +58,7 @@ const MESSAGES: Record<string, string> = {
     "Tướng đang có bản nháp ở patch hoặc loại nhập khác. Hoàn tất hoặc bỏ bản nháp đó trước khi tiếp tục.",
   HERO_REVISION_VERSION_CONFLICT: "Bản nháp đã được người khác sửa. Hãy tải bản mới trước khi tiếp tục.",
   HERO_PATCH_CHANGE_CONFLICT: "Tướng đã có change set trong variant này. Kiểm tra lịch sử đã ghi trước khi thử lại.",
+  HERO_PATCH_CHANGE_LOCKED: "Thay đổi đã ghi của patch đang bị khóa nên không sửa được.",
   HERO_DRAFT_EXISTS: "Tướng đã có bản nháp trong bộ quy tắc này. Hãy mở bản nháp hiện có.",
   HERO_CODE_EXISTS: "Mã tướng đã tồn tại. Hãy mở tướng trong danh mục trên máy chủ.",
   HERO_INVALID_CONTENT: "Nội dung section chưa đầy đủ hoặc không hợp lệ. Kiểm tra các trường và nguồn.",

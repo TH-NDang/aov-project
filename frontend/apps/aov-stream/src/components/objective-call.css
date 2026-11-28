@@ -1,0 +1,114 @@
+/*
+ * The big monster reminder over the video (objective-call.tsx): a dark glass strip in the top left corner, clear of
+ * YouTube's own controls at the bottom. The video is always dark, so it keeps the night colours in either theme.
+ */
+.hub-call {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  max-width: calc(100% - 20px);
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--aov-stream-gold) 45%, transparent);
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-stream-night) 88%, transparent);
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.7);
+  color: var(--aov-stream-lavender-bright);
+  font-size: 13px;
+  line-height: 18px;
+  backdrop-filter: blur(6px);
+  animation: hub-call-in 240ms ease-out;
+}
+.hub-call-mark {
+  display: grid;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--aov-stream-gold) 18%, var(--aov-stream-indigo));
+  box-shadow: 0 0 0 1.5px var(--aov-stream-gold);
+  color: var(--aov-stream-gold);
+}
+.hub-call-words {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+}
+.hub-call-words > b {
+  flex: none;
+  color: var(--aov-stream-gold);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.hub-call-words > span {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-call-map {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-stream-lavender) 18%, transparent);
+  color: var(--aov-stream-lavender-bright);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.hub-call-map:hover,
+.hub-call-map:focus-visible {
+  background: color-mix(in srgb, var(--aov-stream-lavender) 30%, transparent);
+}
+.hub-call-close {
+  display: grid;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--aov-stream-feather-light);
+  cursor: pointer;
+}
+.hub-call-close:hover,
+.hub-call-close:focus-visible {
+  background: color-mix(in srgb, var(--aov-stream-lavender) 18%, transparent);
+  color: var(--aov-stream-lavender-bright);
+}
+
+/* A narrow video has room for the words only. */
+@media (max-width: 899.98px) {
+  .hub-call {
+    top: 8px;
+    left: 8px;
+    gap: 8px;
+  }
+  .hub-call-map {
+    display: none;
+  }
+}
+
+@keyframes hub-call-in {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-call {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .hub-call {
+    border-color: CanvasText;
+  }
+}

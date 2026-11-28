@@ -4,10 +4,12 @@ import com.wikiaov.gamemode.internal.application.response.GameModeViews.CardList
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.Insights;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicGuide;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicLineup;
+import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicMap;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicMode;
 import com.wikiaov.gamemode.internal.catalog.application.GameModeCatalog;
 import com.wikiaov.gamemode.internal.guide.application.AutoChessGuides;
 import com.wikiaov.gamemode.internal.lineup.application.LineupInteractions;
+import com.wikiaov.gamemode.internal.mapguide.application.MapGuides;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
@@ -29,10 +31,14 @@ public class GameModePublicController implements GameModePublicApi {
 
     private final LineupInteractions lineups;
 
-    public GameModePublicController(GameModeCatalog catalog, AutoChessGuides guides, LineupInteractions lineups) {
+    private final MapGuides maps;
+
+    public GameModePublicController(GameModeCatalog catalog, AutoChessGuides guides, LineupInteractions lineups,
+            MapGuides maps) {
         this.catalog = catalog;
         this.guides = guides;
         this.lineups = lineups;
+        this.maps = maps;
     }
 
     @Override
@@ -54,6 +60,13 @@ public class GameModePublicController implements GameModePublicApi {
     public PublicGuide guide(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return guides.published(code);
+    }
+
+    @Override
+    @GetMapping(path = "/{code}/map", version = "1")
+    public PublicMap map(@PathVariable String code, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return maps.published(code);
     }
 
     @Override

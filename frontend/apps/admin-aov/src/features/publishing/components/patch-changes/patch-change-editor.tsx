@@ -32,6 +32,7 @@ import { selectSkillTranslation, skillLabel, skillVariantLabel } from "../../mod
 import { mechanicSkillKey } from "../../model/patch-changes/patch-description-marks"
 import { NativeSelect } from "@/components/native-select"
 import { Input } from "@aov/ui/components/input"
+import { usePatchSources } from "./patch-sources"
 
 const api = createPublishingApi(backendRequest)
 export const compactControl =
@@ -48,6 +49,8 @@ export interface PatchChangeEditorProps {
   toRevisionId?: string | null
   initialRows?: ChangeRow[]
   defaultSourceUrl?: string
+  /** A recorded change set to rewrite in place; its hero, patch, source kind and revisions stay as they are. */
+  editing?: { changeSetId: string; summary: string }
   onSaved: (id: string) => void
   onCancel?: () => void
 }
@@ -63,6 +66,7 @@ export function PatchChangeEditor({
   toRevisionId = null,
   initialRows,
   defaultSourceUrl = "",
+  editing,
   onSaved,
   onCancel,
 }: PatchChangeEditorProps) {
@@ -71,8 +75,14 @@ export function PatchChangeEditor({
   const fieldsId = useId()
   const [rows, setRows] = useState<ChangeRow[]>(() => (initialRows?.length ? initialRows : [emptyRow("STAT")]))
   const starter = useRef(notes && !initialRows?.length ? rows[0].id : null)
-  const [summary, setSummary] = useState("")
+  const [summary, setSummary] = useState(editing?.summary ?? "")
   const [sourceUrl, setSourceUrl] = useState(defaultSourceUrl)
+  // The patch's shared links are the source unless this hero's change came from a page of its own: a new change
+  // follows them, and a recorded one keeps the link it was written with.
+  const shared = usePatchSources(variantId).data ?? []
+  const [ownChoice, setOwnChoice] = useState<boolean | null>(editing ? !!defaultSourceUrl : null)
+  const ownLink = !shared.length || (ownChoice ?? false)
+  const showUrl = notes && ownLink
   const [introduces, setIntroduces] = useState(false)
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -85,7 +95,13 @@ export function PatchChangeEditor({
       rowProblem(row, source) ?? (duplicates.has(row.id) ? "Dòng này trùng với một dòng phía trên." : null),
     ]),
   )
-  const urlProblem = notes && !isHttpUrl(sourceUrl) ? "Dán liên kết ghi chú cập nhật chính thức (http/https)." : null
+  const urlProblem = !showUrl
+    ? null
+    : isHttpUrl(sourceUrl)
+      ? null
+      : shared.length || sourceUrl.trim()
+        ? "Dán liên kết ghi chú cập nhật chính thức (http/https)."
+        : "Thêm link nguồn chung cho patch, hoặc dán link riêng (http/https)."
   const invalid = !summary.trim() || !!urlProblem || [...problems.values()].some(Boolean)
   const skills = notes ? [...(reference?.SKILLS?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder) : []
   // A skill without an icon of its own shows the hero's library picture, as the skills editor does.
@@ -107,16 +123,23 @@ export function PatchChangeEditor({
     setBusy(true)
     setError("")
     try {
-      const result = await api.send<{ id: string }>(`/admin/patch-variants/${variantId}/hero-changes`, "POST", {
-        heroId,
-        sourceKind: source,
-        sourceUrl: sourceUrl.trim() || null,
-        fromHeroRevisionId: fromRevisionId,
-        toHeroRevisionId: toRevisionId,
+      const content = {
+        sourceUrl: !notes || ownLink ? sourceUrl.trim() || null : null,
         summaryTranslations: [{ locale, summary: summary.trim() }],
         changes: rows.map(changePayload),
-        introducesHero: introduces,
-      })
+      }
+      const result = editing
+        ? await api
+            .send<void>(`/admin/hero-changes/${editing.changeSetId}`, "PUT", content)
+            .then(() => ({ id: editing.changeSetId }))
+        : await api.send<{ id: string }>(`/admin/patch-variants/${variantId}/hero-changes`, "POST", {
+            ...content,
+            heroId,
+            sourceKind: source,
+            fromHeroRevisionId: fromRevisionId,
+            toHeroRevisionId: toRevisionId,
+            introducesHero: introduces,
+          })
       await Promise.all([
         cache.invalidateQueries({ queryKey: publishingKeys.allPatchChanges }),
         cache.invalidateQueries({ queryKey: publishingKeys.heroes }),
@@ -140,9 +163,31 @@ export function PatchChangeEditor({
       }}
     >
       <fieldset disabled={busy} className="min-w-0 space-y-4">
-        {notes && (
+        {notes && !showUrl && (
+          <p className="type-meta flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link2 aria-hidden className="size-4" />
+            Nguồn: {shared.length} link chung của patch.
+            <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setOwnChoice(true)}>
+              Dùng link riêng cho tướng này
+            </Button>
+          </p>
+        )}
+        {showUrl && (
           <label className="grid gap-1.5 text-sm">
-            <span className="font-medium">Nguồn ghi chú cập nhật</span>
+            <span className="flex items-center justify-between gap-2">
+              <span className="font-medium">{shared.length ? "Link riêng của tướng" : "Nguồn ghi chú cập nhật"}</span>
+              {shared.length > 0 && (
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0"
+                  onClick={() => setOwnChoice(false)}
+                >
+                  Dùng link chung
+                </Button>
+              )}
+            </span>
             <span className="relative">
               <Link2 className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -158,18 +203,22 @@ export function PatchChangeEditor({
             {checked && urlProblem && <span className="text-xs text-destructive">{urlProblem}</span>}
           </label>
         )}
-        <label className="flex items-start gap-2.5 rounded-md border p-2.5">
-          <input
-            type="checkbox"
-            className="mt-0.5 size-4 shrink-0 accent-primary"
-            checked={introduces}
-            onChange={(event) => setIntroduces(event.target.checked)}
-          />
-          <span className="grid gap-0.5">
-            <span className="type-label">Tướng mới ra mắt ở bản này</span>
-            <span className="type-meta">Wiki không hiện tướng ở các bản trước. Mỗi tướng chỉ đánh dấu ở một bản.</span>
-          </span>
-        </label>
+        {!editing && (
+          <label className="flex items-start gap-2.5 rounded-md border p-2.5">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0 accent-primary"
+              checked={introduces}
+              onChange={(event) => setIntroduces(event.target.checked)}
+            />
+            <span className="grid gap-0.5">
+              <span className="type-label">Tướng mới ra mắt ở bản này</span>
+              <span className="type-meta">
+                Wiki không hiện tướng ở các bản trước. Mỗi tướng chỉ đánh dấu ở một bản.
+              </span>
+            </span>
+          </label>
+        )}
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium">Tóm tắt</span>
           <textarea

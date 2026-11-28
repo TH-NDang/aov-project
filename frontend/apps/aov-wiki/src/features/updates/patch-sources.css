@@ -1,0 +1,53 @@
+/* The official pages of a patch: a quiet row under the title, a pill per language that wraps on a phone. */
+.wiki-patch-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 2px 0 18px;
+}
+.wiki-patch-sources-title {
+  font: var(--wiki-type-category);
+  color: var(--aov-muted);
+}
+.wiki-patch-sources ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-patch-sources a {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 3px 10px 3px 12px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  text-decoration: none;
+  transition: border-color 140ms ease-out;
+}
+.wiki-patch-sources a:hover {
+  border-color: var(--aov-accent);
+  color: var(--aov-accent-strong);
+}
+.wiki-patch-sources a > svg {
+  flex: none;
+  color: var(--aov-accent);
+}
+@media (max-width: 899.98px) {
+  /* On a phone the row sits under the patch's name, the title above its pills so each pill keeps a full line. */
+  .wiki-patch-sources {
+    display: grid;
+    gap: 6px;
+    margin: 6px 0 0;
+  }
+  .wiki-patch-sources a {
+    min-height: 36px;
+  }
+}

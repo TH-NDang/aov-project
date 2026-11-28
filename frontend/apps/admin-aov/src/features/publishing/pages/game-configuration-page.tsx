@@ -8,7 +8,21 @@ import { useSearchParams } from "react-router"
 import { CatalogTimeline } from "../components/catalog/catalog-timeline"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { CalendarPlus, ChevronRight, Globe2, Layers, RefreshCw, Plus, Shapes, CalendarCog } from "lucide-react"
+import {
+  CalendarClock,
+  CalendarCog,
+  CalendarPlus,
+  ChevronRight,
+  CircleCheck,
+  ClipboardCheck,
+  Globe2,
+  Layers,
+  Plus,
+  RefreshCw,
+  Shapes,
+  SlidersHorizontal,
+  type LucideIcon,
+} from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -21,8 +35,6 @@ import {
   type MarketMode,
 } from "../components/setup/market-schedule"
 import { Button } from "@aov/ui/components/button"
-import { Tabs, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
-import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
 import { ActionStrip } from "@/components/action-strip"
 import { Badge } from "@aov/ui/components/badge"
 import { Page, PageHeader } from "@/components/page-header"
@@ -63,12 +75,13 @@ export function GameConfigurationPage() {
   })
   const timelineScope = data ? resolveCatalogScope(data, requested) : requested
   const selectedPatch = data?.variants.find((v) => v.id === timelineScope.variantId)
-  const view = params.get("tab") === "markets" ? "markets" : "versions"
-  const changeView = (value: string) =>
+  // The markets open over the patch being worked on; the address keeps them open so a link can lead straight there.
+  const marketsOpen = params.get("tab") === "markets"
+  const showMarkets = (open: boolean) =>
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
-        if (value === "markets") next.set("tab", "markets")
+        if (open) next.set("tab", "markets")
         else next.delete("tab")
         return next
       },
@@ -117,34 +130,41 @@ export function GameConfigurationPage() {
       <PageHeader
         title="Phiên bản và thị trường"
         actions={
-          <PageActionsMenu label="Tạo và thiết lập phiên bản">
-            {capabilities.includes("patch:write") && (
-              <>
-                <DropdownMenuItem onSelect={() => setSetup("patch")}>
-                  <Plus />
-                  Tạo patch
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSetup("season")}>
-                  <CalendarPlus />
-                  Tạo mùa
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
+          <>
+            {data && (
+              <Button variant="outline" size="sm" aria-haspopup="dialog" onClick={() => showMarkets(true)}>
+                <Globe2 aria-hidden /> Thị trường
+              </Button>
             )}
-            {capabilities.includes("region:admin") && data && !data.rulesets.length && (
-              <>
-                <DropdownMenuItem onSelect={() => void createDefaultRuleset()}>
-                  <Shapes />
-                  Tạo bộ quy tắc mặc định
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            <DropdownMenuItem onSelect={() => void overview.refetch()}>
-              <RefreshCw />
-              Làm mới
-            </DropdownMenuItem>
-          </PageActionsMenu>
+            <PageActionsMenu label="Tạo và thiết lập phiên bản">
+              {capabilities.includes("patch:write") && (
+                <>
+                  <DropdownMenuItem onSelect={() => setSetup("patch")}>
+                    <Plus />
+                    Tạo patch
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSetup("season")}>
+                    <CalendarPlus />
+                    Tạo mùa
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              {capabilities.includes("region:admin") && data && !data.rulesets.length && (
+                <>
+                  <DropdownMenuItem onSelect={() => void createDefaultRuleset()}>
+                    <Shapes />
+                    Tạo bộ quy tắc mặc định
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onSelect={() => void overview.refetch()}>
+                <RefreshCw />
+                Làm mới
+              </DropdownMenuItem>
+            </PageActionsMenu>
+          </>
         }
       />
       <Sheet
@@ -200,67 +220,66 @@ export function GameConfigurationPage() {
       )}
       {data && (
         <>
-          <Tabs value={view} onValueChange={changeView} className="min-w-0 gap-4">
-            <ScrollableTabsList
-              activeValue={view}
-              variant="line"
-              className="w-fit"
-              aria-label="Quản lý phiên bản và thị trường"
-            >
-              <TabsTrigger value="versions">
-                <Layers aria-hidden /> Phiên bản
-              </TabsTrigger>
-              <TabsTrigger value="markets">
-                <Globe2 aria-hidden /> Thị trường
-              </TabsTrigger>
-            </ScrollableTabsList>
-            <CatalogTimeline
-              data={data}
-              value={timelineScope}
-              onChange={changeScope}
-              showCounts={false}
-              currentFilter={activeCatalogScope(data)}
-            />
-            <TabsContent value="versions" className="min-w-0 space-y-4">
-              {selectedPatch ? (
-                <PatchDetail key={selectedPatch.id} variant={selectedPatch} data={data} locale={locale} />
-              ) : (
-                <>
-                  {!data.seasons.length && (
-                    <p className="type-meta">Chưa có mùa. Bạn có thể tạo mùa trong menu đầu trang.</p>
-                  )}
-                  {[...data.seasons]
-                    .filter((s) => !timelineScope.seasonId || s.id === timelineScope.seasonId)
-                    .sort((a, b) => b.ordinal - a.ordinal)
-                    .map((s) => (
-                      <SeasonVersions
-                        key={s.id}
-                        season={s}
-                        data={data}
-                        locale={locale}
-                        onSelect={(v) => changeScope({ seasonId: v.seasonId ?? "", variantId: v.id })}
-                      />
-                    ))}
-                  {!timelineScope.seasonId && data.variants.some((v) => !v.seasonId) && (
-                    <SeasonVersions
-                      data={data}
-                      locale={locale}
-                      onSelect={(v) => changeScope({ seasonId: v.seasonId ?? "", variantId: v.id })}
-                    />
-                  )}
-                </>
+          <CatalogTimeline
+            data={data}
+            value={timelineScope}
+            onChange={changeScope}
+            showCounts={false}
+            currentFilter={activeCatalogScope(data)}
+          />
+          {selectedPatch ? (
+            <PatchDetail key={selectedPatch.id} variant={selectedPatch} data={data} locale={locale} />
+          ) : (
+            <div className="min-w-0 space-y-4">
+              {!data.seasons.length && (
+                <p className="type-meta">Chưa có mùa. Bạn có thể tạo mùa trong menu đầu trang.</p>
               )}
-            </TabsContent>
-            <TabsContent value="markets" className="min-w-0">
-              <MarketOverview
-                data={data}
-                seasonId={timelineScope.seasonId}
-                variantId={timelineScope.variantId}
-                onOpenMarket={(id, mode) => setMarketEditor({ id, mode })}
-                onCreate={capabilities.includes("region:admin") ? () => setSetup("region") : undefined}
-              />
-            </TabsContent>
-          </Tabs>
+              {[...data.seasons]
+                .filter((s) => !timelineScope.seasonId || s.id === timelineScope.seasonId)
+                .sort((a, b) => b.ordinal - a.ordinal)
+                .map((s) => (
+                  <SeasonVersions
+                    key={s.id}
+                    season={s}
+                    data={data}
+                    locale={locale}
+                    onSelect={(v) => changeScope({ seasonId: v.seasonId ?? "", variantId: v.id })}
+                  />
+                ))}
+              {!timelineScope.seasonId && data.variants.some((v) => !v.seasonId) && (
+                <SeasonVersions
+                  data={data}
+                  locale={locale}
+                  onSelect={(v) => changeScope({ seasonId: v.seasonId ?? "", variantId: v.id })}
+                />
+              )}
+            </div>
+          )}
+          <Sheet open={marketsOpen} onOpenChange={showMarkets}>
+            <SheetContent
+              side={wide ? "right" : "bottom"}
+              className={wide ? "w-[min(760px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
+              onOpenAutoFocus={focusSheet}
+            >
+              <SheetHeader className="border-b">
+                <SheetTitle className="flex items-center gap-2">
+                  <Globe2 aria-hidden className="size-4" /> Thị trường
+                </SheetTitle>
+                <SheetDescription>
+                  Mùa và patch đang áp dụng ở từng nơi. Trạng thái dưới mỗi nút theo mùa hoặc patch đang chọn.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+                <MarketOverview
+                  data={data}
+                  seasonId={timelineScope.seasonId}
+                  variantId={timelineScope.variantId}
+                  onOpenMarket={(id, mode) => setMarketEditor({ id, mode })}
+                  onCreate={capabilities.includes("region:admin") ? () => setSetup("region") : undefined}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
           <MarketSchedule
             marketId={marketEditor?.id ?? null}
             initialMode={marketEditor?.mode}
@@ -440,18 +459,12 @@ function MarketOverview({
     )
   }
   return (
-    <section className="@container/markets min-w-0 space-y-4" aria-label="Thị trường">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="type-section-title">Mùa và patch theo thị trường</h2>
-        {onCreate && (
-          <Button size="sm" variant="outline" onClick={onCreate}>
-            <Plus aria-hidden /> Thêm thị trường
-          </Button>
-        )}
-      </header>
-      <p className="type-meta">
-        Trạng thái dưới mỗi nút cho biết thị trường đã có lịch cho mùa hoặc patch đang chọn ở trên.
-      </p>
+    <section className="@container/markets min-w-0 space-y-4 pt-4" aria-label="Thị trường">
+      {onCreate && (
+        <Button size="sm" variant="outline" onClick={onCreate}>
+          <Plus aria-hidden /> Thêm thị trường
+        </Button>
+      )}
       {groups.map(({ rule, markets }) => (
         <div key={rule.id || "none"}>
           {grouped && <h3 className="type-label text-muted-foreground">{rule.code}</h3>}
@@ -467,10 +480,45 @@ function MarketOverview({
   )
 }
 
+/** A sheet opens with focus on itself, so the first date in it does not open its tooltip over the list. */
+const focusSheet = (event: Event) => {
+  event.preventDefault()
+  ;(event.currentTarget as HTMLElement | null)?.focus()
+}
+
+/** The parts of a patch kept out of the way of its change list: each opens on its own sheet. */
+type PatchTool = "schedule" | "stats" | "review"
+const PATCH_TOOLS: { key: PatchTool; label: string; short: string; icon: LucideIcon; description: string }[] = [
+  {
+    key: "schedule",
+    label: "Lịch phát hành",
+    short: "Lịch",
+    icon: CalendarClock,
+    description: "Ngày patch áp dụng ở từng thị trường.",
+  },
+  {
+    key: "stats",
+    label: "Thuộc tính mặc định",
+    short: "Thuộc tính",
+    icon: SlidersHorizontal,
+    description: "Chỉ số chung của mọi tướng từ patch này.",
+  },
+  {
+    key: "review",
+    label: "Kiểm tra dữ liệu",
+    short: "Kiểm tra",
+    icon: ClipboardCheck,
+    description: "Xác nhận đã nhập đủ thay đổi của patch.",
+  },
+]
+
 function PatchDetail({ variant, data, locale }: { variant: Variant; data: PublicationOverview; locale: string }) {
-  const [section, setSection] = useState<"changes" | "schedule" | "review" | "stats">("changes")
+  const [tool, setTool] = useState<PatchTool | null>(null)
+  const wide = useIsWide()
   const season = data.seasons.find((s) => s.id === variant.seasonId)
   const rule = data.rulesets.length > 1 && data.rulesets.find((r) => r.id === variant.rulesetId)
+  const reviewed = variant.dataReviewState === "COMPLETE"
+  const open = PATCH_TOOLS.find((entry) => entry.key === tool)
   return (
     <section className="min-w-0 space-y-3">
       <header className="flex flex-wrap items-center justify-between gap-2">
@@ -484,52 +532,83 @@ function PatchDetail({ variant, data, locale }: { variant: Variant; data: Public
         </div>
         <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
           <span className="type-meta">{phaseLabels[variant.status] ?? variant.status}</span>
-          {variant.dataReviewState === "COMPLETE" && <Badge variant="secondary">Đã hoàn tất nhập liệu</Badge>}
+          {reviewed && <Badge variant="secondary">Đã hoàn tất nhập liệu</Badge>}
           {variant.status === "DRAFT" && <PatchReleaseForm variant={variant} data={data} />}
         </div>
       </header>
       <VersionMarketCoverage data={data} scope={{ variantId: variant.id }} locale={locale} />
-      <ActionStrip aria-label="Phần của patch">
-        {(
-          [
-            ["changes", "Thay đổi"],
-            ["stats", "Thuộc tính mặc định"],
-            ["schedule", "Lịch phát hành"],
-            ["review", "Kiểm tra dữ liệu"],
-          ] as const
-        ).map(([key, label]) => (
-          <Button
-            key={key}
-            type="button"
-            size="sm"
-            variant={section === key ? "secondary" : "ghost"}
-            aria-pressed={section === key}
-            onClick={() => setSection(key)}
-          >
-            {label}
-          </Button>
-        ))}
-      </ActionStrip>
-      {section === "changes" && <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />}
-      {section === "stats" && <PatchStatDefaults variant={variant} />}
-      {section === "schedule" && (
-        <div className="space-y-3 border-t pt-3">
-          <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
-          {/* A published patch, older ones included, gets its market dates here instead of only from a market. */}
-          {variant.status === "PUBLISHED" &&
-            data.markets.some(
-              (market) =>
-                market.available &&
-                !data.releases.some(
-                  (release) =>
-                    release.variantId === variant.id &&
-                    release.regionId === market.id &&
-                    release.status !== "CANCELLED",
-                ),
-            ) && <PatchReleaseForm variant={variant} data={data} />}
-        </div>
-      )}
-      {section === "review" && <PatchDataReview variant={variant} />}
+      {/* A phone gets three even tiles it can reach with a thumb; a wide screen a quiet row of buttons. */}
+      <div
+        role="group"
+        aria-label="Thiết lập patch"
+        className={wide ? "flex flex-wrap items-center gap-2" : "grid grid-cols-3 gap-2"}
+      >
+        {PATCH_TOOLS.map(({ key, label, short, icon: Icon }) => {
+          const done = key === "review" && reviewed
+          return (
+            <Button
+              key={key}
+              type="button"
+              variant="outline"
+              size={wide ? "sm" : "default"}
+              aria-haspopup="dialog"
+              aria-label={label}
+              title={label}
+              className={wide ? undefined : "h-auto min-h-14 flex-col gap-1 px-1 py-2"}
+              onClick={() => setTool(key)}
+            >
+              {done ? (
+                <CircleCheck aria-hidden className="size-4 text-(--aov-success)" />
+              ) : (
+                <Icon aria-hidden className="size-4" />
+              )}
+              <span className={wide ? undefined : "type-meta text-foreground"}>{wide ? label : short}</span>
+            </Button>
+          )
+        })}
+      </div>
+      <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />
+      <Sheet open={!!tool} onOpenChange={(next) => !next && setTool(null)}>
+        <SheetContent
+          side={wide ? "right" : "bottom"}
+          className={wide ? "w-[min(720px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
+          onOpenAutoFocus={focusSheet}
+        >
+          {open && (
+            <>
+              <SheetHeader className="border-b">
+                <SheetTitle className="flex items-center gap-2">
+                  <open.icon aria-hidden className="size-4" /> {open.label}
+                </SheetTitle>
+                <SheetDescription>
+                  {variant.patchCode} · {open.description}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pt-3 pb-6">
+                {open.key === "stats" && <PatchStatDefaults variant={variant} />}
+                {open.key === "review" && <PatchDataReview variant={variant} />}
+                {open.key === "schedule" && (
+                  <>
+                    <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
+                    {/* A published patch, older ones included, gets its market dates here instead of only from a market. */}
+                    {variant.status === "PUBLISHED" &&
+                      data.markets.some(
+                        (market) =>
+                          market.available &&
+                          !data.releases.some(
+                            (release) =>
+                              release.variantId === variant.id &&
+                              release.regionId === market.id &&
+                              release.status !== "CANCELLED",
+                          ),
+                      ) && <PatchReleaseForm variant={variant} data={data} />}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </section>
   )
 }

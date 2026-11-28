@@ -23,6 +23,7 @@ import com.wikiaov.gamemode.internal.catalog.persistence.entity.GameModeRevision
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
 import com.wikiaov.gamemode.internal.guide.persistence.AutoChessRevisionRepository;
+import com.wikiaov.gamemode.internal.mapguide.persistence.MapGuideRevisionRepository;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageScope;
@@ -56,15 +57,19 @@ public class GameModeCatalog {
 
     private final AutoChessRevisionRepository guideRevisions;
 
+    private final MapGuideRevisionRepository mapRevisions;
+
     private final GameModeImages images;
 
     private final RevisionWorkflow workflow;
 
     public GameModeCatalog(GameModeRepository modes, GameModeRevisionRepository revisions,
-            AutoChessRevisionRepository guideRevisions, GameModeImages images, RevisionWorkflow workflow) {
+            AutoChessRevisionRepository guideRevisions, MapGuideRevisionRepository mapRevisions, GameModeImages images,
+            RevisionWorkflow workflow) {
         this.modes = modes;
         this.revisions = revisions;
         this.guideRevisions = guideRevisions;
+        this.mapRevisions = mapRevisions;
         this.images = images;
         this.workflow = workflow;
     }
@@ -76,6 +81,8 @@ public class GameModeCatalog {
         var byMode = revisions.findByStateNot(RevisionState.DISCARDED).stream()
                 .collect(Collectors.groupingBy(GameModeRevision::getModeId));
         var guides = guideRevisions.findByStateNot(RevisionState.DISCARDED).stream()
+                .collect(Collectors.groupingBy(r -> r.getModeId()));
+        var maps = mapRevisions.findByStateNot(RevisionState.DISCARDED).stream()
                 .collect(Collectors.groupingBy(r -> r.getModeId()));
         var art = images.hydrate(all.stream()
                 .map(mode -> latest(byMode.getOrDefault(mode.getId(), List.of())))
@@ -89,20 +96,13 @@ public class GameModeCatalog {
                     .orElse(null);
             var shown = draft != null ? draft : published;
             var content = shown == null ? null : shown.getContent();
-            var guideList = guides.getOrDefault(mode.getId(), List.of());
-            var guidePublished = guideList.stream().filter(r -> r.getState() == RevisionState.PUBLISHED)
-                    .max(Comparator.comparingLong(RevisionRecord::getRevisionNo)).orElse(null);
-            var guideDraft = guideList.stream().filter(r -> r.getState() == RevisionState.DRAFT).findFirst()
-                    .orElse(null);
             return new AdminSummary(mode.getId(), mode.getCode(), content == null ? mode.getCode() : content.name(),
                     content == null ? null : content.group(), content == null ? null : content.order(),
                     content == null ? "NONE" : content.guideKind(),
                     content == null || content.artAssetId() == null ? null : art.get(content.artAssetId()),
                     Revision.of(published), Revision.of(draft),
-                    guideList.isEmpty()
-                            ? null
-                            : new GuideState(Revision.of(guidePublished),
-                                    Revision.of(guideDraft)));
+                    state(guides.getOrDefault(mode.getId(), List.of())),
+                    state(maps.getOrDefault(mode.getId(), List.of())));
         }).sorted(Comparator.comparing((AdminSummary s) -> s.group() == null ? "~" : s.group())
                 .thenComparing(s -> s.order() == null ? Integer.MAX_VALUE : s.order())
                 .thenComparing(AdminSummary::code)).toList();
@@ -228,6 +228,7 @@ public class GameModeCatalog {
         var byId = modes.findAllById(published.stream().map(GameModeRevision::getModeId).toList()).stream()
                 .collect(Collectors.toMap(GameMode::getId, Function.identity()));
         var guides = new HashSet<>(guideRevisions.publishedModeIds(byId.keySet()));
+        var maps = new HashSet<>(mapRevisions.publishedModeIds(byId.keySet()));
         var art = images.hydrate(published.stream().map(r -> r.getContent().artAssetId())
                 .filter(Objects::nonNull).toList());
 
@@ -236,7 +237,7 @@ public class GameModeCatalog {
             var mode = byId.get(revision.getModeId());
             return new Card(mode.getCode(), content.name(), content.group(), content.order(), content.summary(),
                     content.playersLabel(), content.duration(), content.availability(), content.guideKind(),
-                    hasGuide(content, guides.contains(mode.getId())),
+                    hasGuide(content, guides.contains(mode.getId())), maps.contains(mode.getId()),
                     content.artAssetId() == null ? null : art.get(content.artAssetId()), revision.getPublishedAt());
         }).sorted(Comparator.comparing((Card card) -> "PVP".equals(card.group()) ? 0 : 1)
                 .thenComparing(card -> card.order() == null ? Integer.MAX_VALUE : card.order())
@@ -250,8 +251,9 @@ public class GameModeCatalog {
         var revision = latestPublished(mode.getId()).orElseThrow(GameModeCatalog::notFound);
         var content = revision.getContent();
         boolean guide = !guideRevisions.publishedModeIds(List.of(mode.getId())).isEmpty();
+        boolean map = !mapRevisions.publishedModeIds(List.of(mode.getId())).isEmpty();
         return new PublicMode(mode.getCode(), GameModeViews.CONTENT_LOCALE,
-                revision.getPublishedAt(), hasGuide(content, guide), content,
+                revision.getPublishedAt(), hasGuide(content, guide), map, content,
                 images.hydrate(GameModeContentRules.assets(content)));
     }
 
@@ -311,6 +313,17 @@ public class GameModeCatalog {
         }
 
         return usages;
+    }
+
+    /** The published and draft revisions of a guide or map, or null when it was never started. */
+    private static GuideState state(List<? extends RevisionRecord> list) {
+        if (list.isEmpty()) {
+            return null;
+        }
+        var published = list.stream().filter(r -> r.getState() == RevisionState.PUBLISHED)
+                .max(Comparator.comparingLong(RevisionRecord::getRevisionNo)).orElse(null);
+        var draft = list.stream().filter(r -> r.getState() == RevisionState.DRAFT).findFirst().orElse(null);
+        return new GuideState(Revision.of(published), Revision.of(draft));
     }
 
     private static boolean hasGuide(GameModeContent content, boolean guidePublished) {

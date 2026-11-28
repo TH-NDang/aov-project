@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
+import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository.Member;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment;
 import com.wikiaov.hero.internal.domain.HeroChanges;
@@ -34,6 +35,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.patch.PatchReleaseReference;
+import com.wikiaov.patch.PatchSources;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
@@ -52,6 +54,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -70,11 +73,14 @@ public class HeroPatchChanges implements HeroChangeQueries {
     private final CurrentActor actors;
     private final Clock clock;
     private final HeroForms forms;
+    private final PatchSources sources;
+    private final boolean editsOpen;
 
     public HeroPatchChanges(PatchDataReviews dataReviews,
             HeroPatchHistory history,
             HeroStore store, GameplayContexts contexts, AuditLog audit, CurrentActor actors,
-            Clock clock, PatchCatalog patches, HeroSections sections, HeroForms forms) {
+            Clock clock, PatchCatalog patches, HeroSections sections, HeroForms forms, PatchSources sources,
+            @Value("${wiki.hero.change-edits:true}") boolean editsOpen) {
         this.dataReviews = dataReviews;
         this.history = history;
         this.patches = patches;
@@ -85,6 +91,8 @@ public class HeroPatchChanges implements HeroChangeQueries {
         this.actors = actors;
         this.clock = clock;
         this.forms = forms;
+        this.sources = sources;
+        this.editsOpen = editsOpen;
     }
 
     @Transactional
@@ -92,12 +100,76 @@ public class HeroPatchChanges implements HeroChangeQueries {
     public UUID record(UUID variantId, HeroChanges.Record input) {
         store.lockHero(input.heroId());
         var variant = contexts.variant(variantId);
+        var to = validateContent(variantId, variant, input);
+        if (input.introduces()) {
+            validateIntroduction(input.heroId(), variant);
+        }
+
+        UUID id = UUID.randomUUID();
+        var actor = actors.require();
+        try {
+            history.create(id, variantId, input, clock.instant(), actor);
+        } catch (DataIntegrityViolationException e) {
+            throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT,
+                    "A change set already exists for this hero and variant.");
+        }
+        for (var t : input.summaryTranslations()) {
+            history.appendTranslation(id, t);
+        }
+        int order = 0;
+        for (var change : input.changes()) {
+            history.appendChange(id, order++, change);
+        }
+
+        dataReviews.markDirty(variantId);
+        audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGE_RECORDED", CatalogAggregates.HERO, input.heroId(),
+                to == null ? null : to.id(), null, null, null,
+                Map.of("changeSetId", id, "sourceKind", input.source().name())));
+        return id;
+    }
+
+    /**
+     * Replaces what a recorded change set says: its source link, the summaries of the given locales and every line
+     * (ADR-016, 2026-11-27). The hero, patch, source kind and revisions stay. Lines follow the rules of
+     * {@link #record}; a mechanic line keeps what it did before when the new list still names its mechanic. Closed
+     * when {@code wiki.hero.change-edits} is false, once the recorded data is official.
+     */
+    @Transactional
+    @PreAuthorize("hasAuthority('patch:write')")
+    public void edit(UUID changeSetId, HeroChangeEditCommand input) {
+        if (!editsOpen) {
+            throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_LOCKED, "Recorded hero changes are locked.");
+        }
+        UUID heroId = history.heroId(changeSetId).orElseThrow(HeroPatchChanges::changeSetNotFound);
+        store.lockHero(heroId);
+        var header = history.header(changeSetId).orElseThrow(HeroPatchChanges::changeSetNotFound);
+        var variant = contexts.variant(header.getPatchVariantId());
+        var record = new HeroChanges.Record(heroId, header.getSourceKind(), input.sourceUrl(),
+                header.getFromHeroRevisionId(), header.getToHeroRevisionId(), input.summaryTranslations(),
+                input.changes(), header.getIntroducesHero());
+        var to = validateContent(header.getPatchVariantId(), variant, record);
+
+        var actor = actors.require();
+        history.rewrite(changeSetId, input.sourceUrl(), input.summaryTranslations(), input.changes());
+
+        dataReviews.markDirty(header.getPatchVariantId());
+        audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGE_EDITED", CatalogAggregates.HERO, heroId,
+                to == null ? null : to.id(), null, null, null,
+                Map.of("changeSetId", changeSetId, "lines", input.changes().size())));
+    }
+
+    /** Checks a change set's content against its patch and revisions; returns the target revision when it has one. */
+    private HeroRevisionView validateContent(UUID variantId, PatchVariantReference variant,
+            HeroChanges.Record input) {
         boolean notes = input.source() == ChangeSource.PATCH_NOTES;
         if (!notes && input.toHeroRevisionId() == null) {
             throw HeroValidation.invalid("A snapshot change set requires a target revision.");
         }
-        if (notes || input.sourceUrl() != null) {
+        if (input.sourceUrl() != null) {
             requireSourceUrl(input.sourceUrl());
+        } else if (notes && sources.of(variantId).isEmpty()) {
+            throw HeroValidation
+                    .invalid("Patch notes need a source: add a source link to the patch or to this change set.");
         }
 
         var to = input.toHeroRevisionId() == null ? null : store.revision(input.heroId(), input.toHeroRevisionId());
@@ -133,31 +205,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 validateChange(change, from, to);
             }
         }
-        if (input.introduces()) {
-            validateIntroduction(input.heroId(), variant);
-        }
-
-        UUID id = UUID.randomUUID();
-        var actor = actors.require();
-        try {
-            history.create(id, variantId, input, clock.instant(), actor);
-        } catch (DataIntegrityViolationException e) {
-            throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT,
-                    "A change set already exists for this hero and variant.");
-        }
-        for (var t : input.summaryTranslations()) {
-            history.appendTranslation(id, t);
-        }
-        int order = 0;
-        for (var change : input.changes()) {
-            history.appendChange(id, order++, change);
-        }
-
-        dataReviews.markDirty(variantId);
-        audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGE_RECORDED", CatalogAggregates.HERO, input.heroId(),
-                to == null ? null : to.id(), null, null, null,
-                Map.of("changeSetId", id, "sourceKind", input.source().name())));
-        return id;
+        return to;
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
@@ -407,6 +455,35 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
 
         return new HeroAssessmentView(value.getKind(), value.getVersion());
+    }
+
+    /**
+     * Sets the order in which a patch lists its heroes, in Admin and on the public patch page. The list names every
+     * change set of the variant once; one recorded later has no place yet and comes first until the next reorder.
+     */
+    @Transactional
+    @PreAuthorize("hasAuthority('patch:write')")
+    public void reorder(UUID variantId, HeroChangeOrderCommand input) {
+        var ids = input.changeSetIds();
+        if (new HashSet<>(ids).size() != ids.size()) {
+            throw HeroValidation.invalid("A change set may appear only once in the order.");
+        }
+        contexts.variant(variantId);
+
+        var members = history.members(variantId);
+        members.stream().map(Member::getHeroId).sorted().forEach(store::lockHero);
+        if (!new HashSet<>(ids).equals(members.stream().map(Member::getId).collect(Collectors.toSet()))) {
+            throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT,
+                    "The changes of this patch have changed. Reload before reordering.");
+        }
+
+        var actor = actors.require();
+        int moved = history.place(ids, clock.instant(), actor);
+
+        if (moved > 0) {
+            audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGES_REORDERED", CatalogAggregates.PATCH, variantId,
+                    null, null, null, null, Map.of("changeSets", ids.size(), "moved", moved)));
+        }
     }
 
     @Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.PreviousInput")

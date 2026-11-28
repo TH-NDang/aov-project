@@ -18,7 +18,7 @@ Các mục bên dưới vẫn mô tả đích toàn backend; bảng này xác đ
 | Hero admin | GET/POST admin/heroes; GET admin/heroes/publish-readiness; GET admin/heroes/{id}; GET admin/heroes/{id}/revisions; GET revision/draft detail; POST drafts; PUT sáu section; POST publish/discard |
 | Hero public | GET heroes; heroes/{id}; heroes/{id}/manifest; heroes/{id}/changes |
 | Immutable section | hero-profile-revisions, hero-overview-rating-revisions, hero-stats-revisions, hero-skills-revisions, hero-skins-revisions, hero-media-binding-revisions |
-| Patch history | POST admin/patch-variants/{id}/hero-changes; POST admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous; GET patches, patches/{id}, patches/{id}/changes |
+| Patch history | POST admin/patch-variants/{id}/hero-changes; PUT admin/hero-changes/{changeSetId}; POST admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous; GET patches, patches/{id}, patches/{id}/changes |
 
 Tất cả path trong bảng nối sau `/api/wiki/v1/`. POST tạo trả 201; publish variant trả 204;
 Hero mutation/publish/discard trả 200 với composition revision mới nhất. Create Hero trả
@@ -791,7 +791,9 @@ page=0
 size=20
 ```
 
-Trả patch families cùng release/effective metadata của region yêu cầu.
+Trả patch families cùng release/effective metadata của region yêu cầu. Mỗi patch có thêm `sources`: danh sách
+`{url, label, locale}` là link tới ghi chú cập nhật chính thức của variant, theo thứ tự biên tập viên chọn (rỗng khi
+chưa có). Chi tiết patch (mục 10) trả cùng trường này.
 
 ---
 
@@ -1823,7 +1825,8 @@ Request:
 Auto diff có thể gợi ý payload nhưng không tự public mà không review.
 
 `sourceKind` mặc định `SNAPSHOT`: bắt buộc `toHeroRevisionId` là revision GAME_PATCH đã xuất bản đúng
-variant. `PATCH_NOTES` ghi từ ghi chú cập nhật chính thức: bắt buộc `sourceUrl` HTTP(S), không bắt buộc
+variant. `PATCH_NOTES` ghi từ ghi chú cập nhật chính thức: cần nguồn, là `sourceUrl` HTTP(S) riêng hoặc link chung
+của patch (`admin/patch-variants/{id}/sources`); bỏ `sourceUrl` khi patch chưa có link chung trả 422. Không bắt buộc
 revision nguồn/đích, dòng STAT/SKILL bắt buộc `oldValue` và `newValue`, không nhận dòng VISUAL; khóa chỉ
 số và kỹ năng phải thuộc snapshot đã xuất bản mới nhất của tướng khi có. Lỗi kiểm tra trả
 `HERO_INVALID_CONTENT`.
@@ -2497,7 +2500,7 @@ POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trư�
 ## Tổng quan phát hành cho admin
 
 - GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Variant có `patchTitle` nullable: tên vi-VN, không có thì tên en-US, rồi tên của locale đầu tiên theo thứ tự chữ cái. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
-- GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Change set của một dạng có thêm `holderId`, `holderCode`, `formKey` (ADR-024); trang patch công khai nhận cùng các trường. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
+- GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set theo thứ tự biên tập viên đã sắp (xem PUT .../hero-changes/order), có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Change set của một dạng có thêm `holderId`, `holderCode`, `formKey` (ADR-024); trang patch công khai nhận cùng các trường. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
 
 Frontend dùng TanStack Query cho tổng quan (làm mới 60 giây), danh mục và snapshot tướng, bảng thay đổi theo variant/locale (chỉ tải khi mở). Sau mutation thiết lập mùa/patch hoặc ghi thay đổi, invalidate các cache liên quan. Đổi trang giữ cache theo cơ chế workspace hiện có.
 
@@ -2968,7 +2971,8 @@ Ngoại trừ REMOVED, target nằm đúng patch. From là snapshot đã xuất 
 UPDATED/BUFF/NERF/BALANCE/REWORK/FIX cần GAME_PATCH và from; ADDED và DATA_BASELINE là nhãn độc lập.
 REMOVED chỉ một kind, cho phép target ở patch trước để bổ sung lịch sử khi đã có nguồn.
 Tóm tắt theo locale và nguồn HTTP bắt buộc. Trả 201 {id}; trùng owner/patch 409, sai nội dung 422.
-Không cung cấp API kéo đổi/xóa lịch sử đã xác nhận.
+Không có API xóa lịch sử đã ghi. Change set tướng sửa tại chỗ được bằng PUT admin/hero-changes/{changeSetId} khi công
+tắc sửa còn mở.
 
 PUT /admin/hero-changes/{changeSetId}/assessment cần patch:write, nhận {kind,expectedVersion}.
 Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng) và thêm `RELEASE` (Ra mắt) chỉ cho change set có
@@ -2977,11 +2981,33 @@ version=0, lưu tăng version, xung đột 409. Change set không tồn tại tr
 API hero changes thêm overallKind,assessmentVersion; gameplayChanges của /admin/heroes thêm overallKind nullable,
 giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay sự kiện kỹ năng/chỉ số.
 
+PUT /admin/patch-variants/{variantId}/hero-changes/order cần patch:write, nhận {changeSetIds} (tối đa 500) và trả 204.
+Danh sách phải nêu mỗi change set của variant đúng một lần: thiếu, thừa hoặc có change set của variant khác trả 409
+`HERO_PATCH_CHANGE_CONFLICT`; trùng id trả 422; variant không tồn tại trả 404. Thứ tự này áp cho
+GET admin/patch-variants/{id}/hero-changes và trang patch công khai; change set ghi sau lần sắp xếp đứng đầu cho tới
+lần sắp xếp kế tiếp. Lưu khi có vị trí đổi thì ghi audit `HERO_PATCH_CHANGES_REORDERED` (aggregate PATCH, id variant).
+
+PUT /admin/hero-changes/{changeSetId} cần patch:write, nhận `{sourceUrl, summaryTranslations, changes}` cùng dạng và
+cùng giới hạn với lúc ghi (mục 39), trả 204. Lần sửa ghi đè change set tại chỗ, không tạo phiên bản mới
+([ADR-016](adr/ADR-016-patch-note-changes.md), bổ sung 2026-11-27): thay toàn bộ dòng thay đổi, thay tóm tắt của các
+locale được gửi (locale khác giữ nguyên) và thay `sourceUrl`. Tướng, patch, `sourceKind`, revision nguồn/đích,
+`introducesHero`, đánh giá tổng thể và vị trí trong patch không đổi. Nội dung được kiểm tra như lúc ghi theo nguồn của
+change set, sai trả 422 `HERO_INVALID_CONTENT`; change set không tồn tại trả 404 `HERO_PATCH_CHANGE_NOT_FOUND`. Mô tả
+"trước khi đổi" (mục 39b) đi theo dòng MECHANIC mới đầu tiên có cùng `mechanicKey`. Ghi audit `HERO_PATCH_CHANGE_EDITED`
+(aggregate HERO). Khi wiki-service chạy với `HERO_CHANGE_EDITS=false` (`wiki.hero.change-edits`), mọi lần sửa trả 409
+`HERO_PATCH_CHANGE_LOCKED`.
+
 ### Xem toàn bộ dữ liệu tại mốc và rà soát patch
 
 - `GET /admin/patch-variants/{id}/notes/{locale}` cần `catalog:read`, trả `{body, version}` của đúng patch và ngôn ngữ (chưa ghi: chuỗi rỗng, phiên bản 0).
   `PUT` cùng đường dẫn cần `patch:write`, nhận `{body, expectedVersion}`; tối đa 20.000 ký tự, để trống để bỏ ghi chú, xung đột trả 409.
   Ghi chú bổ sung không tạo sự kiện gameplay cho tướng hoặc kho trang bị.
+- `GET /admin/patch-variants/{id}/sources` cần `catalog:read`, trả danh sách `{url, label, locale}` theo thứ tự.
+  `PUT` cùng đường dẫn cần `patch:write`, nhận `{sources: [{url, label, locale}]}` và thay cả danh sách: tối đa 10 link,
+  `url` HTTP(S) tối đa 2.048 ký tự và không trùng, `label` không rỗng tối đa 80 ký tự (cắt khoảng trắng hai đầu),
+  `locale` bỏ trống hoặc là thẻ BCP 47 chuẩn. Sai trả 422 `PATCH_INVALID`, variant không tồn tại trả 404. Lưu khi danh
+  sách đổi thì ghi audit `PATCH_SOURCES_UPDATED` (aggregate PATCH, id variant). Link chung là nguồn của mọi change set
+  `PATCH_NOTES` không có `sourceUrl` riêng và hiện trên trang patch công khai.
 
 - `GET /admin/patch-variants/{id}/hero-stat-samples` cần quyền `catalog:read`. Mỗi tướng có tối đa một mẫu,
   lấy revision mới nhất còn hiệu lực gắn trực tiếp với variant và bộ luật. Mẫu có trạng thái nháp, vai trò,
@@ -3307,7 +3333,7 @@ POST `/api/wiki/v1/admin/videos/import`
 Nội dung trả `contentLocale: "vi-VN"`. Ảnh trả dạng `{assetId, url, width, height, credits}` chỉ khi asset dùng
 được; asset thiếu hoặc chưa sẵn sàng bị bỏ qua thay vì lỗi. Mã lỗi thuộc `GameModeErrorCode`:
 404 `GAME_MODE_NOT_FOUND`, 404 `GAME_MODE_REVISION_NOT_FOUND`, 404 `GAME_MODE_GUIDE_NOT_FOUND`,
-404 `GAME_MODE_LINEUP_NOT_FOUND`, 409 `GAME_MODE_CONFLICT`, 409 `GAME_MODE_CODE_TAKEN`,
+404 `GAME_MODE_MAP_NOT_FOUND`, 404 `GAME_MODE_LINEUP_NOT_FOUND`, 409 `GAME_MODE_CONFLICT`, 409 `GAME_MODE_CODE_TAKEN`,
 422 `GAME_MODE_INVALID_CONTENT` (kèm `missingFields` khi xuất bản thiếu dữ liệu), 403 `GAME_MODE_FORBIDDEN`,
 429 `GAME_MODE_RATE_LIMITED`.
 
@@ -3316,11 +3342,16 @@ Nội dung trả `contentLocale: "vi-VN"`. Ảnh trả dạng `{assetId, url, wi
 GET `/api/wiki/v1/game-modes`
 - Không có query. Trả `{items: [GameModeCard]}` của các chế độ đã xuất bản, sắp theo nhóm (`PVP` trước) rồi
   thứ tự hiển thị. Card gồm `code`, `name`, `group`, `summary`, `playersLabel`, `duration`, `availability`,
-  `art`, `hasGuide`.
+  `art`, `hasGuide`, `hasMap`.
 
 GET `/api/wiki/v1/game-modes/{code}`
 - Trả chế độ đã xuất bản: card + `rules`, `heroes`, `specialItems`, `sources`, `publishedAt`. 404 khi chưa
   xuất bản.
+
+GET `/api/wiki/v1/game-modes/{code}/map`
+- Trả bản đồ chiến trường đã xuất bản: `{modeCode, modeName, contentLocale, revisionId, publishedAt, content,
+  images}`; `content` theo mục “Bản đồ chiến trường” ở 01, `images` là ảnh nền đã hydrate theo `assetId`.
+  404 `GAME_MODE_MAP_NOT_FOUND` khi chế độ chưa xuất bản hoặc chưa có bản đồ xuất bản.
 
 GET `/api/wiki/v1/game-modes/{code}/auto-chess`
 - Trả cẩm nang đã xuất bản: nội dung ở 01, ảnh đã hydrate, mỗi đội hình đề xuất có `likes`, `recentLikes`.
@@ -3364,11 +3395,11 @@ DELETE `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups/{lineupId}?ex
 ### Admin
 
 Cần `catalog:read`; ghi cần `gamemode:write`; xuất bản, ẩn/hiện đội hình cần `gamemode:publish`.
-Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`, `AUTO_CHESS_*`, `LINEUP_*`.
+Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`, `AUTO_CHESS_*`, `MAP_GUIDE_*`, `LINEUP_*`.
 
 - GET `/api/wiki/v1/admin/game-modes` — danh sách mọi chế độ: `id`, `code`, `name`, `group`, `order`,
   `guideKind`, `published` (revision xuất bản gần nhất hoặc null), `draft` (nháp mở hoặc null), `guide`
-  (trạng thái cẩm nang).
+  (trạng thái cẩm nang), `map` (trạng thái bản đồ, cùng dạng `{published, draft}`).
 - POST `/api/wiki/v1/admin/game-modes` — body `{code, name, group, content?}`; tạo identity và nháp đầu; 201.
   409 `GAME_MODE_CODE_TAKEN` khi trùng mã.
 - GET `/api/wiki/v1/admin/game-modes/{id}` — nháp mở nếu có, không thì bản xuất bản gần nhất; kèm
@@ -3383,6 +3414,12 @@ Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`
   (GET hiện hành, GET `revisions`, GET `revisions/{revisionId}`, POST `drafts` với `{changeNote, content?}` —
   `content` chỉ dùng cho nháp đầu tiên khi chưa có bản xuất bản, PUT `drafts/{revisionId}`, POST
   `drafts/{revisionId}/publish`, `drafts/{revisionId}/discard`). 422 khi chế độ không có `guideKind = AUTO_CHESS`.
+- Bản đồ chiến trường dùng cùng bộ endpoint dưới `/api/wiki/v1/admin/game-modes/{id}/map`; POST `drafts` nhận
+  `content` chỉ khi chưa có bản xuất bản (409 `GAME_MODE_CONFLICT` nếu đã có), không có `content` thì sao bản xuất
+  bản gần nhất hoặc revision gần nhất. Mọi chế độ đều có thể có bản đồ. Phản hồi admin gồm `modeId`, `modeCode`,
+  `revision`, `hasPublished`, `content`, `missingFields`, `images`. 422 `GAME_MODE_INVALID_CONTENT` với lỗi theo
+  đường dẫn (`objects[2].family UNKNOWN_REFERENCE`, `tempo[1].seconds OUT_OF_ORDER`…). Audit
+  `MAP_GUIDE_DRAFT_CREATED`, `MAP_GUIDE_DRAFT_UPDATED`, `MAP_GUIDE_PUBLISHED`, `MAP_GUIDE_DRAFT_DISCARDED`.
 - GET `/api/wiki/v1/admin/game-modes/{id}/auto-chess/community-lineups` — query `status`, `page`, `size`;
   `PageSlice` đội hình cộng đồng kèm `likes`, `status`, `hiddenReason`, `version`, `updatedAt`.
 - POST `/api/wiki/v1/admin/game-modes/{id}/auto-chess/community-lineups/{lineupId}/visibility` — body

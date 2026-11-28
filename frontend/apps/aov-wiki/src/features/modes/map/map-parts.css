@@ -1,0 +1,284 @@
+/*
+ * The parts around the board (map-parts.tsx): the three tabs, the layer chips, the index of every object, the lane
+ * plates and the reminder that a mark has come.
+ */
+.wiki-map-tabs {
+  display: flex;
+  gap: 2px;
+  background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent) 15% 85%,
+      transparent
+    )
+    left bottom / 100% 1px no-repeat;
+}
+.wiki-map-tab {
+  font: var(--wiki-type-category);
+  position: relative;
+  flex: 1;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: var(--aov-wiki-text-soft);
+  cursor: pointer;
+}
+@media (min-width: 900px) {
+  .wiki-map-tab {
+    flex: none;
+    padding: 0 22px;
+  }
+}
+.wiki-map-tab:hover {
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-tab[aria-selected="true"] {
+  background: radial-gradient(
+    70% 90% at 50% 100%,
+    color-mix(in srgb, var(--aov-wiki-gold) 24%, transparent),
+    transparent 75%
+  );
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 10px 0;
+  height: 7px;
+  background:
+    linear-gradient(135deg, var(--aov-wiki-gold-bright), var(--aov-wiki-bronze)) center / 7px 7px no-repeat,
+    linear-gradient(90deg, transparent, var(--aov-wiki-gold-bright) 30% 70%, transparent) center bottom / 100% 2px
+      no-repeat;
+  clip-path: polygon(0 calc(100% - 2px), 50% 0, 100% calc(100% - 2px), 100% 100%, 0 100%);
+}
+
+.wiki-map-layers {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+@media (max-width: 899.98px) {
+  .wiki-map-layers {
+    margin-inline: calc(-1 * var(--wiki-gutter));
+    padding-inline: var(--wiki-gutter);
+  }
+}
+.wiki-map-layers::-webkit-scrollbar {
+  display: none;
+}
+.wiki-map-layer {
+  font: var(--wiki-type-category);
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--aov-wiki-line-strong);
+  border-radius: 999px;
+  background: var(--aov-wiki-panel-deep);
+  color: var(--aov-wiki-text-muted);
+  cursor: pointer;
+}
+.wiki-map-layer[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--aov-wiki-gold) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-wiki-gold) 16%, var(--aov-wiki-panel-deep));
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-layer[data-category="AREA"] {
+  border-style: dashed;
+}
+
+/* ---------- Index ---------- */
+.wiki-map-index {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.wiki-map-index-group h2 {
+  margin: 0 0 8px;
+}
+.wiki-map-index-group ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-map-index-entry {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: var(--aov-wiki-text);
+  text-align: left;
+  cursor: pointer;
+}
+.wiki-map-index-entry:hover {
+  border-color: var(--aov-wiki-line-strong);
+  background: var(--aov-wiki-panel-deep);
+}
+.wiki-map-index-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--aov-wiki-bar);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 55%, transparent);
+  color: var(--aov-wiki-gold-bright);
+}
+.wiki-map-index-icon[data-category="EPIC"] {
+  box-shadow: 0 0 0 1.5px var(--aov-wiki-gold-bright);
+}
+.wiki-map-index-name {
+  font: var(--wiki-type-entry);
+  flex: 1;
+  min-width: 0;
+}
+.wiki-map-index-time {
+  font: var(--wiki-type-meta);
+  color: var(--aov-wiki-text-muted);
+}
+/* Phones swipe each kind sideways as small cards. */
+@media (max-width: 899.98px) {
+  .wiki-map-index-group ul {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    overflow-x: auto;
+    margin-inline: calc(-1 * var(--wiki-gutter));
+    padding: 0 var(--wiki-gutter) 4px;
+    scroll-padding-inline: var(--wiki-gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .wiki-map-index-group ul::-webkit-scrollbar {
+    display: none;
+  }
+  .wiki-map-index-group li {
+    display: flex;
+    flex: none;
+    scroll-snap-align: start;
+  }
+  .wiki-map-index-entry {
+    flex-direction: column;
+    gap: 6px;
+    width: 96px;
+    min-height: 104px;
+    padding: 10px 6px;
+    border-color: var(--aov-wiki-line);
+    background: linear-gradient(180deg, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep));
+    text-align: center;
+  }
+  .wiki-map-index-icon {
+    width: 38px;
+    height: 38px;
+  }
+  .wiki-map-index-name {
+    font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
+    flex: none;
+  }
+}
+
+/* ---------- Lanes ---------- */
+.wiki-map-lanes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+@media (max-width: 899.98px) {
+  .wiki-map-lanes {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: calc(-1 * var(--wiki-gutter));
+    padding-inline: var(--wiki-gutter);
+    scrollbar-width: none;
+  }
+}
+.wiki-map-lane-choice {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--aov-wiki-line-strong);
+  border-radius: 3px;
+  background: var(--aov-wiki-panel-deep);
+  color: var(--aov-wiki-text-soft);
+  cursor: pointer;
+}
+.wiki-map-lane-choice svg {
+  color: var(--aov-wiki-gold);
+}
+.wiki-map-lane-choice[aria-pressed="true"] {
+  border-color: var(--aov-wiki-gold);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--aov-wiki-gold) 26%, transparent), transparent);
+  color: var(--aov-wiki-gold-bright);
+}
+
+/* ---------- Reminder ---------- */
+.wiki-map-reminder {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 6;
+  display: flex;
+  max-width: calc(100% - 20px);
+  align-items: stretch;
+  border: 1px solid var(--aov-wiki-gold);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--aov-wiki-bar) 92%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--aov-wiki-gold) 35%, transparent);
+  translate: -50% 0;
+  animation: wiki-map-reminder-in 260ms ease-out both;
+}
+.wiki-map-reminder-body {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 0;
+  background: none;
+  color: var(--aov-wiki-text);
+  text-align: left;
+  cursor: pointer;
+}
+.wiki-map-reminder-body strong {
+  font: 700 1rem/1.25rem var(--wiki-font-display);
+  color: var(--aov-wiki-gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-map-reminder-body span {
+  font: var(--wiki-type-category);
+}
+.wiki-map-reminder-close {
+  display: grid;
+  width: 40px;
+  place-items: center;
+  border: 0;
+  border-left: 1px solid var(--aov-wiki-line-strong);
+  background: none;
+  color: var(--aov-wiki-text-muted);
+  cursor: pointer;
+}
+@keyframes wiki-map-reminder-in {
+  from {
+    opacity: 0;
+    translate: -50% -8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-map-reminder {
+    animation: none;
+  }
+}

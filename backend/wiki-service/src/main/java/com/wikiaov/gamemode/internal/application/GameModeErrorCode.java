@@ -7,6 +7,7 @@ public enum GameModeErrorCode implements ApiErrorCode {
     GAME_MODE_NOT_FOUND(HttpStatus.NOT_FOUND),
     GAME_MODE_REVISION_NOT_FOUND(HttpStatus.NOT_FOUND),
     GAME_MODE_GUIDE_NOT_FOUND(HttpStatus.NOT_FOUND),
+    GAME_MODE_MAP_NOT_FOUND(HttpStatus.NOT_FOUND),
     GAME_MODE_LINEUP_NOT_FOUND(HttpStatus.NOT_FOUND),
     GAME_MODE_CONFLICT(HttpStatus.CONFLICT),
     GAME_MODE_CODE_TAKEN(HttpStatus.CONFLICT),
