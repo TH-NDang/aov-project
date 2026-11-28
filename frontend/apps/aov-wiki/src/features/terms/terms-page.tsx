@@ -14,6 +14,8 @@ import { usePageHead } from "../../lib/seo/use-page-head"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 import "./terms.css"
 import { PageSearch } from "../../components/page-search"
+import { TERM_ITEM_FILTERS } from "@aov/ui/lib/hero-stat-terms"
+import { warehousePath } from "../../lib/wiki-catalog"
 
 /** A term with no picture of its own wears the glossary's mark. */
 const GlossaryMark = gameIcon("spell-book")
@@ -187,6 +189,17 @@ export function TermsPage() {
                           />
                         ) : (
                           text("Chưa có giải thích cho thuật ngữ này.", "This term has no explanation yet.")
+                        )}
+                        {/* The shop changes each patch, so a stat's items are read from the item catalog itself. */}
+                        {TERM_ITEM_FILTERS[entity.id] && (
+                          <Link
+                            className="wiki-term-items"
+                            to={href(
+                              `${warehousePath("items")}?${new URLSearchParams({ stats: TERM_ITEM_FILTERS[entity.id]! })}`,
+                            )}
+                          >
+                            {text("Mọi trang bị có chỉ số này", "Every item with this stat")}
+                          </Link>
                         )}
                       </div>
                     </article>

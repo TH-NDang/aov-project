@@ -110,6 +110,21 @@
   min-width: 0;
   color: var(--aov-text-soft);
 }
+/* Where the items of today's shop that give the stat are listed. */
+.wiki-term-items {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font: var(--wiki-type-meta);
+  color: var(--aov-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-term-items::after {
+  content: "→";
+  text-decoration: none;
+}
 /* A table inside an explanation is ruled between its rows; the card around it is frame enough. */
 .wiki-term-body :has(> [role="table"]) {
   border: 0;

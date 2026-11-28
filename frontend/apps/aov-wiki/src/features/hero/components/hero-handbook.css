@@ -396,6 +396,23 @@
 .wiki-facts dd {
   font-variant-numeric: tabular-nums;
 }
+/* The rise per level sits under the level 1 value, quieter, as the game's attribute screen keeps it apart. */
+.wiki-fact-growth {
+  display: block;
+  font: var(--wiki-type-meta);
+  font-weight: 400;
+  color: var(--aov-muted);
+  text-align: end;
+}
+/* A stat's name opens its glossary term; it reads as a label until hovered. */
+.wiki-facts dt a {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.wiki-facts dt a:hover {
+  color: var(--aov-accent);
+}
 .wiki-facts dt,
 .wiki-hero-ratings dt {
   display: inline-flex;
