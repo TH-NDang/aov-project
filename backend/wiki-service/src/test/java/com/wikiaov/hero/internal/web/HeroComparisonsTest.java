@@ -112,10 +112,10 @@ class HeroComparisonsTest {
         var source = revision(UUID.randomUUID(), null, ruleset, HeroSection.COMBAT_STATS);
         var target = revision(UUID.randomUUID(), source.id(), ruleset, HeroSection.COMBAT_STATS);
         when(sections.content(HeroSection.COMBAT_STATS, source.sections().get(HeroSection.COMBAT_STATS)))
-                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3500.000"), null, "POINT")),
+                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3500.000"), null, null, "POINT")),
                         List.of(new Source("First observation", null, null, Verification.UNVERIFIED, null))));
         when(sections.content(HeroSection.COMBAT_STATS, target.sections().get(HeroSection.COMBAT_STATS)))
-                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3500"), null, "POINT")),
+                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3500"), null, null, "POINT")),
                         List.of(new Source("Second observation", null, null, Verification.VERIFIED, null))));
         assertThat(comparisons.compare(hero, target.id(), null).changes()).isEmpty();
     }
@@ -131,9 +131,9 @@ class HeroComparisonsTest {
         when(sections.content(HeroSection.SKILLS, source.sections().get(HeroSection.SKILLS))).thenReturn(beforeSkills);
         when(sections.content(HeroSection.SKILLS, target.sections().get(HeroSection.SKILLS))).thenReturn(afterSkills);
         when(sections.content(HeroSection.COMBAT_STATS, source.sections().get(HeroSection.COMBAT_STATS)))
-                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3500"), null, "POINT")), List.of()));
+                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3500"), null, null, "POINT")), List.of()));
         when(sections.content(HeroSection.COMBAT_STATS, target.sections().get(HeroSection.COMBAT_STATS)))
-                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3600"), null, "POINT")), List.of()));
+                .thenReturn(new Stats(List.of(new Stat("HP", new BigDecimal("3600"), null, null, "POINT")), List.of()));
 
         var result = comparisons.compare(hero, target.id(), null);
         assertThat(result.changes()).singleElement().satisfies(change -> {

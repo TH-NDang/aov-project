@@ -97,6 +97,10 @@ public class HeroValidation {
         if (stats.values().stream().anyMatch(value -> value.baseValue() == null)) {
             throw invalid("A stat must have a numeric value.");
         }
+        if (stats.values().stream().anyMatch(value -> value.growthPerLevel() != null
+                && value.growthPerLevel().signum() < 0)) {
+            throw invalid("A stat's growth per level cannot be negative.");
+        }
 
         stats.values().stream().filter(value -> value.percentValue() != null).forEach(HeroValidation::validatePercent);
     }

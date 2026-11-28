@@ -55,6 +55,7 @@ public record HeroPatchView(
             String unit,
             BigDecimal baseValue,
             BigDecimal percentValue,
+            BigDecimal growthPerLevel,
             Provenance provenance,
             UUID changeSetId,
             UUID patchVariantId

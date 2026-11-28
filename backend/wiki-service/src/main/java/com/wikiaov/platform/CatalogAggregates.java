@@ -22,10 +22,11 @@ public final class CatalogAggregates {
     public static final String SKIN_BADGE_GROUP = "SKIN_BADGE_GROUP";
     public static final String ITEM_METADATA = "ITEM_METADATA";
     public static final String ENCHANTMENT_METADATA = "ENCHANTMENT_METADATA";
+    public static final String HERO_STAT_RULE = "HERO_STAT_RULE";
 
     public static final Set<String> CACHED = Set.of(HERO, ITEM, ARCANA, SPELL, ENCHANTMENT, PATCH, REGION,
             RANKED_SEASON, REFERENCE_SETTINGS, MEDIA_ASSET, SKIN_BADGE, SKIN_BADGE_GROUP, ITEM_METADATA,
-            ENCHANTMENT_METADATA);
+            ENCHANTMENT_METADATA, HERO_STAT_RULE);
 
     private CatalogAggregates() {
     }
